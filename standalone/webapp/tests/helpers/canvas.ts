@@ -1,4 +1,41 @@
-import type { Page } from "@playwright/test"
+import { expect, type Page } from "@playwright/test"
+
+async function waitForCanvasGeometryStable(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        let previous = ""
+        let stableFrames = 0
+        let frame = 0
+
+        const sample = () => {
+          const viewport =
+            document
+              .querySelector(".react-flow__viewport")
+              ?.getAttribute("style") ?? ""
+          const paths = [...document.querySelectorAll(".react-flow__edge-path")]
+            .map((path) => path.getAttribute("d") ?? "")
+            .join("|")
+          const nodes = [...document.querySelectorAll(".react-flow__node")]
+            .map(
+              (node) =>
+                `${node.getAttribute("style") ?? ""}:${node.getAttribute("class") ?? ""}`
+            )
+            .join("|")
+          const current = `${viewport}::${nodes}::${paths}`
+          stableFrames = current === previous ? stableFrames + 1 : 0
+          previous = current
+
+          if (stableFrames >= 6) return resolve()
+          if (frame++ >= 180)
+            return reject(new Error("canvas geometry did not settle"))
+          requestAnimationFrame(sample)
+        }
+
+        requestAnimationFrame(sample)
+      })
+  )
+}
 
 /**
  * Wait until the React Flow canvas is fully rendered and paint-settled.
@@ -35,8 +72,8 @@ export async function waitForCanvasReady(page: Page, expectNodes = true) {
   //    action (e.g. the fit-view click) can't bleed into the screenshot.
   await page.mouse.move(0, 0)
 
-  // 6. Let layout and paint settle
-  await page.waitForTimeout(800)
+  // 6. Await stable rendered geometry rather than guessing a delay.
+  await waitForCanvasGeometryStable(page)
 }
 
 /**
@@ -51,8 +88,7 @@ export async function clickFitView(page: Page) {
   // built-in <Controls> panel); its fit button carries this stable aria-label.
   const fitViewBtn = page.getByRole("button", { name: "Fit view" })
   await fitViewBtn.click()
-  // Let the zoom/pan animation settle
-  await page.waitForTimeout(500)
+  await waitForCanvasGeometryStable(page)
 }
 
 /**
@@ -94,4 +130,90 @@ export async function openFixtureInLocalEditor(
 ) {
   await injectFixtureIntoLocalStorage(page, fixture)
   await page.goto(`/local/${fixture.id as string}`)
+}
+
+export async function openNewDiagramDialog(page: Page) {
+  const trigger = page.getByRole("button", { name: "New diagram" }).first()
+  const dialog = page.getByRole("dialog")
+
+  await expect(async () => {
+    if (!(await dialog.isVisible())) await trigger.click()
+    await expect(dialog).toBeVisible()
+  }).toPass({ timeout: 15_000 })
+
+  return dialog
+}
+
+/**
+ * Create one of the bundled presets through the real dashboard dialog.
+ *
+ * Template visual tests use this instead of injecting the asset directly:
+ * cloning, transient-state cleanup, fresh-id assignment, persistence and route
+ * navigation are all part of what a user sees when choosing a preset.
+ */
+export async function createTemplateInLocalEditor(
+  page: Page,
+  templateName: string
+) {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "persistenceModelStore",
+      JSON.stringify({
+        state: { models: {}, currentModelId: null },
+        version: 3,
+      })
+    )
+  })
+  await page.goto("/")
+  await page
+    .getByRole("heading", { level: 1, name: "Your diagrams" })
+    .waitFor({ timeout: 15_000 })
+
+  const dialog = await openNewDiagramDialog(page)
+  await dialog.getByRole("tab", { name: "Use template" }).click()
+  await dialog.getByRole("button", { name: templateName, exact: true }).click()
+  await dialog.getByRole("button", { name: "Create Diagram" }).click()
+
+  await page.waitForURL(/\/local\/[^/]+$/, { timeout: 15_000 })
+  await waitForCanvasReady(page)
+
+  return page.evaluate(() => {
+    const persisted = localStorage.getItem("persistenceModelStore")
+    if (!persisted) return null
+
+    const state = JSON.parse(persisted).state as {
+      currentModelId?: string
+      models?: Record<string, { model?: Record<string, unknown> }>
+    }
+    const currentId = state.currentModelId
+    return currentId ? (state.models?.[currentId]?.model ?? null) : null
+  })
+}
+
+/** Select an edge through the visible middle of its rendered path. */
+export async function selectEdgeOnPath(page: Page, edgeId: string) {
+  const point = await page.evaluate((id) => {
+    const path = document.querySelector(
+      `.react-flow__edge[data-id="${id}"] path.react-flow__edge-path`
+    ) as SVGPathElement | null
+    if (!path) return null
+
+    const transform = path.getScreenCTM()
+    if (!transform) return null
+
+    const midpoint = path.getPointAtLength(path.getTotalLength() / 2)
+    const screenPoint = new DOMPoint(midpoint.x, midpoint.y).matrixTransform(
+      transform
+    )
+    return { x: screenPoint.x, y: screenPoint.y }
+  }, edgeId)
+
+  if (!point) {
+    throw new Error(`Edge "${edgeId}" path was not rendered`)
+  }
+
+  await page.mouse.click(point.x, point.y)
+  await expect(
+    page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
+  ).toHaveClass(/selected/)
 }

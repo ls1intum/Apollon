@@ -83,6 +83,9 @@ export const SyntaxTreeEdge = ({
             id={id}
             path={currentPath}
             pointerEvents="none"
+            // Select/hover ride `.edge-overlay`, not RF's fat interaction ribbon,
+            // so the ribbon can't paint over a neighbour edge's handle. See GenericEdge.
+            interactionWidth={0}
             style={{
               stroke: strokeColor,
               strokeDasharray: strokeDashArray,
@@ -115,6 +118,7 @@ export const SyntaxTreeEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}

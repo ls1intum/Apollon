@@ -1,12 +1,10 @@
-import { test, expect, type Page } from "@playwright/test"
+import { test, expect } from "@playwright/test"
 import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * A selected node shows an edit/delete toolbar floating at its top-right. The
- * toolbar's box is larger than its two icons, so its empty margins (and the gap
- * between the icons) must NOT swallow clicks meant for a node sitting beneath
- * it — otherwise that node becomes unclickable. Only the icons themselves
- * should capture the pointer.
+ * toolbar's surface must not swallow clicks meant for a node sitting beneath
+ * it, while each action's full button box remains interactive.
  */
 
 // Two class nodes: "Beta" covers "Alpha"'s top-right corner, exactly where
@@ -60,13 +58,6 @@ const SINGLE_MODEL = {
   ],
 }
 
-const selectedNames = (page: Page) =>
-  page.evaluate(() =>
-    Array.from(document.querySelectorAll(".react-flow__node.selected")).map(
-      (n) => (n.textContent || "").replace(/\s+/g, " ").trim().slice(0, 8)
-    )
-  )
-
 test("the toolbar's empty area does not block the node beneath it", async ({
   page,
 }) => {
@@ -77,46 +68,56 @@ test("the toolbar's empty area does not block the node beneath it", async ({
   // Select Alpha via its bottom strip, which is clear of Beta.
   const aBox = await alpha.boundingBox()
   await page.mouse.click(aBox!.x + aBox!.width / 2, aBox!.y + aBox!.height - 8)
-  await page.waitForTimeout(300)
-  expect(await selectedNames(page)).toEqual(["Alpha"])
+  await expect(alpha).toHaveClass(/selected/)
 
-  // A point inside the toolbar box but on no icon (its left margin), which sits
+  // A point inside the toolbar box but outside its buttons, which sits
   // over Beta. Clicking it must reach Beta, not be eaten by the toolbar.
   const target = await page.evaluate(() => {
     const tb = document.querySelector<HTMLElement>(".react-flow__node-toolbar")!
     const r = tb.getBoundingClientRect()
-    return { x: Math.round(r.x + 2), y: Math.round(r.y + r.height / 2) }
+    return { x: r.x + 1, y: r.y + r.height / 2 }
   })
   await page.mouse.click(target.x, target.y)
-  await page.waitForTimeout(300)
-
-  expect(await selectedNames(page)).toEqual(["Beta"])
+  const beta = page.locator(".react-flow__node").filter({ hasText: "Beta" })
+  await expect(beta).toHaveClass(/selected/)
 })
 
-test("the toolbar's edit and delete icons still work", async ({ page }) => {
+test("the toolbar exposes full pointer targets and keyboard-operable actions", async ({
+  page,
+}) => {
   await openFixtureInLocalEditor(page, SINGLE_MODEL as Record<string, unknown>)
   await waitForCanvasReady(page)
 
   const solo = page.locator(".react-flow__node").filter({ hasText: "Solo" })
   await solo.click()
-  await page.waitForTimeout(300)
-  expect(await selectedNames(page)).toEqual(["Solo"])
+  await expect(solo).toHaveClass(/selected/)
 
-  // The toolbar renders two lucide icons (svg): [0] = delete, [1] = edit.
-  const icons = page.locator(".react-flow__node-toolbar svg")
+  const edit = page.getByRole("button", { name: "Edit element" })
+  const remove = page.getByRole("button", { name: "Delete element" })
+  await expect(
+    page.getByRole("group", { name: "Selection actions" })
+  ).toBeVisible()
+  for (const button of [edit, remove]) {
+    const box = await button.boundingBox()
+    expect(box?.width).toBe(28)
+    expect(box?.height).toBe(28)
+  }
 
-  // Edit (pencil) opens the popover.
-  await icons.nth(1).click()
-  await page.waitForTimeout(300)
+  await edit.focus()
+  await expect(edit).toBeFocused()
+  await page.keyboard.press("Enter")
   await expect(page.locator(".apollon-popover")).toHaveCount(1)
 
-  // Dismiss the popover, then delete (trash) removes the node.
+  // Dismiss the popover, then use the lower-right of the delete button, well
+  // outside the 16px icon mask, to verify the full button is the pointer target.
   await page.keyboard.press("Escape")
-  await page.waitForTimeout(200)
+  await expect(page.locator(".apollon-popover")).toHaveCount(0)
   await solo.click()
-  await page.waitForTimeout(200)
-  await icons.first().click()
-  await page.waitForTimeout(300)
+  const removeBox = (await remove.boundingBox())!
+  await page.mouse.click(
+    removeBox.x + removeBox.width - 2,
+    removeBox.y + removeBox.height - 2
+  )
   await expect(
     page.locator(".react-flow__node").filter({ hasText: "Solo" })
   ).toHaveCount(0)

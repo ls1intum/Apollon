@@ -16,8 +16,7 @@ const NOTCH_INSET = 59
 const NOTCH_SLACK = 21
 
 async function openEditor(page: Page) {
-  await page.goto("/")
-  await page.evaluate((id) => {
+  await page.addInitScript((id) => {
     const storeValue = JSON.stringify({
       state: {
         models: {

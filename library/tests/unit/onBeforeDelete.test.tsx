@@ -31,6 +31,26 @@ afterEach(() => {
 })
 
 describe("useElementInteractions.onBeforeDelete", () => {
+  it("keeps React Flow callback identities stable across parent renders", () => {
+    const metadata = createMetadataStore()
+    const popover = createPopoverStore()
+    const stableWrapper = ({ children }: { children: ReactNode }) => (
+      <MetadataStoreContext value={metadata}>
+        <PopoverStoreContext value={popover}>{children}</PopoverStoreContext>
+      </MetadataStoreContext>
+    )
+    const hook = renderHook(() => useElementInteractions(), {
+      wrapper: stableWrapper,
+    })
+    const first = hook.result.current
+
+    hook.rerender()
+
+    expect(hook.result.current.onBeforeDelete).toBe(first.onBeforeDelete)
+    expect(hook.result.current.onNodeDoubleClick).toBe(first.onNodeDoubleClick)
+    expect(hook.result.current.onEdgeDoubleClick).toBe(first.onEdgeDoubleClick)
+  })
+
   it("allows deletion on a modifiable diagram with the canvas focused", async () => {
     document.body.innerHTML =
       '<div class="apollon-editor"><button id="n"></button></div>'

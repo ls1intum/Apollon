@@ -192,6 +192,17 @@ async function simulateSafeArea(page: Page, insets: number[]): Promise<void> {
       })
     )
     .toBe(`${insets[0]}px`)
+  // OverlayLayer observes the grid resize, then deliberately defers its store
+  // update by one animation frame to avoid a ResizeObserver loop. Await frames,
+  // not milliseconds, so the following fit reads the updated safe-area store.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        )
+      )
+  )
 }
 
 async function fitView(page: Page): Promise<void> {
@@ -202,6 +213,33 @@ async function fitView(page: Page): Promise<void> {
   })
   // fitView retries across animation frames until every node is measured.
   await page.waitForTimeout(300)
+}
+
+/** Wait for the semantic result of fitView rather than assuming its documented
+ * animation-frame retries have completed after a fixed wall-clock delay. */
+async function expectNodesInsideSafeArea(
+  page: Page,
+  insets: readonly [number, number, number, number]
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const editor = await box(editorEl(page))
+        const [top, right, bottom, left] = insets
+        const nodes = await page.locator(".react-flow__node").all()
+        const boxes = await Promise.all(nodes.map((node) => box(node)))
+        return boxes.filter(
+          (node) =>
+            (top > 0 && node.y < editor.y + top) ||
+            (left > 0 && node.x < editor.x + left) ||
+            (bottom > 0 &&
+              node.y + node.height > editor.y + editor.height - bottom) ||
+            (right > 0 && node.x + node.width > editor.x + editor.width - right)
+        ).length
+      },
+      { message: "fitView should frame every node inside the device safe area" }
+    )
+    .toBe(0)
 }
 
 test.describe("controls layout engine", () => {
@@ -706,16 +744,7 @@ test.describe("fitView and the device safe area", () => {
   }) => {
     await simulateSafeArea(page, [...NOTCH])
     await fitView(page)
-
-    const editor = await box(editorEl(page))
-    const nodes = page.locator(".react-flow__node")
-    for (const node of await nodes.all()) {
-      const b = await box(node)
-      expect(b.y).toBeGreaterThanOrEqual(editor.y + NOTCH[0])
-      expect(b.y + b.height).toBeLessThanOrEqual(
-        editor.y + editor.height - NOTCH[2]
-      )
-    }
+    await expectNodesInsideSafeArea(page, NOTCH)
   })
 
   test("clears the safe area on an edge whose only chrome floats", async ({
@@ -724,18 +753,9 @@ test.describe("fitView and the device safe area", () => {
     // With the palette gone, the bottom edge carries just the zoom cluster — a
     // corner slot, which reserves nothing. The home indicator still occludes it.
     await removeControl(page, PALETTE_ID)
-    await simulateSafeArea(page, [0, 0, 34, 0])
+    const safeArea = [0, 0, 34, 0] as const
+    await simulateSafeArea(page, [...safeArea])
     await fitView(page)
-
-    const editor = await box(editorEl(page))
-    const lowest = Math.max(
-      ...(await Promise.all(
-        (await page.locator(".react-flow__node").all()).map(async (node) => {
-          const b = await box(node)
-          return b.y + b.height
-        })
-      ))
-    )
-    expect(lowest).toBeLessThanOrEqual(editor.y + editor.height - 34)
+    await expectNodesInsideSafeArea(page, safeArea)
   })
 })

@@ -2,7 +2,6 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import { resolve } from "path"
-import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
 
 // Cross-package source aliases. Kept INLINE here (and mirrored in ./viteResolve
@@ -11,7 +10,6 @@ import tailwindcss from "@tailwindcss/vite"
 // (mcr.microsoft.com/playwright noble), so only this config must stay
 // self-contained. Keep the two copies in sync.
 const apollonAliases = [
-  { find: "@", replacement: resolve(__dirname, "src") },
   { find: "assets", replacement: resolve(__dirname, "assets") },
   {
     find: "@tumaet/apollon",
@@ -23,38 +21,31 @@ const apollonAliases = [
   },
 ]
 
-// The editor library uses a `@/` alias -> library/lib, which collides with the
-// webapp's own `@/` -> src. Rewrite `@/…` imports in library files to an absolute
-// library/lib path (the webapp's `@/` keeps mapping to src). Only files that
-// actually import `@/…` are intercepted, so every other library file keeps Vite's
-// native source maps; the rewrite is line-preserving, so only the import lines of
-// the rewritten files shift.
-const apollonAliasResolver = {
-  name: "apollon-alias-resolver",
-  enforce: "pre" as const,
-  async load(id: string) {
-    const libraryRoot = resolve(__dirname, "../../library").replace(/\\/g, "/")
-    if (!id.replace(/\\/g, "/").includes(libraryRoot)) return null
-    let original: string
-    try {
-      original = await fs.promises.readFile(id, "utf-8")
-    } catch {
-      return null
-    }
-    if (!original.includes("@/")) return null
-    const libRoot = resolve(__dirname, "../../library/lib").replace(/\\/g, "/")
-    const code = original
-      .replace(
-        /from\s+["']@\/([^"']+)["']/g,
-        (_m, p) => `from "${resolve(libRoot, p).replace(/\\/g, "/")}"`
-      )
-      .replace(
-        /import\s+["']@\/([^"']+)["']/g,
-        (_m, p) => `import "${resolve(libRoot, p).replace(/\\/g, "/")}"`
-      )
-    if (code === original) return null
-    return { code, map: null }
-  },
+// Pure routing kernel loaded by a module Worker. It contains no JSX and must not
+// receive React Refresh's browser-only `window` preamble in dev mode.
+const ROUTING_KERNEL =
+  /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
+
+// Resolve the shared `@/` prefix by importer so each workspace keeps its own root.
+const createApollonAliasResolver = () => {
+  const libraryRoot = `${resolve(__dirname, "../../library").replace(/\\/g, "/")}/`
+  const libRoot = resolve(__dirname, "../../library/lib")
+  const webappRoot = resolve(__dirname, "src")
+
+  return {
+    name: "apollon-alias-resolver",
+    enforce: "pre" as const,
+    async resolveId(source: string, importer?: string) {
+      if (!source.startsWith("@/")) return null
+      const root =
+        importer?.replace(/\\/g, "/").startsWith(libraryRoot) === true
+          ? libRoot
+          : webappRoot
+      return this.resolve(resolve(root, source.slice(2)), importer, {
+        skipSelf: true,
+      })
+    },
+  }
 }
 
 const webappPort = Number(process.env.APOLLON_WEBAPP_PORT || 5173)
@@ -68,11 +59,18 @@ export default defineConfig({
     // (re)generate src/routeTree.gen.ts. File options live in tsr.config.json.
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react({
+      exclude: ROUTING_KERNEL,
       babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
     }),
     tailwindcss(),
-    apollonAliasResolver,
+    createApollonAliasResolver(),
   ],
+  // Worker bundles run their own plugin pipeline. The edge-geometry worker is
+  // reached through the library source alias, so it needs the same `@/` rewrite
+  // as the main webapp graph rather than resolving those imports into webapp/src.
+  worker: {
+    plugins: () => [createApollonAliasResolver()],
+  },
   resolve: {
     alias: apollonAliases,
     // Avoid duplicate React copies across workspace

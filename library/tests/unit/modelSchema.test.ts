@@ -100,22 +100,25 @@ describe("published model JSON schema", () => {
   }, 60_000)
 })
 
-// Contract lock: every real diagram model the app round-trips must validate
-// after importDiagram. This is what proves the open `data` envelope is correct
-// — it guarantees no real submission is rejected, and guards against anyone
-// later tightening the schema in a way that would. (The assets/diagramTemplates
-// starter files are intentionally excluded: they carry edges without `data`, so
-// they aren't conformant v4 submission models — a separate, pre-existing matter.)
+// Contract lock: every real diagram model the app round-trips, including the
+// bundled starter templates, must validate after importDiagram. This proves the
+// open `data` envelope is correct, guarantees templates work through both the
+// preset and direct-file import paths, and guards against future schema drift.
 describe("schema accepts every real diagram model (fixtures)", () => {
-  const dir = join(
-    import.meta.dirname,
-    "../../../standalone/webapp/tests/fixtures"
+  const dirs = [
+    join(import.meta.dirname, "../../../standalone/webapp/tests/fixtures"),
+    join(
+      import.meta.dirname,
+      "../../../standalone/webapp/assets/diagramTemplates"
+    ),
+  ]
+  const models = dirs.flatMap((dir) =>
+    existsSync(dir)
+      ? readdirSync(dir)
+          .filter((f) => f.endsWith(".json"))
+          .map((f) => [f, join(dir, f)] as const)
+      : []
   )
-  const models = existsSync(dir)
-    ? readdirSync(dir)
-        .filter((f) => f.endsWith(".json"))
-        .map((f) => [f, join(dir, f)] as const)
-    : []
 
   it("found fixtures to validate", () => {
     expect(models.length).toBeGreaterThan(10)

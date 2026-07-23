@@ -1,22 +1,25 @@
-import { useCallback, useMemo, useEffect, useRef, useState } from "react"
 import {
-  getSmoothStepPath,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import {
   Position,
-  useStore,
   useReactFlow,
+  useStore,
+  type Edge,
+  type Node,
 } from "@xyflow/react"
-import { EDGES } from "@/constants"
+import { EDGES, INTERFACE } from "@/constants"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getPositionOnCanvas,
-  isParentNodeType,
 } from "@/utils"
-import {
-  IPoint,
-  pointsToSvgPath,
-  tryFindStraightPath,
-} from "../edges/Connection"
+import { IPoint, tryFindStraightPath } from "../edges/Connection"
 import {
   useDiagramStore,
   useMetadataStore,
@@ -25,16 +28,17 @@ import {
 import { useShallow } from "zustand/shallow"
 import {
   getEdgeMarkerStyles,
-  simplifySvgPath,
-  removeDuplicatePoints,
-  parseSvgPath,
   getMarkerSegmentPath,
   preserveOrthogonalEdgePoints,
+  getBendLaneBounds,
   normalizeOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
   getSideHandleIdForPosition,
+  getEndpointSideFromSegment,
+  getTargetConnectionPointPadding,
   isFreeformEdgeAnchor,
+  roundAnchorPointOutward,
   type FreeformEdgeAnchor,
 } from "@/utils/edgeUtils"
 import {
@@ -52,7 +56,6 @@ import {
   applyTerminalSegmentBend,
   getBendableSegments,
   computeToolbarPosition,
-  isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
 import {
   getMidSegment,
@@ -61,11 +64,17 @@ import {
 } from "@/utils/geometry/edgeLabelLayout"
 import { useEdgeState } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
+import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
 import {
-  useEdgeLineJumps,
-  usePublishEdgeGeometry,
-  buildEdgePath,
-} from "./useEdgeLineJumps"
+  resolveEdgeGeometryNodes,
+  createNearbySettledNodeGeometrySelector,
+  selectEdgeNodeSubscription,
+} from "@/utils/geometry/edgeNodeSubscription"
+import {
+  createRouteEntriesSelector,
+  selectedRoutesToRecord,
+} from "@/utils/geometry/edgeGeometrySubscriptions"
+import { recordEdgeRender } from "@/sync/perfCounters"
 
 interface UseStepPathEdgeProps {
   id: string
@@ -86,7 +95,12 @@ interface UseStepPathEdgeProps {
     targetAnchor?: FreeformEdgeAnchor
   }
   allowMidpointDragging?: boolean
-  enableStraightPath?: boolean
+  /**
+   * Canonical marker type while the target endpoint is over empty canvas.
+   * Interface bundles may use reduced socket variants while attached, but a
+   * detached edge has no bundle context and must render its full socket.
+   */
+  detachedTargetMarkerType?: string
 }
 
 export interface StepPathEdgeData {
@@ -113,6 +127,7 @@ type EndpointType = "source" | "target"
 type EndpointDragCommit = {
   endpoint: EndpointType
   nodeId: string
+  nodeType?: string
   handleId: string
   anchor: FreeformEdgeAnchor
   points: IPoint[]
@@ -122,12 +137,28 @@ type EndpointDragCommit = {
   targetPosition: Position
   sourceRect: Rect
   targetRect: Rect
-  directPoints: IPoint[] | null
+  committedPoints: IPoint[]
+  predictedEdge: Edge
 }
 
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
+
+const isInterfaceNodeType = (nodeType?: string): boolean =>
+  nodeType === "componentInterface" || nodeType === "deploymentInterface"
+
+const getInterfaceMarkerGeometry = (
+  nodeType: string | undefined,
+  rect: Rect | null
+) =>
+  rect && isInterfaceNodeType(nodeType)
+    ? {
+        // The interface SVG uses width / 2 as its circle radius. Match the
+        // rendered node exactly, including older 20px imported interfaces.
+        radius: rect.width / 2,
+      }
+    : undefined
 
 export const useStepPathEdge = ({
   id,
@@ -140,10 +171,13 @@ export const useStepPathEdge = ({
   targetY: reactFlowTargetY,
   sourcePosition: reactFlowSourcePosition,
   targetPosition: reactFlowTargetPosition,
+  sourceHandleId,
+  targetHandleId,
   data,
   allowMidpointDragging = true,
-  enableStraightPath = false,
+  detachedTargetMarkerType,
 }: UseStepPathEdgeProps) => {
+  recordEdgeRender()
   const draggingHandleRef = useRef<BendHandle | null>(null)
   const dragOffsetRef = useRef<IPoint>({ x: 0, y: 0 })
   const pathRef = useRef<SVGPathElement | null>(null)
@@ -155,22 +189,29 @@ export const useStepPathEdge = ({
   // of snapping all the way back to the pre-drag shape.
   const lastValidDragRef = useRef<IPoint[]>([])
   const endpointDragCommitRef = useRef<EndpointDragCommit | null>(null)
+  // Document-level listeners outlive the SVG element that started a gesture.
+  // Keep explicit cancel/teardown handles so pointercancel restores the edge and
+  // unmount always detaches listeners without trying to update unmounted state.
+  const activePointerCancelRef = useRef<(() => void) | null>(null)
+  const activePointerTeardownRef = useRef<(() => void) | null>(null)
 
   const isDiagramModifiable = useDiagramModifiable()
-  const zoom = useStore((state) => state.transform[2])
-  const isReconnecting = useMetadataStore(
-    (state) => state.reconnectPreviewEdgeId === id
+  const setLiveEdgeOverride = useMetadataStore(
+    (state) => state.setLiveEdgeOverride
+  )
+  // This edge renders a display-only endpoint projection while the Worker owns
+  // a newer solve. Neighbour scans deliberately remain on settled geometry, so
+  // only routes whose own preview reference changed render during interaction.
+  const centralRoute = useEdgeGeometryStore(
+    (state) => state.previewById[id] ?? state.geometryById[id]
   )
   const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
     useReactFlow()
 
   const [draggingHandle, setDraggingHandle] = useState<BendHandle | null>(null)
-  // While a bend handle is being dragged we render from this live geometry
-  // instead of the committed `activePoints`. Driving the drag through state
-  // (rather than mutating the SVG `d` directly) keeps the path AND everything
-  // derived from it — the bend handle, the toolbar, edge labels, and per-type
-  // decorators like the SFC transition bar — in sync on every move, so they
-  // follow the drag in real time instead of jumping only on release.
+  // Live drag geometry, rendered instead of the committed `activePoints`. Driving
+  // the drag through state (not by mutating the SVG `d`) keeps everything derived
+  // from the path — handle, toolbar, labels, per-type decorators — in sync per move.
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
     null
   )
@@ -178,37 +219,31 @@ export const useStepPathEdge = ({
     sourcePosition: Position
     targetPosition: Position
   } | null>(null)
+  // Render-visible counterpart to the pointer-up ref. The predicted central route
+  // is display state, so React must be able to observe when its endpoints change.
+  const [endpointPreviewCommit, setEndpointPreviewCommit] =
+    useState<EndpointDragCommit | null>(null)
+  const [isTargetEndpointDetached, setIsTargetEndpointDetached] =
+    useState(false)
+
+  useEffect(
+    () => () => {
+      activePointerTeardownRef.current?.()
+    },
+    []
+  )
 
   const { customPoints, setCustomPoints } = useEdgeState(data?.points)
   const sourceAnchor = data?.sourceAnchor
   const targetAnchor = data?.targetAnchor
   const shouldSubscribeToNodeGeometry =
     isFreeformEdgeAnchor(sourceAnchor) || isFreeformEdgeAnchor(targetAnchor)
-  const {
-    setEdges,
-    sourceNodePositionX,
-    sourceNodePositionY,
-    sourceNodeWidth,
-    sourceNodeHeight,
-    targetNodePositionX,
-    targetNodePositionY,
-    targetNodeWidth,
-    targetNodeHeight,
-  } = useDiagramStore(
+  const setEdges = useDiagramStore((state) => state.setEdges)
+  const endpointNodeGeometry = useDiagramStore(
     useShallow((state) => {
-      if (!shouldSubscribeToNodeGeometry) {
-        return {
-          setEdges: state.setEdges,
-          sourceNodePositionX: undefined,
-          sourceNodePositionY: undefined,
-          sourceNodeWidth: undefined,
-          sourceNodeHeight: undefined,
-          targetNodePositionX: undefined,
-          targetNodePositionY: undefined,
-          targetNodeWidth: undefined,
-          targetNodeHeight: undefined,
-        }
-      }
+      // Returning one stable primitive for automatic edges avoids allocating
+      // and shallow-comparing an eight-field object on every node drag.
+      if (!shouldSubscribeToNodeGeometry) return undefined
 
       const storeSourceNode = state.nodes.find((node) => node.id === source)
       const storeTargetNode = state.nodes.find((node) => node.id === target)
@@ -220,7 +255,6 @@ export const useStepPathEdge = ({
         : null
 
       return {
-        setEdges: state.setEdges,
         sourceNodePositionX: storeSourcePosition?.x,
         sourceNodePositionY: storeSourcePosition?.y,
         sourceNodeWidth:
@@ -236,16 +270,43 @@ export const useStepPathEdge = ({
       }
     })
   )
+  const {
+    sourceNodePositionX,
+    sourceNodePositionY,
+    sourceNodeWidth,
+    sourceNodeHeight,
+    targetNodePositionX,
+    targetNodePositionY,
+    targetNodeWidth,
+    targetNodeHeight,
+  } = endpointNodeGeometry ?? {}
 
+  const edgeMarkerStyles = getEdgeMarkerStyles(type)
   const {
     markerPadding,
-    markerEnd,
     markerStart,
     strokeDashArray,
     offset = 0,
-  } = getEdgeMarkerStyles(type)
+  } = edgeMarkerStyles
+  const markerEnd =
+    isTargetEndpointDetached && detachedTargetMarkerType
+      ? getEdgeMarkerStyles(detachedTargetMarkerType).markerEnd
+      : edgeMarkerStyles.markerEnd
   const padding = markerPadding ?? EDGES.MARKER_PADDING
-  const allNodes = getNodes()
+  // Only a pinned/freeform endpoint depends directly on every node update (its
+  // absolute point may follow a nested parent). Auto edges receive their route
+  // from the central geometry store; subscribing all of them to `state.nodes`
+  // made one drag re-render the entire edge layer. They still read a current,
+  // non-reactive snapshot whenever their own RF props/central route render, so
+  // nested endpoint interaction and label avoidance retain the full node set.
+  const subscribedNodes = useStore((state) =>
+    selectEdgeNodeSubscription(state.nodes, shouldSubscribeToNodeGeometry)
+  )
+  const allNodes = resolveEdgeGeometryNodes(
+    subscribedNodes,
+    getNodes,
+    shouldSubscribeToNodeGeometry
+  ) as Node[]
   const sourceNode =
     allNodes.find((node) => node.id === source) ?? getNode(source)
   const targetNode =
@@ -321,6 +382,10 @@ export const useStepPathEdge = ({
       targetNodeHeight,
     ]
   )
+  const committedTargetInterfaceGeometry = getInterfaceMarkerGeometry(
+    targetNode?.type,
+    targetRect
+  )
   const resolvedSourceAnchor = useMemo(
     () =>
       sourceRect && isFreeformEdgeAnchor(sourceAnchor)
@@ -340,165 +405,135 @@ export const useStepPathEdge = ({
   const sourceY = resolvedSourceAnchor?.point.y ?? reactFlowSourceY
   const targetX = resolvedTargetAnchor?.point.x ?? reactFlowTargetX
   const targetY = resolvedTargetAnchor?.point.y ?? reactFlowTargetY
-  const sourcePosition =
+  const baseSourcePosition =
     resolvedSourceAnchor?.position ?? reactFlowSourcePosition
-  const targetPosition =
+  const baseTargetPosition =
     resolvedTargetAnchor?.position ?? reactFlowTargetPosition
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
-  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
+  const targetConnectionPointPadding = getTargetConnectionPointPadding(
+    padding,
+    resolvedTargetAnchor !== null
+  )
 
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
-  const roundedSourceX = Math.round(sourceX)
-  const roundedSourceY = Math.round(sourceY)
-  const roundedTargetX = Math.round(targetX)
-  const roundedTargetY = Math.round(targetY)
+  const roundedSource = resolvedSourceAnchor
+    ? roundAnchorPointOutward(resolvedSourceAnchor.point, baseSourcePosition)
+    : { x: Math.round(sourceX), y: Math.round(sourceY) }
+  const roundedTarget = resolvedTargetAnchor
+    ? roundAnchorPointOutward(resolvedTargetAnchor.point, baseTargetPosition)
+    : { x: Math.round(targetX), y: Math.round(targetY) }
+  const roundedSourceX = roundedSource.x
+  const roundedSourceY = roundedSource.y
+  const roundedTargetX = roundedTarget.x
+  const roundedTargetY = roundedTarget.y
 
-  const adjustedTargetCoordinates = adjustTargetCoordinates(
+  const baseAdjustedTarget = adjustTargetCoordinates(
     roundedTargetX,
     roundedTargetY,
-    targetPosition,
+    baseTargetPosition,
     targetConnectionPointPadding
   )
-  const adjustedSourceCoordinates = adjustSourceCoordinates(
+  const baseAdjustedSource = adjustSourceCoordinates(
     roundedSourceX,
     roundedSourceY,
-    sourcePosition,
+    baseSourcePosition,
     sourceConnectionPointPadding
   )
-  const basePath = useMemo(() => {
-    if (!enableStraightPath) {
-      const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
-        sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
-        targetPosition,
-        borderRadius: EDGES.STEP_BORDER_RADIUS,
-        offset: 30,
-      })
-      return edgePath
-    }
 
-    const straightPathPoints = tryFindStraightPath(
-      {
-        position: { x: sourceAbsolutePosition.x, y: sourceAbsolutePosition.y },
-        width: sourceRect?.width ?? sourceNode?.width ?? 100,
-        height: sourceRect?.height ?? sourceNode?.height ?? 160,
-        direction: sourcePosition,
-      },
-      {
-        position: { x: targetAbsolutePosition.x, y: targetAbsolutePosition.y },
-        width: targetRect?.width ?? targetNode?.width ?? 100,
-        height: targetRect?.height ?? targetNode?.height ?? 160,
-        direction: targetPosition,
-      },
-      padding,
-      {
-        sourceX: roundedSourceX,
-        sourceY: roundedSourceY,
-        targetX: roundedTargetX,
-        targetY: roundedTargetY,
+  // The solver's committed route is the single source of truth for where this
+  // edge attaches: its first/last points ARE the adjusted anchors the auto-router
+  // chose, and its first/last segment directions ARE the sides. The handles, drag
+  // baseline and reconnection all read them from here. Re-deriving the anchor
+  // independently (as this hook once did) would let the interaction layer act on
+  // endpoints the user cannot see the moment the auto-router moves them — a bend
+  // dragged against a stale baseline is silently discarded. The `base*` values
+  // above are only the pre-first-solve fallback.
+  const routeEndpoints =
+    centralRoute && centralRoute.length >= 2 ? centralRoute : null
+  const sourcePosition = routeEndpoints
+    ? getEndpointSideFromSegment(routeEndpoints[0], routeEndpoints[1])
+    : baseSourcePosition
+  const targetPosition = routeEndpoints
+    ? getEndpointSideFromSegment(
+        routeEndpoints[routeEndpoints.length - 1],
+        routeEndpoints[routeEndpoints.length - 2]
+      )
+    : baseTargetPosition
+  const adjustedSourceCoordinates = routeEndpoints
+    ? { sourceX: routeEndpoints[0].x, sourceY: routeEndpoints[0].y }
+    : baseAdjustedSource
+  const adjustedTargetCoordinates = routeEndpoints
+    ? {
+        targetX: routeEndpoints[routeEndpoints.length - 1].x,
+        targetY: routeEndpoints[routeEndpoints.length - 1].y,
       }
-    )
-
-    if (straightPathPoints !== null) {
-      return pointsToSvgPath(straightPathPoints)
-    } else {
-      const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
-        sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
-        targetPosition,
-        borderRadius: EDGES.STEP_BORDER_RADIUS,
-        offset: 30,
-      })
-      return edgePath
-    }
-  }, [
-    enableStraightPath,
-    sourceAbsolutePosition,
-    targetAbsolutePosition,
-    sourceNode,
-    sourceRect?.width,
-    sourceRect?.height,
-    targetNode,
-    targetRect?.width,
-    targetRect?.height,
-    sourcePosition,
-    targetPosition,
-    roundedSourceX,
-    roundedSourceY,
-    roundedTargetX,
-    roundedTargetY,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    padding,
-  ])
-
-  const computedPoints = useMemo(() => {
-    const simplifiedPath = simplifySvgPath(basePath)
-    const parsed = parseSvgPath(simplifiedPath)
-    const result = removeDuplicatePoints(parsed)
-    return result
-  }, [basePath])
-
+    : baseAdjustedTarget
   const hasStoredManualPoints = Boolean(data?.points && data.points.length > 0)
   const hasLocalManualPoints = customPoints.length > 0
   const hasManualPoints = hasStoredManualPoints
+  // The central solver already merged this edge's manual points, so the route it
+  // hands back IS the active geometry; a 2-point route means "clean auto route"
+  // (nothing to persist), which the effect below acts on.
   const shouldPreferComputedPath =
-    computedPoints.length === 2 && !hasManualPoints
+    (centralRoute?.length ?? 0) === 2 && !hasManualPoints
 
-  const activePoints = useMemo(() => {
-    if (shouldPreferComputedPath) {
-      return computedPoints
-    }
+  const centralFallback = useMemo<IPoint[]>(
+    () => [
+      {
+        x: adjustedSourceCoordinates.sourceX,
+        y: adjustedSourceCoordinates.sourceY,
+      },
+      {
+        x: adjustedTargetCoordinates.targetX,
+        y: adjustedTargetCoordinates.targetY,
+      },
+    ],
+    [
+      adjustedSourceCoordinates.sourceX,
+      adjustedSourceCoordinates.sourceY,
+      adjustedTargetCoordinates.targetX,
+      adjustedTargetCoordinates.targetY,
+    ]
+  )
 
-    let points: IPoint[]
-    if (data?.points && data.points.length > 0) {
-      points = data.points
-    } else {
-      points = computedPoints
-    }
-
-    if (hasManualPoints && points.length >= 2) {
-      return preserveOrthogonalEdgePoints(
-        points,
-        {
-          x: adjustedSourceCoordinates.sourceX,
-          y: adjustedSourceCoordinates.sourceY,
-        },
-        {
-          x: adjustedTargetCoordinates.targetX,
-          y: adjustedTargetCoordinates.targetY,
-        },
-        sourcePosition,
-        targetPosition
-      )
-    }
-
-    return points
-  }, [
-    computedPoints,
-    data?.points,
-    hasManualPoints,
-    shouldPreferComputedPath,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    sourcePosition,
-    targetPosition,
-  ])
+  // The solver's route (already manual-merged) is the active geometry. Before
+  // the first solve lands, fall back to a straight endpoint line — never
+  // painted, since the solver commits in a pre-paint layout effect.
+  const activePoints = centralRoute ?? centralFallback
 
   useEffect(() => {
+    // The central store also carries this edge's bend/reconnect display preview.
+    // It is not committed diagram state: pointer-up below owns that write. In
+    // particular, a predicted reconnect of an already manual edge must not
+    // overwrite its old waypoints merely by hovering a node.
+    if (dragPreviewPoints !== null) return
+
+    // Pointer-up clears local preview state before the solver's layout-effect
+    // cleanup necessarily restores the stored edge route. Do not let that brief
+    // handoff frame write a cursor/predicted endpoint into manual waypoints. A
+    // committed manual route always begins/ends at the edge props' resolved stored
+    // anchors (`baseAdjusted*`); node-move reprojection still passes this gate.
+    if (
+      centralRoute &&
+      centralRoute.length >= 2 &&
+      (centralRoute[0].x !== baseAdjustedSource.sourceX ||
+        centralRoute[0].y !== baseAdjustedSource.sourceY ||
+        centralRoute[centralRoute.length - 1].x !==
+          baseAdjustedTarget.targetX ||
+        centralRoute[centralRoute.length - 1].y !== baseAdjustedTarget.targetY)
+    )
+      return
+
+    // This effect persists the SOLVER's (manual-merged, re-projected) route. Until the
+    // solver's first route lands, `activePoints` is `centralFallback` — a bare
+    // source→target straight line that is never painted. Re-projecting THAT would
+    // normalize it to the auto route and overwrite the user's stored manual bends before
+    // the solver ever preserved them. Wait for the real route: never persist the fallback.
+    if (!centralRoute) return
+
     if (shouldPreferComputedPath) {
       if (hasLocalManualPoints) {
         setCustomPoints([])
@@ -549,8 +584,14 @@ export const useStepPathEdge = ({
     )
   }, [
     activePoints,
+    baseAdjustedSource.sourceX,
+    baseAdjustedSource.sourceY,
+    baseAdjustedTarget.targetX,
+    baseAdjustedTarget.targetY,
+    centralRoute,
     customPoints,
     data?.points,
+    dragPreviewPoints,
     hasLocalManualPoints,
     hasManualPoints,
     hasStoredManualPoints,
@@ -570,20 +611,63 @@ export const useStepPathEdge = ({
   // the committed points. Only `renderPoints` drives the visible path and its
   // decorations; the persistence effect above stays keyed on `activePoints`
   // so a live preview never leaks into the store mid-drag.
-  const renderPoints = dragPreviewPoints ?? activePoints
+  const predictedCommit = endpointPreviewCommit
+  const isPredictedEndpointPreview =
+    dragPreviewPoints !== null && predictedCommit !== null
+  const centralPreviewMatchesCommit =
+    isPredictedEndpointPreview &&
+    centralRoute !== undefined &&
+    centralRoute.length >= 2 &&
+    (predictedCommit.endpoint === "source"
+      ? centralRoute[0].x === predictedCommit.sourceEndpoint.x &&
+        centralRoute[0].y === predictedCommit.sourceEndpoint.y
+      : centralRoute[centralRoute.length - 1].x ===
+          predictedCommit.targetEndpoint.x &&
+        centralRoute[centralRoute.length - 1].y ===
+          predictedCommit.targetEndpoint.y)
+  // A snapped endpoint reconnect is solved as its predicted committed edge. Until
+  // that layout-effect solve lands, keep the local cursor-following fallback only
+  // if it already has the committed endpoints; never flash the old stored route.
+  const renderPoints = centralPreviewMatchesCommit
+    ? centralRoute
+    : (dragPreviewPoints ?? activePoints)
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? sourcePosition
   const renderTargetPosition =
     dragPreviewPositions?.targetPosition ?? targetPosition
+  const targetInterfaceGeometry =
+    endpointPreviewCommit?.endpoint === "target"
+      ? (getInterfaceMarkerGeometry(
+          endpointPreviewCommit?.nodeType,
+          endpointPreviewCommit?.targetRect ?? null
+        ) ?? {
+          // A required marker may be dragged onto a non-interface target. It
+          // remains an edge marker and uses the current interface size there.
+          radius: INTERFACE.RADIUS,
+        })
+      : committedTargetInterfaceGeometry
 
   // Bridge over edges this one crosses. Computed from `renderPoints` so the
   // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
   // points change, so only its own scan re-runs — cheap). Suppressed only while
-  // reconnecting, where the preview is drawn separately by ReconnectConnectionLine.
-  // Publish this edge's real geometry so other edges bridge over it accurately;
-  // read others' geometry to bridge over them.
-  usePublishEdgeGeometry(id, renderPoints)
-  const lineJumps = useEdgeLineJumps(id, renderPoints, !isReconnecting)
+  // Other edges' geometry is read from the shared registry the solver populates.
+  const lineJumps = useEdgeLineJumps(id, renderPoints, true)
+
+  // While THIS edge is being bend/endpoint-dragged (`dragPreviewPoints` set),
+  // hand the live preview to the solver so every OTHER edge routes around it in
+  // real time. A layout effect, so the override lands before paint, with a
+  // cleanup that clears it the instant the drag ends or the edge unmounts. Only
+  // the dragged edge has non-null `dragPreviewPoints`, so only it ever publishes.
+  useLayoutEffect(() => {
+    if (dragPreviewPoints === null) return
+    setLiveEdgeOverride({
+      edgeId: id,
+      points: dragPreviewPoints,
+      edge: endpointPreviewCommit?.predictedEdge,
+      strategy: endpointPreviewCommit ? "predicted" : "authoritative",
+    })
+    return () => setLiveEdgeOverride(null)
+  }, [dragPreviewPoints, endpointPreviewCommit, id, setLiveEdgeOverride])
 
   const currentPath = useMemo(
     () => buildEdgePath(renderPoints, lineJumps),
@@ -599,68 +683,15 @@ export const useStepPathEdge = ({
     return `${currentPath} ${markerSegmentPath}`
   }, [currentPath, markerSegmentPath])
 
-  // A segment needs room for the handle (which grows with zoom past 1x) plus
-  // corner clearance on both sides. Using the handle's actual on-screen size
-  // keeps a grown handle from overflowing a short segment when zoomed in.
-  const minSegmentScreenLength =
-    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * Math.max(1, zoom) +
-    2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
-
   const bendHandles = useMemo(() => {
     if (!allowMidpointDragging) return []
-    return getBendableSegments(
-      renderPoints,
-      renderSourcePosition,
-      renderTargetPosition,
-      EDGES.BEND_HANDLE_SAFE_AREA_PX,
-      minSegmentScreenLength,
-      zoom
-    )
-  }, [
-    renderPoints,
-    allowMidpointDragging,
-    renderSourcePosition,
-    renderTargetPosition,
-    minSegmentScreenLength,
-    zoom,
-  ])
+    return getBendableSegments(renderPoints, EDGES.BEND_HANDLE_SAFE_AREA_PX)
+  }, [renderPoints, allowMidpointDragging])
 
-  const canEditEndpoint = useMemo(() => {
-    // Decided from the COMMITTED points, never the live drag preview, so an
-    // endpoint's editability can't flicker mid-bend (the preview can transiently
-    // drop below the handle threshold).
-    // Never strand an edge: if it is too short to offer a bend handle, the
-    // endpoints must stay draggable so the user can always reshape it by
-    // reconnecting.
-    const committedBendableCount = allowMidpointDragging
-      ? getBendableSegments(
-          activePoints,
-          sourcePosition,
-          targetPosition,
-          EDGES.BEND_HANDLE_SAFE_AREA_PX,
-          minSegmentScreenLength,
-          zoom
-        ).length
-      : 0
-    if (committedBendableCount === 0) return true
-
-    const canvasLength = activePoints.reduce((length, point, index) => {
-      if (index === 0) return length
-      const previous = activePoints[index - 1]
-      return (
-        length + Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y)
-      )
-    }, 0)
-
-    return isLengthEditableAtZoom(canvasLength, EDGES.BEND_MIN_LENGTH, zoom)
-  }, [
-    activePoints,
-    allowMidpointDragging,
-    sourcePosition,
-    targetPosition,
-    minSegmentScreenLength,
-    zoom,
-  ])
+  // Endpoints are ALWAYS draggable. Overlap of the two hit targets on a short edge
+  // is handled geometrically instead (each owns half the run between them, see
+  // getEndpointRun), so no minimum-length gate is needed.
+  const canEditEndpoint = true
 
   // The mid-segment midpoint + orientation, derived synchronously and purely
   // from the polyline (no DOM measurement). Computed from renderPoints (pre
@@ -698,8 +729,7 @@ export const useStepPathEdge = ({
   const LABEL_REACH = 220
 
   // Other edges near the edge, so a label on any arm can avoid crossing them.
-  const geometryById = useEdgeGeometryStore((state) => state.geometryById)
-  const neighborGeometry = useMemo(() => {
+  const labelNeighborSearch = useMemo(() => {
     const center = {
       x: (edgeBounds.minX + edgeBounds.maxX) / 2,
       y: (edgeBounds.minY + edgeBounds.maxY) / 2,
@@ -711,38 +741,67 @@ export const useStepPathEdge = ({
       ) /
         2 +
       LABEL_REACH
-    return collectNeighborPolylines(geometryById, id, center, radius)
-  }, [geometryById, id, edgeBounds])
+    return {
+      center,
+      radius,
+      query: {
+        x: center.x - radius,
+        y: center.y - radius,
+        width: radius * 2,
+        height: radius * 2,
+      },
+    }
+  }, [edgeBounds])
+  const selectNeighborRoutes = useMemo(
+    () => createRouteEntriesSelector(labelNeighborSearch.query, id),
+    [labelNeighborSearch.query, id]
+  )
+  const selectedNeighborRouteEntries = useEdgeGeometryStore(
+    useShallow((state) => selectNeighborRoutes(state.geometryById))
+  )
+  const neighborGeometry = useMemo(() => {
+    return collectNeighborPolylines(
+      selectedRoutesToRecord(selectedNeighborRouteEntries),
+      id,
+      labelNeighborSearch.center,
+      labelNeighborSearch.radius
+    )
+  }, [selectedNeighborRouteEntries, id, labelNeighborSearch])
 
-  // EVERY node the edge routes near (not only source/target), so the label
-  // never lands on an unrelated node's body.
+  // EVERY node the edge routes near (not only source/target), so the label never
+  // lands on an unrelated node's body. Subscribe to the primitive geometry of
+  // ONLY nodes in this label corridor: a far-away drag keeps the selector
+  // shallow-equal, while a node entering/moving here still updates the label.
+  const selectNearbySettledNodes = useMemo(
+    () => createNearbySettledNodeGeometrySelector(edgeBounds, LABEL_REACH),
+    [edgeBounds]
+  )
+  const nearbyNodeGeometry = useEdgeGeometryStore(
+    useShallow((state) => selectNearbySettledNodes(state.settledNodeGeometry))
+  )
   const nearbyNodeRects = useMemo<Rect[]>(() => {
-    const q = {
-      x: edgeBounds.minX - LABEL_REACH,
-      y: edgeBounds.minY - LABEL_REACH,
-      r: edgeBounds.maxX + LABEL_REACH,
-      b: edgeBounds.maxY + LABEL_REACH,
-    }
     const rects: Rect[] = []
-    for (const node of allNodes) {
-      const w = node.width ?? 0
-      const h = node.height ?? 0
-      if (!w || !h) continue
-      // Container nodes (pools, lanes, subprocesses, packages, …) are
-      // backgrounds that labels and edges legitimately overlay — never treat
-      // them as obstacles, or a label inside a pool can never be placed.
-      if (isParentNodeType(node.type)) continue
-      const pos = getPositionOnCanvas(node, allNodes)
-      if (pos.x < q.r && pos.x + w > q.x && pos.y < q.b && pos.y + h > q.y) {
-        rects.push({ x: pos.x, y: pos.y, width: w, height: h })
-      }
-    }
+    for (let index = 0; index < nearbyNodeGeometry.length; index += 4)
+      rects.push({
+        x: nearbyNodeGeometry[index],
+        y: nearbyNodeGeometry[index + 1],
+        width: nearbyNodeGeometry[index + 2],
+        height: nearbyNodeGeometry[index + 3],
+      })
     return rects
-  }, [allNodes, edgeBounds])
+  }, [nearbyNodeGeometry])
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent, handle: BendHandle) => {
-      if (!allowMidpointDragging) return
+      if (!allowMidpointDragging || !event.isPrimary || event.button !== 0)
+        return
+
+      event.preventDefault()
+      event.stopPropagation()
+      activePointerCancelRef.current?.()
+      const pointerId = event.pointerId
+      const pointerTarget = event.currentTarget
+      pointerTarget.setPointerCapture(pointerId)
 
       draggingHandleRef.current = handle
       setDraggingHandle(handle)
@@ -784,7 +843,21 @@ export const useStepPathEdge = ({
         y: adjustedTargetCoordinates.targetY,
       }
 
+      // The one degree of freedom this drag has, and how far it may travel. The
+      // lane is clamped to this on every move, so the released geometry is legal
+      // by construction and nothing has to be vetoed (and snapped back) later.
+      const laneBounds = getBendLaneBounds(
+        dragBaseline,
+        handle.segmentIndex,
+        handle.orientation,
+        dragSourcePoint,
+        dragTargetPoint,
+        sourcePosition,
+        targetPosition
+      )
+
       const handlePointerMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
         const activeHandle = draggingHandleRef.current
         if (!activeHandle) return
 
@@ -797,13 +870,36 @@ export const useStepPathEdge = ({
         const rawY = flowPos.y - dragOffsetRef.current.y
 
         const grid = EDGES.BEND_SNAP_GRID_PX
-        const snappedX = Math.round(rawX / grid) * grid
-        const snappedY = Math.round(rawY / grid) * grid
+        // Snap to the grid first, then clamp into the legal interval: the lane
+        // tracks the cursor and comes to rest against the wall.
+        // Snap the DELTA from the lane the user grabbed, not the absolute canvas
+        // coordinate. Coordinated ports frequently land between grid lines; absolute
+        // snapping moved such an edge on the very first pointermove even when the
+        // cursor had not changed its lane, which then needlessly re-optimized every
+        // automatic neighbour.
+        const toLane = (value: number, origin: number): number =>
+          Math.min(
+            Math.max(
+              origin + Math.round((value - origin) / grid) * grid,
+              laneBounds.min
+            ),
+            laneBounds.max
+          )
 
         const delta: IPoint =
           activeHandle.orientation === "H"
-            ? { x: 0, y: snappedY - activeHandle.position.y }
-            : { x: snappedX - activeHandle.position.x, y: 0 }
+            ? {
+                x: 0,
+                y:
+                  toLane(rawY, activeHandle.position.y) -
+                  activeHandle.position.y,
+              }
+            : {
+                x:
+                  toLane(rawX, activeHandle.position.x) -
+                  activeHandle.position.x,
+                y: 0,
+              }
 
         const basePoints = dragPointsRef.current
         const newPoints =
@@ -843,7 +939,33 @@ export const useStepPathEdge = ({
         setDragPreviewPoints(newPoints)
       }
 
-      const handlePointerUp = () => {
+      const ownerDocument = event.currentTarget.ownerDocument
+      const teardownPointerGesture = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (pointerTarget.hasPointerCapture(pointerId))
+          pointerTarget.releasePointerCapture(pointerId)
+        if (activePointerTeardownRef.current === teardownPointerGesture) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const restoreWithoutCommit = () => {
+        setDragPreviewPoints(null)
+        draggingHandleRef.current = null
+        setDraggingHandle(null)
+      }
+
+      const handlePointerCancel = (e?: PointerEvent) => {
+        if (e && e.pointerId !== pointerId) return
+        restoreWithoutCommit()
+        teardownPointerGesture()
+      }
+
+      const handlePointerUp = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
         // Drop the live preview; the render falls back to the committed points
         // (or to the points we commit just below). Both updates batch into one
         // re-render, so there is no intermediate flash of the pre-drag shape.
@@ -879,21 +1001,49 @@ export const useStepPathEdge = ({
 
           setCustomPoints(normalizedPoints)
           setEdges((eds) =>
-            eds.map((e) =>
-              e.id === id
-                ? { ...e, data: { ...e.data, points: normalizedPoints } }
-                : e
-            )
+            eds.map((e) => {
+              if (e.id !== id) return e
+
+              const nextData: Record<string, unknown> = {
+                ...e.data,
+                points: normalizedPoints,
+              }
+              // A bend customizes the complete visible route, including the
+              // attachment sites the joint solver chose. Persist those sites as
+              // pins when they were still automatic; otherwise the manual points
+              // would be re-projected onto the edge's older stored handles on
+              // release and the shape could jump at either end.
+              if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+                const pinnedSource = getEdgeAnchorFromPoint(
+                  sourceNode?.type,
+                  sourcePoint,
+                  sourceRect
+                )
+                if (pinnedSource) nextData.sourceAnchor = pinnedSource
+              }
+              if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+                const pinnedTarget = getEdgeAnchorFromPoint(
+                  targetNode?.type,
+                  targetPoint,
+                  targetRect
+                )
+                if (pinnedTarget) nextData.targetAnchor = pinnedTarget
+              }
+
+              return { ...e, data: nextData }
+            })
           )
         }
         draggingHandleRef.current = null
         setDraggingHandle(null)
-        document.removeEventListener("pointermove", handlePointerMove)
-        document.removeEventListener("pointerup", handlePointerUp)
+        teardownPointerGesture()
       }
 
-      document.addEventListener("pointermove", handlePointerMove)
-      document.addEventListener("pointerup", handlePointerUp, { once: true })
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardownPointerGesture
+      ownerDocument.addEventListener("pointermove", handlePointerMove)
+      ownerDocument.addEventListener("pointerup", handlePointerUp)
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
     [
       activePoints,
@@ -908,6 +1058,12 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
+      sourceAnchor,
+      sourceNode?.type,
+      sourceRect,
+      targetAnchor,
+      targetNode?.type,
+      targetRect,
     ]
   )
 
@@ -915,9 +1071,16 @@ export const useStepPathEdge = ({
 
   const handleEndpointPointerDown = useCallback(
     (event: React.PointerEvent<SVGRectElement>, endpoint: EndpointType) => {
+      if (!event.isPrimary || event.button !== 0) return
       event.preventDefault()
       event.stopPropagation()
+      activePointerCancelRef.current?.()
+      const pointerId = event.pointerId
+      const pointerTarget = event.currentTarget
+      pointerTarget.setPointerCapture(pointerId)
       endpointDragCommitRef.current = null
+      setEndpointPreviewCommit(null)
+      setIsTargetEndpointDetached(false)
 
       const ownerDocument = event.currentTarget.ownerDocument
       const dragBaseline = [...activePoints]
@@ -978,11 +1141,15 @@ export const useStepPathEdge = ({
             y: movingEndpoint.sourceY,
           }
         } else {
+          const targetPreviewPadding = getTargetConnectionPointPadding(
+            padding,
+            true
+          )
           const movingEndpoint = adjustTargetCoordinates(
             resolvedAnchor.point.x,
             resolvedAnchor.point.y,
             resolvedAnchor.position,
-            0
+            targetPreviewPadding
           )
           targetEndpoint = {
             x: movingEndpoint.targetX,
@@ -1028,10 +1195,45 @@ export const useStepPathEdge = ({
           nextSourcePosition,
           nextTargetPosition
         )
+        const committedPoints = normalizeOrthogonalEdgePoints(
+          preservedPoints,
+          sourceEndpoint,
+          targetEndpoint,
+          nextSourcePosition,
+          nextTargetPosition
+        )
+        const predictedData = {
+          ...data,
+          // Endpoint pinning and bend authorship are independent constraints. A
+          // previously automatic edge stays automatic under its predicted pins;
+          // only an already-authored route carries waypoints through reconnect.
+          points: hasManualPoints ? committedPoints : [],
+        }
+        if (endpoint === "source") {
+          predictedData.sourceAnchor = anchor
+        } else {
+          predictedData.targetAnchor = anchor
+        }
+        const predictedEdge: Edge = {
+          id,
+          source: endpoint === "source" ? nodeOnTop.id : source,
+          target: endpoint === "target" ? nodeOnTop.id : target,
+          sourceHandle:
+            endpoint === "source"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : sourceHandleId,
+          targetHandle:
+            endpoint === "target"
+              ? getSideHandleIdForPosition(resolvedAnchor.position)
+              : targetHandleId,
+          type,
+          data: predictedData,
+        }
 
         return {
           endpoint,
           nodeId: nodeOnTop.id,
+          nodeType: nodeOnTop.type,
           handleId: getSideHandleIdForPosition(resolvedAnchor.position),
           anchor,
           sourceEndpoint,
@@ -1040,15 +1242,21 @@ export const useStepPathEdge = ({
           targetPosition: nextTargetPosition,
           sourceRect: nextSourceRect,
           targetRect: nextTargetRect,
-          directPoints,
-          points: directPoints ?? preservedPoints,
+          committedPoints,
+          points: hasManualPoints
+            ? committedPoints
+            : (directPoints ?? committedPoints),
+          predictedEdge,
         }
       }
 
       const handlePointerMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
         const commit = resolveDragCommit(e.clientX, e.clientY)
         endpointDragCommitRef.current = commit
+        setEndpointPreviewCommit(commit)
         if (commit) {
+          if (endpoint === "target") setIsTargetEndpointDetached(false)
           setDragPreviewPoints(commit.points)
           setDragPreviewPositions({
             sourcePosition: commit.sourcePosition,
@@ -1061,6 +1269,7 @@ export const useStepPathEdge = ({
         // edge. No commit is set, so releasing here reverts (no reconnect).
         const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         const movingIsSource = endpoint === "source"
+        setIsTargetEndpointDetached(!movingIsSource)
         const fixedPoint = movingIsSource
           ? currentTargetEndpoint
           : currentSourceEndpoint
@@ -1097,27 +1306,55 @@ export const useStepPathEdge = ({
         })
       }
 
-      const handlePointerUp = () => {
-        const commit = endpointDragCommitRef.current
+      const teardownPointerGesture = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (pointerTarget.hasPointerCapture(pointerId))
+          pointerTarget.releasePointerCapture(pointerId)
+        if (activePointerTeardownRef.current === teardownPointerGesture) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const restoreWithoutCommit = (clearLiveOverride = true) => {
         endpointDragCommitRef.current = null
+        setEndpointPreviewCommit(null)
         setDragPreviewPoints(null)
         setDragPreviewPositions(null)
+        setIsTargetEndpointDetached(false)
+        // Do not wait for the preview-publishing layout effect to clean up on a
+        // later render. The central solver subscribes to this shared override;
+        // clearing it synchronously makes pointer-up/cancel restore committed
+        // geometry in the same state transition as the local preview.
+        if (clearLiveOverride) setLiveEdgeOverride(null)
+      }
+
+      const handlePointerCancel = (e?: PointerEvent) => {
+        if (e && e.pointerId !== pointerId) return
+        restoreWithoutCommit()
+        teardownPointerGesture()
+      }
+
+      const handlePointerUp = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
+        const commit = endpointDragCommitRef.current
+        // On a successful reconnect, replace the controlled edge before clearing
+        // the override. The solver can then distinguish commit from cancellation
+        // by edge identity and carry the authored preview until the exact release
+        // generation lands.
+        restoreWithoutCommit(commit === null)
 
         if (commit) {
+          // Reconnecting an endpoint does not author bend topology. Preserve an
+          // existing manual route, but keep a previously automatic edge automatic
+          // so the joint solver can continue optimizing it under the new pins.
           const normalizedPoints = hasManualPoints
-            ? normalizeOrthogonalEdgePoints(
-                commit.points,
-                commit.sourceEndpoint,
-                commit.targetEndpoint,
-                commit.sourcePosition,
-                commit.targetPosition
-              )
+            ? commit.committedPoints
             : null
-          const shouldClearManualPoints = commit.directPoints !== null
 
-          if (shouldClearManualPoints) {
-            setCustomPoints([])
-          } else if (normalizedPoints) {
+          if (normalizedPoints) {
             setCustomPoints(normalizedPoints)
           }
 
@@ -1133,7 +1370,7 @@ export const useStepPathEdge = ({
               } else {
                 nextData.targetAnchor = commit.anchor
               }
-              if (shouldClearManualPoints) {
+              if (!hasManualPoints) {
                 nextData.points = []
               } else if (normalizedPoints) {
                 nextData.points = normalizedPoints
@@ -1156,16 +1393,17 @@ export const useStepPathEdge = ({
                   }
             })
           )
+          setLiveEdgeOverride(null)
         }
 
-        ownerDocument.removeEventListener("pointermove", handlePointerMove)
-        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        teardownPointerGesture()
       }
 
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardownPointerGesture
       ownerDocument.addEventListener("pointermove", handlePointerMove)
-      ownerDocument.addEventListener("pointerup", handlePointerUp, {
-        once: true,
-      })
+      ownerDocument.addEventListener("pointerup", handlePointerUp)
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
     [
       activePoints,
@@ -1173,18 +1411,26 @@ export const useStepPathEdge = ({
       adjustedSourceCoordinates.sourceY,
       adjustedTargetCoordinates.targetX,
       adjustedTargetCoordinates.targetY,
+      data,
       findFreeformEndpointNode,
       getIntersectingNodes,
       getNodeRect,
       hasManualPoints,
       id,
+      padding,
       screenToFlowPosition,
       setCustomPoints,
       setEdges,
+      setLiveEdgeOverride,
+      source,
+      sourceHandleId,
       sourceRect,
       sourcePosition,
+      target,
+      targetHandleId,
       targetRect,
       targetPosition,
+      type,
     ]
   )
 
@@ -1223,7 +1469,6 @@ export const useStepPathEdge = ({
     // The midpoint is known synchronously on first render, so there is no
     // pre-measurement straight-line flash to fade past — always true.
     hasInitialCalculation: true,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -1236,5 +1481,6 @@ export const useStepPathEdge = ({
     canEditEndpoint,
     sourcePosition: renderSourcePosition,
     targetPosition: renderTargetPosition,
+    targetInterfaceGeometry,
   }
 }

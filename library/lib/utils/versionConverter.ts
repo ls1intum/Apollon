@@ -3,12 +3,12 @@
  * every entry point has to accept `any` until it's narrowed inline. Replacing
  * these with proper types would require defining the full v3/v2 envelope and
  * isn't in scope here. */
-import { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
+import type { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassStereotype } from "../types/nodes/enums"
-import { IPoint } from "../edges/Connection"
-import {
+import type { IPoint } from "../edges/Connection"
+import type {
   V3DiagramFormat,
   V3UMLModel,
   V3UMLElement,
@@ -19,9 +19,9 @@ import {
 } from "./v3Typings"
 import { log } from "../logger"
 import { applyTags, taggableElements } from "./tagUtils"
-import { INTERFACE } from "../constants"
+import { INTERFACE } from "./geometry/routingConstants"
 
-import {
+import type {
   ClassNodeProps,
   ObjectNodeProps,
   CommunicationObjectNodeProps,
@@ -35,7 +35,7 @@ import {
   BPMNEventProps,
   ReachabilityGraphMarkingProps,
 } from "../types/nodes/NodeProps"
-import { MessageData } from "@/edges/EdgeProps"
+import type { MessageData } from "@/edges/EdgeProps"
 
 function normalizeImportedInterfaceGeometry(
   nodeType: string,
@@ -906,8 +906,8 @@ export function isV4Format(data: any): data is UMLModel {
       (edge: unknown) =>
         edge != null &&
         typeof edge === "object" &&
-        (edge as { data?: unknown }).data != null &&
-        typeof (edge as { data: unknown }).data === "object"
+        ((edge as { data?: unknown }).data == null ||
+          typeof (edge as { data: unknown }).data === "object")
     )
   )
 }
@@ -965,12 +965,57 @@ export function normalizeElementTags(model: UMLModel): UMLModel {
 }
 
 /**
+ * Remove React Flow interaction state that older exports and captured fixtures
+ * could persist. Imported models should contain only durable diagram data, not
+ * the selection or drag state of the editor that produced the file.
+ */
+function stripRuntimeInteractionState(model: UMLModel): UMLModel {
+  let changed = false
+
+  const nodes = model.nodes.map((node) => {
+    if (
+      !("selected" in node) &&
+      !("dragging" in node) &&
+      !("resizing" in node)
+    ) {
+      return node
+    }
+
+    changed = true
+    const persistentNode = { ...node } as ApollonNode & {
+      selected?: unknown
+      dragging?: unknown
+      resizing?: unknown
+    }
+    delete persistentNode.selected
+    delete persistentNode.dragging
+    delete persistentNode.resizing
+    return persistentNode
+  })
+
+  const edges = model.edges.map((edge) => {
+    if (!("selected" in edge)) return edge
+
+    changed = true
+    const persistentEdge = { ...edge } as ApollonEdge & {
+      selected?: unknown
+    }
+    delete persistentEdge.selected
+    return persistentEdge
+  })
+
+  return changed ? { ...model, nodes, edges } : model
+}
+
+/**
  * The single normalization pass every incoming model must pass through, whatever
  * its origin. Keep it idempotent and version-agnostic so already-saved `4.0.0`
  * files are repaired on load rather than gated behind a version check.
  */
 export function normalizeModel(model: UMLModel): UMLModel {
-  return normalizeElementTags(normalizeClassStereotypes(model))
+  return stripRuntimeInteractionState(
+    normalizeElementTags(normalizeClassStereotypes(model))
+  )
 }
 
 /**

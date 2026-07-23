@@ -3,14 +3,35 @@ import { Position } from "@xyflow/react"
 import {
   applyInnerSegmentBend,
   applyTerminalSegmentBend,
+  collapseCollinearPoints,
   getBendHandlePosition,
   getBendableSegments,
   getSegmentKind,
-  isLengthEditableAtZoom,
 } from "@/utils/geometry/bendHandles"
+import { IPoint } from "@/edges/Connection"
 import { EDGES } from "@/constants"
 
 const stubLength = 30
+
+const isOrthogonal = (points: IPoint[]): boolean =>
+  points.every(
+    (p, i) => i === 0 || p.x === points[i - 1].x || p.y === points[i - 1].y
+  )
+
+const hasZeroLengthSegment = (points: IPoint[]): boolean =>
+  points.some(
+    (p, i) => i > 0 && p.x === points[i - 1].x && p.y === points[i - 1].y
+  )
+
+/**
+ * A path with no collinear no-op and no overshoot "spike": collapsing collinear
+ * runs must not shrink it (a collinear jog would vanish), and it must be free of
+ * zero-length segments (a spike doubles back through a repeated point).
+ */
+const isCleanBend = (points: IPoint[]): boolean =>
+  isOrthogonal(points) &&
+  !hasZeroLengthSegment(points) &&
+  collapseCollinearPoints(points).length === points.length
 
 // ---------------------------------------------------------------------------
 // bend handle utilities
@@ -23,19 +44,13 @@ describe("bend handle utilities", () => {
     expect(getSegmentKind(1, 4)).toBe("inner")
   })
 
-  it("offers a bend handle on a segment with enough on-screen room", () => {
+  it("offers a bend handle on a segment with room", () => {
     const points = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
     ]
 
-    const handles = getBendableSegments(
-      points,
-      Position.Right,
-      Position.Left,
-      stubLength,
-      100
-    )
+    const handles = getBendableSegments(points, stubLength)
 
     expect(handles).toHaveLength(1)
     expect(handles[0].segmentIndex).toBe(0)
@@ -44,117 +59,136 @@ describe("bend handle utilities", () => {
     expect(handles[0].position).toEqual({ x: 100, y: 0 })
   })
 
-  it("treats the minimum edit length as zoom-aware screen length", () => {
-    expect(isLengthEditableAtZoom(90, 100, 1)).toBe(false)
-    expect(isLengthEditableAtZoom(90, 100, 2)).toBe(true)
-    expect(isLengthEditableAtZoom(100, 100, 1)).toBe(true)
-  })
-
-  it("reveals a bend handle on a short segment once zoom gives it enough on-screen length", () => {
-    // 40px bendable segment (no safe area here): below the 54px on-screen
-    // budget at 1x, above it at 2x. Availability is judged on the *on-screen*
-    // length, so zooming in reveals handles and never hides them.
-    const points = [
+  it("gives a lone segment a handle at any length; the endpoint grips are sized separately", () => {
+    // A lone single segment (2-point edge) ALWAYS gets a bend handle — it bends cleanly at
+    // any length. Handles are never traded away for endpoint room: the endpoint grips are
+    // sized independently (GenericEdge floors them), so a short edge shows BOTH grips and
+    // the bend handle rather than one at the cost of the other.
+    const shortLone = [
       { x: 0, y: 0 },
-      { x: 40, y: 0 },
+      { x: 12, y: 0 },
     ]
-    const minScreen = 54
-
     expect(
-      getBendableSegments(
-        points,
-        Position.Right,
-        Position.Left,
-        0,
-        minScreen,
-        1
-      )
-    ).toHaveLength(0)
-    expect(
-      getBendableSegments(
-        points,
-        Position.Right,
-        Position.Left,
-        0,
-        minScreen,
-        2
-      )
+      getBendableSegments(shortLone, EDGES.BEND_HANDLE_SAFE_AREA_PX)
     ).toHaveLength(1)
-  })
 
-  it("uses the documented on-screen budget at the exact boundary", () => {
-    // The budget is the handle's long axis plus clearance on both sides.
-    const budget =
-      EDGES.BEND_HANDLE_SCREEN_LENGTH_PX +
-      2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX
-    expect(EDGES.BEND_HANDLE_MIN_SEGMENT_SCREEN_PX).toBe(budget)
-    expect(budget).toBe(54)
-
-    const seg = (len: number) => [
+    const stub = [
       { x: 0, y: 0 },
-      { x: len, y: 0 },
+      { x: EDGES.STUB_LENGTH, y: 0 },
     ]
-    // With no safe area, exactly at the budget (54px on screen at 1x) a handle
-    // is offered; one pixel short, it is not.
     expect(
-      getBendableSegments(
-        seg(budget),
-        Position.Right,
-        Position.Left,
-        0,
-        budget,
-        1
-      )
+      getBendableSegments(stub, EDGES.BEND_HANDLE_SAFE_AREA_PX)
     ).toHaveLength(1)
+
+    // A long lone segment centres its handle between the two endpoints.
+    const longLone = [
+      { x: 0, y: 0 },
+      { x: 120, y: 0 },
+    ]
+    const [longHandle] = getBendableSegments(
+      longLone,
+      EDGES.BEND_HANDLE_SAFE_AREA_PX
+    )
+    expect(longHandle).toBeDefined()
+    expect(longHandle.position).toEqual({ x: 60, y: 0 })
+
+    // Inner segments always get a handle regardless of length; only terminal stubs are
+    // gated (below). Here the 8px inner keeps its handle alongside the long inner.
+    const shortTerminals = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 }, // 10px source terminal — below the jog floor, withheld
+      { x: 10, y: 8 }, // 8px inner — kept
+      { x: 300, y: 8 }, // long inner — kept
+      { x: 300, y: 20 }, // 12px target terminal — below the jog floor, withheld
+    ]
     expect(
-      getBendableSegments(
-        seg(budget - 1),
-        Position.Right,
-        Position.Left,
-        0,
-        budget,
-        1
+      getBendableSegments(shortTerminals, EDGES.BEND_HANDLE_SAFE_AREA_PX).map(
+        (h) => h.kind
       )
-    ).toHaveLength(0)
+    ).toEqual(["inner", "inner"])
   })
 
-  it("keeps bend handles out of the node safe area and places them past it", () => {
-    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX // 25
-    // A source-terminal segment from the node (x=0) to the first bend (x=200).
+  it("gates a terminal handle at the jog floor: kept at the floor, withheld below it", () => {
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
+    // A terminal stub only carries a bend handle when it is long enough to bend into a
+    // non-degenerate S-jog (MIN_STUB_LENGTH + armFloor). This is a geometry limit, not a
+    // space trade-off with the endpoints. AT the floor (20px) the handle is kept.
+    const atFloor = [
+      { x: 0, y: 0 },
+      { x: 20, y: 0 }, // 20px source terminal — bends cleanly
+      { x: 20, y: 200 }, // long inner
+      { x: 300, y: 200 }, // 280px target terminal
+    ]
+    expect(getBendableSegments(atFloor, safeArea).map((h) => h.kind)).toEqual([
+      "source-terminal",
+      "inner",
+      "target-terminal",
+    ])
+
+    // BELOW the floor (15px) the stub degenerates — the drag would snap the edge straight
+    // — so only that terminal's handle is withheld.
+    const belowFloor = [
+      { x: 0, y: 0 },
+      { x: 15, y: 0 },
+      { x: 15, y: 200 },
+      { x: 300, y: 200 },
+    ]
+    expect(
+      getBendableSegments(belowFloor, safeArea).map((h) => h.kind)
+    ).toEqual(["inner", "target-terminal"])
+
+    // A default 30px terminal stub is well past the floor — kept (it used to be wrongly
+    // withheld for "endpoint room"; endpoints no longer need it).
+    const defaultStub = [
+      { x: 440, y: -265 },
+      { x: 440, y: -405 }, // 140px source terminal
+      { x: 495, y: -405 }, // 55px inner
+      { x: 495, y: -345 }, // 60px inner
+      { x: 525, y: -345 }, // 30px target terminal — kept
+    ]
+    expect(
+      getBendableSegments(defaultStub, safeArea).map((h) => h.kind)
+    ).toEqual(["source-terminal", "inner", "inner", "target-terminal"])
+  })
+
+  it("reports the room each handle has, so the renderer can size it", () => {
     const points = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
     ]
-    // Single segment = both terminals, so both ends lose the safe area:
-    // bendable = 200 - 2*25 = 150; handle centred over [25, 175] → x = 100.
-    const [handle] = getBendableSegments(
-      points,
-      Position.Right,
-      Position.Left,
-      safeArea,
-      54,
-      1
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
+
+    const [roomy] = getBendableSegments(points, safeArea)
+    // One segment is both terminals, so it gives up the safe area at both ends, and the
+    // reported room is what is left BETWEEN the two endpoint reserves.
+    expect(roomy.bendableLength).toBe(200 - 2 * safeArea)
+
+    // An INNER segment reserves nothing for endpoints (its ends are corners, not
+    // endpoints), so it reports its own full length and sits at its midpoint.
+    const withInner = [
+      { x: 0, y: 0 },
+      { x: 0, y: 100 }, // long source terminal
+      { x: 40, y: 100 }, // 40px inner segment
+      { x: 40, y: 200 }, // long target terminal
+    ]
+    const inner = getBendableSegments(withInner, safeArea).find(
+      (h) => h.kind === "inner"
     )
-    expect(handle).toBeDefined()
+    expect(inner?.bendableLength).toBe(40)
+    expect(inner?.position).toEqual({ x: 20, y: 100 })
+  })
+
+  it("keeps a handle past the node safe area when the segment has room for it", () => {
+    const safeArea = EDGES.BEND_HANDLE_SAFE_AREA_PX
+    const points = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+    ]
+    // bendable = 200 - 2*25 = 150; handle centred over [25, 175] → x = 100.
+    const [handle] = getBendableSegments(points, safeArea)
     expect(handle.position.x).toBeGreaterThanOrEqual(safeArea)
     expect(handle.position.x).toBeLessThanOrEqual(200 - safeArea)
     expect(handle.position).toEqual({ x: 100, y: 0 })
-
-    // A segment that is entirely safe area (<= 2*safeArea) offers no handle.
-    const allSafe = [
-      { x: 0, y: 0 },
-      { x: 2 * safeArea, y: 0 },
-    ]
-    expect(
-      getBendableSegments(
-        allSafe,
-        Position.Right,
-        Position.Left,
-        safeArea,
-        54,
-        10
-      )
-    ).toHaveLength(0)
   })
 
   it("positions a target terminal handle using the stub exit", () => {
@@ -327,5 +361,195 @@ describe("bend handle utilities", () => {
       { x: 370, y: 200 },
       { x: 400, y: 200 },
     ])
+  })
+
+  // A terminal segment exactly STUB_LENGTH long has its corner sitting right on
+  // the stub exit. Jogging at the stub exit then produces a zero-length move
+  // (collinear no-op when dragged "in") or an overshoot (spike when dragged
+  // "out"). These guard the clean S-jog that reopens room on both sides.
+  describe("bending a stub-length terminal segment (corner == stub exit)", () => {
+    // Repro geometry: target arrowhead pinned to a Left port at (525,-345); the
+    // 30px terminal stub (495,-345)->(525,-345) is the segment being dragged.
+    const targetPath: IPoint[] = [
+      { x: 440, y: -265 },
+      { x: 440, y: -405 },
+      { x: 495, y: -405 },
+      { x: 495, y: -345 },
+      { x: 525, y: -345 },
+    ]
+    const targetHandle = {
+      segmentIndex: 3,
+      position: { x: 510, y: -345 },
+      orientation: "H" as const,
+      kind: "target-terminal" as const,
+      bendableLength: 30,
+    }
+
+    it("target terminal (H, Left port) bends cleanly dragging away from the endpoint", () => {
+      const result = applyTerminalSegmentBend(
+        targetPath,
+        targetHandle,
+        { x: 0, y: 30 },
+        Position.Bottom,
+        Position.Left,
+        stubLength,
+        5
+      )
+
+      expect(result).toEqual([
+        { x: 440, y: -265 },
+        { x: 440, y: -405 },
+        { x: 495, y: -405 },
+        { x: 495, y: -315 },
+        { x: 510, y: -315 },
+        { x: 510, y: -345 },
+        { x: 525, y: -345 },
+      ])
+      expect(isCleanBend(result)).toBe(true)
+      // Endpoints preserved.
+      expect(result[0]).toEqual(targetPath[0])
+      expect(result[result.length - 1]).toEqual(
+        targetPath[targetPath.length - 1]
+      )
+      // Anchor-side entry preserved: final segment horizontal into the Left port.
+      expect(result[result.length - 2].y).toBe(result[result.length - 1].y)
+    })
+
+    it("target terminal (H, Left port) bends cleanly dragging toward the endpoint", () => {
+      const result = applyTerminalSegmentBend(
+        targetPath,
+        targetHandle,
+        { x: 0, y: -30 },
+        Position.Bottom,
+        Position.Left,
+        stubLength,
+        5
+      )
+
+      expect(result).toEqual([
+        { x: 440, y: -265 },
+        { x: 440, y: -405 },
+        { x: 495, y: -405 },
+        { x: 495, y: -375 },
+        { x: 510, y: -375 },
+        { x: 510, y: -345 },
+        { x: 525, y: -345 },
+      ])
+      expect(isCleanBend(result)).toBe(true)
+      expect(result[result.length - 2].y).toBe(result[result.length - 1].y)
+    })
+
+    // Source mirror: source pinned to a Right port at (0,0); the 30px stub
+    // (0,0)->(30,0) is dragged.
+    const sourcePath: IPoint[] = [
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 100 },
+    ]
+    const sourceHandle = {
+      segmentIndex: 0,
+      position: { x: 15, y: 0 },
+      orientation: "H" as const,
+      kind: "source-terminal" as const,
+      bendableLength: 30,
+    }
+
+    it("source terminal (H, Right port) bends cleanly in both directions", () => {
+      const down = applyTerminalSegmentBend(
+        sourcePath,
+        sourceHandle,
+        { x: 0, y: 30 },
+        Position.Right,
+        Position.Bottom,
+        stubLength,
+        5
+      )
+      expect(down).toEqual([
+        { x: 0, y: 0 },
+        { x: 15, y: 0 },
+        { x: 15, y: 30 },
+        { x: 30, y: 30 },
+        { x: 30, y: 100 },
+      ])
+      expect(isCleanBend(down)).toBe(true)
+      // Anchor-side entry preserved: first segment horizontal out of the Right port.
+      expect(down[1].y).toBe(down[0].y)
+
+      const up = applyTerminalSegmentBend(
+        sourcePath,
+        sourceHandle,
+        { x: 0, y: -30 },
+        Position.Right,
+        Position.Bottom,
+        stubLength,
+        5
+      )
+      expect(up).toEqual([
+        { x: 0, y: 0 },
+        { x: 15, y: 0 },
+        { x: 15, y: -30 },
+        { x: 30, y: -30 },
+        { x: 30, y: 100 },
+      ])
+      expect(isCleanBend(up)).toBe(true)
+    })
+
+    // Vertical orientation: target pinned to a Top port at (100,100); the 30px
+    // stub (100,70)->(100,100) is dragged perpendicular (in x).
+    const targetVPath: IPoint[] = [
+      { x: 0, y: 0 },
+      { x: 0, y: 70 },
+      { x: 100, y: 70 },
+      { x: 100, y: 100 },
+    ]
+    const targetVHandle = {
+      segmentIndex: 2,
+      position: { x: 100, y: 85 },
+      orientation: "V" as const,
+      kind: "target-terminal" as const,
+      bendableLength: 30,
+    }
+
+    it("target terminal (V, Top port) bends cleanly in both directions", () => {
+      const right = applyTerminalSegmentBend(
+        targetVPath,
+        targetVHandle,
+        { x: 30, y: 0 },
+        Position.Right,
+        Position.Top,
+        stubLength,
+        5
+      )
+      expect(right).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 70 },
+        { x: 130, y: 70 },
+        { x: 130, y: 85 },
+        { x: 100, y: 85 },
+        { x: 100, y: 100 },
+      ])
+      expect(isCleanBend(right)).toBe(true)
+      // Anchor-side entry preserved: final segment vertical into the Top port.
+      expect(right[right.length - 2].x).toBe(right[right.length - 1].x)
+
+      const left = applyTerminalSegmentBend(
+        targetVPath,
+        targetVHandle,
+        { x: -30, y: 0 },
+        Position.Right,
+        Position.Top,
+        stubLength,
+        5
+      )
+      expect(left).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 70 },
+        { x: 70, y: 70 },
+        { x: 70, y: 85 },
+        { x: 100, y: 85 },
+        { x: 100, y: 100 },
+      ])
+      expect(isCleanBend(left)).toBe(true)
+    })
   })
 })

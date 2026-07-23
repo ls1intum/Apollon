@@ -69,13 +69,28 @@ describe("EdgeTransformer", () => {
       expect(edge.data).toHaveProperty("computedSegments")
     })
 
-    it("normalizes null/absent data to an empty object without throwing", () => {
+    it("normalizes null/absent data to canonical edge data without throwing", () => {
       const malformed = makeEdge({
         data: null as unknown as ApollonEdge["data"],
       })
 
       expect(() => hydrateEdgeData(malformed)).not.toThrow()
-      expect(hydrateEdgeData(malformed).data).toEqual({})
+      expect(hydrateEdgeData(malformed).data).toEqual({ points: [] })
+    })
+
+    it("hydrates missing or malformed legacy points", () => {
+      const missing = makeEdge({
+        data: { label: "legacy" } as ApollonEdge["data"],
+      })
+      const malformed = makeEdge({
+        data: { points: "legacy" } as unknown as ApollonEdge["data"],
+      })
+
+      expect(hydrateEdgeData(missing).data).toEqual({
+        label: "legacy",
+        points: [],
+      })
+      expect(hydrateEdgeData(malformed).data).toEqual({ points: [] })
     })
   })
 

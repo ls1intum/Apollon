@@ -1,6 +1,6 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c4",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Adapter Diagram",
   "type": "ClassDiagram",
   "nodes": [
@@ -30,7 +30,7 @@
       "height": 70,
       "id": "7052e703-263f-4df5-95e0-3558793849af",
       "type": "class",
-      "position": { "x": 120, "y": 330 },
+      "position": { "x": 195, "y": 265 },
       "data": {
         "name": "Adaptee1",
         "methods": [
@@ -47,11 +47,11 @@
       "resizing": false
     },
     {
-      "width": 167.20445251464844,
+      "width": 170,
       "height": 100,
       "id": "286257b1-ebd3-424f-b3e4-c1c2a722531b",
       "type": "class",
-      "position": { "x": -90, "y": 105 },
+      "position": { "x": 0, "y": 105 },
       "data": {
         "name": "Client",
         "methods": [
@@ -68,7 +68,7 @@
         ]
       },
       "selected": false,
-      "measured": { "width": 167, "height": 100 },
+      "measured": { "width": 170, "height": 100 },
       "dragging": true
     },
     {
@@ -76,7 +76,7 @@
       "height": 70,
       "id": "2fecb039-1b0d-4de9-8820-fa120c51f4f6",
       "type": "class",
-      "position": { "x": 435, "y": 330 },
+      "position": { "x": 390, "y": 265 },
       "data": {
         "name": "Adaptee2",
         "methods": [
@@ -100,6 +100,7 @@
       "targetHandle": "left",
       "type": "ClassUnidirectional",
       "selected": false,
+      "data": { "points": [] },
       "id": "xy-edge__286257b1-ebd3-424f-b3e4-c1c2a722531bright-2eb1ceb2-266e-4669-89f1-c61e246cb10cleft"
     },
     {
@@ -109,7 +110,12 @@
       "targetHandle": "bottom",
       "id": "1737993042486-7052e703-263f-4df5-95e0-3558793849af-2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "2fecb039-1b0d-4de9-8820-fa120c51f4f6",
@@ -118,7 +124,12 @@
       "targetHandle": "bottom",
       "id": "1737993045593-2fecb039-1b0d-4de9-8820-fa120c51f4f6-2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     }
   ],
   "assessments": {}

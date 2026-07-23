@@ -3,16 +3,20 @@ import {
   ReactFlowInstance,
   ConnectionMode,
   ReactFlow,
-  type Edge,
 } from "@xyflow/react"
-import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
+import { useCallback } from "react"
 import {
   CustomBackground,
-  ReconnectConnectionLine,
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
 } from "@/components"
+// Imported DIRECTLY, not via the `@/components` barrel: this component pulls in the
+// edge-geometry solver to preview the committed auto route, and the barrel is
+// imported by `constants.ts`, so routing it through the barrel forms a
+// `constants → components → solver → edgeAnchoring` import cycle that leaves module
+// constants undefined at init. The direct path keeps the solver out of the barrel.
+import { ConnectionPreviewLine } from "@/components/ConnectionPreviewLine"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
@@ -36,7 +40,6 @@ import { diagramEdgeTypes } from "./edges"
 import {
   useNodeDragStop,
   useConnect,
-  useReconnect,
   useElementInteractions,
   useDragOver,
   useNodeDrag,
@@ -50,37 +53,30 @@ import {
   useRemoteDraggingNodes,
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
-import {
-  getConnectionLineType,
-  resolveReconnectPreviewBasePoints,
-} from "./utils/edgeUtils"
-import { IPoint } from "./edges/Connection"
+import { getConnectionLineType } from "./utils/edgeUtils"
 import {
   CollaborationLayer,
   type CollaborationAwarenessApi,
   type CollaborationLayerOptions,
 } from "@/components/collaboration/CollaborationLayer"
 import { TooltipProvider } from "@/components/ui"
+import { EdgeGeometrySolver } from "@/components/EdgeGeometrySolver"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
   collaboration: CollaborationLayerOptions
   awareness: CollaborationAwarenessApi
+  /** Disabled by the off-screen export mount, which must materialize the whole
+   * model regardless of its synthetic viewport. */
+  onlyRenderVisibleElements?: boolean
 }
 const proOptions = { hideAttribution: true }
-const isPointArray = (value: unknown): value is IPoint[] =>
-  Array.isArray(value) &&
-  value.every(
-    (point) =>
-      typeof point === "object" &&
-      point !== null &&
-      "x" in point &&
-      "y" in point &&
-      typeof point.x === "number" &&
-      typeof point.y === "number"
-  )
-
-function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
+function App({
+  onReactFlowInit,
+  collaboration,
+  awareness,
+  onlyRenderVisibleElements = true,
+}: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId, previewMode } =
@@ -102,8 +98,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     scrollEnabled,
     keyboardShortcuts,
     connectionGuidanceActive,
-    startReconnectPreview,
-    stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
@@ -112,8 +106,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
       scrollEnabled: state.scrollEnabled,
       keyboardShortcuts: state.keyboardShortcuts,
       connectionGuidanceActive: state.connectionGuidanceActive,
-      startReconnectPreview: state.startReconnectPreview,
-      stopReconnectPreview: state.stopReconnectPreview,
     }))
   )
 
@@ -143,7 +135,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   const onDragOver = useDragOver()
   const { onConnect, onConnectEnd, onConnectStart, onEdgesDelete } =
     useConnect()
-  const onReconnect = useReconnect()
   const { onBeforeDelete, onNodeDoubleClick, onEdgeDoubleClick } =
     useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
@@ -155,25 +146,6 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     },
     [onReactFlowInit]
   )
-
-  const handleReconnectStart = useCallback(
-    (_event: ReactMouseEvent, edge: Edge, handleType: "source" | "target") => {
-      const storedPoints = isPointArray(edge.data?.points)
-        ? edge.data.points
-        : undefined
-
-      startReconnectPreview(
-        edge.id,
-        handleType,
-        resolveReconnectPreviewBasePoints(storedPoints, undefined, [])
-      )
-    },
-    [startReconnectPreview]
-  )
-
-  const handleReconnectEnd = useCallback(() => {
-    stopReconnectPreview()
-  }, [stopReconnectPreview])
 
   return (
     <TooltipProvider>
@@ -206,6 +178,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             edgeTypes={diagramEdgeTypes}
             nodes={displayNodes}
             edges={edges}
+            // React Flow's viewport culling keeps large off-screen diagrams out
+            // of the DOM while the central solver still optimizes every edge.
+            // This is purely a rendering boundary: export and exact geometry
+            // continue to use the complete diagram.
+            onlyRenderVisibleElements={onlyRenderVisibleElements}
             onDragOver={onDragOver}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -216,11 +193,8 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             zoomOnDoubleClick={false}
             onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
-            onReconnect={onReconnect}
-            onReconnectStart={handleReconnectStart}
-            onReconnectEnd={handleReconnectEnd}
             connectionLineType={connectionLineType}
-            connectionLineComponent={ReconnectConnectionLine}
+            connectionLineComponent={ConnectionPreviewLine}
             connectionMode={ConnectionMode.Loose}
             // Lift the selected edge (and its bend/endpoint handles) above other
             // edges so an overlapping edge's interaction ribbon can't steal the
@@ -244,7 +218,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             onBeforeDelete={onBeforeDelete}
             onPaneClick={onPaneClicked}
             proOptions={proOptions}
-            edgesReconnectable={isDiagramModifiable}
+            edgesReconnectable={false}
             nodesConnectable={isDiagramModifiable}
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
@@ -278,6 +252,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             <CustomBackground />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
+            <EdgeGeometrySolver />
             {/* Renders every registered control (built-in + host-injected) into
                 its region: header, rails, corners, on-canvas. The chrome itself is
                 registered at construction (imperative) or by the React wrapper. */}

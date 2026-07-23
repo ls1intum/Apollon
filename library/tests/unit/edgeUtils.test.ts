@@ -1,4 +1,4 @@
-import { EDGES, INTERFACE } from "@/constants"
+import { CANVAS, EDGES, INTERFACE } from "@/constants"
 import type { UMLDiagramType } from "@/types/DiagramType"
 import {
   adjustSourceCoordinates,
@@ -18,6 +18,7 @@ import {
   getFreeformAnchorFromPoint,
   getFreeformAnchorPoint,
   getSideHandleIdForPosition,
+  getTargetConnectionPointPadding,
   reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
@@ -26,11 +27,13 @@ import {
   parseSvgPath,
   preserveOrthogonalEdgePoints,
   resolveOrthogonalEdgeReleasePoints,
-  resolveReconnectPreviewBasePoints,
+  roundAnchorPointOutward,
   removeDuplicatePoints,
   simplifyPoints,
   simplifySvgPath,
   stubsWouldOverlap,
+  getEffectiveStubLength,
+  getBendLaneBounds,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
@@ -296,6 +299,25 @@ describe("getEdgeMarkerStyles", () => {
     if ("pad" in c) expect(result.markerPadding).toBe(c.pad)
   })
 })
+
+describe("getTargetConnectionPointPadding", () => {
+  it("keeps React Flow handle compensation for an unpinned endpoint", () => {
+    expect(getTargetConnectionPointPadding(EDGES.MARKER_PADDING, false)).toBe(
+      EDGES.MARKER_PADDING
+    )
+  })
+
+  it("removes handle compensation from an exact shape anchor", () => {
+    expect(getTargetConnectionPointPadding(EDGES.MARKER_PADDING, true)).toBe(0)
+  })
+
+  it("preserves the ball-to-socket gap on an exact interface anchor", () => {
+    const requiredPadding = EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP
+    expect(getTargetConnectionPointPadding(requiredPadding, true)).toBe(
+      INTERFACE.SOCKET_GAP
+    )
+  })
+})
 // ---------------------------------------------------------------------------
 // findClosestHandle
 describe("findClosestHandle", () => {
@@ -496,6 +518,58 @@ describe("freeform rectangle anchors", () => {
     })
   })
 
+  describe("a corner overshoot picks the side by the angle you aimed", () => {
+    // rect = {10,20,100,80}; top-right corner (110, 20).
+    it("overshoot mostly SIDEWAYS past the corner -> the vertical (right/left) side", () => {
+      // 20px past the right edge, 5px above the top: aimed at the RIGHT side.
+      expect(getFreeformAnchorFromPoint({ x: 130, y: 15 }, rect)).toEqual({
+        side: Position.Right,
+        ratio: 0,
+      })
+    })
+
+    it("overshoot mostly UP/DOWN past the corner -> the horizontal (top/bottom) side", () => {
+      // 5px past the right edge, 20px above the top: aimed at the TOP side.
+      expect(getFreeformAnchorFromPoint({ x: 115, y: 0 }, rect)).toEqual({
+        side: Position.Top,
+        ratio: 1,
+      })
+      // Past the bottom-left corner, mostly downward: the BOTTOM side.
+      expect(getFreeformAnchorFromPoint({ x: 5, y: 130 }, rect)).toEqual({
+        side: Position.Bottom,
+        ratio: 0,
+      })
+    })
+
+    it("a drag ALONG a side (outside one axis only) never enters the corner branch", () => {
+      // Above the top, next to the corner, but WITHIN the x-range -> plain nearest = Top.
+      expect(getFreeformAnchorFromPoint({ x: 108, y: 0 }, rect).side).toBe(
+        Position.Top
+      )
+      // Beside the right, next to the corner, but WITHIN the y-range -> nearest = Right.
+      expect(getFreeformAnchorFromPoint({ x: 130, y: 26 }, rect).side).toBe(
+        Position.Right
+      )
+    })
+
+    it("is STABLE across the corner lines — a point past one edge is always that side", () => {
+      // Right of the node, swept vertically THROUGH the top corner line (y=20) and just
+      // above/below it: every one is Right. Previously the exact corner line tied to Top,
+      // so a cursor moving vertically flip-flopped Right->Top->Right next to a corner.
+      for (const y of [16, 19, 20, 21, 24]) {
+        expect(getFreeformAnchorFromPoint({ x: 130, y }, rect).side).toBe(
+          Position.Right
+        )
+      }
+      // Above the node, swept horizontally through the right corner line (x=110): all Top.
+      for (const x of [104, 109, 110, 111, 116]) {
+        expect(getFreeformAnchorFromPoint({ x, y: 12 }, rect).side).toBe(
+          Position.Top
+        )
+      }
+    })
+  })
+
   it("recognizes persisted freeform anchors", () => {
     expect(
       getFreeformAnchorPoint(rect, { side: Position.Left, ratio: 0.5 })
@@ -503,6 +577,21 @@ describe("freeform rectangle anchors", () => {
       point: { x: 10, y: 60 },
       position: Position.Left,
     })
+  })
+
+  it("rounds fractional boundaries outward instead of into the node", () => {
+    expect(
+      roundAnchorPointOutward({ x: 27.204, y: 210.4 }, Position.Right)
+    ).toEqual({ x: 28, y: 210 })
+    expect(
+      roundAnchorPointOutward({ x: -140.2, y: 210.4 }, Position.Left)
+    ).toEqual({ x: -141, y: 210 })
+    expect(
+      roundAnchorPointOutward({ x: 210.4, y: 245.2 }, Position.Bottom)
+    ).toEqual({ x: 210, y: 246 })
+    expect(
+      roundAnchorPointOutward({ x: 210.4, y: 174.8 }, Position.Top)
+    ).toEqual({ x: 210, y: 174 })
   })
 })
 
@@ -838,6 +927,27 @@ describe("removeDuplicatePoints", () => {
 // preserveOrthogonalEdgePoints
 // ---------------------------------------------------------------------------
 describe("preserveOrthogonalEdgePoints", () => {
+  it("keeps a lane the user dragged close to a parallel stub (a narrow U), not snapped clear", () => {
+    // diagram 87: the down-run (x=665) was dragged to 15px from the source up-stub
+    // (x=680). It must STAY at 665 — pushing it to the 30px clearance line (650) snapped
+    // the drag straight back. A lane already on this side of the stub is the user's.
+    const dragged = [
+      { x: 680, y: 155 },
+      { x: 680, y: -150 },
+      { x: 665, y: -150 },
+      { x: 665, y: -10 },
+      { x: 575, y: -10 },
+    ]
+    const result = preserveOrthogonalEdgePoints(
+      dragged,
+      { x: 680, y: 155 },
+      { x: 575, y: -10 },
+      Position.Top,
+      Position.Right
+    )
+    expect(result).toEqual(dragged)
+  })
+
   it("keeps a manually moved bend when the target handle moves lower on the same side", () => {
     const result = preserveOrthogonalEdgePoints(
       [
@@ -1079,34 +1189,33 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("routes around stub collisions without shortening 30px stubs", () => {
+  it("keeps a hand-drawn detour between facing endpoints as drawn (no auto-straighten)", () => {
+    // A detour the user drew is theirs to keep: we no longer flatten a loop between
+    // facing endpoints just because a straight line would also connect them. It only
+    // collapses when its arms actually fold onto each other.
+    const detour = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 20, y: 250 },
+      { x: 20, y: 200 },
+      { x: 50, y: 200 },
+    ]
     const result = normalizeOrthogonalEdgePoints(
-      [
-        { x: 0, y: 200 },
-        { x: 30, y: 200 },
-        { x: 30, y: 250 },
-        { x: 20, y: 250 },
-        { x: 20, y: 200 },
-        { x: 50, y: 200 },
-      ],
+      detour,
       { x: 0, y: 200 },
       { x: 50, y: 200 },
       Position.Right,
       Position.Left
     )
 
-    expect(result).toEqual([
-      { x: 0, y: 200 },
-      { x: 30, y: 200 },
-      { x: 30, y: 170 },
-      { x: 20, y: 170 },
-      { x: 20, y: 200 },
-      { x: 50, y: 200 },
-    ])
+    expect(result).toEqual(detour)
     expectOrthogonalSegments(result)
   })
 
-  it("prefers a Z-shape fallback for horizontal stub collisions when endpoints are vertically separated", () => {
+  it("shrinks both stubs to share the gap for a horizontal near-miss instead of doubling back", () => {
+    // 50px between facing endpoints: too tight for two 30px stubs, but a 25px
+    // stub on each side turns cleanly in the middle.
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 0, y: 0 },
@@ -1124,10 +1233,8 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 0, y: 0 },
-      { x: 30, y: 0 },
-      { x: 30, y: 150 },
-      { x: 20, y: 150 },
-      { x: 20, y: 300 },
+      { x: 25, y: 0 },
+      { x: 25, y: 300 },
       { x: 50, y: 300 },
     ])
     expectOrthogonalSegments(result)
@@ -1149,16 +1256,18 @@ describe("preserveOrthogonalEdgePoints", () => {
       Position.Left
     )
 
+    // One spine, and it lands on the 5px canvas grid — the same line a dragged
+    // bend would snap to (the exact half-gap, 27, would sit half a cell off).
     expect(result).toEqual([
       { x: 0, y: 0 },
-      { x: 27, y: 0 },
-      { x: 27, y: 300 },
+      { x: 25, y: 0 },
+      { x: 25, y: 300 },
       { x: 54, y: 300 },
     ])
     expectOrthogonalSegments(result)
   })
 
-  it("prefers a Z-shape fallback for vertical stub collisions when endpoints are horizontally separated", () => {
+  it("shrinks both stubs to share the gap for a vertical near-miss instead of doubling back", () => {
     const result = preserveOrthogonalEdgePoints(
       [
         { x: 300, y: 0 },
@@ -1176,11 +1285,52 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 300, y: 0 },
-      { x: 300, y: 30 },
-      { x: 150, y: 30 },
-      { x: 150, y: 20 },
-      { x: 0, y: 20 },
+      { x: 300, y: 25 },
+      { x: 0, y: 25 },
       { x: 0, y: 50 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("routes cleanly right down to two minimum stubs meeting on one lane", () => {
+    // The tightest clean route there is: a 20px gap spends 10px of stub per side
+    // and both turn on the same lane. Anything looser must not detour either.
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: 2 * EDGES.MIN_STUB_LENGTH, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: EDGES.MIN_STUB_LENGTH, y: 0 },
+      { x: EDGES.MIN_STUB_LENGTH, y: 300 },
+      { x: 2 * EDGES.MIN_STUB_LENGTH, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("detours only once the stubs would genuinely cross", () => {
+    // Below 2 * MIN_STUB_LENGTH the two stubs overlap: there is no lane either
+    // can turn on, so the edge routes around instead of folding back. That is a
+    // single grid step of gap — the nodes are all but touching.
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: CANVAS.SNAP_TO_GRID_PX, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 150 },
+      { x: -25, y: 150 },
+      { x: -25, y: 300 },
+      { x: 5, y: 300 },
     ])
     expectOrthogonalSegments(result)
   })
@@ -1203,8 +1353,8 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(result).toEqual([
       { x: 300, y: 0 },
-      { x: 300, y: 27 },
-      { x: 0, y: 27 },
+      { x: 300, y: 25 },
+      { x: 0, y: 25 },
       { x: 0, y: 54 },
     ])
     expectOrthogonalSegments(result)
@@ -1277,36 +1427,59 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  it("collapses near-overlapping parallel arms only in release normalization", () => {
+  it("keeps near-but-not-touching parallel arms as drawn (collapses only when they meet)", () => {
+    // Arms 10px apart are a narrow loop the user drew, not a spike — preserved. They
+    // only collapse once dragged together far enough that a stub can no longer fit.
+    const narrow = [
+      { x: 0, y: 200 },
+      { x: 360, y: 200 },
+      { x: 360, y: 250 },
+      { x: 370, y: 250 },
+      { x: 370, y: 200 },
+      { x: 400, y: 200 },
+    ]
     const result = normalizeOrthogonalEdgePoints(
-      [
-        { x: 0, y: 200 },
-        { x: 360, y: 200 },
-        { x: 360, y: 250 },
-        { x: 370, y: 250 },
-        { x: 370, y: 200 },
-        { x: 400, y: 200 },
-      ],
+      narrow,
       { x: 0, y: 200 },
       { x: 400, y: 200 },
       Position.Right,
       Position.Left
     )
 
-    expect(result).toEqual([
-      { x: 0, y: 200 },
-      { x: 400, y: 200 },
-    ])
+    expect(result).toEqual(narrow)
     expectOrthogonalSegments(result)
   })
 
-  it("rejects release when the target stub would shrink below 30px", () => {
+  it("accepts a bend dragged right in to the node, down to the minimum stub", () => {
+    // STUB_LENGTH is what the router reaches for, not a cage: pulling this lane
+    // to 10px off the target is a legitimate tight layout and must stick.
     const releasedPoints = [
       { x: 0, y: 200 },
       { x: 30, y: 200 },
       { x: 30, y: 150 },
       { x: 190, y: 150 },
       { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    expect(
+      isInvalidOrthogonalEdgeRelease(
+        releasedPoints,
+        { x: 0, y: 200 },
+        { x: 200, y: 200 },
+        Position.Right,
+        Position.Left
+      )
+    ).toBe(false)
+  })
+
+  it("rejects release when a terminal stub drops under the minimum", () => {
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 198, y: 150 },
+      { x: 198, y: 200 },
       { x: 200, y: 200 },
     ]
 
@@ -1330,12 +1503,13 @@ describe("preserveOrthogonalEdgePoints", () => {
       { x: 170, y: 200 },
       { x: 200, y: 200 },
     ]
+    // 2px of stub left: under the floor, so this one does snap back.
     const releasedPoints = [
       { x: 0, y: 200 },
       { x: 30, y: 200 },
       { x: 30, y: 150 },
-      { x: 190, y: 150 },
-      { x: 190, y: 200 },
+      { x: 198, y: 150 },
+      { x: 198, y: 200 },
       { x: 200, y: 200 },
     ]
 
@@ -1352,10 +1526,69 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
-  // Dragging a U's arm so the two parallel arms meet or cross is a deliberate
-  // "merge the U" gesture and must collapse the route — not snap back to the
-  // pre-drag wide U. Arms still clearly apart stay a (narrow) U.
-  describe("collapses a U when its arms are dragged together", () => {
+  it("lets a router stub squeezed by a node drag grow back as the node parts", () => {
+    // Dragging a node in shrinks the stub to fit; dragging it back out must
+    // restore it. Otherwise one close pass would leave the edge cramped forever.
+    const source = { x: 0, y: 0 }
+    const squeezed = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 120 },
+      { x: 20, y: 120 },
+    ]
+
+    const target = { x: 90, y: 120 }
+    const roomyAgain = preserveOrthogonalEdgePoints(
+      squeezed,
+      source,
+      target,
+      Position.Right,
+      Position.Left
+    )
+
+    // 10px was exactly the stub the router drew for the old 20px gap, so it is
+    // the router's, and it lands back on the route the router draws for the gap
+    // the nodes have NOW — not pinned at the squeezed 10px, and not at some third
+    // length either. Re-routing an untouched edge reproduces the router exactly,
+    // which is what stops it drifting a little further on every node drag.
+    expect(roomyAgain).toEqual(
+      normalizeOrthogonalEdgePoints(
+        [],
+        source,
+        target,
+        Position.Right,
+        Position.Left
+      )
+    )
+    expect(roomyAgain[1].x).toBeGreaterThan(EDGES.MIN_STUB_LENGTH)
+  })
+
+  it("keeps a stub the user pulled in to the node across a re-render", () => {
+    // The re-pin that keeps stubs locked to their node must not quietly restore
+    // the preferred 30px length — that is what made a tightened bend spring back.
+    const tightened = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 120 },
+      { x: 200, y: 120 },
+    ]
+
+    const result = preserveOrthogonalEdgePoints(
+      tightened,
+      { x: 0, y: 0 },
+      { x: 200, y: 120 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual(tightened)
+  })
+
+  // A U collapses only once its arms actually MEET (touch/cross), where the loop folds
+  // onto itself or a stub can no longer fit — a real "collapse this loop" gesture. A U
+  // whose arms are merely close stays exactly as drawn, so a partial drag never snaps the
+  // loop into a straight line.
+  describe("collapses a U only when its arms actually meet", () => {
     const S = { x: 0, y: 200 }
     const T = { x: 400, y: 200 }
     const wideU = [
@@ -1375,9 +1608,10 @@ describe("preserveOrthogonalEdgePoints", () => {
       { x: 400, y: 200 },
     ]
 
-    // Arm gap 5px / 10px (boundary) / crossed: all collapse to a straight line.
-    for (const lx of [365, 360, 375]) {
-      it(`collapses when the dragged arm lands at x=${lx} (gap ${370 - lx}px)`, () => {
+    // Touching (0px), essentially touching (5px, a stub can no longer fit), and crossed
+    // all collapse to a straight line.
+    for (const lx of [365, 370, 375]) {
+      it(`collapses when the dragged arm reaches x=${lx} (gap ${370 - lx}px)`, () => {
         const result = resolveOrthogonalEdgeReleasePoints(
           releaseWithLeftArmAt(lx),
           wideU,
@@ -1394,25 +1628,151 @@ describe("preserveOrthogonalEdgePoints", () => {
       })
     }
 
-    it("preserves a deliberate narrow U whose arms are still 15px apart", () => {
-      const released = releaseWithLeftArmAt(355)
-      const result = resolveOrthogonalEdgeReleasePoints(
-        released,
-        wideU,
+    // Still clearly apart (10px, 15px): the narrow U is kept exactly as drawn.
+    for (const lx of [360, 355]) {
+      it(`preserves a narrow U whose arms are ${370 - lx}px apart`, () => {
+        const released = releaseWithLeftArmAt(lx)
+        const result = resolveOrthogonalEdgeReleasePoints(
+          released,
+          wideU,
+          S,
+          T,
+          Position.Right,
+          Position.Left
+        )
+        expect(result).toEqual(released)
+        expectOrthogonalSegments(result)
+      })
+    }
+  })
+
+  // A dragged arm must come to REST on the parallel arm two segments away (where the
+  // connector between them collapses and the loop merges), not sail through it and grow
+  // a fresh zig-zag on the far side — which read as the geometry "pushing apart".
+  describe("clamps a dragged arm's lane at the adjacent parallel arm", () => {
+    // A loop like diagram 83: source stub → up → over → down into target. The two
+    // vertical arms are at x=615 and x=645; the target down-run (seg 3) is dragged left.
+    const loop = [
+      { x: 565, y: 335 }, // source
+      { x: 615, y: 335 },
+      { x: 615, y: 140 }, // seg1: left arm  (x=615)
+      { x: 645, y: 140 },
+      { x: 645, y: 410 }, // seg3: right arm (x=645) — the dragged terminal down-run
+    ]
+    const S = { x: 565, y: 335 }
+    const T = { x: 645, y: 410 }
+
+    it("stops the right arm at the left arm (x=615) instead of crossing it", () => {
+      const bounds = getBendLaneBounds(
+        loop,
+        3, // the target down-run
+        "V",
         S,
         T,
         Position.Right,
+        Position.Top
+      )
+      // Dragging the x=645 arm LEFT, its lane may not go below x=615 (the parallel arm).
+      expect(bounds.min).toBe(615)
+    })
+
+    it("clamps the left arm at the right arm (x=645) when dragged toward it", () => {
+      // seg1 (left arm, x=615) has its parallel neighbour on the target side (seg3 at
+      // x=645), so dragging it RIGHT stops at 645 rather than crossing.
+      const bounds = getBendLaneBounds(
+        loop,
+        1,
+        "V",
+        S,
+        T,
+        Position.Right,
+        Position.Top
+      )
+      expect(bounds.max).toBe(645)
+    })
+  })
+
+  // A fold is a spike where the path reverses on itself. normalize removes ONLY that
+  // spike (the collinear reversal collapses under simplify) and keeps every other corner
+  // the user drew — so squeezing one step of a multi-bend edge loses just that step, not
+  // the whole route. Done in normalize (not only at release) so the post-drag geometry
+  // re-projection cannot re-introduce the spike.
+  describe("removes a fold locally and keeps the rest of the route", () => {
+    it("drops only the spike of a multi-corner route (three corners stay, minus one)", () => {
+      // A route that spikes UP to y=-160 through a 5px step, then continues. Collapsing
+      // the step folds it (650,125 → up to -160 → down to -10 reverses); the spike goes,
+      // the outer corners (the 680→650 top jog) stay.
+      const folded = [
+        { x: 680, y: 155 },
+        { x: 680, y: 125 },
+        { x: 650, y: 125 },
+        { x: 650, y: -160 },
+        { x: 650, y: -10 },
+        { x: 575, y: -10 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        folded,
+        { x: 680, y: 155 },
+        { x: 575, y: -10 },
+        Position.Top,
+        Position.Right
+      )
+      expect(result).toEqual([
+        { x: 680, y: 155 },
+        { x: 680, y: 125 },
+        { x: 650, y: 125 },
+        { x: 650, y: -10 },
+        { x: 575, y: -10 },
+      ])
+      expectOrthogonalSegments(result)
+    })
+
+    it("collapses a simple loop's fold straight down to two corners", () => {
+      // When the only structure IS the spike, removing it leaves the direct route.
+      const folded = [
+        { x: 640, y: -30 },
+        { x: 680, y: -30 },
+        { x: 680, y: -120 },
+        { x: 680, y: 155 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        folded,
+        { x: 640, y: -30 },
+        { x: 680, y: 155 },
+        Position.Right,
+        Position.Top
+      )
+      expect(result).toEqual([
+        { x: 640, y: -30 },
+        { x: 680, y: -30 },
+        { x: 680, y: 155 },
+      ])
+      expectOrthogonalSegments(result)
+    })
+
+    it("leaves an ordinary jog (no fold) untouched", () => {
+      // A genuine S-jog that never reverses on itself is preserved, not flattened.
+      const jog = [
+        { x: 0, y: 0 },
+        { x: 40, y: 0 },
+        { x: 40, y: 60 },
+        { x: 100, y: 60 },
+      ]
+      const result = normalizeOrthogonalEdgePoints(
+        jog,
+        { x: 0, y: 0 },
+        { x: 100, y: 60 },
+        Position.Right,
         Position.Left
       )
-      expect(result).toEqual(released)
-      expectOrthogonalSegments(result)
+      expect(result).toEqual(jog)
     })
   })
 
   it("detects mirrored horizontal and vertical stub collisions", () => {
     expect(
       stubsWouldOverlap(
-        { x: 100, y: 0 },
+        { x: 100, y: 20 },
         { x: 50, y: 0 },
         Position.Left,
         Position.Right,
@@ -1421,7 +1781,7 @@ describe("preserveOrthogonalEdgePoints", () => {
     ).toBe(true)
     expect(
       stubsWouldOverlap(
-        { x: 0, y: 100 },
+        { x: 20, y: 100 },
         { x: 0, y: 50 },
         Position.Top,
         Position.Bottom,
@@ -1430,10 +1790,277 @@ describe("preserveOrthogonalEdgePoints", () => {
     ).toBe(true)
     expect(
       stubsWouldOverlap(
-        { x: 100, y: 0 },
+        { x: 100, y: 20 },
         { x: 0, y: 0 },
         Position.Left,
         Position.Right,
+        30
+      )
+    ).toBe(false)
+  })
+
+  // These three sweep the whole configuration space rather than a hand-picked
+  // case, because every routing bug found so far has been a *specific alignment*
+  // nobody thought to try — a lane landing on an endpoint's own line, a stub lane
+  // colliding with the target's column. Point cases cannot cover that; a sweep
+  // can. All three run over 16 source/target position pairs.
+  const POSITIONS = [
+    Position.Right,
+    Position.Left,
+    Position.Top,
+    Position.Bottom,
+  ]
+  const sweepRoutes = (
+    visit: (
+      route: IPoint[],
+      source: IPoint,
+      target: IPoint,
+      sourcePosition: Position,
+      targetPosition: Position
+    ) => string | null
+  ): string[] => {
+    const failures: string[] = []
+    for (const sourcePosition of POSITIONS) {
+      for (const targetPosition of POSITIONS) {
+        for (let dx = -160; dx <= 160; dx += 5) {
+          for (let dy = -160; dy <= 160; dy += 5) {
+            if (dx === 0 && dy === 0) continue
+            const source = { x: 0, y: 0 }
+            const target = { x: dx, y: dy }
+            const route = normalizeOrthogonalEdgePoints(
+              [],
+              source,
+              target,
+              sourcePosition,
+              targetPosition
+            )
+            const failure = visit(
+              route,
+              source,
+              target,
+              sourcePosition,
+              targetPosition
+            )
+            if (failure) {
+              failures.push(
+                `${sourcePosition}->${targetPosition} d=(${dx},${dy}): ${failure}`
+              )
+            }
+          }
+        }
+      }
+    }
+    return failures
+  }
+
+  // A property test that routes hundreds of layouts through the full search. It
+  // finishes in about a second and a half on its own; the default 5s budget leaves
+  // it nothing to spare when the suite runs it alongside everything else, and a
+  // test that fails on a busy machine and passes on a quiet one teaches people to
+  // re-run rather than to look.
+  it(
+    "never routes an edge that its own validator would reject",
+    { timeout: 30_000 },
+    () => {
+      // A route the editor cannot accept is a route the user cannot bend: the first
+      // drag is judged invalid and snaps straight back. The router must never emit
+      // one. (This caught a route that overshot its target and returned along the
+      // same line, leaving the target stub pointing backwards.)
+      const failures = sweepRoutes((route, s, t, sp, tp) =>
+        isInvalidOrthogonalEdgeRelease(route, s, t, sp, tp)
+          ? route.map((p) => `${p.x},${p.y}`).join(" ")
+          : null
+      )
+
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
+
+  // Same full-search sweep as above, so the same 30s budget: on a loaded machine the
+  // default 5s is not enough and the test flakes rather than fails.
+  it(
+    "never doubles a route back along a line it has already drawn",
+    { timeout: 30_000 },
+    () => {
+      // Retracing reads as an edge drawn on top of itself, and it is what happens
+      // when a lane gets snapped onto an endpoint's own coordinate.
+      const failures = sweepRoutes((route) => {
+        for (let i = 1; i < route.length - 1; i++) {
+          const previous = route[i - 1]
+          const current = route[i]
+          const next = route[i + 1]
+          const reversesX =
+            previous.y === current.y &&
+            current.y === next.y &&
+            (current.x - previous.x) * (next.x - current.x) < 0
+          const reversesY =
+            previous.x === current.x &&
+            current.x === next.x &&
+            (current.y - previous.y) * (next.y - current.y) < 0
+          if (reversesX || reversesY) {
+            return route.map((p) => `${p.x},${p.y}`).join(" ")
+          }
+        }
+        return null
+      })
+
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
+
+  // Runs the sweep AND a full preserve() per case, so it is the heaviest of the three
+  // — the one that timed out first on a busy machine. Same 30s budget as its siblings.
+  it(
+    "re-routes an untouched edge to exactly where it already is",
+    { timeout: 30_000 },
+    () => {
+      // preserve() runs on every render and every node drag. If it does not return
+      // the router's own route unchanged, an edge nobody touched creeps a little
+      // further on each drag — the geometry equivalent of a rounding leak.
+      const failures = sweepRoutes((route, s, t, sp, tp) => {
+        const again = preserveOrthogonalEdgePoints(route, s, t, sp, tp)
+        const before = route.map((p) => `${p.x},${p.y}`).join(" ")
+        const after = again.map((p) => `${p.x},${p.y}`).join(" ")
+        return before === after ? null : `${before}  =>  ${after}`
+      })
+
+      expect(failures.slice(0, 5)).toEqual([])
+    }
+  )
+
+  it("keeps a lane clear of a stub it runs alongside as a node is dragged past", () => {
+    // Reported from a real diagram: an edge leaving a class's right side and
+    // looping over the top into another class's top handle. Dragging the target
+    // class down brings its stub lane onto the SOURCE handle's own line, and the
+    // router used to shove the lane aside by a single grid cell — leaving the
+    // return run 5px above the stub it had just drawn, with a sliver between the
+    // two. It has to keep real clearance, and stay on the side it was already on
+    // rather than flipping under the source (and through the node it went around).
+    const source = { x: 525, y: 335 }
+    const stored = [
+      { x: 525, y: 335 },
+      { x: 555, y: 335 },
+      { x: 555, y: 295 },
+      { x: 270, y: 295 },
+      { x: 270, y: 325 },
+    ]
+
+    for (let dragged = 0; dragged <= 120; dragged += 5) {
+      const target = { x: 270, y: 325 + dragged }
+      const route = preserveOrthogonalEdgePoints(
+        stored,
+        source,
+        target,
+        Position.Right,
+        Position.Top
+      )
+
+      const bridge = route[route.length - 3]
+      const clearance = Math.abs(bridge.y - source.y)
+      expect(
+        clearance,
+        `dragged ${dragged}px: bridge at y=${bridge.y}`
+      ).toBeGreaterThanOrEqual(EDGES.STUB_LENGTH)
+      // And it stays above the source's line, where it started — never flipping
+      // under it, which would swing the edge through the source node's body.
+      expect(bridge.y, `dragged ${dragged}px`).toBeLessThan(source.y)
+    }
+  })
+
+  it("survives two anchors landing exactly on top of each other", () => {
+    // A node dropped onto another used to dedupe the route down to a single point,
+    // and everything downstream reads a source AND a target off it.
+    const point = { x: 100, y: 30 }
+
+    expect(
+      normalizeOrthogonalEdgePoints(
+        [],
+        point,
+        { ...point },
+        Position.Right,
+        Position.Left
+      )
+    ).toHaveLength(2)
+    expect(() =>
+      preserveOrthogonalEdgePoints(
+        [{ ...point }],
+        point,
+        { ...point },
+        Position.Right,
+        Position.Left
+      )
+    ).not.toThrow()
+  })
+
+  it("puts every router-placed bend on the canvas grid", () => {
+    // Node borders are grid-snapped, so every corner the router places must land
+    // on the grid too — otherwise the first drag of that bend jumps to it.
+    const gaps = [20, 25, 30, 35, 45, 55, 65, 100, 137]
+    const perpendicularOffsets = [60, 63, 145]
+
+    for (const gap of gaps) {
+      for (const perpendicular of perpendicularOffsets) {
+        const source = { x: 0, y: 0 }
+        const target = { x: gap, y: perpendicular }
+        const result = normalizeOrthogonalEdgePoints(
+          [],
+          source,
+          target,
+          Position.Right,
+          Position.Left
+        )
+
+        // The corners carry their endpoint's own perpendicular coordinate (they
+        // sit on the handle), so only the lane coordinate is the router's to
+        // place: x here, since the endpoints face along x.
+        const laneXs = result.slice(1, -1).map((point) => point.x)
+        for (const laneX of laneXs) {
+          expect(
+            laneX % CANVAS.SNAP_TO_GRID_PX,
+            `gap ${gap}, lane x ${laneX}`
+          ).toBe(0)
+        }
+      }
+    }
+  })
+
+  it("spends half the gap on each stub once a full stub no longer fits", () => {
+    const stubFor = (gap: number) =>
+      getEffectiveStubLength(
+        { x: 0, y: 0 },
+        { x: gap, y: 100 },
+        Position.Right,
+        Position.Left
+      )
+
+    // Roomy: both stubs get the full length.
+    expect(stubFor(200)).toBe(EDGES.STUB_LENGTH)
+    expect(stubFor(2 * EDGES.STUB_LENGTH)).toBe(EDGES.STUB_LENGTH)
+    // Tight: each side takes half the gap, so the corners still meet.
+    expect(stubFor(50)).toBe(25)
+    expect(stubFor(40)).toBe(20)
+    // Never below the floor — beyond it the edge detours instead.
+    expect(stubFor(10)).toBe(EDGES.MIN_STUB_LENGTH)
+  })
+
+  it("never reports an overlap for facing endpoints on a shared lane", () => {
+    // The straight line between them has no arms that could collapse, so no
+    // amount of proximity forces a detour.
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 50, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(false)
+    expect(
+      stubsWouldOverlap(
+        { x: 0, y: 100 },
+        { x: 0, y: 50 },
+        Position.Top,
+        Position.Bottom,
         30
       )
     ).toBe(false)
@@ -1493,55 +2120,6 @@ describe("preserveOrthogonalEdgePoints", () => {
     )
     expect(result[1]).toEqual({ x: 60, y: 200 })
     expectOrthogonalSegments(result)
-  })
-})
-
-describe("resolveReconnectPreviewBasePoints", () => {
-  it("prefers stored manual points when available", () => {
-    const result = resolveReconnectPreviewBasePoints(
-      [
-        { x: 10, y: 20 },
-        { x: 30, y: 40 },
-      ],
-      [{ x: 50, y: 60 }],
-      [{ x: 70, y: 80 }]
-    )
-
-    expect(result).toEqual([
-      { x: 10, y: 20 },
-      { x: 30, y: 40 },
-    ])
-  })
-
-  it("falls back to local custom points before computed points", () => {
-    const result = resolveReconnectPreviewBasePoints(
-      undefined,
-      [
-        { x: 15, y: 25 },
-        { x: 35, y: 45 },
-      ],
-      [{ x: 55, y: 65 }]
-    )
-
-    expect(result).toEqual([
-      { x: 15, y: 25 },
-      { x: 35, y: 45 },
-    ])
-  })
-
-  it("returns a cloned fallback path when no manual points exist", () => {
-    const fallbackPoints = [
-      { x: 5, y: 10 },
-      { x: 15, y: 20 },
-    ]
-    const result = resolveReconnectPreviewBasePoints(
-      undefined,
-      undefined,
-      fallbackPoints
-    )
-
-    expect(result).toEqual(fallbackPoints)
-    expect(result).not.toBe(fallbackPoints)
   })
 })
 

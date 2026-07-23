@@ -1,4 +1,8 @@
-import { NodeTypes } from "@xyflow/react" // Explicitly differentiate imported type
+import type { NodeTypes } from "@xyflow/react"
+import {
+  DiagramNodeTypeRecord,
+  type DiagramNodeType,
+} from "../modelElementTypes"
 import { Class, ColorDescription } from "./classDiagram"
 import { ObjectName } from "./objectDiagram"
 import { CommunicationObjectName } from "./communicationDiagram"
@@ -115,64 +119,6 @@ export const diagramNodeTypes = {
   sfcActionTable: SfcActionTable,
   sfcTransitionBranch: SfcTransitionBranch,
   sfcJump: SfcJump,
-} satisfies NodeTypes
+} satisfies Record<DiagramNodeType, NodeTypes[string]>
 
-// 2. Union type from keys
-export type DiagramNodeType = keyof typeof diagramNodeTypes
-
-// 3. Enum-like object (manually declared once, same keys)
-export const DiagramNodeTypeRecord: Record<DiagramNodeType, DiagramNodeType> = {
-  package: "package",
-  class: "class",
-  objectName: "objectName",
-  communicationObjectName: "communicationObjectName",
-  colorDescription: "colorDescription",
-  titleAndDesctiption: "titleAndDesctiption",
-  activity: "activity",
-  activityInitialNode: "activityInitialNode",
-  activityFinalNode: "activityFinalNode",
-  activityActionNode: "activityActionNode",
-  activityObjectNode: "activityObjectNode",
-  activityMergeNode: "activityMergeNode",
-  activityForkNode: "activityForkNode",
-  activityForkNodeHorizontal: "activityForkNodeHorizontal",
-  activitySwimlane: "activitySwimlane",
-  useCase: "useCase",
-  useCaseActor: "useCaseActor",
-  useCaseSystem: "useCaseSystem",
-  component: "component",
-  componentInterface: "componentInterface",
-  componentSubsystem: "componentSubsystem",
-  deploymentNode: "deploymentNode",
-  deploymentComponent: "deploymentComponent",
-  deploymentArtifact: "deploymentArtifact",
-  deploymentInterface: "deploymentInterface",
-  flowchartTerminal: "flowchartTerminal",
-  flowchartProcess: "flowchartProcess",
-  flowchartDecision: "flowchartDecision",
-  flowchartInputOutput: "flowchartInputOutput",
-  flowchartFunctionCall: "flowchartFunctionCall",
-  syntaxTreeTerminal: "syntaxTreeTerminal",
-  syntaxTreeNonterminal: "syntaxTreeNonterminal",
-  petriNetTransition: "petriNetTransition",
-  petriNetPlace: "petriNetPlace",
-  bpmnTask: "bpmnTask",
-  bpmnStartEvent: "bpmnStartEvent",
-  bpmnIntermediateEvent: "bpmnIntermediateEvent",
-  bpmnEndEvent: "bpmnEndEvent",
-  bpmnGateway: "bpmnGateway",
-  bpmnSubprocess: "bpmnSubprocess",
-  bpmnTransaction: "bpmnTransaction",
-  bpmnCallActivity: "bpmnCallActivity",
-  bpmnAnnotation: "bpmnAnnotation",
-  bpmnDataObject: "bpmnDataObject",
-  bpmnDataStore: "bpmnDataStore",
-  bpmnPool: "bpmnPool",
-  bpmnGroup: "bpmnGroup",
-  reachabilityGraphMarking: "reachabilityGraphMarking",
-  sfcStart: "sfcStart",
-  sfcStep: "sfcStep",
-  sfcActionTable: "sfcActionTable",
-  sfcTransitionBranch: "sfcTransitionBranch",
-  sfcJump: "sfcJump",
-} as const
+export { DiagramNodeTypeRecord, type DiagramNodeType }

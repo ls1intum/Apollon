@@ -56,18 +56,13 @@ import {
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
 import { ClassStereotype, UMLDiagramType } from "@/types"
+import { CANVAS, EDGES, INTERFACE } from "@/utils/geometry/routingConstants"
+
+export { CANVAS, EDGES, INTERFACE }
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
 /* -------------------------------------------------------------------------- */
-export const CANVAS = Object.freeze({
-  MIN_SCALE_TO_ZOOM_OUT: 0.4,
-  MAX_SCALE_TO_ZOOM_IN: 2.5,
-  MOUSE_UP_OFFSET_PX: 5,
-  SNAP_TO_GRID_PX: 5,
-  EXTRA_SPACE_FOR_EXTENSION: 10,
-  PASTE_OFFSET_PX: 20,
-} as const)
 
 /* -------------------------------------------------------------------------- */
 /* Theme                                                                      */
@@ -197,20 +192,6 @@ export const generateUUID = (): string => {
   return `${h.slice(0, 4).join("")}-${h.slice(4, 6).join("")}-${h.slice(6, 8).join("")}-${h.slice(8, 10).join("")}-${h.slice(10, 16).join("")}`
 }
 
-// Interface-component sizing. The flat aliases below are local-only; public
-// consumers (and the rest of the library) should reach for `INTERFACE.*`.
-const INTERFACE_SIZE = 30
-const INTERFACE_RADIUS = INTERFACE_SIZE / 2
-const INTERFACE_STROKE_WIDTH = 2
-const INTERFACE_SOCKET_GAP = 4
-
-export const INTERFACE = Object.freeze({
-  SIZE: INTERFACE_SIZE,
-  RADIUS: INTERFACE_RADIUS,
-  STROKE_WIDTH: INTERFACE_STROKE_WIDTH,
-  SOCKET_GAP: INTERFACE_SOCKET_GAP,
-} as const)
-
 /* -------------------------------------------------------------------------- */
 /* Edges                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -227,72 +208,6 @@ const BPMN_MARKER_SIZE = 11
 const RHOMBUS_MARKER_SIZE = 24
 // 1/phi, inside the 0.588-0.706 thickness band those tools use.
 const RHOMBUS_HEIGHT_FACTOR = 0.618
-
-export const EDGES = Object.freeze({
-  /** Negative padding extends target point to node boundary (React Flow handles are offset 3px) */
-  MARKER_PADDING: -3,
-  /** Positive padding pulls source point back to node boundary (React Flow handles are offset 3px from node edge) */
-  SOURCE_CONNECTION_POINT_PADDING: 3,
-  /** Border radius for step-style edge corners */
-  STEP_BORDER_RADIUS: 0,
-  /** Width of the invisible stroke used for edge selection/highlighting */
-  EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
-  /** Height of the line-jump bridge used when edges cross */
-  EDGE_LINE_JUMP_HEIGHT: 10,
-  /** Length of the line-jump bridge along the crossed segment */
-  EDGE_LINE_JUMP_WIDTH: 16,
-  /** Stub length locked to node, matches getSmoothStepPath offset */
-  STUB_LENGTH: 30,
-  /** Minimum total edge length (screen px) for the endpoint reconnect handles
-   * to be active. Short edges fall back to always-editable (see
-   * useStepPathEdge), so this only gates medium/long edges. */
-  BEND_MIN_LENGTH: 100,
-  /** Bend handle long-axis size, in screen px (the minimum kept across zoom). */
-  BEND_HANDLE_SCREEN_LENGTH_PX: 34,
-  /** Minimum clearance, in screen px, between a bend handle and the segment's
-   * corners — how close a handle is allowed to sit to a corner. */
-  BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
-  /** A segment shows a bend handle once its ON-SCREEN length can host the
-   * handle with corner clearance on both sides: 34 + 2*10 = 54px. Screen-based
-   * so zooming in reveals handles on shorter segments (and never hides them). */
-  BEND_HANDLE_MIN_SEGMENT_SCREEN_PX: 34 + 2 * 10,
-  /** "Safe area" next to a node, in flow px: a bend handle is never placed
-   * within this distance of a node connection point, and that part of a
-   * terminal segment is excluded when deciding whether a handle fits. Keeps
-   * handles out of the locked stub so dragging never produces a detached
-   * slim sliver near the node. */
-  BEND_HANDLE_SAFE_AREA_PX: 25,
-  /** Size of the invisible endpoint hit target used for edge reconnection */
-  ENDPOINT_HIT_TARGET_SIZE: 24,
-  /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
-   * up with grid-snapped node handles. */
-  BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,
-  /** Connector length at/below which a *monotonic* orthogonal stair-step (a
-   * same-direction dogleg) is treated as a rounding artifact and flattened.
-   * Must stay strictly below BEND_SNAP_GRID_PX, otherwise the smallest
-   * deliberate single-step bend would be flattened and the edge would snap
-   * back to a straight line on release. */
-  ORTHOGONAL_DOGLEG_TOLERANCE_PX: 2,
-  /** Gap at/below which two parallel arms that double back over each other
-   * (an opposite-direction U-turn) are treated as a degenerate self-overlap
-   * and the route is reset. Independent of the snap grid: a doubled-back
-   * U-turn is never a deliberate edit, so this stays at the visual-merge
-   * threshold rather than the per-step threshold. */
-  ORTHOGONAL_ARM_OVERLAP_PX: 10,
-  /** Perpendicular gap (flow px) between an edge's mid-segment line and the
-   * near edge of its relationship/stereotype label. The label sits this far
-   * off the line on whichever side is clearer. */
-  LABEL_GAP: 14,
-  /** Nominal label line height (flow px) used as the across-text depth of the
-   * candidate box when scoring which side a label sits on. Constant by
-   * construction — placement never measures the rendered text (mirrors the
-   * messageLayout.ts invariant). */
-  LABEL_LINE_HEIGHT: 14,
-  /** Nominal half-width (flow px) of a label along its text axis, used only to
-   * build the candidate box for side scoring. Coarse on purpose: we choose a
-   * side, not a pixel-perfect fit. */
-  LABEL_NOMINAL_HALF_EXTENT: 40,
-} as const)
 
 /* -------------------------------------------------------------------------- */
 /* Z-Index                                                                    */
@@ -329,7 +244,7 @@ export interface MarkerConfig {
 }
 
 // Interface socket markers - radius derived from INTERFACE.RADIUS
-const INTERFACE_SOCKET_SIZE = INTERFACE_RADIUS // Must equal INTERFACE.SIZE / 2
+const INTERFACE_SOCKET_SIZE = INTERFACE.RADIUS // Must equal INTERFACE.SIZE / 2
 
 export const MARKER_CONFIGS = Object.freeze({
   // Class diagram markers
@@ -368,15 +283,17 @@ export const MARKER_CONFIGS = Object.freeze({
     widthFactor: 1.0,
     heightFactor: 0.866,
   },
-  // Component/Deployment diagram - interface socket
-  // Size = interface radius so arc perfectly overlaps the interface circle
+  // Component/Deployment diagram — interface socket. InlineMarker derives the
+  // actual socket radius from the target ball plus the configured gap.
   "required-interface": {
     type: "semicircle",
     filled: false,
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 150,
+    // A fifteen-degree opening keeps the socket visibly distinct from a closed
+    // circle while preserving the canonical near-semicircle shape.
+    arcSpanDegrees: 165,
   },
   "required-interface-quarter": {
     type: "semicircle",
@@ -384,7 +301,8 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 90,
+    // Adjacent cardinal sockets retain the same 5° seam.
+    arcSpanDegrees: 85,
   },
   "required-interface-threequarter": {
     type: "semicircle",
@@ -392,7 +310,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 270,
+    arcSpanDegrees: 265,
   },
   // BPMN markers - compact style
   "bpmn-white-triangle": {
@@ -682,8 +600,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "componentInterface",
-      width: INTERFACE_SIZE,
-      height: INTERFACE_SIZE,
+      width: INTERFACE.SIZE,
+      height: INTERFACE.SIZE,
       defaultData: { name: "Interface" },
       svg: ComponentInterfaceNodeSVG,
       marginTop: 10,
@@ -717,8 +635,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "deploymentInterface",
-      width: INTERFACE_SIZE,
-      height: INTERFACE_SIZE,
+      width: INTERFACE.SIZE,
+      height: INTERFACE.SIZE,
       defaultData: { name: "Interface" },
       svg: DeploymentInterfaceSVG,
       marginTop: 10,

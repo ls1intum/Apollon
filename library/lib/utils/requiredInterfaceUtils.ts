@@ -16,6 +16,10 @@ type ResolveRequiredInterfaceEdgeTypeParams = {
   requiredTypes: readonly string[]
   defaultType: string
   reducedType: string
+  /** Settled/preview route sides, when available. Auto-layout may move an edge
+   * away from its stored RF handle, and the socket must describe what is
+   * actually drawn rather than that stale suggestion. */
+  targetPositionByEdgeId?: ReadonlyMap<string, Position>
 }
 
 const arePositionsOpposite = (pos1: Position, pos2: Position): boolean => {
@@ -47,6 +51,7 @@ export function resolveRequiredInterfaceEdgeType({
   requiredTypes,
   defaultType,
   reducedType,
+  targetPositionByEdgeId,
 }: ResolveRequiredInterfaceEdgeTypeParams): string {
   if (!requiredTypes.includes(type)) {
     return type
@@ -65,11 +70,15 @@ export function resolveRequiredInterfaceEdgeType({
     return reducedType
   }
 
-  const currentTargetPosition = getPositionFromHandleId(targetHandleId ?? null)
+  const currentTargetPosition =
+    targetPositionByEdgeId?.get(id) ??
+    getPositionFromHandleId(targetHandleId ?? null)
   const hasOppositeRequiredEdge = requiredEdgesOnTarget
     .filter((edge) => edge.id !== id)
     .some((edge) => {
-      const otherPosition = getPositionFromHandleId(edge.targetHandle ?? null)
+      const otherPosition =
+        targetPositionByEdgeId?.get(edge.id) ??
+        getPositionFromHandleId(edge.targetHandle ?? null)
       return arePositionsOpposite(currentTargetPosition, otherPosition)
     })
 

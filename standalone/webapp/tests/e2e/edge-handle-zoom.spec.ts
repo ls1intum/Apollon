@@ -129,6 +129,41 @@ test("the endpoint reconnect grip stays anchored to the endpoint across zoom", a
   ).toBeLessThanOrEqual(16)
 })
 
+test("the endpoint grip outline scales with the handle across zoom (not a fixed screen width)", async ({
+  page,
+}) => {
+  // The grip's outline must track the handle body, not stay pinned to a constant screen
+  // width (which reads too thick zoomed out / too thin zoomed in). The stroke-width is set
+  // in flow units as `2 * screenScale`, so as you zoom OUT (screenScale = 1/zoom grows) the
+  // flow-space width grows to hold a constant ON-SCREEN width — proving it is NOT a
+  // non-scaling-stroke pinned at 2px.
+  await openFixtureInLocalEditor(page, classDiagram)
+  await waitForCanvasReady(page)
+  const id = "edge-inheritance-dog-animal"
+  const strokeUserUnits = () =>
+    page.evaluate((eid) => {
+      const g = document.querySelector(`.react-flow__edge[data-id="${eid}"]`)
+      const grip = g?.querySelector(".edge-endpoint-grip--source") as SVGElement
+      return grip ? parseFloat(getComputedStyle(grip).strokeWidth) : -1
+    }, id)
+
+  await selectEdge(page, id)
+  const atDefault = await strokeUserUnits()
+  expect(atDefault, "outline ~4 flow-units at zoom 1").toBeGreaterThan(3)
+  expect(atDefault).toBeLessThan(5)
+
+  const zoom = await zoomOutUntil(page, 0.5)
+  await selectEdge(page, id)
+  const zoomedOut = await strokeUserUnits()
+  // Zoomed out to `zoom`, the flow-space stroke must have grown by ~1/zoom to hold its
+  // on-screen width — a fixed non-scaling stroke would have stayed at ~2.
+  expect(
+    zoomedOut,
+    "outline flow-width must grow when zoomed out so its on-screen width is constant"
+  ).toBeGreaterThan(atDefault + 0.5)
+  expect(zoomedOut).toBeCloseTo(atDefault / zoom, 0)
+})
+
 test("edge handles stay usable when zoomed out and grow when zoomed in", async ({
   page,
 }) => {

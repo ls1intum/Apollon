@@ -1,11 +1,11 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c1",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Observer Diagram",
   "type": "ClassDiagram",
   "nodes": [
     {
-      "width": 225,
+      "width": 230,
       "height": 130,
       "id": "ea2576c6-d132-47d0-8caa-8f4a6df78256",
       "type": "class",
@@ -26,15 +26,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 225, "height": 130 },
+      "measured": { "width": 230, "height": 130 },
       "dragging": true
     },
     {
-      "width": 225,
+      "width": 230,
       "height": 130,
       "id": "db6efc15-44dc-427e-9352-1a4bed4d239b",
       "type": "class",
-      "position": { "x": -60, "y": 290 },
+      "position": { "x": -60, "y": 215 },
       "data": {
         "name": "ConcretePublisher",
         "methods": [
@@ -51,15 +51,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 225, "height": 130 },
+      "measured": { "width": 230, "height": 130 },
       "dragging": true
     },
     {
-      "width": 200,
+      "width": 180,
       "height": 70,
       "id": "659c7ab7-a771-400c-bd7c-ef061f1668f3",
       "type": "class",
-      "position": { "x": 450, "y": 310 },
+      "position": { "x": 265, "y": 215 },
       "data": {
         "name": "ConcreteSubscriber",
         "methods": [
@@ -68,16 +68,16 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 200, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true,
       "resizing": false
     },
     {
-      "width": 230,
+      "width": 180,
       "height": 70,
       "id": "b399bebd-10a6-444d-9c09-cf14f41aec7d",
       "type": "class",
-      "position": { "x": 435, "y": 30 },
+      "position": { "x": 265, "y": 60 },
       "data": {
         "name": "Subscriber",
         "methods": [
@@ -86,7 +86,7 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 230, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "resizing": false,
       "dragging": true
     }
@@ -99,7 +99,12 @@
       "targetHandle": "bottom",
       "id": "1737998028042-db6efc15-44dc-427e-9352-1a4bed4d239b-ea2576c6-d132-47d0-8caa-8f4a6df78256",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "ea2576c6-d132-47d0-8caa-8f4a6df78256",
@@ -108,7 +113,8 @@
       "targetHandle": "left-top",
       "id": "1737998083879-ea2576c6-d132-47d0-8caa-8f4a6df78256-b399bebd-10a6-444d-9c09-cf14f41aec7d",
       "type": "ClassBidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "659c7ab7-a771-400c-bd7c-ef061f1668f3",
@@ -117,7 +123,12 @@
       "targetHandle": "bottom",
       "id": "1737998095406-659c7ab7-a771-400c-bd7c-ef061f1668f3-b399bebd-10a6-444d-9c09-cf14f41aec7d",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     }
   ],
   "assessments": {}

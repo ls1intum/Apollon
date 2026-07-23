@@ -1,0 +1,42 @@
+{
+  "id": "package-top-edge-fixture",
+  "version": "4.1.0",
+  "title": "Package top edge",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "package",
+      "type": "package",
+      "position": { "x": 185, "y": 350 },
+      "width": 160,
+      "height": 120,
+      "measured": { "width": 160, "height": 120 },
+      "data": { "name": "Package" }
+    },
+    {
+      "id": "class",
+      "type": "class",
+      "position": { "x": 185, "y": 130 },
+      "width": 160,
+      "height": 100,
+      "measured": { "width": 160, "height": 100 },
+      "data": {
+        "name": "Class",
+        "methods": [{ "id": "method", "name": "+ method()" }],
+        "attributes": [{ "id": "attribute", "name": "+ attribute: Type" }]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "class-to-package",
+      "type": "ClassUnidirectional",
+      "source": "class",
+      "target": "package",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-mid-left",
+      "data": { "points": [] }
+    }
+  ],
+  "assessments": {}
+}

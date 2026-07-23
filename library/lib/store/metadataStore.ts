@@ -7,7 +7,29 @@ import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
 import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
+import type { Edge } from "@xyflow/react"
 import { DISABLED_TAG_CONFIG, type TagConfig } from "@/utils/tagUtils"
+
+/**
+ * An edge whose route is being dragged right now. Bend geometry is authoritative;
+ * endpoint geometry can instead describe the exact edge pointer-up will commit so
+ * the central solver generates the whole live route set under committed constraints.
+ * `null` whenever nothing is dragging.
+ */
+export type LiveEdgeOverride = {
+  edgeId: string
+  points: IPoint[]
+  /** Predicted committed edge semantics during an endpoint drag. Bend drags may
+   * omit this because source/target/anchors do not change. */
+  edge?: Edge
+  /**
+   * Endpoint reconnects must be routed under the exact constraints the predicted
+   * edge will have after pointer-up. In that mode `points` is only an immediate
+   * interaction fallback; the central solver generates the authoritative preview.
+   * Bend drags omit this and keep their authored polyline byte-for-byte.
+   */
+  strategy?: "authoritative" | "predicted"
+}
 
 export type MetadataStore = {
   diagramTitle: string
@@ -30,12 +52,23 @@ export type MetadataStore = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  reconnectPreviewEdgeId: string | null
-  reconnectPreviewHandleType: "source" | "target" | null
-  reconnectPreviewBasePoints: IPoint[]
+  liveEdgeOverride: LiveEdgeOverride | null
+  /** A NEW connection being drawn onto a node, published as a transient edge so
+   * the central solver routes every OTHER edge as if it already existed — the
+   * neighbours fan/re-anchor to make room LIVE, instead of jumping on release.
+   * Never touches the diagram store (no undo/Yjs); cleared when the drag ends. */
+  pendingConnectionEdge: Edge | null
+  /** The id the edge under construction WILL be committed with, minted once when the
+   * drag starts. The preview must carry it: parallel siblings tie on every geometric
+   * key, so `computeParallelInfo` settles their lane order by edge id — preview and
+   * commit therefore have to share one identity, or the bundle re-lanes on release
+   * (the very jump the preview exists to prevent). Null when no drag is in flight. */
+  pendingConnectionId: string | null
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
+  setPendingConnectionEdge: (edge: Edge | null) => void
+  setPendingConnectionId: (id: string | null) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setMultiSelectionMode: (multiSelectionMode: boolean) => void
@@ -48,12 +81,7 @@ export type MetadataStore = {
     sourceHandleId: string | null
   ) => void
   stopConnectionGuidance: () => void
-  startReconnectPreview: (
-    edgeId: string,
-    handleType: "source" | "target",
-    basePoints: IPoint[]
-  ) => void
-  stopReconnectPreview: () => void
+  setLiveEdgeOverride: (override: LiveEdgeOverride | null) => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
   updateMetaData: (diagramTitle: string, diagramType: UMLDiagramType) => void
@@ -79,9 +107,9 @@ type InitialMetadataState = {
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
   connectionGuidanceSourceHandleId: string | null
-  reconnectPreviewEdgeId: string | null
-  reconnectPreviewHandleType: "source" | "target" | null
-  reconnectPreviewBasePoints: IPoint[]
+  liveEdgeOverride: LiveEdgeOverride | null
+  pendingConnectionEdge: Edge | null
+  pendingConnectionId: string | null
 }
 const initialMetadataState: InitialMetadataState = {
   // Empty by default — an untitled diagram stays untitled (hosts render their own
@@ -102,9 +130,9 @@ const initialMetadataState: InitialMetadataState = {
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
   connectionGuidanceSourceHandleId: null,
-  reconnectPreviewEdgeId: null,
-  reconnectPreviewHandleType: null,
-  reconnectPreviewBasePoints: [],
+  liveEdgeOverride: null,
+  pendingConnectionEdge: null,
+  pendingConnectionId: null,
 }
 
 export const createMetadataStore = (
@@ -261,30 +289,20 @@ export const createMetadataStore = (
           )
         },
 
-        startReconnectPreview: (edgeId, handleType, basePoints) => {
+        setLiveEdgeOverride: (override) => {
+          set({ liveEdgeOverride: override }, undefined, "setLiveEdgeOverride")
+        },
+
+        setPendingConnectionEdge: (edge) => {
           set(
-            {
-              reconnectPreviewEdgeId: edgeId,
-              reconnectPreviewHandleType: handleType,
-              reconnectPreviewBasePoints: basePoints.map((point) => ({
-                ...point,
-              })),
-            },
+            { pendingConnectionEdge: edge },
             undefined,
-            "startReconnectPreview"
+            "setPendingConnectionEdge"
           )
         },
 
-        stopReconnectPreview: () => {
-          set(
-            {
-              reconnectPreviewEdgeId: null,
-              reconnectPreviewHandleType: null,
-              reconnectPreviewBasePoints: [],
-            },
-            undefined,
-            "stopReconnectPreview"
-          )
+        setPendingConnectionId: (id) => {
+          set({ pendingConnectionId: id }, undefined, "setPendingConnectionId")
         },
 
         setDebug: (debug) => {

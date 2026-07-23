@@ -32,7 +32,10 @@ import {
   type AssessmentSelectionStore,
 } from "@/store/assessmentSelectionStore"
 import { createAlignmentGuidesStore } from "@/store/alignmentGuidesStore"
-import { createEdgeGeometryStore } from "@/store/edgeGeometryStore"
+import {
+  createEdgeGeometryStore,
+  type EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
 import {
   DiagramStoreContext,
   MetadataStoreContext,
@@ -128,6 +131,7 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
+  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private readonly overlayStore: StoreApi<OverlayStore>
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private readonly controlGenerations = new Map<string, number>()
@@ -159,7 +163,7 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
-    const edgeGeometryStore = createEdgeGeometryStore()
+    this.edgeGeometryStore = createEdgeGeometryStore()
     this.overlayStore = createOverlayStore()
     this.syncManager = new YjsSync(
       this.ydoc,
@@ -273,7 +277,9 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={alignmentGuidesStore}
               >
-                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                <EdgeGeometryStoreContext.Provider
+                  value={this.edgeGeometryStore}
+                >
                   <OverlayStoreContext.Provider value={this.overlayStore}>
                     <AppWithProvider
                       onReactFlowInit={this.setReactFlowInstance.bind(this)}
@@ -664,6 +670,7 @@ export class ApollonEditor {
     }
 
     try {
+      const routingGeneration = edgeGeometryStore.getState().acceptedGeneration
       diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
       diagramStore.getState().setAssessments(model.assessments)
 
@@ -683,6 +690,7 @@ export class ApollonEditor {
                         onReactFlowInit={setReactFlowInstance}
                         collaboration={disabledCollaboration}
                         awareness={noopCollaborationAwareness}
+                        onlyRenderVisibleElements={false}
                       />
                     </OverlayStoreContext.Provider>
                   </EdgeGeometryStoreContext.Provider>
@@ -731,16 +739,24 @@ export class ApollonEditor {
         }
       }
 
-      // Wait for ReactFlow to fully lay out nodes and measure custom handle
-      // positions (especially for non-rectangular shapes like parallelograms).
-      // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
+      // Let React Flow publish its measured handles before awaiting the exact
+      // solve that consumes them.
       await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => resolve())
-          })
-        }, 150)
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
       })
+
+      if (model.edges.length > 0) {
+        await Promise.race([
+          edgeGeometryStore.getState().waitForSettled(routingGeneration),
+          new Promise<never>((_, reject) => {
+            setTimeout(
+              () =>
+                reject(new Error("Edge geometry did not settle before export")),
+              3000
+            )
+          }),
+        ])
+      }
 
       filterRenderedElements(container, options)
 
@@ -1138,11 +1154,57 @@ export class ApollonEditor {
    * Dev/test-only performance probe; returns `undefined` in production.
    * @internal — not part of the public API; stripped from the published d.ts.
    */
-  public __perf():
+  public __perf(skipDocumentEncoding = false):
     | {
         encodedDocBytes: number
         nodesMapSize: number
         storeNodeWrites: number
+        edgeSearches: number
+        edgeSearchExpansions: number
+        edgeSearchesMaxExpansions: number
+        edgeSearchesAbandoned: number
+        edgeSearchMs: number
+        edgeSearchMaxMs: number
+        edgeSearchSetupMs: number
+        edgeSearchLoopMs: number
+        edgeStepPricings: number
+        edgeHeuristicEvaluations: number
+        edgeHeapPushes: number
+        edgeIncumbentBounds: number
+        edgeBoundPrunes: number
+        edgeMaxCells: number
+        routeScorePairs: number
+        routeScoreMs: number
+        routeScoreRuns: number
+        solveMs: number
+        solveMaxMs: number
+        solveCount: number
+        workerSolveCount: number
+        workerResponseCount: number
+        workerAttemptCount: number
+        workerFallbackCount: number
+        workerInitialSyncCount: number
+        workerSmallSyncCount: number
+        workerSerializeMaxMs: number
+        workerPostMessageMaxMs: number
+        workerRoundTripMaxMs: number
+        workerDispatchDelayMaxMs: number
+        workerSnapshotAgeMaxMs: number
+        workerReleaseExactMaxMs: number
+        workerReleaseSettledMaxMs: number
+        workerHolisticPreviewCount: number
+        workerFirstPreviewMaxMs: number
+        workerPreviewGapMaxMs: number
+        workerLatestInputRevision: number
+        workerLastDispatchedRevision: number
+        workerLastAcceptedRevision: number
+        previewDecisionHoldCount: number
+        previewDecisionConfirmCount: number
+        previewDecisionInvalidationCount: number
+        edgeRenderCount: number
+        routingSolving: number
+        routingPreviewCount: number
+        diagramEdgeCount: number
       }
     | undefined {
     if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
@@ -1151,9 +1213,60 @@ export class ApollonEditor {
     const counters = getPerfCounters()
 
     return {
-      encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
+      encodedDocBytes: skipDocumentEncoding
+        ? 0
+        : Y.encodeStateAsUpdate(this.ydoc).byteLength,
       nodesMapSize: getNodesMap(this.ydoc).size,
       storeNodeWrites: counters?.storeNodeWrites ?? 0,
+      edgeSearches: counters?.routerSearches ?? 0,
+      edgeSearchExpansions: counters?.routerExpansions ?? 0,
+      edgeSearchesMaxExpansions: counters?.routerMaxExpansions ?? 0,
+      edgeSearchesAbandoned: counters?.routerAbandoned ?? 0,
+      edgeSearchMs: counters?.routerSearchMs ?? 0,
+      edgeSearchMaxMs: counters?.routerSearchMaxMs ?? 0,
+      edgeSearchSetupMs: counters?.routerSetupMs ?? 0,
+      edgeSearchLoopMs: counters?.routerLoopMs ?? 0,
+      edgeStepPricings: counters?.routerStepPricings ?? 0,
+      edgeHeuristicEvaluations: counters?.routerHeuristicEvaluations ?? 0,
+      edgeHeapPushes: counters?.routerHeapPushes ?? 0,
+      edgeIncumbentBounds: counters?.routerIncumbentBounds ?? 0,
+      edgeBoundPrunes: counters?.routerBoundPrunes ?? 0,
+      edgeMaxCells: counters?.routerMaxCells ?? 0,
+      routeScorePairs: counters?.routeScorePairs ?? 0,
+      routeScoreMs: counters?.routeScoreMs ?? 0,
+      routeScoreRuns: counters?.routeScoreRuns ?? 0,
+      solveMs: counters?.solveMs ?? 0,
+      solveMaxMs: counters?.solveMaxMs ?? 0,
+      solveCount: counters?.solveCount ?? 0,
+      workerSolveCount: counters?.workerSolveCount ?? 0,
+      workerResponseCount: counters?.workerResponseCount ?? 0,
+      workerAttemptCount: counters?.workerAttemptCount ?? 0,
+      workerFallbackCount: counters?.workerFallbackCount ?? 0,
+      workerInitialSyncCount: counters?.workerInitialSyncCount ?? 0,
+      workerSmallSyncCount: counters?.workerSmallSyncCount ?? 0,
+      workerSerializeMaxMs: counters?.workerSerializeMaxMs ?? 0,
+      workerPostMessageMaxMs: counters?.workerPostMessageMaxMs ?? 0,
+      workerRoundTripMaxMs: counters?.workerRoundTripMaxMs ?? 0,
+      workerDispatchDelayMaxMs: counters?.workerDispatchDelayMaxMs ?? 0,
+      workerSnapshotAgeMaxMs: counters?.workerSnapshotAgeMaxMs ?? 0,
+      workerReleaseExactMaxMs: counters?.workerReleaseExactMaxMs ?? 0,
+      workerReleaseSettledMaxMs: counters?.workerReleaseSettledMaxMs ?? 0,
+      workerHolisticPreviewCount: counters?.workerHolisticPreviewCount ?? 0,
+      workerFirstPreviewMaxMs: counters?.workerFirstPreviewMaxMs ?? 0,
+      workerPreviewGapMaxMs: counters?.workerPreviewGapMaxMs ?? 0,
+      workerLatestInputRevision: counters?.workerLatestInputRevision ?? 0,
+      workerLastDispatchedRevision: counters?.workerLastDispatchedRevision ?? 0,
+      workerLastAcceptedRevision: counters?.workerLastAcceptedRevision ?? 0,
+      previewDecisionHoldCount: counters?.previewDecisionHoldCount ?? 0,
+      previewDecisionConfirmCount: counters?.previewDecisionConfirmCount ?? 0,
+      previewDecisionInvalidationCount:
+        counters?.previewDecisionInvalidationCount ?? 0,
+      edgeRenderCount: counters?.edgeRenderCount ?? 0,
+      routingSolving: this.edgeGeometryStore.getState().isSolving ? 1 : 0,
+      routingPreviewCount: Object.keys(
+        this.edgeGeometryStore.getState().previewById
+      ).length,
+      diagramEdgeCount: this.diagramStore.getState().edges.length,
     }
   }
 

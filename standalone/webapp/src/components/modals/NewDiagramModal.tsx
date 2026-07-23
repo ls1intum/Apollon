@@ -12,6 +12,7 @@ import {
   TabsTrigger,
 } from "@tumaet/ui/components/tabs"
 import { log } from "@/logger"
+import { prepareTemplateModel } from "@/utils/templateModels"
 import {
   HomeDialogActions,
   HomeDialogContent,
@@ -174,16 +175,15 @@ export const NewDiagramModal = () => {
         throw new Error("Selected template data not found")
       }
 
-      const templateModel =
-        typeof structuredClone === "function"
-          ? structuredClone(jsonData)
-          : JSON.parse(JSON.stringify(jsonData))
-
-      templateModel.title = newDiagramTitle
       // Templates ship with fixed ids (several even share one), so give each
       // created diagram a fresh id — otherwise creating two collides on the
-      // same store key and one silently overwrites the other.
-      templateModel.id = crypto.randomUUID()
+      // same store key and one silently overwrites the other. Preparing also
+      // removes stale React Flow interaction flags captured in the JSON asset
+      // without discarding deliberate pinned endpoints or authored bends.
+      const templateModel = prepareTemplateModel(jsonData, {
+        id: crypto.randomUUID(),
+        title: newDiagramTitle,
+      })
 
       createModel(templateModel)
       closeModal()

@@ -93,6 +93,22 @@ function interiorCrossing(h: Seg, v: Seg, margin = 6): P | null {
 
 const near = (a: P, b: P, tol = 5) => Math.hypot(a.x - b.x, a.y - b.y) < tol
 
+// The renderer draws at most one bridge per jump-width window: two crossings closer
+// than EDGES.EDGE_LINE_JUMP_WIDTH on the same line would draw as overlapping arcs, so
+// buildPathWithLineJumps keeps the first and omits the rest (see the `< jumpWidth`
+// guard there). A crossing consolidated into a neighbouring bridge like that is
+// COVERED, not missed — the arc a reader sees spans the cluster. This mirrors that
+// contract: a crossing counts as bridged if a bridge sits on it, or on the same line
+// within one jump-width of it.
+const JUMP_WIDTH = 16
+const isBridged = (c: P, bridges: P[]) =>
+  bridges.some(
+    (p) =>
+      near(c, p) ||
+      (Math.abs(p.y - c.y) < 3 && Math.abs(p.x - c.x) < JUMP_WIDTH) ||
+      (Math.abs(p.x - c.x) < 3 && Math.abs(p.y - c.y) < JUMP_WIDTH)
+  )
+
 async function checkIntegrity(page: Page) {
   const loc = page.locator(".react-flow__edge")
   const n = await loc.count()
@@ -122,7 +138,7 @@ async function checkIntegrity(page: Page) {
     e.bridges.map((p) => ({ ...p, id: e.id }))
   )
   const floating = bridges.filter((p) => !crossings.some((c) => near(c, p)))
-  const unmarked = crossings.filter((c) => !bridges.some((p) => near(c, p)))
+  const unmarked = crossings.filter((c) => !isBridged(c, bridges))
   return { crossings, bridges, floating, unmarked }
 }
 
@@ -135,18 +151,26 @@ test.describe("Line-jump geometry integrity", () => {
   // Each fixture must satisfy both invariants. deployment / use-case use
   // straight-path / diagonal edges — they must produce NO floating bridges
   // (the exact regression where re-derived geometry hallucinated crossings).
-  for (const fixture of [
-    "line-jump-cross.json",
-    "line-jump-complex.json",
-    "deployment-diagram.json",
-    "use-case-diagram.json",
-    "class-diagram.json",
+  // `mustCross` fixtures are designed to contain crossings — if one stops producing
+  // any, the two `[]` assertions below pass vacuously, so we require the crossings to
+  // exist. The others exercise the no-false-bridge path and legitimately have none.
+  for (const { fixture, mustCross } of [
+    { fixture: "line-jump-cross.json", mustCross: true },
+    { fixture: "line-jump-complex.json", mustCross: true },
+    { fixture: "deployment-diagram.json", mustCross: false },
+    { fixture: "use-case-diagram.json", mustCross: false },
+    { fixture: "class-diagram.json", mustCross: false },
   ]) {
     test(`${fixture}: every bridge sits on a real crossing`, async ({
       page,
     }) => {
       await loadFixture(page, fixture)
       const r = await checkIntegrity(page)
+      if (mustCross)
+        expect(
+          r.crossings.length,
+          "fixture no longer produces crossings — the checks below would pass vacuously"
+        ).toBeGreaterThan(0)
       expect(r.floating, "bridges floating off any crossing").toEqual([])
       expect(r.unmarked, "real crossings with no bridge").toEqual([])
     })

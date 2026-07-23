@@ -893,6 +893,16 @@
   background-color: var(--apollon-primary, #3e8acc) !important;
 }
 
+/* While DRAGGING a connection (the ghost line SVG is present), the edge auto-
+   anchors to a SINGLE point — the ghost marks it with one dot — rather than
+   attaching at a fixed handle. Showing a circle on every handle would mislead about
+   where it connects, so hide them for the duration of the drag. Click-to-connect
+   guidance (no ghost line) is unaffected — its circles are the click targets. */
+.apollon-editor--connection-guidance:has(.react-flow__connectionline)
+  .react-flow__handle.connectionindicator {
+  opacity: 0 !important;
+}
+
 .edge-bend-handle {
   opacity: 0;
   stroke: none;
@@ -911,12 +921,16 @@
   opacity: 0;
   fill: var(--apollon-background, #fff);
   stroke: var(--apollon-primary, #3e8acc);
-  stroke-width: 2px;
+
+  /* stroke-width is set inline, scaled by the handle screen scale, so the outline
+     tracks the handle across zoom (NO non-scaling-stroke — that would pin it to a
+     constant screen width and read as too thick zoomed out / too thin zoomed in).
+     Painted UNDER the fill so it reads as a clean outer ring. */
+  paint-order: stroke;
   transition:
     fill 120ms ease,
     opacity 120ms ease,
     stroke 120ms ease;
-  vector-effect: non-scaling-stroke;
 }
 
 .edge-endpoint-handle {
@@ -950,6 +964,11 @@
   );
 }
 
+/* A USER-PINNED end (custom anchor) keeps the same clean white "handle" look as an
+   auto grip — a hollow pill with a blue outline — so it never disappears into a solid
+   bend handle it overlaps. The pinned state is surfaced through the reset affordance in
+   the edge toolbar rather than by restyling the grip. */
+
 .react-flow__edge:hover .edge-bend-handle:hover,
 .react-flow__edge.selected .edge-bend-handle:hover {
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
@@ -960,8 +979,12 @@
 }
 
 .react-flow__edge.selected .edge-overlay {
+  /* Invisible while selected (the coloured selection styling lives elsewhere) but
+     KEEP it pointer-live: with RF's fat interaction ribbon removed
+     (interactionWidth=0), this overlay stroke is the only mid-body click surface, so
+     clicking a selected edge's body must still land on it rather than fall through to
+     the pane and deselect. At ±7.5px it never reaches a co-located neighbour's handle. */
   opacity: 0;
-  pointer-events: none;
 }
 
 .react-flow__edge:hover .react-flow__edge-path,
@@ -1449,12 +1472,30 @@ svg.react-flow__connectionline {
   cursor: grabbing;
 }
 
-/* Edge toolbar: only buttons capture pointer events, not the box body. */
-.apollon-edge-toolbar {
+/* Node and edge actions use the same compact shadcn-style button group. React
+   Flow owns positioning/scaling; the shared group owns appearance and hit areas. */
+.react-flow__node-toolbar.apollon-element-toolbar-host,
+.react-flow__edge-toolbar.apollon-element-toolbar-host {
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   pointer-events: none;
 }
 
-.apollon-edge-toolbar > * {
+.apollon-element-toolbar {
+  padding: 2px;
+  background: var(--apollon-surface, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  pointer-events: none;
+}
+
+.apollon-element-toolbar [data-slot="icon-button"] {
   pointer-events: auto;
 }
 

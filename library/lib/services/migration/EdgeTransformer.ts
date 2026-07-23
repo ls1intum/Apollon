@@ -10,7 +10,8 @@ import type { ApollonEdge, UMLModel, OrthogonalEdgeData } from "@/typings"
 
 /**
  * Returns a new edge whose data is free of stale runtime geometry. Does NOT
- * mutate the input. A null/absent `data` is normalized to an empty object.
+ * mutate the input. Null/absent legacy data and points are normalized to the
+ * canonical empty point list.
  */
 export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
   // Legacy/malformed payloads can carry a null or absent `data`; treat it as
@@ -22,13 +23,18 @@ export function hydrateEdgeData(edge: ApollonEdge): ApollonEdge {
     "computedSegments"
   )
 
-  // Already a clean object with nothing to strip — leave it untouched.
-  if (edge.data != null && !hasComputedSegments) {
+  // Already a clean object with nothing to strip or hydrate — leave it untouched.
+  if (
+    edge.data != null &&
+    Array.isArray(sourceData.points) &&
+    !hasComputedSegments
+  ) {
     return edge
   }
 
   const data = { ...sourceData } as OrthogonalEdgeData & Record<string, unknown>
   delete data.computedSegments
+  if (!Array.isArray(data.points)) data.points = []
 
   return { ...edge, data }
 }

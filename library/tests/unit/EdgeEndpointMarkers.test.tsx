@@ -11,22 +11,24 @@ const renderEndpointMarkers = ({
   isDiagramModifiable = true,
   canEditEndpoint = true,
   onEndpointPointerDown,
+  sourcePoint = { x: 10, y: 20 },
+  targetPoint = { x: 110, y: 120 },
 }: {
   isDiagramModifiable?: boolean
   canEditEndpoint?: boolean
   onEndpointPointerDown?: ComponentProps<
     typeof EdgeEndpointMarkers
   >["onEndpointPointerDown"]
+  sourcePoint?: { x: number; y: number }
+  targetPoint?: { x: number; y: number }
 } = {}) =>
   render(
     <ReactFlowProvider>
       <svg>
         <g className="react-flow__edge">
-          <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
-          <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
           <EdgeEndpointMarkers
-            sourcePoint={{ x: 10, y: 20 }}
-            targetPoint={{ x: 110, y: 120 }}
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
             sourcePosition={Position.Right}
             targetPosition={Position.Left}
             isDiagramModifiable={isDiagramModifiable}
@@ -70,6 +72,39 @@ describe("EdgeEndpointMarkers", () => {
     expect(targetHandle).toHaveAttribute("y", "108")
   })
 
+  it("splits a short edge between the two hit targets instead of overlapping them", () => {
+    // A 30px edge cannot host two full 24px targets: at full size they would
+    // cover each other, and a click near one end could grab the far endpoint.
+    const { container } = renderEndpointMarkers({
+      sourcePoint: { x: 0, y: 0 },
+      targetPoint: { x: 30, y: 0 },
+    })
+    const sourceHandle = container.querySelector(
+      ".edge-endpoint-handle--source"
+    )
+    const targetHandle = container.querySelector(
+      ".edge-endpoint-handle--target"
+    )
+
+    // Each end owns its half of the run: 0..15 and 15..30, meeting at the middle.
+    expect(sourceHandle).toHaveAttribute("width", "15")
+    expect(sourceHandle).toHaveAttribute("x", "0")
+    expect(targetHandle).toHaveAttribute("width", "15")
+    expect(targetHandle).toHaveAttribute("x", "15")
+  })
+
+  it("keeps full-size hit targets when the endpoints face away from each other", () => {
+    // Endpoints that grow apart never collide, so proximity must not shrink them.
+    const { container } = renderEndpointMarkers({
+      sourcePoint: { x: 30, y: 0 },
+      targetPoint: { x: 0, y: 0 },
+    })
+
+    expect(
+      container.querySelector(".edge-endpoint-handle--source")
+    ).toHaveAttribute("width", String(EDGES.ENDPOINT_HIT_TARGET_SIZE))
+  })
+
   it("keeps short-edge targets inert when the edge is below the edit threshold", () => {
     const { container } = renderEndpointMarkers({ canEditEndpoint: false })
 
@@ -78,67 +113,6 @@ describe("EdgeEndpointMarkers", () => {
     )
     expect(sourceHandle).toHaveClass("edge-endpoint-handle--disabled")
     expect(sourceHandle).toHaveAttribute("pointer-events", "none")
-  })
-
-  it("disables native updater pointer events without relying on CSS selectors", () => {
-    const { container } = renderEndpointMarkers()
-
-    expect(
-      container.querySelector<SVGElement>(".react-flow__edgeupdater-source")
-    ).toHaveStyle({ pointerEvents: "none" })
-    expect(
-      container.querySelector<SVGElement>(".react-flow__edgeupdater-target")
-    ).toHaveStyle({ pointerEvents: "none" })
-  })
-
-  it("disables native updater pointer events after editability is toggled on", () => {
-    const { container, rerender } = renderEndpointMarkers({
-      isDiagramModifiable: false,
-    })
-
-    rerender(
-      <ReactFlowProvider>
-        <svg>
-          <g className="react-flow__edge">
-            <circle className="react-flow__edgeupdater react-flow__edgeupdater-source" />
-            <circle className="react-flow__edgeupdater react-flow__edgeupdater-target" />
-            <EdgeEndpointMarkers
-              sourcePoint={{ x: 10, y: 20 }}
-              targetPoint={{ x: 110, y: 120 }}
-              sourcePosition={Position.Right}
-              targetPosition={Position.Left}
-              isDiagramModifiable
-              diagramType="step"
-            />
-          </g>
-        </svg>
-      </ReactFlowProvider>
-    )
-
-    expect(
-      container.querySelector<SVGElement>(".react-flow__edgeupdater-source")
-    ).toHaveStyle({ pointerEvents: "none" })
-  })
-
-  it("forwards source hit target mouse down to React Flow reconnection", () => {
-    const { container } = renderEndpointMarkers()
-    const nativeUpdater = container.querySelector(
-      ".react-flow__edgeupdater-source"
-    )
-    const onNativeMouseDown = vi.fn()
-    nativeUpdater?.addEventListener("mousedown", onNativeMouseDown)
-
-    fireEvent.mouseDown(
-      container.querySelector(".edge-endpoint-handle--source")!,
-      {
-        button: 0,
-        buttons: 1,
-        clientX: 10,
-        clientY: 20,
-      }
-    )
-
-    expect(onNativeMouseDown).toHaveBeenCalledTimes(1)
   })
 
   it("uses a larger invisible hit target for freeform endpoint dragging", () => {
@@ -184,14 +158,9 @@ describe("EdgeEndpointMarkers", () => {
     expect(targetGrip).toHaveAttribute("y", "116")
   })
 
-  it("uses the freeform pointer handler instead of native reconnect when provided", () => {
+  it("invokes the configured endpoint pointer handler", () => {
     const onEndpointPointerDown = vi.fn()
     const { container } = renderEndpointMarkers({ onEndpointPointerDown })
-    const nativeUpdater = container.querySelector(
-      ".react-flow__edgeupdater-source"
-    )
-    const onNativeMouseDown = vi.fn()
-    nativeUpdater?.addEventListener("mousedown", onNativeMouseDown)
 
     fireEvent.pointerDown(
       container.querySelector(".edge-endpoint-handle--source")!,
@@ -202,11 +171,7 @@ describe("EdgeEndpointMarkers", () => {
         clientY: 20,
       }
     )
-    fireEvent.mouseDown(
-      container.querySelector(".edge-endpoint-handle--source")!
-    )
 
     expect(onEndpointPointerDown).toHaveBeenCalledTimes(1)
-    expect(onNativeMouseDown).not.toHaveBeenCalled()
   })
 })

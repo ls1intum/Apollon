@@ -3,7 +3,12 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     "library": {
-      "entry": ["lib/index.tsx", "lib/internals.ts", "lib/export/index.ts"],
+      "entry": [
+        "lib/index.tsx",
+        "lib/internals.ts",
+        "lib/export/index.ts",
+        "lib/model.ts"
+      ],
       "project": ["lib/**/*.{ts,tsx}"],
       "ignoreBinaries": ["build", "run"]
     },
@@ -28,7 +33,6 @@
       "ignoreDependencies": [
         "@capacitor/file-transfer",
         "@capacitor/splash-screen",
-        "@capacitor/android",
         "tailwindcss",
         "jspdf",
         "svg2pdf.js",

@@ -1,22 +1,26 @@
 import {
   useState,
   useEffect,
-  useRef,
+  useCallback,
   type ReactNode,
-  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
 import { BaseEdge, Position, useStore } from "@xyflow/react"
+import { useDiagramStore } from "@/store/context"
 import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
-import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
+import {
+  EdgeInlineMarkers,
+  type InterfaceGeometry,
+} from "@/components/svgs/edges/InlineMarker"
 import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
+import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
 
 // Edge handles live inside the zoomed React Flow viewport. We want them to
@@ -41,8 +45,20 @@ const useHandleScreenScale = (): number =>
 export type BaseEdgeProps = ExtendedEdgeProps
 const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44
 const FREEFORM_ENDPOINT_GRIP_LONG_AXIS = 18
+/** The grip never shrinks below this on-screen length, so an endpoint always shows a
+ * visible handle even on a very short or crowded edge. The grip is purely visual
+ * (pointer-events:none), so flooring it can only ever help legibility — the interactive
+ * hit target is sized separately. */
+const FREEFORM_ENDPOINT_GRIP_MIN_LONG_AXIS = 12
 const FREEFORM_ENDPOINT_GRIP_SHORT_AXIS = 8
 const FREEFORM_ENDPOINT_GRIP_RADIUS = 4
+/** Grip outline width in flow units at natural scale. Multiplied by the handle screen
+ * scale (and drawn WITHOUT non-scaling-stroke) so the outline tracks the handle body:
+ * constant on-screen when zoomed out, growing with the handle when zoomed in. */
+const FREEFORM_ENDPOINT_GRIP_STROKE = 4
+/** Breathing room kept between a shortened grip and the middle of a short edge,
+ * so the two grips read as two handles rather than one bar. */
+const FREEFORM_ENDPOINT_GRIP_MARGIN = 2
 
 export const useEdgeState = (initialPoints?: IPoint[]) => {
   const [customPoints, setCustomPoints] = useState<IPoint[]>([])
@@ -81,6 +97,79 @@ const normalizeDir = (v: IPoint): IPoint => {
   return len === 0 ? { x: 0, y: 0 } : { x: v.x / len, y: v.y / len }
 }
 
+/**
+ * How far out from its endpoint a handle may reach before it starts eating into
+ * the other endpoint's half of the edge. Both handles grow outward along the
+ * edge, so on a short edge they march straight into each other. Each endpoint
+ * owns half the run between the two, and `Infinity` means unconstrained — the
+ * handles only need to give way when they actually point at one another.
+ */
+const getEndpointRun = (
+  point: IPoint,
+  otherPoint: IPoint,
+  direction: IPoint
+): number => {
+  const toOther = { x: otherPoint.x - point.x, y: otherPoint.y - point.y }
+  const towardsOther = direction.x * toOther.x + direction.y * toOther.y
+  if (towardsOther <= 0) return Number.POSITIVE_INFINITY
+
+  return Math.hypot(toOther.x, toOther.y) / 2
+}
+
+/**
+ * Half the on-screen length of the bend handle `EdgeBendHandle` draws for a segment of
+ * this bendable length, expressed in FLOW units. The single source of truth shared by
+ * the handle renderer and `nearestHandleReach`: the endpoint reconnect target must stop
+ * at the handle's RENDERED near edge, and that edge is screen-scale dependent (the drawn
+ * handle is clamped to a minimum SCREEN size, so when zoomed out its flow-space half
+ * grows PAST `bendableLength / 2`). Capping against `bendableLength / 2` instead lets the
+ * drawn handle poke into the target at low zoom, and the target — drawn on top — eats it.
+ */
+const renderedBendHandleHalfLength = (
+  bendableLength: number,
+  screenScale: number
+): number => {
+  const room =
+    bendableLength - 2 * EDGES.BEND_HANDLE_CORNER_CLEARANCE_PX * screenScale
+  const longAxis = Math.min(
+    Math.max(room, EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX * screenScale),
+    EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
+  )
+  return longAxis / 2
+}
+
+/**
+ * How far outward the endpoint reconnect target may reach before it buries the nearest
+ * bend handle. The target is drawn ON TOP of the handles, so it must stop at the
+ * handle's RENDERED near edge — which is screen-scale dependent, hence
+ * `renderedBendHandleHalfLength` rather than the flow-space `bendableLength`. Caps
+ * against ANY handle kind: an inner handle can sit at the corner just past a short
+ * stub, and when the terminal stub is too short to bend there is no terminal handle to
+ * cap against at all. `Infinity` when nothing lies ahead of the endpoint.
+ */
+const nearestHandleReach = (
+  bendHandles: BendHandle[] | undefined,
+  endpoint: IPoint,
+  direction: IPoint,
+  screenScale: number
+): number => {
+  if (!bendHandles || bendHandles.length === 0) return Number.POSITIVE_INFINITY
+  const gap = EDGES.ENDPOINT_HANDLE_CLEARANCE_PX * screenScale
+  let reach = Number.POSITIVE_INFINITY
+  for (const handle of bendHandles) {
+    const along =
+      (handle.position.x - endpoint.x) * direction.x +
+      (handle.position.y - endpoint.y) * direction.y
+    if (along <= 0) continue // handle is beside/behind the endpoint's outward axis
+    const nearEdge =
+      along -
+      renderedBendHandleHalfLength(handle.bendableLength, screenScale) -
+      gap
+    if (nearEdge > 0) reach = Math.min(reach, nearEdge)
+  }
+  return reach
+}
+
 export const getEndpointHitTargetRect = (
   point: IPoint,
   side?: EndpointSide,
@@ -88,13 +177,20 @@ export const getEndpointHitTargetRect = (
   hitTargetSize: number = EDGES.ENDPOINT_HIT_TARGET_SIZE,
   // Straight (direct) edges leave the node at an angle; pass the real outward
   // edge direction so the target follows the line instead of an orthogonal side.
-  outwardDir?: IPoint
+  outwardDir?: IPoint,
+  run: number = Number.POSITIVE_INFINITY
 ) => {
-  const hitSize = hitTargetSize * screenScale
-  const hitOffset = hitSize / 2
   const direction = outwardDir
     ? normalizeDir(outwardDir)
     : getEndpointDirection(side)
+  // Keep the square inside this endpoint's half so the two hit targets meet at the
+  // midpoint instead of overlapping. Floored so a very short edge still gets two
+  // reachable targets rather than zero-sized ones.
+  const hitSize = Math.max(
+    Math.min(hitTargetSize * screenScale, run),
+    EDGES.MIN_ENDPOINT_HIT_TARGET_PX * screenScale
+  )
+  const hitOffset = hitSize / 2
 
   return {
     x: point.x + direction.x * hitOffset - hitOffset,
@@ -109,21 +205,36 @@ const getEndpointGripRect = (
   point: IPoint,
   side?: EndpointSide,
   screenScale = 1,
-  outwardDir?: IPoint
+  outwardDir?: IPoint,
+  run: number = Number.POSITIVE_INFINITY
 ) => {
   // Anchor the grip to the endpoint (+ small clearance for the marker), not the
   // centre of the wide hit-target — otherwise it floats ~22px off the tip when
   // zoomed out. The hit-target stays wide for grabbing.
   const radius = FREEFORM_ENDPOINT_GRIP_RADIUS * screenScale
-  const long = FREEFORM_ENDPOINT_GRIP_LONG_AXIS * screenScale
   const short = FREEFORM_ENDPOINT_GRIP_SHORT_AXIS * screenScale
+  // On a short edge the full-size grip cannot sit clear of the endpoint AND stay in its
+  // own half, so shorten it and pull it in — but never below a visible minimum. The two
+  // grips give way equally (each owns its half of the edge via `run`), so they read as
+  // two handles; the floor guarantees each stays visible even when its half is tiny.
+  const margin = FREEFORM_ENDPOINT_GRIP_MARGIN * screenScale
+  const long = Math.max(
+    Math.min(FREEFORM_ENDPOINT_GRIP_LONG_AXIS * screenScale, run - margin),
+    FREEFORM_ENDPOINT_GRIP_MIN_LONG_AXIS * screenScale
+  )
+  // Keep the grip's near edge at the endpoint tip (clearance ≥ long/2) so a floored grip
+  // sits ON the edge rather than straddling the node border.
+  const baseClearance = long / 2 + radius
+  const clearance = Math.max(
+    Math.min(baseClearance, run - long / 2 - margin),
+    long / 2
+  )
 
   if (outwardDir) {
     // Straight edge: a bar whose long axis runs ALONG the edge, offset outward
     // along it and rotated to its angle — so the grip tracks the line, not an
     // orthogonal N/E/S/W side.
     const dir = normalizeDir(outwardDir)
-    const clearance = long / 2 + radius
     const cx = point.x + dir.x * clearance
     const cy = point.y + dir.y * clearance
     return {
@@ -143,7 +254,6 @@ const getEndpointGripRect = (
   const width = isHorizontalGrip ? long : short
   const height = isHorizontalGrip ? short : long
   const dir = getEndpointDirection(side)
-  const clearance = (isHorizontalGrip ? width : height) / 2 + radius
   const cx = point.x + dir.x * clearance
   const cy = point.y + dir.y * clearance
   return {
@@ -167,6 +277,7 @@ export const EdgeEndpointMarkers = ({
   canEditEndpoint = true,
   onEndpointPointerDown,
   straight = false,
+  bendHandles,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -181,73 +292,14 @@ export const EdgeEndpointMarkers = ({
   // Direct/straight edges: orient the grip + hit-target along the actual edge
   // angle instead of the endpoint's orthogonal N/E/S/W side.
   straight?: boolean
+  // The edge's bend handles, so a reconnect target can cap its outward reach at
+  // this end's terminal bend handle instead of painting over it.
+  bendHandles?: BendHandle[]
 }) => {
-  const sourceHandleRef = useRef<SVGRectElement | null>(null)
   const screenScale = useHandleScreenScale()
-
-  useEffect(() => {
-    if (!isDiagramModifiable) return
-
-    // `.react-flow__edgeupdater*` are React Flow v12 internal class names.
-    // Reconnection defers to RF's native updater while the hit target controls
-    // UX; pinned to RF v12 (revisit on a major React Flow bump).
-    const edgeGroup = sourceHandleRef.current?.closest(".react-flow__edge")
-    const nativeUpdaters = Array.from(
-      edgeGroup?.querySelectorAll<SVGElement>(".react-flow__edgeupdater") ?? []
-    )
-
-    const previousPointerEvents = nativeUpdaters.map(
-      (updater) => updater.style.pointerEvents
-    )
-
-    nativeUpdaters.forEach((updater) => {
-      updater.style.pointerEvents = "none"
-    })
-
-    return () => {
-      nativeUpdaters.forEach((updater, index) => {
-        updater.style.pointerEvents = previousPointerEvents[index]
-      })
-    }
-  }, [isDiagramModifiable])
 
   if (!isDiagramModifiable) {
     return null
-  }
-
-  const forwardToNativeReconnect = (
-    event: ReactMouseEvent<SVGRectElement>,
-    endType: "source" | "target"
-  ) => {
-    const edgeGroup = event.currentTarget.closest(".react-flow__edge")
-    const nativeUpdater = edgeGroup?.querySelector(
-      `.react-flow__edgeupdater-${endType}`
-    )
-
-    if (!nativeUpdater) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    const eventWindow = event.currentTarget.ownerDocument.defaultView ?? window
-
-    // Hand off to React Flow's native reconnect updater so reconnection stays
-    // owned by React Flow while the hit target controls UX.
-    nativeUpdater.dispatchEvent(
-      new eventWindow.MouseEvent("mousedown", {
-        bubbles: true,
-        cancelable: true,
-        button: event.button,
-        buttons: event.buttons,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        screenX: event.screenX,
-        screenY: event.screenY,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        altKey: event.altKey,
-        metaKey: event.metaKey,
-      })
-    )
   }
   // For a straight edge the grip sits on the line, offset from its endpoint
   // TOWARD the other endpoint (so it clears the marker on the node side) and
@@ -260,19 +312,38 @@ export const EdgeEndpointMarkers = ({
   const targetOutward = straight
     ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
     : undefined
+  const sourceDir = sourceOutward
+    ? normalizeDir(sourceOutward)
+    : getEndpointDirection(sourcePosition)
+  const targetDir = targetOutward
+    ? normalizeDir(targetOutward)
+    : getEndpointDirection(targetPosition)
+  // The reconnect target reaches at most to the OTHER endpoint's half AND stops
+  // short of this end's own terminal bend handle — so a short centred stub can
+  // still expose a grabbable bend handle beyond the (now-shortened) target.
+  const sourceRun = Math.min(
+    getEndpointRun(sourcePoint, targetPoint, sourceDir),
+    nearestHandleReach(bendHandles, sourcePoint, sourceDir, screenScale)
+  )
+  const targetRun = Math.min(
+    getEndpointRun(targetPoint, sourcePoint, targetDir),
+    nearestHandleReach(bendHandles, targetPoint, targetDir, screenScale)
+  )
   const sourceHitTarget = getEndpointHitTargetRect(
     sourcePoint,
     sourcePosition,
     screenScale,
     onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
-    sourceOutward
+    sourceOutward,
+    sourceRun
   )
   const targetHitTarget = getEndpointHitTargetRect(
     targetPoint,
     targetPosition,
     screenScale,
     onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
-    targetOutward
+    targetOutward,
+    targetRun
   )
   const className = [
     "edge-endpoint-handle",
@@ -281,17 +352,25 @@ export const EdgeEndpointMarkers = ({
     .filter(Boolean)
     .join(" ")
   const showEndpointGrips = Boolean(onEndpointPointerDown)
+  // The VISIBLE grip yields only to the other endpoint (so the two never cross the
+  // midpoint), NOT to bend handles: it is pointer-events:none, so it may cosmetically
+  // overlap a nearby bend handle without stealing any interaction. Only the hit target
+  // (above) caps against bend handles, keeping them grabbable.
+  const sourceGripRun = getEndpointRun(sourcePoint, targetPoint, sourceDir)
+  const targetGripRun = getEndpointRun(targetPoint, sourcePoint, targetDir)
   const sourceGrip = getEndpointGripRect(
     sourcePoint,
     sourcePosition,
     screenScale,
-    sourceOutward
+    sourceOutward,
+    sourceGripRun
   )
   const targetGrip = getEndpointGripRect(
     targetPoint,
     targetPosition,
     screenScale,
-    targetOutward
+    targetOutward,
+    targetGripRun
   )
 
   return (
@@ -307,6 +386,7 @@ export const EdgeEndpointMarkers = ({
             rx={sourceGrip.radius}
             ry={sourceGrip.radius}
             transform={`rotate(${sourceGrip.rotationDeg} ${sourceGrip.centerX} ${sourceGrip.centerY})`}
+            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
             pointerEvents="none"
           />
           <rect
@@ -318,12 +398,12 @@ export const EdgeEndpointMarkers = ({
             rx={targetGrip.radius}
             ry={targetGrip.radius}
             transform={`rotate(${targetGrip.rotationDeg} ${targetGrip.centerX} ${targetGrip.centerY})`}
+            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
             pointerEvents="none"
           />
         </>
       )}
       <rect
-        ref={sourceHandleRef}
         className={`${className} edge-endpoint-handle--source`}
         x={sourceHitTarget.x}
         y={sourceHitTarget.y}
@@ -331,15 +411,17 @@ export const EdgeEndpointMarkers = ({
         height={sourceHitTarget.height}
         rx={sourceHitTarget.radius}
         ry={sourceHitTarget.radius}
-        pointerEvents={canEditEndpoint ? "all" : "none"}
+        // Above the bend handles (z 9999) so where the reconnect target and a bend handle
+        // OVERLAP, the reconnect handle wins even in engines that honour z-index on SVG
+        // (paint order alone already puts it on top). It is still capped short of the bend
+        // handle, so the bend stays grabbable beyond the endpoint's zone.
+        style={{ zIndex: 10000 }}
+        pointerEvents={
+          canEditEndpoint && onEndpointPointerDown ? "all" : "none"
+        }
         onPointerDown={
           canEditEndpoint && onEndpointPointerDown
             ? (event) => onEndpointPointerDown(event, "source")
-            : undefined
-        }
-        onMouseDown={
-          canEditEndpoint && !onEndpointPointerDown
-            ? (event) => forwardToNativeReconnect(event, "source")
             : undefined
         }
       />
@@ -351,15 +433,13 @@ export const EdgeEndpointMarkers = ({
         height={targetHitTarget.height}
         rx={targetHitTarget.radius}
         ry={targetHitTarget.radius}
-        pointerEvents={canEditEndpoint ? "all" : "none"}
+        style={{ zIndex: 10000 }}
+        pointerEvents={
+          canEditEndpoint && onEndpointPointerDown ? "all" : "none"
+        }
         onPointerDown={
           canEditEndpoint && onEndpointPointerDown
             ? (event) => onEndpointPointerDown(event, "target")
-            : undefined
-        }
-        onMouseDown={
-          canEditEndpoint && !onEndpointPointerDown
-            ? (event) => forwardToNativeReconnect(event, "target")
             : undefined
         }
       />
@@ -372,16 +452,23 @@ export const EdgeBendHandle = ({
   segmentIndex,
   position,
   orientation,
+  bendableLength,
   onPointerDown,
 }: {
   id: string
   segmentIndex: number
   position: IPoint
   orientation: "H" | "V"
+  /** Flow-space room on this segment. The handle shrinks into it. */
+  bendableLength: number
   onPointerDown: (e: ReactPointerEvent<SVGRectElement>) => void
 }) => {
   const screenScale = useHandleScreenScale()
-  const longAxis = 34 * screenScale
+  // Fit the handle to the segment instead of deleting the handle when a
+  // fixed-size one would not fit. A short segment gets a small nub; it is still
+  // grabbable, and a small nub beats nothing to grab at all. Clearance keeps it
+  // off the corners so a bend never reads as belonging to the next segment.
+  const longAxis = 2 * renderedBendHandleHalfLength(bendableLength, screenScale)
   const shortAxis = 10 * screenScale
   const width = orientation === "H" ? longAxis : shortAxis
   const height = orientation === "H" ? shortAxis : longAxis
@@ -422,11 +509,11 @@ export const StepEdgeBody = ({
   strokeColor,
   strokeDashArray,
   hasInitialCalculation,
-  isReconnecting,
   isBendDragging,
   draggingHandleSegmentIndex,
   markerStart,
   markerEnd,
+  targetInterfaceGeometry,
   sourcePoint,
   targetPoint,
   sourcePosition,
@@ -447,11 +534,11 @@ export const StepEdgeBody = ({
   strokeColor: string
   strokeDashArray?: string
   hasInitialCalculation: boolean
-  isReconnecting: boolean
   isBendDragging: boolean
   draggingHandleSegmentIndex: number | null
   markerStart?: string
   markerEnd?: string
+  targetInterfaceGeometry?: InterfaceGeometry
   sourcePoint: IPoint
   targetPoint: IPoint
   sourcePosition?: Position
@@ -477,23 +564,30 @@ export const StepEdgeBody = ({
         id={id}
         path={currentPath}
         pointerEvents="none"
+        // No fat React Flow interaction ribbon (default 20px): select/hover ride
+        // our own `.edge-overlay` stroke instead. RF's ribbon is a wider hit path
+        // that, on a dense diagram, paints OVER a neighbour edge's precise endpoint/
+        // bend handle and steals its pointer. `.edge-overlay` is narrower and never
+        // reaches a co-located neighbour's handle, so removing the ribbon fixes the
+        // theft by subtraction. Selection/hover fire on the wrapping `.react-flow__
+        // edge` group, not the ribbon, so nothing is lost.
+        interactionWidth={0}
         style={{
           stroke: strokeColor,
-          strokeDasharray: isReconnecting ? "none" : strokeDashArray,
+          strokeDasharray: strokeDashArray,
           transition: hasInitialCalculation ? "opacity 0.1s ease-in" : "none",
           opacity: 1,
         }}
       />
 
       {/* Inline markers for export compatibility (survives ungrouping). */}
-      {!isReconnecting && (
-        <EdgeInlineMarkers
-          pathD={currentPath}
-          markerEnd={markerEnd}
-          markerStart={markerStart}
-          strokeColor={strokeColor}
-        />
-      )}
+      <EdgeInlineMarkers
+        pathD={currentPath}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        strokeColor={strokeColor}
+        targetInterfaceGeometry={targetInterfaceGeometry}
+      />
 
       <path
         ref={pathRef}
@@ -502,21 +596,10 @@ export const StepEdgeBody = ({
         fill="none"
         strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
         pointerEvents="stroke"
-        style={{ opacity: isReconnecting || isBendDragging ? 0 : 0.4 }}
-      />
-
-      <EdgeEndpointMarkers
-        sourcePoint={sourcePoint}
-        targetPoint={targetPoint}
-        sourcePosition={sourcePosition}
-        targetPosition={targetPosition}
-        isDiagramModifiable={isDiagramModifiable}
-        canEditEndpoint={canEditEndpoint}
-        onEndpointPointerDown={handleEndpointPointerDown}
+        style={{ opacity: isBendDragging ? 0 : 0.4 }}
       />
 
       {isDiagramModifiable &&
-        !isReconnecting &&
         allowMidpointDragging &&
         bendHandles
           .filter(
@@ -531,9 +614,25 @@ export const StepEdgeBody = ({
               segmentIndex={handle.segmentIndex}
               position={handle.position}
               orientation={handle.orientation}
+              bendableLength={handle.bendableLength}
               onPointerDown={(e) => handlePointerDown(e, handle)}
             />
           ))}
+
+      {/* AFTER the bend handles, deliberately. Where an endpoint handle and a
+          bend handle overlap near a node, the later one wins the click, and it
+          should be the endpoint: a mis-grabbed bend is undone by dragging it
+          back, a mis-grabbed reconnect detaches the edge. */}
+      <EdgeEndpointMarkers
+        sourcePoint={sourcePoint}
+        targetPoint={targetPoint}
+        sourcePosition={sourcePosition}
+        targetPosition={targetPosition}
+        isDiagramModifiable={isDiagramModifiable}
+        canEditEndpoint={canEditEndpoint}
+        onEndpointPointerDown={handleEndpointPointerDown}
+        bendHandles={bendHandles}
+      />
 
       {children}
     </g>
@@ -542,6 +641,7 @@ export const StepEdgeBody = ({
 
 export const CommonEdgeElements = ({
   id,
+  data,
   pathMiddlePosition,
   toolbarPosition,
   isDiagramModifiable,
@@ -551,6 +651,7 @@ export const CommonEdgeElements = ({
   type,
 }: {
   id: string
+  data: BaseEdgeProps["data"]
   pathMiddlePosition: IPoint
   toolbarPosition?: IPoint
   isDiagramModifiable: boolean
@@ -561,10 +662,30 @@ export const CommonEdgeElements = ({
 }) => {
   const nodeScore = assessments[id]?.score
   const uiPosition = toolbarPosition ?? pathMiddlePosition
-  // Owns its popover anchor: a callback ref captures the toolbar's
-  // <foreignObject> into state so the popover positions against the live
-  // element without reading a ref's `.current` during render.
-  const [anchorEl, anchorRef] = usePopoverAnchor<SVGForeignObjectElement>()
+  // The callback ref makes the framework toolbar's portal content available
+  // as soon as it mounts, without reading `.current` during render.
+  const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
+
+  const setEdges = useDiagramStore((state) => state.setEdges)
+  const points = data?.points
+  const hasManualPoints = Array.isArray(points) && points.length > 0
+  const hasPinnedAnchor =
+    isFreeformEdgeAnchor(data?.sourceAnchor) ||
+    isFreeformEdgeAnchor(data?.targetAnchor)
+  const hasManualRoute = hasManualPoints || hasPinnedAnchor
+
+  const handleResetRouting = useCallback(() => {
+    setEdges((edges) =>
+      edges.map((edge) => {
+        if (edge.id !== id) return edge
+        const nextData = { ...(edge.data ?? {}) } as Record<string, unknown>
+        nextData.points = []
+        delete nextData.sourceAnchor
+        delete nextData.targetAnchor
+        return { ...edge, data: nextData }
+      })
+    )
+  }, [id, setEdges])
 
   return (
     <>
@@ -572,9 +693,10 @@ export const CommonEdgeElements = ({
         edgeId={id}
         anchorRef={anchorRef}
         position={uiPosition}
-        scaleAnchor={pathMiddlePosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
+        canResetRouting={isDiagramModifiable && hasManualRoute}
+        onResetRoutingClick={handleResetRouting}
       />
 
       {!isDiagramModifiable && (

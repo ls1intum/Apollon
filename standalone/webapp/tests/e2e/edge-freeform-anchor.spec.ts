@@ -64,6 +64,19 @@ async function centerOf(locator: Locator): Promise<Pt> {
   }
 }
 
+/** The rendered target endpoint, transformed from SVG path space to screen space. */
+async function targetEndpointOf(edge: Locator): Promise<Pt> {
+  return edge.locator(".react-flow__edge-path").evaluate((element) => {
+    const path = element as SVGPathElement
+    const matrix = path.getScreenCTM()
+    if (!matrix) throw new Error("edge path has no screen transform")
+
+    const point = path.getPointAtLength(path.getTotalLength())
+    const screenPoint = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+    return { x: screenPoint.x, y: screenPoint.y }
+  })
+}
+
 /** The persisted `{side, ratio}` anchor of an edge's target endpoint. */
 async function targetAnchorOf(page: Page, edgeId: string) {
   return page.evaluate((id) => {
@@ -158,7 +171,7 @@ async function expectFreeformTargetFollowsMovedNode({
 
   const anchorBefore = await targetAnchorOf(page, edgeId)
   const nodeBefore = await centerOf(targetNode)
-  const endpointBefore = await centerOf(targetHandle)
+  const endpointBefore = await targetEndpointOf(edge)
 
   // Move the node so its endpoint has to follow. A child pinned to its parent's
   // border (e.g. a component interface) can't be dragged freely on its own, so
@@ -185,7 +198,7 @@ async function expectFreeformTargetFollowsMovedNode({
     .poll(
       async () => {
         const nodeAfter = await centerOf(targetNode)
-        const endpointAfter = await centerOf(targetHandle)
+        const endpointAfter = await targetEndpointOf(edge)
         const nodeMoved = Math.hypot(
           nodeAfter.x - nodeBefore.x,
           nodeAfter.y - nodeBefore.y
@@ -226,6 +239,9 @@ async function expectEndpointCanRetargetToNode({
   await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
 
+  const edgeBefore = (await storedEdges(page)).find(
+    (edge) => edge.id === edgeId
+  )
   const edge = await selectEdge(page, edgeId)
   const endpointHandle = edge.locator(".edge-endpoint-handle--target")
   await expect(endpointHandle).toBeVisible()
@@ -261,6 +277,7 @@ async function expectEndpointCanRetargetToNode({
   const edgeState = (await storedEdges(page)).find((edge) => edge.id === edgeId)
   expect(edgeState).toMatchObject({ target: targetId, targetHandle })
   expect(edgeState?.data).toHaveProperty("targetAnchor")
+  expect(edgeState?.data?.sourceAnchor).toEqual(edgeBefore?.data?.sourceAnchor)
 }
 
 // Following is diagram-agnostic — the stored {side, ratio} anchor is
@@ -311,6 +328,111 @@ for (const { name, fixture, edgeId, targetId } of cases) {
   })
 }
 
+test("a dragged required-interface socket follows its tip and restores its gap when snapped", async ({
+  page,
+}) => {
+  const edgeId = "edge-server-interface"
+  const interfaceId = "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d"
+  await openFixtureInLocalEditor(page, componentFixture)
+  await waitForCanvasReady(page)
+
+  const edge = await selectEdge(page, edgeId)
+  const endpointHandle = edge.locator(".edge-endpoint-handle--target")
+  const endpointBox = await endpointHandle.boundingBox()
+  if (!endpointBox) throw new Error("target endpoint has no bounding box")
+
+  const measureJoin = () =>
+    page.evaluate(
+      ({ edgeId, interfaceId }) => {
+        const edgeGroup = document.querySelector(
+          `.react-flow__edge[data-id="${edgeId}"]`
+        )
+        const edgePath = edgeGroup?.querySelector(
+          ".react-flow__edge-path"
+        ) as SVGPathElement | null
+        const markerPath = edgeGroup?.querySelector(
+          "[data-inline-marker]"
+        ) as SVGPathElement | null
+        const circle = document.querySelector(
+          `.react-flow__node[data-id="${interfaceId}"] circle`
+        ) as SVGCircleElement | null
+        if (!edgePath || !markerPath || !circle)
+          throw new Error("missing required-interface geometry")
+
+        const screenPoint = (
+          path: SVGPathElement,
+          distance: number
+        ): DOMPoint => {
+          const matrix = path.getScreenCTM()
+          if (!matrix) throw new Error("missing path transform")
+          const point = path.getPointAtLength(distance)
+          return new DOMPoint(point.x, point.y).matrixTransform(matrix)
+        }
+        const edgeEnd = screenPoint(edgePath, edgePath.getTotalLength())
+        // The required arc is symmetric around its line/socket contact, so its
+        // arc-length midpoint is that exact contact for every orientation.
+        const socketContact = screenPoint(
+          markerPath,
+          markerPath.getTotalLength() / 2
+        )
+        const circleMatrix = circle.getScreenCTM()
+        if (!circleMatrix) throw new Error("missing circle transform")
+        const circleCenter = new DOMPoint(
+          circle.cx.baseVal.value,
+          circle.cy.baseVal.value
+        ).matrixTransform(circleMatrix)
+        const scale = Math.hypot(circleMatrix.a, circleMatrix.b)
+        const circleRadius = circle.r.baseVal.value * scale
+
+        return {
+          lineToSocket: Math.hypot(
+            edgeEnd.x - socketContact.x,
+            edgeEnd.y - socketContact.y
+          ),
+          socketGap:
+            (Math.hypot(
+              socketContact.x - circleCenter.x,
+              socketContact.y - circleCenter.y
+            ) -
+              circleRadius) /
+            scale,
+        }
+      },
+      { edgeId, interfaceId }
+    )
+
+  const start = {
+    x: endpointBox.x + endpointBox.width / 2,
+    y: endpointBox.y + endpointBox.height / 2,
+  }
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down()
+  await page.mouse.move(start.x + 140, start.y - 120, { steps: 10 })
+
+  await expect
+    .poll(async () => (await measureJoin()).lineToSocket)
+    .toBeLessThan(0.75)
+
+  const interfaceNode = page.locator(
+    `.react-flow__node[data-id="${interfaceId}"]`
+  )
+  const interfaceBox = await interfaceNode.boundingBox()
+  if (!interfaceBox) throw new Error("interface node has no bounding box")
+  await page.mouse.move(
+    interfaceBox.x + interfaceBox.width / 2,
+    interfaceBox.y + interfaceBox.height / 2,
+    { steps: 10 }
+  )
+
+  await expect
+    .poll(async () => (await measureJoin()).lineToSocket)
+    .toBeLessThan(0.75)
+  await expect
+    .poll(async () => (await measureJoin()).socketGap)
+    .toBeCloseTo(4, 1)
+  await page.mouse.up()
+})
+
 test("a freeform ComponentDiagram endpoint can retarget to a component subsystem", async ({
   page,
 }) => {
@@ -356,8 +478,8 @@ test("a new same-node edge can connect different handles", async ({ page }) => {
   if (!nodeBox) throw new Error("source node has no bounding box")
 
   await node.hover()
-  await page.waitForTimeout(120)
   const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  await expect(rightHandle.first()).toBeVisible()
   const handleBox = await rightHandle.first().boundingBox()
   if (!handleBox) throw new Error("source handle has no bounding box")
 
@@ -391,8 +513,8 @@ test("a new same-node edge cannot reconnect to the same handle", async ({
   const node = page.locator(`.react-flow__node[data-id="${CLASS_SOURCE}"]`)
 
   await node.hover()
-  await page.waitForTimeout(120)
   const rightHandle = node.locator('.react-flow__handle[data-handleid="right"]')
+  await expect(rightHandle.first()).toBeVisible()
   const handleBox = await rightHandle.first().boundingBox()
   if (!handleBox) throw new Error("source handle has no bounding box")
 
@@ -403,7 +525,12 @@ test("a new same-node edge cannot reconnect to the same handle", async ({
   await page.mouse.move(x + 16, y, { steps: 4 })
   await page.mouse.move(x, y, { steps: 4 })
   await page.mouse.up()
-  await page.waitForTimeout(400)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+  )
 
   expect(await storedEdges(page)).toHaveLength(0)
 })

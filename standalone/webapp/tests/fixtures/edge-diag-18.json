@@ -1,0 +1,153 @@
+{
+  "id": "2c9a8d5d-0821-4963-8de0-7d19dfd8fd42",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "6eecd04e-0ab3-4129-afad-6aa46cc42f36",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": -85,
+        "y": 335
+      },
+      "data": {
+        "name": "ClassA",
+        "methods": [
+          {
+            "id": "a7308698-4bd0-4817-a149-bab7a6b530ad",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "51786903-3779-4f29-a887-e811a24e9f41",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "63a81e35-283b-45bc-94fd-03023b0b290d",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 70,
+        "y": 105
+      },
+      "data": {
+        "name": "ClassB",
+        "methods": [
+          {
+            "id": "c54e81fa-21db-4ab4-92b2-bf99b3c6d742",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "f245e7ee-44c6-4ae2-bc40-3407e769422b",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "7b183f35-ff05-4984-a7cd-27020c270afa",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 190,
+        "y": 345
+      },
+      "data": {
+        "name": "ClassD",
+        "methods": [
+          {
+            "id": "06ad08ae-afda-44d6-8036-b8d1e006c85b",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "24067ca3-c8a7-41fe-9097-f16627b018f2",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "4b8ddc0b-7e23-46f3-88fe-6a6589ce1791",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 225,
+        "y": 565
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "89a7f1d3-2d7e-443a-b569-0635bbcf7c88",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "fb3b3848-f001-471e-9b8f-856ba980015e",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e009aff4-e5d0-4851-b483-781795875101",
+      "source": "6eecd04e-0ab3-4129-afad-6aa46cc42f36",
+      "target": "7b183f35-ff05-4984-a7cd-27020c270afa",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "targetAnchor": {
+          "side": "left",
+          "ratio": 0.4
+        }
+      }
+    },
+    {
+      "id": "ecfad32b-3b74-4dd2-ae76-9bc4ee2b4a60",
+      "source": "63a81e35-283b-45bc-94fd-03023b0b290d",
+      "target": "4b8ddc0b-7e23-46f3-88fe-6a6589ce1791",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-between-mid-left-center",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

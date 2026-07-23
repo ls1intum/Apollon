@@ -4,18 +4,6 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { waitForCanvasReady, openFixtureInLocalEditor } from "../helpers/canvas"
 
-/**
- * Behavioural E2E coverage for edge editing: bend (waypoint) dragging,
- * endpoint reconnection, and zoom-adaptive bend handles.
- *
- * These drive the real React Flow canvas with the mouse and assert on
- * externally-observable results — the committed SVG path geometry, the
- * presence/count of bend handles, and whether the edge survives — rather
- * than on component internals. The class-diagram fixture is used because it
- * has edges with no manual waypoints (so they exercise the same
- * fresh-edge code path a user hits right after drawing a connection).
- */
-
 const __filename2 = fileURLToPath(import.meta.url)
 const __dirname2 = path.dirname(__filename2)
 const classDiagram = JSON.parse(
@@ -25,19 +13,34 @@ const classDiagram = JSON.parse(
   )
 ) as Record<string, unknown>
 
-// Edges in the fixture, keyed by their stable data-id.
-const BIDIRECTIONAL = "edge-bidirectional-dog-imovable" // long L-shape, 2 bend handles
-const INHERITANCE = "edge-inheritance-dog-animal" // short, 0 handles until zoomed
+const BIDIRECTIONAL = "edge-bidirectional-dog-imovable"
+const INHERITANCE = "edge-inheritance-dog-animal"
 
 function edgeById(page: Page, id: string): Locator {
   return page.locator(`.react-flow__edge[data-id="${id}"]`)
 }
 
-/** Select an edge so its bend/endpoint handles render. */
+/** Select an edge so its bend/endpoint handles render. Clicks a point ON the path
+ * (its arc-length midpoint) rather than the element's bounding-box centre: for a
+ * bent/L-shaped edge the bbox centre sits in empty space off the line, so a
+ * force-click there misses the overlay stroke and fails to select. An on-path click
+ * is how a user actually selects the edge and is robust to routing shape. */
 async function selectEdge(page: Page, id: string): Promise<Locator> {
   const edge = edgeById(page, id)
-  await edge.locator(".edge-overlay, path").first().click({ force: true })
-  await page.waitForTimeout(150)
+  const pt = await page.evaluate((eid) => {
+    const p = document.querySelector(
+      `.react-flow__edge[data-id="${eid}"] path.react-flow__edge-path`
+    ) as SVGPathElement | null
+    if (!p) return null
+    const ctm = p.getScreenCTM()
+    if (!ctm) return null
+    const q = p.getPointAtLength(p.getTotalLength() / 2)
+    const m = new DOMPoint(q.x, q.y).matrixTransform(ctm)
+    return { x: m.x, y: m.y }
+  }, id)
+  if (!pt) throw new Error(`edge ${id} path not found for selection`)
+  await page.mouse.click(pt.x, pt.y)
+  await expect(edge).toHaveClass(/selected/)
   return edge
 }
 
@@ -45,11 +48,22 @@ function mainPathD(edge: Locator): Promise<string | null> {
   return edge.locator(".react-flow__edge-path").first().getAttribute("d")
 }
 
-/** "M x y ..." -> the source anchor {x,y}. */
-function sourcePointOf(d: string | null): { x: number; y: number } | null {
-  if (!d) return null
-  const m = d.match(/M\s*(-?[\d.]+)\s+(-?[\d.]+)/)
-  return m ? { x: Number(m[1]), y: Number(m[2]) } : null
+async function persistedConnection(page: Page, edgeId: string) {
+  return page.evaluate((id) => {
+    const raw = localStorage.getItem("persistenceModelStore")
+    if (!raw) return null
+    const state = JSON.parse(raw).state
+    const edge = state.models[state.currentModelId]?.model?.edges?.find(
+      (candidate: { id: string }) => candidate.id === id
+    )
+    return edge
+      ? {
+          source: edge.source,
+          target: edge.target,
+          sourceAnchor: edge.data?.sourceAnchor ?? null,
+        }
+      : null
+  }, edgeId)
 }
 
 /** Drag the centre of a handle by (dx,dy) screen px and let the commit settle. */
@@ -126,7 +140,7 @@ test.describe("Edge bend (waypoint) dragging", () => {
 })
 
 test.describe("Edge endpoint reconnection", () => {
-  test("dragging an endpoint onto another node rewires the edge without it disappearing, keeping the opposite endpoint anchored", async ({
+  test("rewiring one endpoint leaves the untouched endpoint under the same routing authority", async ({
     page,
   }) => {
     const edge = await selectEdge(page, BIDIRECTIONAL)
@@ -134,8 +148,8 @@ test.describe("Edge endpoint reconnection", () => {
     await expect(target).toBeVisible()
 
     const totalBefore = await page.locator(".react-flow__edge").count()
-    const sourceBefore = sourcePointOf(await mainPathD(edge))
-    expect(sourceBefore).not.toBeNull()
+    const connectionBefore = await persistedConnection(page, BIDIRECTIONAL)
+    expect(connectionBefore).not.toBeNull()
 
     // A different class node to reconnect onto (node index 5 = far-right class).
     const dest = page.locator(".react-flow__node").nth(5)
@@ -149,19 +163,18 @@ test.describe("Edge endpoint reconnection", () => {
       { steps: 16 }
     )
     await page.mouse.up()
-    await page.waitForTimeout(400)
 
-    // 1. The edge must still exist (not be dropped by React Flow).
     await expect(edgeById(page, BIDIRECTIONAL)).toHaveCount(1)
-    // 2. No edge was lost in the process.
     expect(await page.locator(".react-flow__edge").count()).toEqual(totalBefore)
-    // 3. The opposite (source) endpoint stayed anchored where it was.
-    const sourceAfter = sourcePointOf(
-      await mainPathD(edgeById(page, BIDIRECTIONAL))
+    await expect
+      .poll(() => persistedConnection(page, BIDIRECTIONAL))
+      .toMatchObject({
+        source: connectionBefore!.source,
+        sourceAnchor: connectionBefore!.sourceAnchor,
+      })
+    expect((await persistedConnection(page, BIDIRECTIONAL))?.target).not.toBe(
+      connectionBefore!.target
     )
-    expect(sourceAfter).not.toBeNull()
-    expect(Math.abs(sourceAfter!.x - sourceBefore!.x)).toBeLessThanOrEqual(2)
-    expect(Math.abs(sourceAfter!.y - sourceBefore!.y)).toBeLessThanOrEqual(2)
   })
 })
 

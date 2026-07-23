@@ -14,7 +14,10 @@ import {
   getSideHandleIdForPosition,
   type FreeformEdgeAnchor,
 } from "@/utils"
-import { getEdgeAnchorFromPoint } from "@/utils/connectionModes"
+import {
+  dropAnchorIsAimed,
+  getEdgeAnchorFromPoint,
+} from "@/utils/connectionModes"
 import { HandleId } from "@/nodes/wrappers"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useFreeformDropTarget } from "./useFreeformDropTarget"
@@ -118,6 +121,14 @@ export const useConnect = () => {
       stopConnectionGuidance: state.stopConnectionGuidance,
     }))
   )
+  const setPendingConnectionEdge = useMetadataStore(
+    (state) => state.setPendingConnectionEdge
+  )
+  const setPendingConnectionId = useMetadataStore(
+    (state) => state.setPendingConnectionId
+  )
+  /** The id minted at drag start and shared with the preview; see `onConnectStart`. */
+  const pendingConnectionId = useRef<string | null>(null)
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
 
@@ -136,6 +147,12 @@ export const useConnect = () => {
   const onConnectStart: OnConnectStart = (event, params) => {
     connectionStartParams.current = params
     startEdge.current = null
+    // Mint the committed edge's id NOW, so the live preview can be routed under the
+    // same identity. Sibling lanes are settled by edge id (every geometric key ties
+    // between parallels), so a preview under a different id lands in a different lane
+    // and the bundle re-orders on release.
+    pendingConnectionId.current = generateUUID()
+    setPendingConnectionId(pendingConnectionId.current)
     startConnectionGuidance(params.nodeId ?? null, params.handleId ?? null)
     const dropPosition = getDropPosition(event)
 
@@ -169,6 +186,9 @@ export const useConnect = () => {
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      // Withdraw the preview edge as the real one lands, so the solver never holds
+      // both for a frame (which would fan them apart, then collapse — a flicker).
+      setPendingConnectionEdge(null)
       if (
         isSameNodeSameHandleArea(
           connection.source,
@@ -182,14 +202,18 @@ export const useConnect = () => {
 
       const newEdge: Edge = {
         ...connection,
-        id: generateUUID(),
+        // Reuse the id minted for the live preview (see onConnectStart) so a native
+        // handle-drop commits into the SAME fan lane it previewed in — sibling lanes
+        // are settled by edge id, so a fresh id here would re-lane parallel
+        // connections on release. Falls back to a new id if the gesture had none.
+        id: pendingConnectionId.current ?? generateUUID(),
         type: defaultEdgeType,
         selected: false,
       }
 
       addEdge(newEdge)
     },
-    [addEdge, defaultEdgeType]
+    [addEdge, defaultEdgeType, setPendingConnectionEdge]
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
@@ -274,15 +298,27 @@ export const useConnect = () => {
               return
             }
 
+            // On a shaped node (oval, parallelogram) PIN the endpoint to the drop
+            // point: the live ghost ends at that point projected onto the node's real
+            // outline, and the committed edge must land there too — an auto anchor
+            // would jump it to a different place on release, the exact preview≠commit
+            // drift this router set out to kill. On a plain rectangle the border
+            // carries no sub-side aim, so keep the auto default and let the solver
+            // route its endpoint cleanly (the user pins later by dragging it). Either
+            // way keep the preview's id so the committed edge stays in the same fan
+            // lane.
+            const pinned = dropAnchorIsAimed(nodeOnTop.type)
             setEdges((eds) =>
               eds.concat({
-                id: generateUUID(),
+                id: pendingConnectionId.current ?? generateUUID(),
                 source: sourceNodeId,
                 target: nodeOnTop.id,
                 type: defaultEdgeType,
                 sourceHandle: sourceHandleId,
                 targetHandle,
-                data: withEndpointAnchor(undefined, "target", targetAnchor),
+                data: pinned
+                  ? withEndpointAnchor(undefined, "target", targetAnchor)
+                  : { points: [] },
               })
             )
           }
@@ -291,6 +327,11 @@ export const useConnect = () => {
         startEdge.current = null
         connectionStartParams.current = null
         stopConnectionGuidance()
+        // Every path out of a connection gesture — commit, cancel, invalid drop —
+        // withdraws the preview edge and its id, so neither outlives the drag.
+        setPendingConnectionEdge(null)
+        setPendingConnectionId(null)
+        pendingConnectionId.current = null
       }
     },
     [
@@ -300,6 +341,8 @@ export const useConnect = () => {
       resolveDropTarget,
       setEdges,
       stopConnectionGuidance,
+      setPendingConnectionEdge,
+      setPendingConnectionId,
     ]
   )
 

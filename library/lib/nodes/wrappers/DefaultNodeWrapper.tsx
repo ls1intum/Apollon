@@ -5,6 +5,7 @@ import { useMetadataStore } from "@/store/context"
 import {
   getAxisHandlePlan,
   getDistributedHandleOffsetPercents,
+  getDistributedHandleOffsets,
   reduceVisibleArcCountForZoom,
 } from "@/utils"
 import { CANVAS } from "@/constants"
@@ -103,6 +104,9 @@ interface Props {
   height?: number
   elementId: string
   hiddenHandles?: HandleId[] | true
+  /** Move the connection rectangle's top edge into the node while retaining the
+   * node's full visual/selection bounds (the raised package tab). */
+  connectionTopInset?: number
   // Keep the handles (so existing edges anchored to them still render) but stop
   // this node from being a connection TARGET. Used by non-connectable shapes that
   // can still be an edge SOURCE, e.g. a BPMN annotation.
@@ -114,6 +118,7 @@ export function DefaultNodeWrapper({
   children,
   hiddenHandles = [],
   isConnectableEnd = true,
+  connectionTopInset = 0,
 }: Props) {
   // Subscribe to only the fields this wrapper uses, with shallow equality, so a
   // node re-renders its handles on resize/type change but not on the position
@@ -184,9 +189,17 @@ export function DefaultNodeWrapper({
     () => getDistributedHandleOffsetPercents(nodeWidth),
     [nodeWidth]
   )
+  const safeConnectionTopInset = Math.min(
+    Math.max(connectionTopInset, 0),
+    nodeHeight
+  )
+  const connectionHeight = Math.max(0, nodeHeight - safeConnectionTopInset)
   const [ys0, ys1, ys2, ys3, ys4, ys5, ys6, ys7, ys8] = useMemo(
-    () => getDistributedHandleOffsetPercents(nodeHeight),
-    [nodeHeight]
+    () =>
+      getDistributedHandleOffsets(connectionHeight).map(
+        (offset) => safeConnectionTopInset + offset
+      ),
+    [connectionHeight, safeConnectionTopInset]
   )
 
   // The width axis governs arcs on the top/bottom sides; the height axis
@@ -206,13 +219,13 @@ export function DefaultNodeWrapper({
     )
   }, [nodeWidth, zoom])
   const heightArcs = useMemo(() => {
-    const plan = getAxisHandlePlan(nodeHeight)
+    const plan = getAxisHandlePlan(connectionHeight)
     return reduceVisibleArcCountForZoom(
       plan.offsets,
       plan.visibleArcCount,
       zoom
     )
-  }, [nodeHeight, zoom])
+  }, [connectionHeight, zoom])
 
   const hiddenHandleSet = useMemo(
     () => (hiddenHandles === true ? null : new Set<string>(hiddenHandles)),
@@ -274,12 +287,12 @@ export function DefaultNodeWrapper({
         HandleId.TopLeft,
         showCornerArc(widthArcs)
       ),
-      style: { ...baseHandleStyle, left: xs0 },
+      style: { ...baseHandleStyle, left: xs0, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopBetweenLeftMidLeft,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: xs1 },
+      style: { ...baseHandleStyle, left: xs1, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopMidLeft,
@@ -289,12 +302,12 @@ export function DefaultNodeWrapper({
         HandleId.TopMidLeft,
         showMidCornerArc(widthArcs)
       ),
-      style: { ...baseHandleStyle, left: xs2 },
+      style: { ...baseHandleStyle, left: xs2, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopBetweenMidLeftCenter,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: xs3 },
+      style: { ...baseHandleStyle, left: xs3, top: safeConnectionTopInset },
     },
     {
       id: HandleId.Top,
@@ -305,12 +318,12 @@ export function DefaultNodeWrapper({
         showMiddleArc(widthArcs),
         topMiddleForce
       ),
-      style: { ...baseHandleStyle, left: xs4 },
+      style: { ...baseHandleStyle, left: xs4, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopBetweenCenterMidRight,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: xs5 },
+      style: { ...baseHandleStyle, left: xs5, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopMidRight,
@@ -320,12 +333,12 @@ export function DefaultNodeWrapper({
         HandleId.TopMidRight,
         showMidCornerArc(widthArcs)
       ),
-      style: { ...baseHandleStyle, left: xs6 },
+      style: { ...baseHandleStyle, left: xs6, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopBetweenMidRightRight,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: xs7 },
+      style: { ...baseHandleStyle, left: xs7, top: safeConnectionTopInset },
     },
     {
       id: HandleId.TopRight,
@@ -335,7 +348,7 @@ export function DefaultNodeWrapper({
         HandleId.TopRight,
         showCornerArc(widthArcs)
       ),
-      style: { ...baseHandleStyle, left: xs8 },
+      style: { ...baseHandleStyle, left: xs8, top: safeConnectionTopInset },
     },
     // Right side (slots 0..8 of the height axis).
     {

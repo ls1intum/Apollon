@@ -7,6 +7,7 @@ import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
+import { PACKAGE_TAB_HEIGHT } from "@/utils/geometry/nodeGeometry"
 
 export default function Package({
   id,
@@ -24,7 +25,12 @@ export default function Package({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      connectionTopInset={PACKAGE_TAB_HEIGHT}
+    >
       <NodeToolbar elementId={id} />
 
       <NodeResizer

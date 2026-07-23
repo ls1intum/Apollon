@@ -8,7 +8,7 @@ import { useToolbar } from "@/hooks"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
-import { resolveRequiredInterfaceEdgeType } from "@/utils"
+import { useRequiredInterfaceEdgeType } from "@/hooks/useRequiredInterfaceEdgeType"
 
 const DEPLOYMENT_REQUIRED_INTERFACE_TYPES = [
   "DeploymentRequiredInterface",
@@ -47,27 +47,26 @@ export const DeploymentDiagramEdge = ({
   const showRelationshipLabels =
     "showRelationshipLabels" in config ? config.showRelationshipLabels : false
 
-  const { edges, assessments } = useDiagramStore(
-    useShallow((state) => ({
-      edges: state.edges,
-      assessments: state.assessments,
-    }))
-  )
+  const assessments = useDiagramStore(useShallow((state) => state.assessments))
 
   const setPopOverElementId = usePopoverStore(
     useShallow((state) => state.setPopOverElementId)
   )
 
-  const dynamicEdgeType = resolveRequiredInterfaceEdgeType({
+  const dynamicEdgeType = useRequiredInterfaceEdgeType({
     type,
     id,
     target,
     targetHandleId,
-    edges,
     requiredTypes: DEPLOYMENT_REQUIRED_INTERFACE_TYPES,
     defaultType: "DeploymentRequiredInterface",
     reducedType: "DeploymentRequiredQuarterInterface",
   })
+  const detachedTargetMarkerType = DEPLOYMENT_REQUIRED_INTERFACE_TYPES.some(
+    (requiredType) => requiredType === type
+  )
+    ? "DeploymentRequiredInterface"
+    : undefined
 
   const {
     pathRef,
@@ -78,7 +77,6 @@ export const DeploymentDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -90,6 +88,7 @@ export const DeploymentDiagramEdge = ({
     targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
+    targetInterfaceGeometry,
   } = useStepPathEdge({
     id,
     type: dynamicEdgeType,
@@ -105,7 +104,7 @@ export const DeploymentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: true,
+    detachedTargetMarkerType,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -123,11 +122,11 @@ export const DeploymentDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
           markerEnd={markerEnd}
+          targetInterfaceGeometry={targetInterfaceGeometry}
           sourcePoint={sourcePoint}
           targetPoint={targetPoint}
           sourcePosition={renderSourcePosition}
@@ -151,6 +150,7 @@ export const DeploymentDiagramEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
