@@ -62,6 +62,11 @@ export const DeploymentDiagramEdge = ({
     defaultType: "DeploymentRequiredInterface",
     reducedType: "DeploymentRequiredQuarterInterface",
   })
+  const detachedTargetMarkerType = DEPLOYMENT_REQUIRED_INTERFACE_TYPES.some(
+    (requiredType) => requiredType === type
+  )
+    ? "DeploymentRequiredInterface"
+    : undefined
 
   const {
     pathRef,
@@ -100,6 +105,7 @@ export const DeploymentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
+    detachedTargetMarkerType,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)

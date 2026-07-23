@@ -13,7 +13,7 @@ import {
   type Edge,
   type Node,
 } from "@xyflow/react"
-import { EDGES } from "@/constants"
+import { EDGES, INTERFACE } from "@/constants"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
@@ -95,6 +95,12 @@ interface UseStepPathEdgeProps {
     targetAnchor?: FreeformEdgeAnchor
   }
   allowMidpointDragging?: boolean
+  /**
+   * Canonical marker type while the target endpoint is over empty canvas.
+   * Interface bundles may use reduced socket variants while attached, but a
+   * detached edge has no bundle context and must render its full socket.
+   */
+  detachedTargetMarkerType?: string
 }
 
 export interface StepPathEdgeData {
@@ -121,6 +127,7 @@ type EndpointType = "source" | "target"
 type EndpointDragCommit = {
   endpoint: EndpointType
   nodeId: string
+  nodeType?: string
   handleId: string
   anchor: FreeformEdgeAnchor
   points: IPoint[]
@@ -138,6 +145,21 @@ const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
 
+const isInterfaceNodeType = (nodeType?: string): boolean =>
+  nodeType === "componentInterface" || nodeType === "deploymentInterface"
+
+const getInterfaceMarkerGeometry = (
+  nodeType: string | undefined,
+  rect: Rect | null
+) =>
+  rect && isInterfaceNodeType(nodeType)
+    ? {
+        // The interface SVG uses width / 2 as its circle radius. Match the
+        // rendered node exactly, including older 20px imported interfaces.
+        radius: rect.width / 2,
+      }
+    : undefined
+
 export const useStepPathEdge = ({
   id,
   type,
@@ -153,6 +175,7 @@ export const useStepPathEdge = ({
   targetHandleId,
   data,
   allowMidpointDragging = true,
+  detachedTargetMarkerType,
 }: UseStepPathEdgeProps) => {
   recordEdgeRender()
   const draggingHandleRef = useRef<BendHandle | null>(null)
@@ -203,6 +226,8 @@ export const useStepPathEdge = ({
   // is display state, so React must be able to observe when its endpoints change.
   const [endpointPreviewCommit, setEndpointPreviewCommit] =
     useState<EndpointDragCommit | null>(null)
+  const [isTargetEndpointDetached, setIsTargetEndpointDetached] =
+    useState(false)
 
   useEffect(
     () => () => {
@@ -259,13 +284,17 @@ export const useStepPathEdge = ({
     targetNodeHeight,
   } = endpointNodeGeometry ?? {}
 
+  const edgeMarkerStyles = getEdgeMarkerStyles(type)
   const {
     markerPadding,
-    markerEnd,
     markerStart,
     strokeDashArray,
     offset = 0,
-  } = getEdgeMarkerStyles(type)
+  } = edgeMarkerStyles
+  const markerEnd =
+    isTargetEndpointDetached && detachedTargetMarkerType
+      ? getEdgeMarkerStyles(detachedTargetMarkerType).markerEnd
+      : edgeMarkerStyles.markerEnd
   const padding = markerPadding ?? EDGES.MARKER_PADDING
   // Only a pinned/freeform endpoint depends directly on every node update (its
   // absolute point may follow a nested parent). Auto edges receive their route
@@ -356,20 +385,10 @@ export const useStepPathEdge = ({
       targetNodeHeight,
     ]
   )
-  const targetInterfaceGeometry =
-    targetRect &&
-    (targetNode?.type === "componentInterface" ||
-      targetNode?.type === "deploymentInterface")
-      ? {
-          center: {
-            x: targetRect.x + targetRect.width / 2,
-            y: targetRect.y + targetRect.height / 2,
-          },
-          // The interface SVG uses width / 2 as its circle radius. Match the
-          // rendered node exactly, including older 20px imported interfaces.
-          radius: targetRect.width / 2,
-        }
-      : undefined
+  const committedTargetInterfaceGeometry = getInterfaceMarkerGeometry(
+    targetNode?.type,
+    targetRect
+  )
   const resolvedSourceAnchor = useMemo(
     () =>
       sourceRect && isFreeformEdgeAnchor(sourceAnchor)
@@ -617,6 +636,17 @@ export const useStepPathEdge = ({
     dragPreviewPositions?.sourcePosition ?? sourcePosition
   const renderTargetPosition =
     dragPreviewPositions?.targetPosition ?? targetPosition
+  const targetInterfaceGeometry =
+    endpointPreviewCommit?.endpoint === "target"
+      ? (getInterfaceMarkerGeometry(
+          endpointPreviewCommit?.nodeType,
+          endpointPreviewCommit?.targetRect ?? null
+        ) ?? {
+          // A required marker may be dragged onto a non-interface target. It
+          // remains an edge marker and uses the current interface size there.
+          radius: INTERFACE.RADIUS,
+        })
+      : committedTargetInterfaceGeometry
 
   // Bridge over edges this one crosses. Computed from `renderPoints` so the
   // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
@@ -1041,6 +1071,7 @@ export const useStepPathEdge = ({
       activePointerCancelRef.current?.()
       endpointDragCommitRef.current = null
       setEndpointPreviewCommit(null)
+      setIsTargetEndpointDetached(false)
 
       const ownerDocument = event.currentTarget.ownerDocument
       const dragBaseline = [...activePoints]
@@ -1101,11 +1132,15 @@ export const useStepPathEdge = ({
             y: movingEndpoint.sourceY,
           }
         } else {
+          const targetPreviewPadding = getTargetConnectionPointPadding(
+            padding,
+            true
+          )
           const movingEndpoint = adjustTargetCoordinates(
             resolvedAnchor.point.x,
             resolvedAnchor.point.y,
             resolvedAnchor.position,
-            0
+            targetPreviewPadding
           )
           targetEndpoint = {
             x: movingEndpoint.targetX,
@@ -1205,6 +1240,7 @@ export const useStepPathEdge = ({
         return {
           endpoint,
           nodeId: nodeOnTop.id,
+          nodeType: nodeOnTop.type,
           handleId: getSideHandleIdForPosition(resolvedAnchor.position),
           anchor,
           sourceEndpoint,
@@ -1226,6 +1262,7 @@ export const useStepPathEdge = ({
         endpointDragCommitRef.current = commit
         setEndpointPreviewCommit(commit)
         if (commit) {
+          if (endpoint === "target") setIsTargetEndpointDetached(false)
           setDragPreviewPoints(commit.points)
           setDragPreviewPositions({
             sourcePosition: commit.sourcePosition,
@@ -1238,6 +1275,7 @@ export const useStepPathEdge = ({
         // edge. No commit is set, so releasing here reverts (no reconnect).
         const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         const movingIsSource = endpoint === "source"
+        setIsTargetEndpointDetached(!movingIsSource)
         const fixedPoint = movingIsSource
           ? currentTargetEndpoint
           : currentSourceEndpoint
@@ -1289,6 +1327,7 @@ export const useStepPathEdge = ({
         setEndpointPreviewCommit(null)
         setDragPreviewPoints(null)
         setDragPreviewPositions(null)
+        setIsTargetEndpointDetached(false)
         // Do not wait for the preview-publishing layout effect to clean up on a
         // later render. The central solver subscribes to this shared override;
         // clearing it synchronously makes pointer-up/cancel restore committed

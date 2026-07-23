@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { EdgeTypePreviewIcon } from "@/components/popovers/edgePopovers/EdgeTypePreviewIcon"
+import { MARKER_CONFIGS } from "@/constants"
 
 // The type -> marker/dash mapping is covered by edgeUtils.test.ts. These tests
 // cover the rendering layer it adds: dash-attribute translation, marker
@@ -52,5 +53,31 @@ describe("EdgeTypePreviewIcon", () => {
     expect(
       renderIcon("ClassUnidirectional").querySelector("g[transform]")
     ).toBeNull()
+  })
+
+  it("puts dependency and required markers on the same edge-tip contract", () => {
+    const dependency = renderIcon("ComponentDependency")
+    const dependencyLineEnd = Number(
+      dependency.querySelector("line")?.getAttribute("x2")
+    )
+    expect(dependency.querySelector("path")?.getAttribute("d")).toContain(
+      `L${dependencyLineEnd},14`
+    )
+
+    const svg = renderIcon("ComponentRequiredInterface")
+    const lineEnd = Number(svg.querySelector("line")?.getAttribute("x2"))
+    const markerPath = svg.querySelector("path")?.getAttribute("d")
+    const match = markerPath?.match(/^M([^,]+),[^ ]+ A([^,]+),[^ ]+ 0 [01],0 /)
+    expect(match).not.toBeNull()
+
+    const arcEndpointX = Number(match?.[1])
+    const radius = Number(match?.[2])
+    const span = MARKER_CONFIGS["required-interface"].arcSpanDegrees ?? 180
+    const halfAngle = ((span / 2) * Math.PI) / 180
+    const inferredCenterX = arcEndpointX + radius * Math.cos(halfAngle)
+
+    // The unscaled line endpoint is the socket's leftmost contact. FittedMarker
+    // scales around this same anchor, so the rendered preview keeps the join.
+    expect(inferredCenterX - radius).toBeCloseTo(lineEnd, 10)
   })
 })

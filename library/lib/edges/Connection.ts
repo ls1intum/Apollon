@@ -69,7 +69,12 @@ export function tryFindStraightPath(
     direction: Position
   },
   targetPadding: number,
-  handleCoords?: {
+  /**
+   * Exact padding-adjusted path endpoints. Besides rejecting a diagonal
+   * "straight" route, these keep the accepted route on the same marker contact
+   * points as every orthogonal route.
+   */
+  endpointCoords?: {
     sourceX: number
     sourceY: number
     targetX: number
@@ -98,12 +103,12 @@ export function tryFindStraightPath(
   const sourceHandleEdge = source.direction
   const targetHandleEdge = target.direction
   const alignedHorizontalY =
-    handleCoords !== undefined
-      ? (handleCoords.sourceY + handleCoords.targetY) / 2
+    endpointCoords !== undefined
+      ? (endpointCoords.sourceY + endpointCoords.targetY) / 2
       : null
   const alignedVerticalX =
-    handleCoords !== undefined
-      ? (handleCoords.sourceX + handleCoords.targetX) / 2
+    endpointCoords !== undefined
+      ? (endpointCoords.sourceX + endpointCoords.targetX) / 2
       : null
 
   // Right -> Left case
@@ -114,8 +119,8 @@ export function tryFindStraightPath(
   ) {
     // If actual handle Y-coordinates are misaligned, skip straight path
     if (
-      handleCoords &&
-      Math.abs(handleCoords.sourceY - handleCoords.targetY) >
+      endpointCoords &&
+      Math.abs(endpointCoords.sourceY - endpointCoords.targetY) >
         HANDLE_ALIGNMENT_TOLERANCE
     ) {
       return null
@@ -135,11 +140,11 @@ export function tryFindStraightPath(
     if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
       const middleY = alignedHorizontalY ?? (overlapY[0] + overlapY[1]) / 2
       const start: IPoint = {
-        x: source.position.x + source.width,
+        x: endpointCoords?.sourceX ?? source.position.x + source.width,
         y: middleY,
       }
       const end: IPoint = {
-        x: target.position.x - offset,
+        x: endpointCoords?.targetX ?? target.position.x - offset,
         y: middleY,
       }
       return [start, end]
@@ -154,8 +159,8 @@ export function tryFindStraightPath(
   ) {
     // If actual handle Y-coordinates are misaligned, skip straight path
     if (
-      handleCoords &&
-      Math.abs(handleCoords.sourceY - handleCoords.targetY) >
+      endpointCoords &&
+      Math.abs(endpointCoords.sourceY - endpointCoords.targetY) >
         HANDLE_ALIGNMENT_TOLERANCE
     ) {
       return null
@@ -175,12 +180,12 @@ export function tryFindStraightPath(
     if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
       const middleY = alignedHorizontalY ?? (overlapY[0] + overlapY[1]) / 2
       const start: IPoint = {
-        x: source.position.x,
+        x: endpointCoords?.sourceX ?? source.position.x,
         y: middleY,
       }
 
       const end: IPoint = {
-        x: target.position.x + target.width + offset,
+        x: endpointCoords?.targetX ?? target.position.x + target.width + offset,
         y: middleY,
       }
       return [start, end]
@@ -195,8 +200,8 @@ export function tryFindStraightPath(
   ) {
     // If actual handle X-coordinates are misaligned, skip straight path
     if (
-      handleCoords &&
-      Math.abs(handleCoords.sourceX - handleCoords.targetX) >
+      endpointCoords &&
+      Math.abs(endpointCoords.sourceX - endpointCoords.targetX) >
         HANDLE_ALIGNMENT_TOLERANCE
     ) {
       return null
@@ -211,12 +216,12 @@ export function tryFindStraightPath(
       const middleX = alignedVerticalX ?? (overlapX[0] + overlapX[1]) / 2
       const start: IPoint = {
         x: middleX,
-        y: source.position.y + source.height,
+        y: endpointCoords?.sourceY ?? source.position.y + source.height,
       }
 
       const end: IPoint = {
         x: middleX,
-        y: target.position.y - offset,
+        y: endpointCoords?.targetY ?? target.position.y - offset,
       }
       return [start, end]
     }
@@ -230,8 +235,8 @@ export function tryFindStraightPath(
   ) {
     // If actual handle X-coordinates are misaligned, skip straight path
     if (
-      handleCoords &&
-      Math.abs(handleCoords.sourceX - handleCoords.targetX) >
+      endpointCoords &&
+      Math.abs(endpointCoords.sourceX - endpointCoords.targetX) >
         HANDLE_ALIGNMENT_TOLERANCE
     ) {
       return null
@@ -246,12 +251,13 @@ export function tryFindStraightPath(
       const middleX = alignedVerticalX ?? (overlapX[0] + overlapX[1]) / 2
       const start: IPoint = {
         x: middleX,
-        y: source.position.y,
+        y: endpointCoords?.sourceY ?? source.position.y,
       }
 
       const end: IPoint = {
         x: middleX,
-        y: target.position.y + target.height + offset,
+        y:
+          endpointCoords?.targetY ?? target.position.y + target.height + offset,
       }
       return [start, end]
     }

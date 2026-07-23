@@ -70,7 +70,7 @@ const REQUIRED_INTERFACE_TYPES = new Set([
   "ComponentRequiredThreeQuarterInterface",
   "DeploymentRequiredThreeQuarterInterface",
 ])
-const STANDARD_REQUIRED_INTERFACE_ARC_RADIANS = (172 * Math.PI) / 180
+const STANDARD_REQUIRED_INTERFACE_ARC_RADIANS = (165 * Math.PI) / 180
 
 /**
  * Whole-editor screenshots intentionally tolerate a small amount of
@@ -434,6 +434,54 @@ test.describe("Required interface socket combinations", () => {
       })
     })
   }
+
+  test("a detached reduced socket uses the canonical 165-degree marker", async ({
+    page,
+  }) => {
+    const fixture = requiredInterfaceCombinationFixture("socket-detached", {
+      x: 320,
+      y: 390,
+    })
+    const sideEdgeId = `${fixture.id}-side`
+    const topEdgeId = `${fixture.id}-top`
+    const quarterArc = (85 * Math.PI) / 180
+    await injectFixtureIntoLocalStorage(page, fixture)
+    await page.goto(resolveLocalDiagramRoute(fixture))
+    await waitForCanvasReady(page)
+    await expectRequiredInterfaceGeometry(page, fixture, {
+      [sideEdgeId]: quarterArc,
+      [topEdgeId]: quarterArc,
+    })
+
+    await selectEdgeOnPath(page, sideEdgeId)
+    const targetHandle = page.locator(
+      `.react-flow__edge[data-id="${sideEdgeId}"] .edge-endpoint-handle--target`
+    )
+    await expect(targetHandle).toBeVisible()
+    const handleBox = await targetHandle.boundingBox()
+    if (!handleBox) throw new Error("required endpoint handle is absent")
+
+    const start = {
+      x: handleBox.x + handleBox.width / 2,
+      y: handleBox.y + handleBox.height / 2,
+    }
+    await page.mouse.move(start.x, start.y)
+    await page.mouse.down()
+    await page.mouse.move(start.x + 200, start.y + 160, { steps: 12 })
+
+    // Only the detached edge loses its interface-bundle context. Its sibling
+    // remains a reduced socket around the still-connected interface.
+    await expectRequiredInterfaceGeometry(page, fixture, {
+      [sideEdgeId]: STANDARD_REQUIRED_INTERFACE_ARC_RADIANS,
+      [topEdgeId]: quarterArc,
+    })
+
+    await page.mouse.up()
+    await expectRequiredInterfaceGeometry(page, fixture, {
+      [sideEdgeId]: quarterArc,
+      [topEdgeId]: quarterArc,
+    })
+  })
 
   test("a provided edge passes cleanly through the seam between required sockets", async ({
     page,

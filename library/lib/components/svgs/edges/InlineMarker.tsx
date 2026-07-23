@@ -37,7 +37,7 @@ export interface MarkerProps {
 }
 
 export interface InterfaceGeometry {
-  center: { x: number; y: number }
+  /** Radius of the provided-interface ball this edge terminates at. */
   radius: number
 }
 
@@ -69,10 +69,11 @@ export function getMarkerHalfHeight(
 }
 
 /**
- * Resolve a required-interface socket around the exact center of its provided
- * interface. The path endpoint and the ball boundary are normally identical,
- * but the center is authoritative so RF handle padding and legacy node sizes
- * can never introduce a visible eccentricity.
+ * Resolve a required-interface socket exactly like every other inline marker:
+ * the edge endpoint is its contact point and the marker extends beyond it in
+ * the edge's direction. The target contributes only its rendered ball radius.
+ * Routing owns the contact point, so previews, selectors, exports and settled
+ * edges cannot disagree about which geometry the marker belongs to.
  */
 export function getInterfaceSocketGeometry({
   endPoint,
@@ -88,11 +89,11 @@ export function getInterfaceSocketGeometry({
   const cos = Math.cos(direction)
   const sin = Math.sin(direction)
   const ballRadius = interfaceGeometry?.radius ?? INTERFACE.RADIUS
-  const center = interfaceGeometry?.center ?? {
-    x: endPoint.x + ballRadius * cos,
-    y: endPoint.y + ballRadius * sin,
-  }
   const radius = ballRadius + INTERFACE.SOCKET_GAP
+  const center = {
+    x: endPoint.x + radius * cos,
+    y: endPoint.y + radius * sin,
+  }
   const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
   const cosHalf = Math.cos(halfAngle)
   const sinHalf = Math.sin(halfAngle)

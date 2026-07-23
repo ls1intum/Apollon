@@ -27,7 +27,7 @@ export type StepEdgeRouteParams = {
   sourcePosition: Position
   targetPosition: Position
   padding: number
-  /** Whole-pixel-rounded raw endpoints, for the straight-path handle coords. */
+  /** Whole-pixel-rounded raw endpoints used by anchor scoring/signatures. */
   rounded: {
     sourceX: number
     sourceY: number
@@ -68,10 +68,13 @@ export function routeStepEdge(p: StepEdgeRouteParams): IPoint[] {
       },
       p.padding,
       {
-        sourceX: p.rounded.sourceX,
-        sourceY: p.rounded.sourceY,
-        targetX: p.rounded.targetX,
-        targetY: p.rounded.targetY,
+        // Straight routes must terminate at the same padding-adjusted points as
+        // orthogonal routes. This matters for marker-specific spacing such as
+        // the required-interface socket gap.
+        sourceX: routeSource.x,
+        sourceY: routeSource.y,
+        targetX: routeTarget.x,
+        targetY: routeTarget.y,
       }
     )
     // A straight shot is only allowed when it runs clear of every solid node AND

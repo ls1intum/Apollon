@@ -18,9 +18,9 @@ export const CANVAS = Object.freeze({
 const INTERFACE_SIZE = 30
 const INTERFACE_RADIUS = INTERFACE_SIZE / 2
 const INTERFACE_STROKE_WIDTH = 2
-// The socket is concentric with the provided-interface ball. With two 2px
-// strokes, a 3px centerline difference leaves a crisp 1px visible gap.
-const INTERFACE_SOCKET_GAP = 3
+// The socket is concentric with the provided-interface ball. Its centerline
+// and the relationship stem sit exactly 4px beyond the ball radius.
+const INTERFACE_SOCKET_GAP = 4
 
 export const INTERFACE = Object.freeze({
   SIZE: INTERFACE_SIZE,

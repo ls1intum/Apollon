@@ -283,19 +283,17 @@ export const MARKER_CONFIGS = Object.freeze({
     widthFactor: 1.0,
     heightFactor: 0.866,
   },
-  // Component/Deployment diagram - interface socket
-  // Size = interface radius so arc perfectly overlaps the interface circle
+  // Component/Deployment diagram — interface socket. InlineMarker derives the
+  // actual socket radius from the target ball plus the configured gap.
   "required-interface": {
     type: "semicircle",
     filled: false,
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    // Two opposing sockets leave an 8° seam at both joins instead of merging
-    // into a visually indistinguishable 360° ring. At the canonical 18px
-    // socket radius, 8° is the smallest grid-friendly seam that also clears a
-    // provided-interface line passing through it at the current stroke width.
-    arcSpanDegrees: 172,
+    // A fifteen-degree opening keeps the socket visibly distinct from a closed
+    // circle while preserving the canonical near-semicircle shape.
+    arcSpanDegrees: 165,
   },
   "required-interface-quarter": {
     type: "semicircle",

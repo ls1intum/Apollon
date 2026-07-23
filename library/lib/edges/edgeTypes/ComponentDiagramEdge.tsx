@@ -59,6 +59,11 @@ export const ComponentDiagramEdge = ({
     defaultType: "ComponentRequiredInterface",
     reducedType: "ComponentRequiredQuarterInterface",
   })
+  const detachedTargetMarkerType = COMPONENT_REQUIRED_INTERFACE_TYPES.some(
+    (requiredType) => requiredType === type
+  )
+    ? "ComponentRequiredInterface"
+    : undefined
 
   const {
     pathRef,
@@ -97,6 +102,7 @@ export const ComponentDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
+    detachedTargetMarkerType,
   })
 
   const { strokeColor } = getCustomColorsFromDataForEdge(data)
