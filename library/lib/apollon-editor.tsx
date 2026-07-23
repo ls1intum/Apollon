@@ -1154,7 +1154,7 @@ export class ApollonEditor {
    * Dev/test-only performance probe; returns `undefined` in production.
    * @internal — not part of the public API; stripped from the published d.ts.
    */
-  public __perf():
+  public __perf(skipDocumentEncoding = false):
     | {
         encodedDocBytes: number
         nodesMapSize: number
@@ -1180,10 +1180,24 @@ export class ApollonEditor {
         solveMaxMs: number
         solveCount: number
         workerSolveCount: number
+        workerResponseCount: number
         workerAttemptCount: number
         workerFallbackCount: number
         workerInitialSyncCount: number
         workerSmallSyncCount: number
+        workerSerializeMaxMs: number
+        workerPostMessageMaxMs: number
+        workerRoundTripMaxMs: number
+        workerDispatchDelayMaxMs: number
+        workerSnapshotAgeMaxMs: number
+        workerReleaseExactMaxMs: number
+        workerReleaseSettledMaxMs: number
+        workerHolisticPreviewCount: number
+        workerFirstPreviewMaxMs: number
+        workerPreviewGapMaxMs: number
+        workerLatestInputRevision: number
+        workerLastDispatchedRevision: number
+        workerLastAcceptedRevision: number
         previewDecisionHoldCount: number
         previewDecisionConfirmCount: number
         previewDecisionInvalidationCount: number
@@ -1199,7 +1213,9 @@ export class ApollonEditor {
     const counters = getPerfCounters()
 
     return {
-      encodedDocBytes: Y.encodeStateAsUpdate(this.ydoc).byteLength,
+      encodedDocBytes: skipDocumentEncoding
+        ? 0
+        : Y.encodeStateAsUpdate(this.ydoc).byteLength,
       nodesMapSize: getNodesMap(this.ydoc).size,
       storeNodeWrites: counters?.storeNodeWrites ?? 0,
       edgeSearches: counters?.routerSearches ?? 0,
@@ -1223,10 +1239,24 @@ export class ApollonEditor {
       solveMaxMs: counters?.solveMaxMs ?? 0,
       solveCount: counters?.solveCount ?? 0,
       workerSolveCount: counters?.workerSolveCount ?? 0,
+      workerResponseCount: counters?.workerResponseCount ?? 0,
       workerAttemptCount: counters?.workerAttemptCount ?? 0,
       workerFallbackCount: counters?.workerFallbackCount ?? 0,
       workerInitialSyncCount: counters?.workerInitialSyncCount ?? 0,
       workerSmallSyncCount: counters?.workerSmallSyncCount ?? 0,
+      workerSerializeMaxMs: counters?.workerSerializeMaxMs ?? 0,
+      workerPostMessageMaxMs: counters?.workerPostMessageMaxMs ?? 0,
+      workerRoundTripMaxMs: counters?.workerRoundTripMaxMs ?? 0,
+      workerDispatchDelayMaxMs: counters?.workerDispatchDelayMaxMs ?? 0,
+      workerSnapshotAgeMaxMs: counters?.workerSnapshotAgeMaxMs ?? 0,
+      workerReleaseExactMaxMs: counters?.workerReleaseExactMaxMs ?? 0,
+      workerReleaseSettledMaxMs: counters?.workerReleaseSettledMaxMs ?? 0,
+      workerHolisticPreviewCount: counters?.workerHolisticPreviewCount ?? 0,
+      workerFirstPreviewMaxMs: counters?.workerFirstPreviewMaxMs ?? 0,
+      workerPreviewGapMaxMs: counters?.workerPreviewGapMaxMs ?? 0,
+      workerLatestInputRevision: counters?.workerLatestInputRevision ?? 0,
+      workerLastDispatchedRevision: counters?.workerLastDispatchedRevision ?? 0,
+      workerLastAcceptedRevision: counters?.workerLastAcceptedRevision ?? 0,
       previewDecisionHoldCount: counters?.previewDecisionHoldCount ?? 0,
       previewDecisionConfirmCount: counters?.previewDecisionConfirmCount ?? 0,
       previewDecisionInvalidationCount:

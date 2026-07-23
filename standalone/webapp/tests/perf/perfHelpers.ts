@@ -35,10 +35,24 @@ export type PerfSnapshot = {
   solveMaxMs: number
   solveCount: number
   workerSolveCount: number
+  workerResponseCount: number
   workerAttemptCount: number
   workerFallbackCount: number
   workerInitialSyncCount: number
   workerSmallSyncCount: number
+  workerSerializeMaxMs: number
+  workerPostMessageMaxMs: number
+  workerRoundTripMaxMs: number
+  workerDispatchDelayMaxMs: number
+  workerSnapshotAgeMaxMs: number
+  workerReleaseExactMaxMs: number
+  workerReleaseSettledMaxMs: number
+  workerHolisticPreviewCount: number
+  workerFirstPreviewMaxMs: number
+  workerPreviewGapMaxMs: number
+  workerLatestInputRevision: number
+  workerLastDispatchedRevision: number
+  workerLastAcceptedRevision: number
   previewDecisionHoldCount: number
   previewDecisionConfirmCount: number
   previewDecisionInvalidationCount: number

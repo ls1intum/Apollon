@@ -41,14 +41,16 @@ cold solve.
 
 The first solve and small diagrams run synchronously so geometry is available before
 paint. Larger subsequent solves run in a versioned module Worker with one request in
-flight and one replaceable pending snapshot. This gives the solver backpressure: a pointer
-storm cannot build an obsolete FIFO queue. Above the measured large-scene crossover,
-the newest changing snapshot is sampled at an 80 ms cadence. A successful superseded
-generation cannot commit, but it can become the display-only route baseline projected onto
-the current pointer position. This keeps neighboring edges flowing holistically throughout
-a sustained drag without putting routing on the interaction frame. Pointer-up dispatches
-the final revision immediately, and only a matching session and latest revision may replace
-settled geometry. Because sampled Worker generations can lag a fast pointer, preview-only
+flight; while it is busy, the main thread retains only the newest unserialized snapshot.
+This gives the solver backpressure without cloning an obsolete FIFO queue. Above the
+measured large-scene crossover, changing snapshots use an adaptive 40–160 ms cadence
+derived from observed Worker turnaround. A successful superseded generation cannot
+commit, but it can become the display-only route baseline projected onto the current
+pointer position. This keeps neighboring edges flowing holistically throughout a sustained
+drag without putting routing on the interaction frame. Pointer-up bypasses the preview
+cadence and becomes the next request after any already-running solve; only a matching
+session and latest revision may replace settled geometry. Because sampled Worker
+generations can lag a fast pointer, preview-only
 hysteresis requires a changed side, port, or route-direction sequence to appear in two
 consecutive exact samples before displaying it. Coordinate refinements within the current
 decision still flow immediately, and a displayed route that now crosses a solid unrelated

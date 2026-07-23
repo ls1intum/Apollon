@@ -10,10 +10,15 @@ import {
   type Node,
 } from "@xyflow/react"
 import {
+  EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS,
   EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
+  EDGE_GEOMETRY_WORKER_MAX_CADENCE_MS,
+  EDGE_GEOMETRY_WORKER_MIN_CADENCE_MS,
   EdgeGeometryWorkerController,
+  getEdgeGeometryWorkerCadence,
   shouldSampleEdgeGeometryWorker,
   shouldUseEdgeGeometryWorker,
+  updateEdgeGeometryWorkerRoundTrip,
   type EdgeGeometryWorkerPort,
 } from "@/utils/geometry/edgeGeometryWorkerController"
 import {
@@ -244,9 +249,44 @@ describe("EdgeGeometryWorkerController", () => {
     ).toBe(true)
   })
 
-  it("keeps one solve in flight and collapses queued frames to the latest revision", () => {
+  it("adapts cadence within bounds without reacting violently to one outlier", () => {
+    expect(getEdgeGeometryWorkerCadence(null)).toBe(
+      EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS
+    )
+    expect(getEdgeGeometryWorkerCadence(Number.NaN)).toBe(
+      EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS
+    )
+
+    let fastRoundTrip: number | null = null
+    const fastCadences: number[] = []
+    for (let index = 0; index < 8; index++) {
+      fastRoundTrip = updateEdgeGeometryWorkerRoundTrip(fastRoundTrip, 5)
+      fastCadences.push(getEdgeGeometryWorkerCadence(fastRoundTrip))
+    }
+    expect(fastCadences.at(-1)).toBe(EDGE_GEOMETRY_WORKER_MIN_CADENCE_MS)
+
+    let slowRoundTrip: number | null = null
+    const slowCadences: number[] = []
+    for (let index = 0; index < 8; index++) {
+      slowRoundTrip = updateEdgeGeometryWorkerRoundTrip(slowRoundTrip, 1_000)
+      slowCadences.push(getEdgeGeometryWorkerCadence(slowRoundTrip))
+    }
+    expect(slowCadences.at(-1)).toBe(EDGE_GEOMETRY_WORKER_MAX_CADENCE_MS)
+    expect(slowCadences[0]).toBeLessThan(EDGE_GEOMETRY_WORKER_MAX_CADENCE_MS)
+    for (let index = 1; index < slowCadences.length; index++)
+      expect(slowCadences[index] - slowCadences[index - 1]).toBeLessThanOrEqual(
+        20
+      )
+
+    const ignored = updateEdgeGeometryWorkerRoundTrip(slowRoundTrip, -1)
+    expect(ignored).toBe(slowRoundTrip)
+  })
+
+  it("keeps one solve in flight and lets the owner lazily dispatch only the latest snapshot", () => {
     const requests: EdgeGeometrySolveRequest[] = []
     const accepted: number[] = []
+    let latestInput = emptyInput()
+    let dirty = false
     const worker: EdgeGeometryWorkerPort = {
       postMessage: (request) => requests.push(request),
       terminate: vi.fn(),
@@ -256,19 +296,36 @@ describe("EdgeGeometryWorkerController", () => {
       worker,
       onResult: ({ revision }) => accepted.push(revision),
       onFailure: vi.fn(),
+      onIdle: () => {
+        if (!dirty) return
+        dirty = false
+        controller.submit(latestInput)
+      },
     })
 
     expect(controller.submit(emptyInput())).toBe(1)
-    expect(controller.submit(emptyInput())).toBe(2)
-    expect(controller.submit(emptyInput())).toBe(3)
+    for (let index = 2; index <= 1_000; index++) {
+      latestInput = {
+        ...emptyInput(),
+        connectionMode: "strict",
+        nodes: [{ id: `snapshot-${index}`, position: { x: index, y: -index } }],
+      }
+      dirty = true
+      controller.supersede()
+    }
+    expect(controller.submit(latestInput)).toBeNull()
     expect(requests.map(({ revision }) => revision)).toEqual([1])
 
     controller.receive(resultFor(requests[0]))
     expect(accepted).toEqual([])
-    expect(requests.map(({ revision }) => revision)).toEqual([1, 3])
+    expect(requests.map(({ revision }) => revision)).toEqual([1, 1_001])
+    expect(requests[1].input.connectionMode).toBe("strict")
+    expect(requests[1].input.nodes).toEqual([
+      { id: "snapshot-1000", position: { x: 1_000, y: -1_000 } },
+    ])
 
     controller.receive(resultFor(requests[1]))
-    expect(accepted).toEqual([3])
+    expect(accepted).toEqual([1_001])
   })
 
   it("reports superseded exact generations as provisional without settling them", () => {
@@ -287,19 +344,20 @@ describe("EdgeGeometryWorkerController", () => {
     })
 
     controller.submit(emptyInput())
-    controller.submit(emptyInput())
-    controller.submit(emptyInput())
+    controller.supersede()
+    controller.supersede()
     controller.receive(resultFor(requests[0]))
 
     expect(provisional).toEqual([1])
     expect(settled).toEqual([])
-    expect(requests.map(({ revision }) => revision)).toEqual([1, 3])
+    expect(requests.map(({ revision }) => revision)).toEqual([1])
 
     // A duplicate old result is neither a second preview nor a settled commit.
     controller.receive(resultFor(requests[0]))
     expect(provisional).toEqual([1])
+    expect(controller.submit(emptyInput())).toBe(4)
     controller.receive(resultFor(requests[1]))
-    expect(settled).toEqual([3])
+    expect(settled).toEqual([4])
   })
 
   it("continues sampled provisional work while pointer frames supersede it", () => {
@@ -318,20 +376,17 @@ describe("EdgeGeometryWorkerController", () => {
     })
 
     controller.submit(emptyInput()) // in flight
-    controller.submit(emptyInput()) // cadence-sampled pending
     controller.supersede() // a newer unsampled pointer frame
     controller.receive(resultFor(requests[0]))
 
-    // The pending sample is stale for settlement, but still runs so the UI gets
-    // bounded-lag holistic progress instead of freezing until pointer-up.
-    expect(requests.map(({ revision }) => revision)).toEqual([1, 2])
+    // The owner dispatches only after the Worker is idle, so no replaceable
+    // scene was serialized while the first sample was still running.
+    expect(requests.map(({ revision }) => revision)).toEqual([1])
     expect(provisional).toEqual([1])
-    controller.receive(resultFor(requests[1]))
-    expect(provisional).toEqual([1, 2])
-    expect(settled).toEqual([])
 
     const release = controller.submit(emptyInput())
-    controller.receive(resultFor(requests[2]))
+    expect(release).toBe(3)
+    controller.receive(resultFor(requests[1]))
     expect(settled).toEqual([release])
   })
 
@@ -362,11 +417,12 @@ describe("EdgeGeometryWorkerController", () => {
     expect(settled).toEqual([])
   })
 
-  it("does not let a stale solve error discard the pending latest revision", () => {
+  it("does not let a stale solve error discard the latest desired revision", () => {
     const requests: EdgeGeometrySolveRequest[] = []
     const accepted: number[] = []
     const onProvisionalResult = vi.fn()
     const onFailure = vi.fn()
+    const onResponse = vi.fn()
     const controller = new EdgeGeometryWorkerController({
       sessionId: "session",
       worker: {
@@ -376,10 +432,11 @@ describe("EdgeGeometryWorkerController", () => {
       onResult: ({ revision }) => accepted.push(revision),
       onProvisionalResult,
       onFailure,
+      onResponse,
     })
 
     controller.submit(emptyInput())
-    controller.submit(emptyInput())
+    controller.supersede()
     controller.receive({
       protocol: EDGE_GEOMETRY_WORKER_PROTOCOL_VERSION,
       sessionId: "session",
@@ -390,9 +447,12 @@ describe("EdgeGeometryWorkerController", () => {
 
     expect(onFailure).not.toHaveBeenCalled()
     expect(onProvisionalResult).not.toHaveBeenCalled()
-    expect(requests.map(({ revision }) => revision)).toEqual([1, 2])
+    expect(onResponse).toHaveBeenCalledOnce()
+    expect(requests.map(({ revision }) => revision)).toEqual([1])
+    const latest = controller.submit(emptyInput())
+    expect(latest).toBe(3)
     controller.receive(resultFor(requests[1]))
-    expect(accepted).toEqual([2])
+    expect(accepted).toEqual([3])
   })
 
   it("attaches the synchronous cache only to the first Worker request", () => {
@@ -423,10 +483,11 @@ describe("EdgeGeometryWorkerController", () => {
     )
 
     controller.submit(emptyInput(), initialCache)
-    controller.submit(emptyInput(), initialCache)
+    expect(controller.submit(emptyInput(), initialCache)).toBeNull()
     expect(requests[0].initialCache).toEqual(initialCache)
 
     controller.receive(resultFor(requests[0]))
+    controller.submit(emptyInput(), initialCache)
     expect(requests[1].initialCache).toBeUndefined()
   })
 
@@ -459,12 +520,13 @@ describe("EdgeGeometryWorkerController", () => {
     )
 
     expect(controller.submit(emptyInput(), initialCache)).toBe(1)
-    expect(controller.submit(emptyInput(), initialCache)).toBe(2)
-    expect(controller.invalidate()).toBe(3)
-    expect(controller.submit(emptyInput(), initialCache)).toBe(4)
+    expect(controller.submit(emptyInput(), initialCache)).toBeNull()
+    expect(controller.invalidate()).toBe(2)
+    expect(controller.submit(emptyInput(), initialCache)).toBeNull()
 
     controller.receive(resultFor(requests[0]))
-    expect(requests.map(({ revision }) => revision)).toEqual([1, 4])
+    expect(controller.submit(emptyInput(), initialCache)).toBe(3)
+    expect(requests.map(({ revision }) => revision)).toEqual([1, 3])
     expect(requests[0].initialCache).toEqual(initialCache)
     expect(requests[1].initialCache).toBeUndefined()
 
@@ -472,7 +534,7 @@ describe("EdgeGeometryWorkerController", () => {
     controller.receive(resultFor(requests[0]))
     expect(accepted).toEqual([])
     controller.receive(resultFor(requests[1]))
-    expect(accepted).toEqual([4])
+    expect(accepted).toEqual([3])
   })
 
   it("invalidates an outstanding result before a synchronous solve", () => {
@@ -774,9 +836,13 @@ describe("edge geometry worker DTO", () => {
       id: "a",
       type: "Class",
       position: { x: 10, y: 20 },
+      parentId: "parent",
       width: 120,
       height: 80,
+      initialWidth: 100,
+      initialHeight: 60,
       measured: { width: 120, height: 80 },
+      hidden: true,
       data: {
         renderLabel: () => "not cloneable",
       },
@@ -834,16 +900,31 @@ describe("edge geometry worker DTO", () => {
           { x: 130, y: 80 },
           { x: 160, y: 80 },
         ],
+        sourceAnchor: { side: Position.Right, ratio: 0.25 },
+        targetAnchor: { side: Position.Left, ratio: 0.75 },
         labelRenderer: () => "not cloneable",
       },
     } as unknown as Edge
     const input: SolverInput = {
       nodes: [node],
       nodeLookup: new Map([[node.id, internal]]),
-      connectionMode: ConnectionMode.Loose,
+      connectionMode: ConnectionMode.Strict,
       edges: [edge],
       straightPathTypes: new Set(["ClassUnidirectional"]),
       straightHookTypes: new Set(),
+      fixedEdges: [edge],
+      liveOverride: {
+        edgeId: edge.id,
+        edge,
+        points: [{ x: 150, y: 90 }],
+        strategy: "predicted",
+      },
+      previous: {
+        [edge.id]: [
+          { x: 130, y: 80 },
+          { x: 160, y: 80 },
+        ],
+      },
     }
 
     const serialized = serializeSolverInput(input)
@@ -856,6 +937,26 @@ describe("edge geometry worker DTO", () => {
     expect(
       roundTripped.nodeLookup.get("a")?.internals.handleBounds?.source
     ).toHaveLength(2)
+    expect(roundTripped.nodes[0]).toMatchObject({
+      parentId: "parent",
+      initialWidth: 100,
+      initialHeight: 60,
+      measured: { width: 120, height: 80 },
+      hidden: true,
+    })
+    expect(roundTripped.connectionMode).toBe(ConnectionMode.Strict)
     expect(roundTripped.edges[0].data?.points).toEqual(edge.data?.points)
+    expect(roundTripped.fixedEdges?.[0].data?.sourceAnchor).toEqual({
+      side: Position.Right,
+      ratio: 0.25,
+    })
+    expect(roundTripped.liveOverride).toMatchObject({
+      edgeId: "e",
+      strategy: "predicted",
+      edge: { id: "e" },
+    })
+    expect(roundTripped.previous).toEqual(input.previous)
+    roundTripped.previous!.e[0].x = 999
+    expect(input.previous!.e[0].x).toBe(130)
   })
 })

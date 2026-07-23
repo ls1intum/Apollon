@@ -20,6 +20,13 @@ type ControllerOptions = {
    * display geometry, but must never replace the latest settled generation. */
   onProvisionalResult?: (result: EdgeGeometrySolveResult) => void
   onFailure: (message: string) => void
+  /** Called after a response leaves the Worker idle. The owner can use this to
+   * lazily serialize the newest snapshot instead of cloning replaceable work
+   * while the Worker is still busy. */
+  onIdle?: () => void
+  /** Called once for every valid response consumed from the active session,
+   * including stale errors that are intentionally not surfaced as failures. */
+  onResponse?: (response: EdgeGeometryWorkerResponse) => void
 }
 
 let sessionCounter = 0
@@ -40,9 +47,47 @@ export const shouldUseEdgeGeometryWorker = ({
 }): boolean => hasRunInitialSolve && edgeCount >= threshold && !disabled
 
 export const EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD = 32
-/** Maximum time between sampled holistic previews during active interaction.
- * The Worker still coalesces to one in-flight + one pending generation. */
-export const EDGE_GEOMETRY_WORKER_PREVIEW_CADENCE_MS = 80
+export const EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS = 80
+export const EDGE_GEOMETRY_WORKER_MIN_CADENCE_MS = 40
+export const EDGE_GEOMETRY_WORKER_MAX_CADENCE_MS = 160
+
+/**
+ * Pace snapshots from observed end-to-end Worker throughput. Fast scenes get
+ * fresher holistic previews, while expensive scenes stop cloning work faster
+ * than the Worker can consume it.
+ */
+export const getEdgeGeometryWorkerCadence = (
+  roundTripMs: number | null
+): number => {
+  const observedMs =
+    roundTripMs !== null && Number.isFinite(roundTripMs) && roundTripMs >= 0
+      ? roundTripMs * 1.25
+      : EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS
+  return Math.round(
+    Math.min(
+      EDGE_GEOMETRY_WORKER_MAX_CADENCE_MS,
+      Math.max(EDGE_GEOMETRY_WORKER_MIN_CADENCE_MS, observedMs)
+    )
+  )
+}
+
+export const updateEdgeGeometryWorkerRoundTrip = (
+  previousMs: number | null,
+  sampleMs: number
+): number => {
+  const baselineMs =
+    previousMs !== null && Number.isFinite(previousMs) && previousMs >= 0
+      ? previousMs
+      : EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS / 1.25
+  if (!Number.isFinite(sampleMs) || sampleMs < 0) return baselineMs
+  // One throttled/background-tab sample may be enormous. Bound its influence
+  // so the visible cadence moves by at most ~20 ms per completed response.
+  const boundedSampleMs = Math.min(
+    baselineMs + 64,
+    Math.max(Math.max(0, baselineMs - 64), sampleMs)
+  )
+  return baselineMs * 0.75 + boundedSampleMs * 0.25
+}
 
 /**
  * At the measured crossover where routing moves off-thread, sample changing
@@ -58,9 +103,9 @@ export const shouldSampleEdgeGeometryWorker = ({
 }): boolean => interacting && edgeCount >= EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD
 
 /**
- * A Worker cannot interrupt a CPU-bound solve already running. Keep at most one
- * request in flight and one replaceable pending snapshot instead: rapid drag
- * frames collapse to the newest revision rather than forming an obsolete queue.
+ * A Worker cannot interrupt a CPU-bound solve already running. The controller
+ * therefore accepts only one in-flight request; its owner retains the newest
+ * unserialized snapshot and submits it when `onIdle` fires.
  */
 export class EdgeGeometryWorkerController {
   readonly sessionId: string
@@ -69,10 +114,11 @@ export class EdgeGeometryWorkerController {
   private readonly onResult: ControllerOptions["onResult"]
   private readonly onProvisionalResult: ControllerOptions["onProvisionalResult"]
   private readonly onFailure: ControllerOptions["onFailure"]
+  private readonly onIdle: ControllerOptions["onIdle"]
+  private readonly onResponse: ControllerOptions["onResponse"]
   private latestRevision = 0
   private hardInvalidatedThrough = 0
   private inFlightRevision: number | null = null
-  private pendingRequest: EdgeGeometrySolveRequest | null = null
   private hasSubmitted = false
   private disposed = false
 
@@ -82,19 +128,27 @@ export class EdgeGeometryWorkerController {
     onResult,
     onProvisionalResult,
     onFailure,
+    onIdle,
+    onResponse,
   }: ControllerOptions) {
     this.sessionId = sessionId
     this.worker = worker
     this.onResult = onResult
     this.onProvisionalResult = onProvisionalResult
     this.onFailure = onFailure
+    this.onIdle = onIdle
+    this.onResponse = onResponse
+  }
+
+  isIdle(): boolean {
+    return !this.disposed && this.inFlightRevision === null
   }
 
   submit(
     input: SerializedSolverInput,
     initialCache?: SerializedEdgeSolveCache
-  ): number {
-    if (this.disposed) return this.latestRevision
+  ): number | null {
+    if (!this.isIdle()) return null
     const isFirstRequest = !this.hasSubmitted
     this.hasSubmitted = true
     const request: EdgeGeometrySolveRequest = {
@@ -105,11 +159,7 @@ export class EdgeGeometryWorkerController {
       input,
       initialCache: isFirstRequest ? initialCache : undefined,
     }
-    if (this.inFlightRevision !== null) {
-      this.pendingRequest = request
-    } else {
-      this.post(request)
-    }
+    this.post(request)
     return request.revision
   }
 
@@ -119,7 +169,6 @@ export class EdgeGeometryWorkerController {
    */
   invalidate(): number {
     if (this.disposed) return this.latestRevision
-    this.pendingRequest = null
     const revision = ++this.latestRevision
     this.hardInvalidatedThrough = revision
     return revision
@@ -145,28 +194,21 @@ export class EdgeGeometryWorkerController {
       return
 
     this.inFlightRevision = null
+    this.onResponse?.(response)
     if (response.kind === "result") {
       if (response.revision === this.latestRevision) this.onResult(response)
       else if (response.revision > this.hardInvalidatedThrough)
         this.onProvisionalResult?.(response)
     } else if (response.revision === this.latestRevision) {
-      this.pendingRequest = null
       this.onFailure(response.message)
       return
     }
 
-    const pending = this.pendingRequest
-    this.pendingRequest = null
-    // A cadence-sampled request may itself have been superseded by newer
-    // pointer frames. It is still valuable as bounded-lag display progress;
-    // only a hard invalidation makes it ineligible to run.
-    if (pending && pending.revision > this.hardInvalidatedThrough)
-      this.post(pending)
+    if (this.isIdle()) this.onIdle?.()
   }
 
   fail(message: string): void {
     if (this.disposed) return
-    this.pendingRequest = null
     this.inFlightRevision = null
     this.onFailure(message)
   }
@@ -174,7 +216,6 @@ export class EdgeGeometryWorkerController {
   dispose(): void {
     if (this.disposed) return
     this.disposed = true
-    this.pendingRequest = null
     this.inFlightRevision = null
     this.worker.terminate()
   }
@@ -184,7 +225,6 @@ export class EdgeGeometryWorkerController {
       this.worker.postMessage(request)
       this.inFlightRevision = request.revision
     } catch (error) {
-      this.pendingRequest = null
       this.inFlightRevision = null
       this.onFailure(
         error &&

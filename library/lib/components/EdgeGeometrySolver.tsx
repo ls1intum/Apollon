@@ -14,15 +14,17 @@ import {
 } from "@/utils/geometry/edgeGeometrySolver"
 import {
   EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
-  EDGE_GEOMETRY_WORKER_PREVIEW_CADENCE_MS,
   EdgeGeometryWorkerController,
   createEdgeGeometryWorkerSessionId,
+  getEdgeGeometryWorkerCadence,
   shouldSampleEdgeGeometryWorker,
   shouldUseEdgeGeometryWorker,
+  updateEdgeGeometryWorkerRoundTrip,
 } from "@/utils/geometry/edgeGeometryWorkerController"
 import {
   serializeEdgeSolveCache,
   serializeSolverInput,
+  type EdgeGeometrySolveResult,
   type EdgeGeometryWorkerResponse,
 } from "@/utils/geometry/edgeGeometryWorkerProtocol"
 import {
@@ -43,7 +45,13 @@ import {
   recordSolve,
   recordPreviewDecisionStabilization,
   recordWorkerAttempt,
+  recordWorkerDispatch,
   recordWorkerFallback,
+  recordWorkerHolisticPreview,
+  recordWorkerReleaseExact,
+  recordWorkerReleaseSettled,
+  recordWorkerResponse,
+  recordWorkerRevision,
   recordWorkerSolve,
   recordWorkerSyncDecision,
 } from "@/sync/perfCounters"
@@ -56,8 +64,9 @@ import type { IPoint } from "@/edges/Connection"
 /**
  * The central edge-geometry engine. The first solve and small diagrams stay
  * synchronous so initial geometry lands before paint. Large subsequent solves
- * use a coalescing Worker queue. During interaction, superseded exact solves may
- * improve the display-only preview, but cannot commit obsolete drag geometry.
+ * use a backpressured Worker scheduler. During interaction, superseded exact
+ * solves may improve the display-only preview, but cannot commit obsolete drag
+ * geometry.
  *
  * Display projections are published separately from accepted geometry. The
  * moving edge follows the pointer immediately, while spatial consumers keep a
@@ -100,14 +109,29 @@ export const EdgeGeometrySolver = () => {
   const solveCacheRef = useRef<Map<string, EdgeSolveCacheEntry>>(new Map())
   const hasRunInitialSolveRef = useRef(false)
   const workerDisabledRef = useRef(false)
-  const workerRef = useRef<Worker | null>(null)
   const workerControllerRef = useRef<EdgeGeometryWorkerController | null>(null)
   const workerHasSubmittedRef = useRef(false)
   const scheduledWorkerSubmitRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
+  const submitLatestWorkerSnapshotRef = useRef<(() => void) | null>(null)
   const latestSolverInputRef = useRef<SolverInput | null>(null)
   const latestNodeGeometryRef = useRef<EdgeGeometryNodeSnapshot | null>(null)
+  const latestSnapshotAtRef = useRef(0)
+  const latestSnapshotRevisionRef = useRef(0)
+  const latestSnapshotDirtyRef = useRef(false)
+  const lastWorkerDispatchAtRef = useRef(0)
+  const workerRoundTripRef = useRef<number | null>(null)
+  const workerRequestTimingRef = useRef(
+    new Map<
+      number,
+      { dispatchedAt: number; snapshotAt: number; snapshotRevision: number }
+    >()
+  )
+  const interactionActiveRef = useRef(false)
+  const interactionStartedAtRef = useRef<number | null>(null)
+  const lastHolisticPreviewAtRef = useRef<number | null>(null)
+  const releaseStartedAtRef = useRef<number | null>(null)
   const settledNodeGeometryRef = useRef<EdgeGeometryNodeSnapshot | null>(null)
   const provisionalRoutesRef = useRef<Record<string, IPoint[]> | null>(null)
   const provisionalNodeGeometryRef = useRef<EdgeGeometryNodeSnapshot | null>(
@@ -196,6 +220,7 @@ export const EdgeGeometrySolver = () => {
       previous: geometryStore?.getState().geometryById,
     }
     latestSolverInputRef.current = input
+    latestSnapshotAtRef.current = performance.now()
     const currentNodeGeometry = snapshotEdgeGeometryNodes(nodeLookup)
     latestNodeGeometryRef.current = currentNodeGeometry
     if (liveEdgeOverride) {
@@ -222,6 +247,18 @@ export const EdgeGeometrySolver = () => {
       )
       activeEdgeGestureRef.current = null
     }
+    const interacting =
+      nodeInteractionActive ||
+      liveEdgeOverride !== null ||
+      pendingConnectionEdge !== null
+    const interactionChangedAt = performance.now()
+    if (!interactionActiveRef.current && interacting) {
+      interactionStartedAtRef.current = interactionChangedAt
+      lastHolisticPreviewAtRef.current = null
+      releaseStartedAtRef.current = null
+    } else if (interactionActiveRef.current && !interacting)
+      releaseStartedAtRef.current = interactionChangedAt
+    interactionActiveRef.current = interacting
 
     const solveSynchronously = (solveInput: SolverInput) => {
       const startedAt =
@@ -246,6 +283,9 @@ export const EdgeGeometrySolver = () => {
         geometryStore?.getState().geometryById ?? routeById
       settledNodeGeometryRef.current = acceptedNodeGeometry
       submittedNodeGeometryRef.current.clear()
+      workerRequestTimingRef.current.clear()
+      latestSnapshotDirtyRef.current = false
+      releaseStartedAtRef.current = null
       geometryStore?.getState().setSolving(false)
     }
 
@@ -274,6 +314,10 @@ export const EdgeGeometrySolver = () => {
     }
 
     geometryStore?.getState().setSolving(true)
+    const snapshotRevision = ++latestSnapshotRevisionRef.current
+    if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+      recordWorkerRevision("input", snapshotRevision)
+    latestSnapshotDirtyRef.current = true
 
     // Keep every settled route attached to its moving/resizing endpoints while
     // the Worker proves the new optimum. This projection is display-only and
@@ -335,10 +379,44 @@ export const EdgeGeometrySolver = () => {
       clearScheduledWorkerSubmit()
       const controller = workerControllerRef.current
       workerControllerRef.current = null
-      workerRef.current = null
       controller?.dispose()
       const latest = latestSolverInputRef.current
       if (latest) solveSynchronously(latest)
+    }
+
+    const observeWorkerResult = (result: EdgeGeometrySolveResult) => {
+      const receivedAt = performance.now()
+      const timing = workerRequestTimingRef.current.get(result.revision)
+      workerRequestTimingRef.current.delete(result.revision)
+      if (timing) {
+        const roundTripMs = receivedAt - timing.dispatchedAt
+        workerRoundTripRef.current = updateEdgeGeometryWorkerRoundTrip(
+          workerRoundTripRef.current,
+          roundTripMs
+        )
+        if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+          recordWorkerResponse(roundTripMs, receivedAt - timing.snapshotAt)
+      }
+      if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+        mergeRoutingPerfCounters(result.perfDelta)
+        recordSolve(result.durationMs)
+      }
+      return { receivedAt, snapshotRevision: timing?.snapshotRevision }
+    }
+
+    const observeHolisticPreview = (now: number) => {
+      if (!interactionActiveRef.current) return
+      const interactionStartedAt = interactionStartedAtRef.current
+      const previousPreviewAt = lastHolisticPreviewAtRef.current
+      if (
+        (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") &&
+        interactionStartedAt !== null
+      )
+        recordWorkerHolisticPreview(
+          previousPreviewAt === null ? now - interactionStartedAt : null,
+          previousPreviewAt === null ? null : now - previousPreviewAt
+        )
+      lastHolisticPreviewAtRef.current = now
     }
 
     let controller = workerControllerRef.current
@@ -362,11 +440,15 @@ export const EdgeGeometrySolver = () => {
           sessionId: createEdgeGeometryWorkerSessionId(),
           worker,
           onResult: (result) => {
+            const { receivedAt, snapshotRevision } = observeWorkerResult(result)
             if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
-              mergeRoutingPerfCounters(result.perfDelta)
-              recordSolve(result.durationMs)
+              if (snapshotRevision !== undefined)
+                recordWorkerRevision("accepted", snapshotRevision)
               recordWorkerSolve()
             }
+            const releaseStartedAt = releaseStartedAtRef.current
+            if (releaseStartedAt !== null)
+              recordWorkerReleaseExact(receivedAt - releaseStartedAt)
             const acceptedNodeGeometry = submittedNodeGeometryRef.current.get(
               result.revision
             )
@@ -389,6 +471,7 @@ export const EdgeGeometrySolver = () => {
               acceptedNodeGeometry,
               initialSettlementPreview
             )
+            observeHolisticPreview(receivedAt)
             releasedEdgePreviewRef.current = null
             provisionalRoutesRef.current = null
             provisionalNodeGeometryRef.current = null
@@ -400,6 +483,10 @@ export const EdgeGeometrySolver = () => {
             submittedNodeGeometryRef.current.clear()
             const transitionIds = Object.keys(settlement)
             if (transitionIds.length === 0) {
+              if (releaseStartedAt !== null) {
+                recordWorkerReleaseSettled(receivedAt - releaseStartedAt)
+                releaseStartedAtRef.current = null
+              }
               geometryStore?.getState().setSolving(false)
               return
             }
@@ -420,6 +507,10 @@ export const EdgeGeometrySolver = () => {
                 settlementAnimationFrameRef.current = null
                 geometryStore?.getState().clearPreviewGeometry()
                 geometryStore?.getState().setSolving(false)
+                if (releaseStartedAt !== null) {
+                  recordWorkerReleaseSettled(now - releaseStartedAt)
+                  releaseStartedAtRef.current = null
+                }
                 return
               }
               setPreviewGeometry(
@@ -432,10 +523,7 @@ export const EdgeGeometrySolver = () => {
               requestAnimationFrame(animateSettlement)
           },
           onProvisionalResult: (result) => {
-            if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
-              mergeRoutingPerfCounters(result.perfDelta)
-              recordSolve(result.durationMs)
-            }
+            observeWorkerResult(result)
             const submittedNodeGeometry = submittedNodeGeometryRef.current.get(
               result.revision
             )
@@ -468,8 +556,15 @@ export const EdgeGeometrySolver = () => {
             provisionalRoutesRef.current = stabilization.routeById
             provisionalNodeGeometryRef.current = latestNodes
             publishProjectedPreview(stabilization.routeById, latestNodes)
+            observeHolisticPreview(performance.now())
           },
           onFailure: fallbackToLatestSnapshot,
+          onIdle: () => submitLatestWorkerSnapshotRef.current?.(),
+          onResponse: (response) => {
+            if (response.kind === "result") return
+            workerRequestTimingRef.current.delete(response.revision)
+            submittedNodeGeometryRef.current.delete(response.revision)
+          },
         })
         worker.onmessage = (event: MessageEvent<EdgeGeometryWorkerResponse>) =>
           controller?.receive(event.data)
@@ -483,7 +578,6 @@ export const EdgeGeometrySolver = () => {
         }
         worker.onmessageerror = () =>
           controller?.fail("Edge geometry worker message could not be cloned")
-        workerRef.current = worker
         workerControllerRef.current = controller
         workerHasSubmittedRef.current = false
       } catch {
@@ -494,59 +588,90 @@ export const EdgeGeometrySolver = () => {
         return
       }
     }
-    const submitLatestSnapshot = () => {
-      scheduledWorkerSubmitRef.current = null
-      if (workerDisabledRef.current) return
-      const latestInput = latestSolverInputRef.current
-      const latestNodeGeometry = latestNodeGeometryRef.current
-      if (!latestInput || !latestNodeGeometry) return
-      // Clone the full diagram only when a generation is actually dispatched.
-      // Pointer frames only replace refs; the bounded-cadence timer serializes
-      // the newest snapshot at most once per interval.
-      const serialized = serializeSolverInput(latestInput)
-      if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
-        recordWorkerAttempt()
-      const revision = controller.submit(
-        serialized,
-        workerHasSubmittedRef.current
+    const scheduleLatestSnapshot = () => {
+      if (
+        scheduledWorkerSubmitRef.current !== null ||
+        workerDisabledRef.current ||
+        !latestSnapshotDirtyRef.current
+      )
+        return
+      if (!controller.isIdle()) return
+
+      const cadence = interactionActiveRef.current
+        ? getEdgeGeometryWorkerCadence(workerRoundTripRef.current)
+        : 0
+      const delay = Math.max(
+        0,
+        lastWorkerDispatchAtRef.current + cadence - performance.now()
+      )
+      // Even a zero-delay settle moves to a later task, letting this layout
+      // effect publish its cheap projection and return before serialization.
+      scheduledWorkerSubmitRef.current = setTimeout(() => {
+        scheduledWorkerSubmitRef.current = null
+        if (
+          workerDisabledRef.current ||
+          !latestSnapshotDirtyRef.current ||
+          !controller.isIdle()
+        )
+          return
+        const latestInput = latestSolverInputRef.current
+        const latestNodeGeometry = latestNodeGeometryRef.current
+        if (!latestInput || !latestNodeGeometry) return
+
+        const snapshotAt = latestSnapshotAtRef.current
+        const snapshotRevision = latestSnapshotRevisionRef.current
+        const serializeStartedAt = performance.now()
+        const serialized = serializeSolverInput(latestInput)
+        const initialCache = workerHasSubmittedRef.current
           ? undefined
           : serializeEdgeSolveCache(solveCacheRef.current)
-      )
-      workerHasSubmittedRef.current = true
-      if (!workerDisabledRef.current)
+        const serializedAt = performance.now()
+        latestSnapshotDirtyRef.current = false
+        if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+          recordWorkerAttempt()
+        const dispatchedAt = performance.now()
+        const revision = controller.submit(serialized, initialCache)
+        const postedAt = performance.now()
+        if (revision === null) {
+          latestSnapshotDirtyRef.current = true
+          return
+        }
+        if (workerDisabledRef.current) return
+        workerHasSubmittedRef.current = true
+        lastWorkerDispatchAtRef.current = dispatchedAt
+        workerRequestTimingRef.current.set(revision, {
+          dispatchedAt,
+          snapshotAt,
+          snapshotRevision,
+        })
+        if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+          recordWorkerRevision("dispatch", snapshotRevision)
+        }
         submittedNodeGeometryRef.current.set(revision, latestNodeGeometry)
-      // Replaced pending samples never receive a reply. Bound their snapshots;
-      // even an unusually slow in-flight solve retains several seconds of
-      // cadence history, while a missing old snapshot merely skips one preview.
-      while (submittedNodeGeometryRef.current.size > 32) {
-        const oldest = submittedNodeGeometryRef.current.keys().next().value
-        if (oldest === undefined) break
-        submittedNodeGeometryRef.current.delete(oldest)
-      }
+        if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+          recordWorkerDispatch(
+            serializedAt - serializeStartedAt,
+            postedAt - dispatchedAt
+          )
+      }, delay)
     }
-    const interacting =
-      nodeInteractionActive ||
-      liveEdgeOverride !== null ||
-      pendingConnectionEdge !== null
+    submitLatestWorkerSnapshotRef.current = scheduleLatestSnapshot
+
+    // Every new geometry input invalidates an older in-flight exact generation
+    // before its lazily serialized replacement is dispatched.
+    controller.supersede()
     if (
       shouldSampleEdgeGeometryWorker({
         edgeCount: solverEdges.length,
         interacting,
       })
     ) {
-      // Mark an already-running generation unable to settle immediately, but
-      // keep a successful result eligible as display-only progress. Do not
-      // restart an existing timer on every pointer frame: that trailing-edge
-      // debounce starved continuous gestures of every holistic generation.
-      controller.supersede()
-      if (scheduledWorkerSubmitRef.current === null)
-        scheduledWorkerSubmitRef.current = setTimeout(
-          submitLatestSnapshot,
-          EDGE_GEOMETRY_WORKER_PREVIEW_CADENCE_MS
-        )
+      // Keep the earliest timer instead of restarting it on every pointer frame.
+      // Actual preview throughput remains bounded by Worker solve duration.
+      scheduleLatestSnapshot()
     } else {
       clearScheduledWorkerSubmit()
-      submitLatestSnapshot()
+      scheduleLatestSnapshot()
     }
     // `nodeGeometryKey` is the change trigger; `nodes`/`nodeLookup` are refs RF
     // mutates in place, so they never signal measurement on their own.
@@ -576,10 +701,16 @@ export const EdgeGeometrySolver = () => {
       }
       workerControllerRef.current?.dispose()
       workerControllerRef.current = null
-      workerRef.current = null
       workerHasSubmittedRef.current = false
+      submitLatestWorkerSnapshotRef.current = null
       latestSolverInputRef.current = null
       latestNodeGeometryRef.current = null
+      latestSnapshotDirtyRef.current = false
+      workerRequestTimingRef.current.clear()
+      interactionActiveRef.current = false
+      interactionStartedAtRef.current = null
+      lastHolisticPreviewAtRef.current = null
+      releaseStartedAtRef.current = null
       submittedNodeGeometryRef.current.clear()
       provisionalRoutesRef.current = null
       provisionalNodeGeometryRef.current = null

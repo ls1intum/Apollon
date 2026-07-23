@@ -1,4 +1,4 @@
-import { test, expect, type Locator } from "@playwright/test"
+import { test, expect, type Locator, type Page } from "@playwright/test"
 import {
   loadFixture,
   openLocalWithPerf,
@@ -32,6 +32,13 @@ const MAX_EXPANSIONS_WORST_SEARCH = 16_000
  * must stay out of the segment-level objective. */
 const MAX_ROUTE_SCORE_PAIRS_PER_DRAG = 1_000
 const MAX_P95_INTERACTION_FRAME_MS = 34
+const MAX_HANDOFF_FRAME_MS = 50
+const MAX_WORKER_MAIN_THREAD_SLICE_MS = 16
+const MAX_WORKER_CADENCE_MS = 160
+const MAX_WORKER_PREVIEW_FRESHNESS_MS = 1_000
+const MAX_WORKER_SNAPSHOT_AGE_MS = 2_500
+const MAX_WORKER_RELEASE_MS = 2_000
+const SETTLEMENT_DURATION_MS = 120
 
 const renderedEdgePaths = async (
   editor: Locator
@@ -47,6 +54,45 @@ const renderedEdgePaths = async (
         })
       ) as Record<string, string>
   )
+
+const nodeNearestViewportCenter = async (
+  editor: Locator,
+  viewport: { width: number; height: number }
+): Promise<string | null> =>
+  editor.locator(".react-flow__node").evaluateAll((elements, size) => {
+    let nearest: string | null = null
+    let distance = Infinity
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect()
+      const next = Math.hypot(
+        rect.x + rect.width / 2 - size.width / 2,
+        rect.y + rect.height / 2 - size.height / 2
+      )
+      if (next < distance) {
+        distance = next
+        nearest = element.getAttribute("data-id")
+      }
+    }
+    return nearest
+  }, viewport)
+
+const beginContinuousNodeDrag = async (node: Locator, page: Page) => {
+  const box = await node.boundingBox()
+  expect(box).not.toBeNull()
+  const startX = box!.x + box!.width / 2
+  const startY = box!.y + box!.height / 2
+  await page.mouse.move(startX, startY)
+  await page.mouse.down()
+  for (let step = 1; step <= 30; step++) {
+    await page.mouse.move(startX + step * 2, startY + step)
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        )
+    )
+  }
+}
 
 test("dragging a node re-routes only the edges it can have moved", async ({
   page,
@@ -123,24 +169,7 @@ test("a continuously moving large diagram shows holistic route progress before r
 
   const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
   const viewport = page.viewportSize()!
-  const nodeId = await editor
-    .locator(".react-flow__node")
-    .evaluateAll((elements, size) => {
-      let nearest: string | null = null
-      let distance = Infinity
-      for (const element of elements) {
-        const rect = element.getBoundingClientRect()
-        const next = Math.hypot(
-          rect.x + rect.width / 2 - size.width / 2,
-          rect.y + rect.height / 2 - size.height / 2
-        )
-        if (next < distance) {
-          distance = next
-          nearest = element.getAttribute("data-id")
-        }
-      }
-      return nearest
-    }, viewport)
+  const nodeId = await nodeNearestViewportCenter(editor, viewport)
   expect(nodeId).not.toBeNull()
   const incidentIds = new Set(
     (fixture.edges as Array<{ id: string; source: string; target: string }>)
@@ -149,25 +178,9 @@ test("a continuously moving large diagram shows holistic route progress before r
   )
   const before = await renderedEdgePaths(editor)
   const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
-  const box = await node.boundingBox()
-  expect(box).not.toBeNull()
-  const startX = box!.x + box!.width / 2
-  const startY = box!.y + box!.height / 2
-
-  await page.mouse.move(startX, startY)
-  await page.mouse.down()
-  // Keep input arriving faster than the 80 ms Worker preview cadence. This
-  // would perpetually starve the former trailing-edge debounce.
-  for (let step = 1; step <= 30; step++) {
-    await page.mouse.move(startX + step * 2, startY + step)
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-        )
-    )
-  }
-
+  await beginContinuousNodeDrag(node, page)
+  // Keep input arriving faster than the minimum adaptive Worker cadence. This
+  // would perpetually starve a trailing-edge debounce.
   const during = await renderedEdgePaths(editor)
   const changedIds = Object.keys(during).filter(
     (id) => before[id] !== undefined && before[id] !== during[id]
@@ -180,46 +193,87 @@ test("a continuously moving large diagram shows holistic route progress before r
   const duringInteraction = await readPerf(page)
   expect(duringInteraction.routingPreviewCount).toBeGreaterThan(0)
   expect(
-    duringInteraction.previewDecisionHoldCount -
-      beforeInteraction.previewDecisionHoldCount,
-    "the dense pressure gesture did not exercise provisional side/port/route hysteresis"
-  ).toBeGreaterThan(0)
+    duringInteraction.workerHolisticPreviewCount -
+      beforeInteraction.workerHolisticPreviewCount
+  ).toBeGreaterThanOrEqual(2)
+  expect(duringInteraction.workerFirstPreviewMaxMs).toBeGreaterThan(0)
+  expect(duringInteraction.workerFirstPreviewMaxMs).toBeLessThanOrEqual(
+    duringInteraction.workerRoundTripMaxMs +
+      MAX_WORKER_CADENCE_MS +
+      MAX_P95_INTERACTION_FRAME_MS
+  )
+  expect(duringInteraction.workerPreviewGapMaxMs).toBeLessThanOrEqual(
+    duringInteraction.workerRoundTripMaxMs +
+      MAX_WORKER_CADENCE_MS +
+      MAX_P95_INTERACTION_FRAME_MS
+  )
+  expect(duringInteraction.workerFirstPreviewMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_PREVIEW_FRESHNESS_MS
+  )
+  expect(duringInteraction.workerPreviewGapMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_PREVIEW_FRESHNESS_MS
+  )
 
   await page.mouse.up()
-  const handoffFrames = await page.evaluate(
-    async ({ editorId }) => {
-      const readPaths = () => {
-        const root = document.querySelector(editorId)
-        if (!root) return {}
-        return Object.fromEntries(
-          [...root.querySelectorAll(".react-flow__edge")].flatMap((element) => {
-            const id = element.getAttribute("data-id")
-            const d = element
-              .querySelector(".react-flow__edge-path")
-              ?.getAttribute("d")
-            return id && d ? [[id, d]] : []
-          })
-        )
-      }
-      const frames: Array<Record<string, string>> = []
-      for (let frame = 0; frame < 240; frame++) {
-        frames.push(readPaths())
-        const perf = (
-          window as unknown as {
-            __apollonPerf?: () =>
-              | { routingSolving: number; routingPreviewCount: number }
-              | undefined
-          }
-        ).__apollonPerf?.()
-        if (perf?.routingSolving === 0 && perf.routingPreviewCount === 0) break
-        await new Promise<void>((resolve) =>
-          requestAnimationFrame(() => resolve())
-        )
-      }
-      return frames
+  const handoff = await page.evaluate(
+    ({ editorId, expectedEdgeCount }) => {
+      return new Promise<{
+        frameDeltas: number[]
+        missingEdgeFrame: boolean
+        timedOut: boolean
+      }>((resolve) => {
+        const frameDeltas: number[] = []
+        let missingEdgeFrame = false
+        let previousFrameAt = performance.now()
+        let animationFrame = 0
+        let finished = false
+        const finish = (timedOut: boolean) => {
+          if (finished) return
+          finished = true
+          cancelAnimationFrame(animationFrame)
+          clearTimeout(timeout)
+          resolve({ frameDeltas, missingEdgeFrame, timedOut })
+        }
+        const timeout = window.setTimeout(() => finish(true), 5_000)
+        const tick = (now: number) => {
+          frameDeltas.push(now - previousFrameAt)
+          previousFrameAt = now
+          const root = document.querySelector(editorId)
+          if (
+            root?.querySelectorAll(".react-flow__edge-path").length !==
+            expectedEdgeCount
+          )
+            missingEdgeFrame = true
+          const perf = (
+            window as unknown as {
+              __apollonPerf?: (
+                skipDocumentEncoding?: boolean
+              ) =>
+                | { routingSolving: number; routingPreviewCount: number }
+                | undefined
+            }
+          ).__apollonPerf?.(true)
+          if (perf?.routingSolving === 0 && perf.routingPreviewCount === 0)
+            finish(false)
+          else animationFrame = requestAnimationFrame(tick)
+        }
+        animationFrame = requestAnimationFrame(tick)
+      })
     },
-    { editorId: `#react-flow-library-${String(fixture.id)}` }
+    {
+      editorId: `#react-flow-library-${String(fixture.id)}`,
+      expectedEdgeCount: Object.keys(during).length,
+    }
   )
+  expect(handoff.timedOut).toBe(false)
+  expect(handoff.missingEdgeFrame).toBe(false)
+  if (handoff.frameDeltas.length > 0) {
+    const handoffMax = Math.max(...handoff.frameDeltas)
+    expect(
+      handoffMax,
+      `slowest preview-to-exact handoff frame was ${handoffMax.toFixed(1)} ms`
+    ).toBeLessThanOrEqual(MAX_HANDOFF_FRAME_MS)
+  }
   const afterHandoff = await readPerf(page)
   expect(afterHandoff.routingSolving).toBe(0)
   expect(afterHandoff.routingPreviewCount).toBe(0)
@@ -227,30 +281,56 @@ test("a continuously moving large diagram shows holistic route progress before r
     afterHandoff.workerAttemptCount - beforeInteraction.workerAttemptCount
   ).toBeGreaterThan(0)
   expect(
+    afterHandoff.workerAttemptCount - beforeInteraction.workerAttemptCount
+  ).toBeLessThanOrEqual(
+    afterHandoff.workerResponseCount - beforeInteraction.workerResponseCount + 1
+  )
+  expect(
     afterHandoff.workerSolveCount - beforeInteraction.workerSolveCount
   ).toBeGreaterThan(0)
   expect(
     afterHandoff.workerFallbackCount - beforeInteraction.workerFallbackCount
   ).toBe(0)
+  expect(afterHandoff.workerLatestInputRevision).toBe(
+    afterHandoff.workerLastDispatchedRevision
+  )
+  expect(afterHandoff.workerLastAcceptedRevision).toBe(
+    afterHandoff.workerLatestInputRevision
+  )
+  expect(afterHandoff.workerSerializeMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_MAIN_THREAD_SLICE_MS
+  )
+  expect(afterHandoff.workerPostMessageMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_MAIN_THREAD_SLICE_MS
+  )
+  expect(afterHandoff.workerDispatchDelayMaxMs).toBeLessThanOrEqual(
+    afterHandoff.workerRoundTripMaxMs +
+      MAX_WORKER_CADENCE_MS +
+      MAX_P95_INTERACTION_FRAME_MS
+  )
+  expect(afterHandoff.workerSnapshotAgeMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_SNAPSHOT_AGE_MS
+  )
+  expect(afterHandoff.workerReleaseExactMaxMs).toBeGreaterThan(0)
+  expect(afterHandoff.workerReleaseExactMaxMs).toBeLessThanOrEqual(
+    afterHandoff.workerRoundTripMaxMs * 2 + MAX_P95_INTERACTION_FRAME_MS * 2
+  )
+  expect(afterHandoff.workerReleaseSettledMaxMs).toBeLessThanOrEqual(
+    afterHandoff.workerReleaseExactMaxMs +
+      SETTLEMENT_DURATION_MS +
+      MAX_P95_INTERACTION_FRAME_MS * 2
+  )
+  expect(afterHandoff.workerReleaseSettledMaxMs).toBeLessThanOrEqual(
+    MAX_WORKER_RELEASE_MS
+  )
   const settled = await renderedEdgePaths(editor)
   const changedAtSettlement = Object.keys(settled).filter(
     (id) => during[id] !== undefined && during[id] !== settled[id]
   )
-  expect(
-    changedAtSettlement.length,
-    "the pressure gesture did not exercise a preview-to-settled route change"
-  ).toBeGreaterThan(0)
-  expect(
-    changedAtSettlement.some((id) =>
-      handoffFrames.some(
-        (frame) =>
-          frame[id] !== undefined &&
-          frame[id] !== during[id] &&
-          frame[id] !== settled[id]
-      )
-    ),
-    "the final exact route snapped directly from preview instead of traversing an intermediate orthogonal frame"
-  ).toBe(true)
+  if (changedAtSettlement.length > 0)
+    expect(afterHandoff.workerReleaseSettledMaxMs).toBeGreaterThan(
+      afterHandoff.workerReleaseExactMaxMs
+    )
   await page.evaluate(
     () =>
       new Promise<void>((resolve) =>
@@ -258,6 +338,44 @@ test("a continuously moving large diagram shows holistic route progress before r
       )
   )
   expect(await renderedEdgePaths(editor)).toEqual(settled)
+})
+
+test("reduced motion skips the handoff used by the same release", async ({
+  page,
+}) => {
+  const runGesture = async () => {
+    await openLocalWithPerf(page, fixture)
+    const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
+    const nodeId = await nodeNearestViewportCenter(editor, page.viewportSize()!)
+    expect(nodeId).not.toBeNull()
+    const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
+    await beginContinuousNodeDrag(node, page)
+    await page.mouse.up()
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as {
+            __apollonPerf?: () => { routingSolving: number } | undefined
+          }
+        ).__apollonPerf?.()?.routingSolving === 0
+    )
+    return readPerf(page)
+  }
+
+  const animated = await runGesture()
+  expect(animated.workerReleaseSettledMaxMs).toBeGreaterThan(
+    animated.workerReleaseExactMaxMs
+  )
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const after = await runGesture()
+  expect(
+    after.workerReleaseExactMaxMs,
+    `missing reduced-motion release timing: ${JSON.stringify(after)}`
+  ).toBeGreaterThan(0)
+  expect(after.workerReleaseSettledMaxMs).toBe(after.workerReleaseExactMaxMs)
+  expect(after.routingPreviewCount).toBe(0)
+  expect(after.workerLastAcceptedRevision).toBe(after.workerLatestInputRevision)
 })
 
 test("large-diagram interaction sustains a 30 fps p95 frame budget", async ({

@@ -4,10 +4,14 @@ import type { ApollonEditor } from "@tumaet/apollon"
 // (@internal + stripInternal), so it isn't on the public `ApollonEditor` type.
 // This E2E-only seam reaches it structurally; the runtime body is itself
 // DEV-gated, so production gets only an empty stub.
-type PerfProbe = { __perf: () => Record<string, number> | undefined }
+type PerfProbe = {
+  __perf: (skipDocumentEncoding?: boolean) => Record<string, number> | undefined
+}
 
 type PerfHookWindow = Window & {
-  __apollonPerf?: () => Record<string, number> | undefined
+  __apollonPerf?: (
+    skipDocumentEncoding?: boolean
+  ) => Record<string, number> | undefined
 }
 
 /**
@@ -32,7 +36,7 @@ export const installPerfHooks = (editor: ApollonEditor): (() => void) => {
 
   const w = window as PerfHookWindow
   const probe = editor as unknown as PerfProbe
-  w.__apollonPerf = () => probe.__perf()
+  w.__apollonPerf = (skipDocumentEncoding) => probe.__perf(skipDocumentEncoding)
 
   return () => {
     delete w.__apollonPerf

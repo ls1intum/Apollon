@@ -48,10 +48,24 @@ export type PerfCounters = {
   solveMaxMs: number
   solveCount: number
   workerSolveCount: number
+  workerResponseCount: number
   workerAttemptCount: number
   workerFallbackCount: number
   workerInitialSyncCount: number
   workerSmallSyncCount: number
+  workerSerializeMaxMs: number
+  workerPostMessageMaxMs: number
+  workerRoundTripMaxMs: number
+  workerDispatchDelayMaxMs: number
+  workerSnapshotAgeMaxMs: number
+  workerReleaseExactMaxMs: number
+  workerReleaseSettledMaxMs: number
+  workerHolisticPreviewCount: number
+  workerFirstPreviewMaxMs: number
+  workerPreviewGapMaxMs: number
+  workerLatestInputRevision: number
+  workerLastDispatchedRevision: number
+  workerLastAcceptedRevision: number
   /** Preview-only stability decisions. A held choice is a stale sampled
    * side/port/topology change that did not yet repeat; a confirmation adopts it,
    * while an invalidation adopts immediately because the displayed route now
@@ -110,10 +124,24 @@ export const perfCounters: PerfCounters =
         solveMaxMs: 0,
         solveCount: 0,
         workerSolveCount: 0,
+        workerResponseCount: 0,
         workerAttemptCount: 0,
         workerFallbackCount: 0,
         workerInitialSyncCount: 0,
         workerSmallSyncCount: 0,
+        workerSerializeMaxMs: 0,
+        workerPostMessageMaxMs: 0,
+        workerRoundTripMaxMs: 0,
+        workerDispatchDelayMaxMs: 0,
+        workerSnapshotAgeMaxMs: 0,
+        workerReleaseExactMaxMs: 0,
+        workerReleaseSettledMaxMs: 0,
+        workerHolisticPreviewCount: 0,
+        workerFirstPreviewMaxMs: 0,
+        workerPreviewGapMaxMs: 0,
+        workerLatestInputRevision: 0,
+        workerLastDispatchedRevision: 0,
+        workerLastAcceptedRevision: 0,
         previewDecisionHoldCount: 0,
         previewDecisionConfirmCount: 0,
         previewDecisionInvalidationCount: 0,
@@ -159,6 +187,90 @@ export const recordWorkerSyncDecision = (reason: "initial" | "small"): void => {
   if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
     if (reason === "initial") perfCounters.workerInitialSyncCount++
     else perfCounters.workerSmallSyncCount++
+  }
+}
+
+export const recordWorkerDispatch = (
+  serializeMs: number,
+  postMessageMs: number
+): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+    perfCounters.workerSerializeMaxMs = Math.max(
+      perfCounters.workerSerializeMaxMs,
+      serializeMs
+    )
+    perfCounters.workerPostMessageMaxMs = Math.max(
+      perfCounters.workerPostMessageMaxMs,
+      postMessageMs
+    )
+  }
+}
+
+export const recordWorkerResponse = (
+  roundTripMs: number,
+  snapshotAgeMs: number
+): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+    perfCounters.workerResponseCount++
+    perfCounters.workerRoundTripMaxMs = Math.max(
+      perfCounters.workerRoundTripMaxMs,
+      roundTripMs
+    )
+    perfCounters.workerDispatchDelayMaxMs = Math.max(
+      perfCounters.workerDispatchDelayMaxMs,
+      snapshotAgeMs - roundTripMs
+    )
+    perfCounters.workerSnapshotAgeMaxMs = Math.max(
+      perfCounters.workerSnapshotAgeMaxMs,
+      snapshotAgeMs
+    )
+  }
+}
+
+export const recordWorkerReleaseExact = (elapsedMs: number): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+    perfCounters.workerReleaseExactMaxMs = Math.max(
+      perfCounters.workerReleaseExactMaxMs,
+      elapsedMs
+    )
+}
+
+export const recordWorkerReleaseSettled = (elapsedMs: number): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+    perfCounters.workerReleaseSettledMaxMs = Math.max(
+      perfCounters.workerReleaseSettledMaxMs,
+      elapsedMs
+    )
+}
+
+export const recordWorkerHolisticPreview = (
+  firstDelayMs: number | null,
+  gapMs: number | null
+): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+    perfCounters.workerHolisticPreviewCount++
+    if (firstDelayMs !== null)
+      perfCounters.workerFirstPreviewMaxMs = Math.max(
+        perfCounters.workerFirstPreviewMaxMs,
+        firstDelayMs
+      )
+    if (gapMs !== null)
+      perfCounters.workerPreviewGapMaxMs = Math.max(
+        perfCounters.workerPreviewGapMaxMs,
+        gapMs
+      )
+  }
+}
+
+export const recordWorkerRevision = (
+  kind: "input" | "dispatch" | "accepted",
+  revision: number
+): void => {
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true") {
+    if (kind === "input") perfCounters.workerLatestInputRevision = revision
+    else if (kind === "dispatch")
+      perfCounters.workerLastDispatchedRevision = revision
+    else perfCounters.workerLastAcceptedRevision = revision
   }
 }
 
