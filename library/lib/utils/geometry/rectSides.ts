@@ -1,5 +1,5 @@
-import { Position, type Rect } from "@xyflow/react"
-import { CANVAS } from "@/constants"
+import { Position, type Rect } from "@xyflow/system"
+import { CANVAS } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
 
 /**

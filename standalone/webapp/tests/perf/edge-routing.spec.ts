@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Locator } from "@playwright/test"
 import {
   loadFixture,
   openLocalWithPerf,
@@ -7,11 +7,11 @@ import {
 } from "./perfHelpers"
 
 /**
- * Edge routing is a graph search, and it runs on the render path: React re-renders
- * every edge on every frame of a node drag. What makes that affordable is not how
- * fast one search is — it is how RARELY one is needed. An edge's route depends on
- * its endpoints, the few nodes near it and the edges it must not cross; when none
- * of those changed, the answer did not either, and the edge must not search again.
+ * Edge routing is a graph search. Large subsequent solves run in a Worker, but
+ * wasting searches still delays the exact accepted generation and burns CPU that
+ * the browser needs for rendering. An edge's route depends on its endpoints, the
+ * few nodes near it and the edges it must not cross; when none of those changed,
+ * the answer did not either, and the edge must not search again.
  *
  * That is the property this spec holds onto, and it is not one a stopwatch can
  * hold. A wall-clock budget measures the machine — it passes on a developer laptop
@@ -42,26 +42,45 @@ const DRAG_COUNT = 10
  * Auto endpoint anchors (edges slide/switch sides to route cleanly) raise that
  * cost on purpose: more edges attach at varied points and fan out into separate
  * lanes, so a moving node ripples through more neighbours. That cost is
- * irreducible under the memoryless-determinism rule — a route MUST be a pure
- * function of the current geometry (so Yjs peers with different drag histories
- * never diverge), which forbids keeping a stale route across a geometry change
- * that could alter it, and deciding whether it *would* alter it is itself a
- * search. Everything cleanly cacheable already is: the anchor pick is keyed on
- * intrinsic geometry alone, routes re-run only when a reachable obstacle or
- * neighbour actually moves. What remains is legitimate work, which measures ~330
- * here; the budget sits above it with room for fixture noise.
+ * irreducible under deterministic exactness — a route MUST be a pure function of
+ * the current geometry (so Yjs peers with different drag histories never diverge).
+ * Proven cached routes and incumbent bounds may make a warm solve faster, but may
+ * never change its answer. Route keys include only the clipped obstacle/edge
+ * corridor the search can reach. What remains is legitimate work; the budget
+ * leaves room for browser event-coalescing differences without approaching the
+ * ~1000-search regression.
  */
-const MAX_SEARCHES_PER_DRAG = 400
+const MAX_SEARCHES_PER_DRAG = 300
 
 /** The search's own cost. Ordinary detours run a few hundred expansions; a lattice
  * built from the whole diagram instead of the nodes near the edge runs orders of
  * magnitude more. */
-const MAX_EXPANSIONS_PER_SEARCH = 3_000
+const MAX_EXPANSIONS_PER_SEARCH = 2_500
 
 /** And what the single most expensive edge may cost. Every state is expanded at
  * most once, so a search is bounded by its own lattice — an edge far above this is
  * one whose lattice was built from more geometry than it can turn on. */
-const MAX_EXPANSIONS_WORST_SEARCH = 12_000
+const MAX_EXPANSIONS_WORST_SEARCH = 16_000
+
+/** Whole-route scoring has an exact expanded-AABB broad phase. The old all-pairs
+ * scorer evaluated ~10,000 pairs per gesture here; spatially impossible pairs
+ * must stay out of the segment-level objective. */
+const MAX_ROUTE_SCORE_PAIRS_PER_DRAG = 1_000
+
+const renderedEdgePaths = async (
+  editor: Locator
+): Promise<Record<string, string>> =>
+  editor.locator(".react-flow__edge").evaluateAll(
+    (elements: Element[]) =>
+      Object.fromEntries(
+        elements.flatMap((element) => {
+          const id = element.getAttribute("data-id")
+          const path = element.querySelector(".react-flow__edge-path")
+          const d = path?.getAttribute("d")
+          return id && d ? [[id, d]] : []
+        })
+      ) as Record<string, string>
+  )
 
 test("dragging a node re-routes only the edges it can have moved", async ({
   page,
@@ -84,6 +103,8 @@ test("dragging a node re-routes only the edges it can have moved", async ({
 
   const searches = after.edgeSearches - baseline.edgeSearches
   const expansions = after.edgeSearchExpansions - baseline.edgeSearchExpansions
+
+  const routeScorePairs = after.routeScorePairs - baseline.routeScorePairs
 
   expect(
     searches / DRAG_COUNT,
@@ -112,4 +133,154 @@ test("dragging a node re-routes only the edges it can have moved", async ({
   // freeze the canvas — but an ORDINARY diagram reaching it would mean the router
   // is quietly not running, which is a silent failure rather than a slow one.
   expect(after.edgeSearchesAbandoned).toBe(0)
+
+  expect(
+    routeScorePairs / DRAG_COUNT,
+    `${(routeScorePairs / DRAG_COUNT).toFixed(0)} route pairs scored per drag — ` +
+      `the route-set objective is rescanning spatially impossible pairs`
+  ).toBeLessThan(MAX_ROUTE_SCORE_PAIRS_PER_DRAG)
+})
+
+test("a continuously moving large diagram shows holistic route progress before release", async ({
+  page,
+}) => {
+  await openLocalWithPerf(page, fixture)
+  await page.waitForFunction(
+    () =>
+      (
+        window as unknown as {
+          __apollonPerf?: () => { routingSolving: number } | undefined
+        }
+      ).__apollonPerf?.()?.routingSolving === 0
+  )
+  const beforeInteraction = await readPerf(page)
+
+  const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
+  const viewport = page.viewportSize()!
+  const nodeId = await editor
+    .locator(".react-flow__node")
+    .evaluateAll((elements, size) => {
+      let nearest: string | null = null
+      let distance = Infinity
+      for (const element of elements) {
+        const rect = element.getBoundingClientRect()
+        const next = Math.hypot(
+          rect.x + rect.width / 2 - size.width / 2,
+          rect.y + rect.height / 2 - size.height / 2
+        )
+        if (next < distance) {
+          distance = next
+          nearest = element.getAttribute("data-id")
+        }
+      }
+      return nearest
+    }, viewport)
+  expect(nodeId).not.toBeNull()
+  const incidentIds = new Set(
+    (fixture.edges as Array<{ id: string; source: string; target: string }>)
+      .filter((edge) => edge.source === nodeId || edge.target === nodeId)
+      .map((edge) => edge.id)
+  )
+  const before = await renderedEdgePaths(editor)
+  const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
+  const box = await node.boundingBox()
+  expect(box).not.toBeNull()
+  const startX = box!.x + box!.width / 2
+  const startY = box!.y + box!.height / 2
+
+  await page.mouse.move(startX, startY)
+  await page.mouse.down()
+  // Keep input arriving faster than the 80 ms Worker preview cadence. This
+  // would perpetually starve the former trailing-edge debounce.
+  for (let step = 1; step <= 30; step++) {
+    await page.mouse.move(startX + step * 2, startY + step)
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        )
+    )
+  }
+
+  const during = await renderedEdgePaths(editor)
+  const changedIds = Object.keys(during).filter(
+    (id) => before[id] !== undefined && before[id] !== during[id]
+  )
+  expect(changedIds.some((id) => incidentIds.has(id))).toBe(true)
+  expect(
+    changedIds.some((id) => !incidentIds.has(id)),
+    "only endpoint projection changed; no visible neighbouring edge received holistic Worker progress"
+  ).toBe(true)
+  const duringInteraction = await readPerf(page)
+  expect(duringInteraction.routingPreviewCount).toBeGreaterThan(0)
+  expect(
+    duringInteraction.previewDecisionHoldCount -
+      beforeInteraction.previewDecisionHoldCount,
+    "the dense pressure gesture did not exercise provisional side/port/route hysteresis"
+  ).toBeGreaterThan(0)
+
+  await page.mouse.up()
+  const handoffFrames = await page.evaluate(
+    async ({ editorId }) => {
+      const readPaths = () => {
+        const root = document.querySelector(editorId)
+        if (!root) return {}
+        return Object.fromEntries(
+          [...root.querySelectorAll(".react-flow__edge")].flatMap((element) => {
+            const id = element.getAttribute("data-id")
+            const d = element
+              .querySelector(".react-flow__edge-path")
+              ?.getAttribute("d")
+            return id && d ? [[id, d]] : []
+          })
+        )
+      }
+      const frames: Array<Record<string, string>> = []
+      for (let frame = 0; frame < 240; frame++) {
+        frames.push(readPaths())
+        const perf = (
+          window as unknown as {
+            __apollonPerf?: () =>
+              | { routingSolving: number; routingPreviewCount: number }
+              | undefined
+          }
+        ).__apollonPerf?.()
+        if (perf?.routingSolving === 0 && perf.routingPreviewCount === 0) break
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve())
+        )
+      }
+      return frames
+    },
+    { editorId: `#react-flow-library-${String(fixture.id)}` }
+  )
+  const afterHandoff = await readPerf(page)
+  expect(afterHandoff.routingSolving).toBe(0)
+  expect(afterHandoff.routingPreviewCount).toBe(0)
+  const settled = await renderedEdgePaths(editor)
+  const changedAtSettlement = Object.keys(settled).filter(
+    (id) => during[id] !== undefined && during[id] !== settled[id]
+  )
+  expect(
+    changedAtSettlement.length,
+    "the pressure gesture did not exercise a preview-to-settled route change"
+  ).toBeGreaterThan(0)
+  expect(
+    changedAtSettlement.some((id) =>
+      handoffFrames.some(
+        (frame) =>
+          frame[id] !== undefined &&
+          frame[id] !== during[id] &&
+          frame[id] !== settled[id]
+      )
+    ),
+    "the final exact route snapped directly from preview instead of traversing an intermediate orthogonal frame"
+  ).toBe(true)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+  )
+  expect(await renderedEdgePaths(editor)).toEqual(settled)
 })

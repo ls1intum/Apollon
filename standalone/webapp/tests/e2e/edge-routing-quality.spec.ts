@@ -99,6 +99,8 @@ type Metrics = {
   straightBroken: number
   offMax: number
   portCentroidError: number
+  portGapImbalance: number
+  sharedPortGapImbalance: number
 }
 
 async function measure(page: Page, model: Model): Promise<Metrics> {
@@ -107,7 +109,6 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
   const paths = new Map<string, Pt[]>()
   for (const e of model.edges)
     paths.set(e.id, await readEdgePathVertices(page, e.id))
-
   let corners = 0
   let straightBroken = 0
   let offMax = 0
@@ -155,12 +156,28 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
   }
 
   let portCentroidError = 0
+  let portGapImbalance = 0
+  let sharedPortGapImbalance = 0
   for (const ratios of portGroups.values()) {
-    if (ratios.length < 2) continue
-    const mean = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
-    portCentroidError = Math.max(portCentroidError, 2 * Math.abs(mean - 0.5))
+    ratios.sort((a, b) => a - b)
+    if (ratios.length >= 2) {
+      const mean = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
+      portCentroidError = Math.max(portCentroidError, 2 * Math.abs(mean - 0.5))
+    }
+    const actualGaps = [
+      ratios[0],
+      ...ratios.slice(1).map((ratio, index) => ratio - ratios[index]),
+      1 - ratios[ratios.length - 1],
+    ]
+    const idealGap = 1 / (ratios.length + 1)
+    const imbalance = actualGaps.reduce(
+      (sum, gap) => sum + Math.abs(gap - idealGap),
+      0
+    )
+    portGapImbalance = Math.max(portGapImbalance, imbalance)
+    if (ratios.length >= 2)
+      sharedPortGapImbalance = Math.max(sharedPortGapImbalance, imbalance)
   }
-
   let crossings = 0
   let overlapPx = 0
   for (let i = 0; i < model.edges.length; i++)
@@ -204,6 +221,8 @@ async function measure(page: Page, model: Model): Promise<Metrics> {
     straightBroken,
     offMax,
     portCentroidError,
+    portGapImbalance,
+    sharedPortGapImbalance,
   }
 }
 
@@ -216,6 +235,8 @@ const CASES: {
   maxStraightBroken: number
   maxOffMax: number
   maxPortCentroidError?: number
+  maxPortGapImbalance?: number
+  maxSharedPortGapImbalance?: number
 }[] = [
   // Thresholds = the current committed baseline (the ratchet the router must hold or
   // beat). straightBroken and crossings are the load-bearing invariants; corners/offMax
@@ -308,6 +329,8 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.75,
+    // On a 100px side the closest 5px-grid thirds are 35/30/35px.
+    maxSharedPortGapImbalance: 0.07,
   },
   {
     file: "routing-case-59.json",
@@ -332,6 +355,10 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.9,
+    // One member must stay in a 20px straight overlap band. Even thirds are not
+    // feasible without breaking that zero-bend route; the other member nests beside it.
+    maxPortCentroidError: 0.45,
+    maxSharedPortGapImbalance: 0.55,
   },
   {
     file: "routing-case-62.json",
@@ -348,6 +375,7 @@ const CASES: {
     maxCrossings: 0,
     maxStraightBroken: 0,
     maxOffMax: 0.8,
+    maxSharedPortGapImbalance: 0.05,
   },
   // 64/67: inheritance fans — several sub-classes on one super-class. They get no
   // special treatment; a user who wants the arrowheads merged pins them. These guard
@@ -411,6 +439,14 @@ const CASES: {
     maxOffMax: 0.8,
     maxPortCentroidError: 0.54,
   },
+  {
+    file: "routing-case-91.json",
+    maxCorners: 4,
+    maxCrossings: 0,
+    maxStraightBroken: 1,
+    maxOffMax: 0.05,
+    maxPortGapImbalance: 0.05,
+  },
 ]
 for (const c of CASES) {
   test(`routing quality: ${c.file}`, async ({ page }) => {
@@ -420,7 +456,7 @@ for (const c of CASES) {
     await page.waitForTimeout(400)
     const m = await measure(page, model)
     console.log(
-      `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} overlapPx=${m.overlapPx} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)} centroid=${m.portCentroidError.toFixed(2)}`
+      `QUALITY ${c.file} corners=${m.corners} crossings=${m.crossings} overlapPx=${m.overlapPx} straightBroken=${m.straightBroken} offMax=${m.offMax.toFixed(2)} centroid=${m.portCentroidError.toFixed(2)} gaps=${m.portGapImbalance.toFixed(2)} sharedGaps=${m.sharedPortGapImbalance.toFixed(2)}`
     )
     expect(m.crossings, "open-space crossings").toBeLessThanOrEqual(
       c.maxCrossings
@@ -438,5 +474,12 @@ for (const c of CASES) {
       m.portCentroidError,
       "shared-side port centroid imbalance"
     ).toBeLessThanOrEqual(c.maxPortCentroidError ?? 0.1)
+    expect(m.portGapImbalance, "n+1 side-gap imbalance").toBeLessThanOrEqual(
+      c.maxPortGapImbalance ?? 1
+    )
+    expect(
+      m.sharedPortGapImbalance,
+      "shared-side n+1 gap imbalance"
+    ).toBeLessThanOrEqual(c.maxSharedPortGapImbalance ?? 1)
   })
 }

@@ -1,6 +1,9 @@
 import type { Node, Rect } from "@xyflow/react"
-import { EDGES } from "@/constants"
-import { getPositionOnCanvas, isParentNodeType } from "@/utils/nodeUtils"
+import { EDGES } from "@/utils/geometry/routingConstants"
+import {
+  getRoutingPositionOnCanvas,
+  isRoutingParentNodeType,
+} from "@/utils/geometry/nodeGeometry"
 import type { IPoint } from "@/edges/Connection"
 
 /**
@@ -118,7 +121,7 @@ export const createNodeIndex = (nodes: readonly Node[]): NodeIndex => {
     if (node.hidden) continue
     const { width, height } = nodeSize(node)
     if (!width || !height) continue
-    const { x, y } = getPositionOnCanvas(node, nodes as Node[])
+    const { x, y } = getRoutingPositionOnCanvas(node, nodes)
     entries.set(node.id, {
       body: {
         id: node.id,
@@ -128,7 +131,7 @@ export const createNodeIndex = (nodes: readonly Node[]): NodeIndex => {
         height,
         // A container is soft: an edge may cut through a package it is not part of
         // when going around would mean circling the diagram.
-        soft: isParentNodeType(node.type),
+        soft: isRoutingParentNodeType(node.type),
       },
       ancestors: getAncestorIds(node, byId),
     })

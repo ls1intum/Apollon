@@ -1,4 +1,4 @@
-import { Position } from "@xyflow/react"
+import { Position } from "@xyflow/system"
 import { IPoint, tryFindStraightPath } from "@/edges/Connection"
 import {
   routeOrthogonalPath,

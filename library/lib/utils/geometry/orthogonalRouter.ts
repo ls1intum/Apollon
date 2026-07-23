@@ -1,5 +1,5 @@
-import { Position } from "@xyflow/react"
-import { CANVAS, EDGES } from "@/constants"
+import { Position } from "@xyflow/system"
+import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
 import { recordRouterSearch } from "@/sync/perfCounters"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
@@ -62,6 +62,23 @@ const headingOf = (position: Position): Heading => {
 }
 
 const opposite = (h: Heading): Heading => ((h + 2) % 4) as Heading
+
+/** The three legal successors for each heading, in the same ascending Heading
+ * order as the former four-way loop after it rejected the immediate reverse. */
+const NEXT_HEADINGS = new Uint8Array([
+  Heading.Up,
+  Heading.Right,
+  Heading.Left,
+  Heading.Up,
+  Heading.Right,
+  Heading.Down,
+  Heading.Right,
+  Heading.Down,
+  Heading.Left,
+  Heading.Up,
+  Heading.Down,
+  Heading.Left,
+])
 
 /**
  * Minimum heading changes in an obstacle-free relaxation. A required-direction
@@ -136,6 +153,8 @@ const CROSSING_NEAR_CORNER_PENALTY = ROUTING_COST.crossingNearCorner
 /** Room a crossing needs at either end to draw its hop: half the 16px jump arc
  * (EDGES.EDGE_LINE_JUMP_WIDTH) plus a grid cell of slack. */
 const CROSSING_CORNER_CLEARANCE = ROUTING_COST.crossingCornerClearance
+const CROSSING_CORNER_CLEARANCE_SQUARED =
+  CROSSING_CORNER_CLEARANCE * CROSSING_CORNER_CLEARANCE
 
 /** Two parallel lines closer than this read as one. Two grid cells: visibly
  * separate, and enough for a jump arc to fit between them. */
@@ -349,10 +368,10 @@ export type NeighborSegment = Segment
 /**
  * The neighbour segments a route between these endpoints can actually reach:
  * those overlapping the box its endpoints and obstacles span, grown by the
- * routing margin. A neighbour outside it can be neither crossed nor lain on — so
- * it neither shapes the route NOR should invalidate the route's cache key. The
- * router prunes its lattice with this; the solver keys routes on it, so a
- * neighbour bending outside this edge's corridor no longer forces it to re-route.
+ * routing margin. Axis-aligned segments are clipped to that box, and synthetic
+ * clip points are not terminals. A remote endpoint or midpoint therefore cannot
+ * mint a local turning lane. A neighbour outside the box can be neither crossed
+ * nor lain on, so it neither shapes the route nor invalidates its cache key.
  */
 export const neighborsWithinReach = (
   sourcePoint: IPoint,
@@ -368,13 +387,49 @@ export const neighborsWithinReach = (
   const top = Math.min(...ys, ...obstacles.map((o) => o.y)) - reach
   const bottom =
     Math.max(...ys, ...obstacles.map((o) => o.y + o.height)) + reach
-  return toSegments(neighborEdges).filter(
-    (s) =>
-      Math.min(s.x1, s.x2) <= right &&
-      Math.max(s.x1, s.x2) >= left &&
-      Math.min(s.y1, s.y2) <= bottom &&
-      Math.max(s.y1, s.y2) >= top
-  )
+  const inside = (x: number, y: number): boolean =>
+    x >= left && x <= right && y >= top && y <= bottom
+  const clamp = (value: number, low: number, high: number): number =>
+    Math.max(low, Math.min(high, value))
+  return toSegments(neighborEdges).flatMap((segment) => {
+    if (
+      !(
+        Math.min(segment.x1, segment.x2) <= right &&
+        Math.max(segment.x1, segment.x2) >= left &&
+        Math.min(segment.y1, segment.y2) <= bottom &&
+        Math.max(segment.y1, segment.y2) >= top
+      )
+    )
+      return []
+
+    const startTerminal =
+      segment.startTerminal && inside(segment.x1, segment.y1)
+    const endTerminal = segment.endTerminal && inside(segment.x2, segment.y2)
+    if (segment.y1 === segment.y2)
+      return [
+        {
+          ...segment,
+          x1: clamp(segment.x1, left, right),
+          x2: clamp(segment.x2, left, right),
+          startTerminal,
+          endTerminal,
+        },
+      ]
+    if (segment.x1 === segment.x2)
+      return [
+        {
+          ...segment,
+          y1: clamp(segment.y1, top, bottom),
+          y2: clamp(segment.y2, top, bottom),
+          startTerminal,
+          endTerminal,
+        },
+      ]
+    // Authored diagonal geometry participates in exact crossing/crowding tests.
+    // Keeping the full segment is harmless once off-corridor real endpoints lose
+    // their terminal flags: diagonals add no midpoint or escape turning lines.
+    return [{ ...segment, startTerminal, endTerminal }]
+  })
 }
 
 const sign = (n: number): number => (n > 0 ? 1 : n < 0 ? -1 : 0)
@@ -454,11 +509,13 @@ const crossingPoint = (a: Segment, b: Segment): IPoint => {
   }
 }
 
-/** Distance from `p` to the nearest end of segment `s`. */
-const distanceToEnds = (p: IPoint, s: Segment): number =>
+/** Squared distance from `p` to the nearest end of segment `s`. Routing
+ * decisions compare it with a squared threshold, avoiding the engine-dependent
+ * rounding permitted for `Math.hypot`. */
+const distanceSquaredToEnds = (p: IPoint, s: Segment): number =>
   Math.min(
-    Math.hypot(p.x - s.x1, p.y - s.y1),
-    Math.hypot(p.x - s.x2, p.y - s.y2)
+    (p.x - s.x1) ** 2 + (p.y - s.y1) ** 2,
+    (p.x - s.x2) ** 2 + (p.y - s.y2) ** 2
   )
 
 /**
@@ -678,11 +735,11 @@ const edgePenaltyAt = (
     const t = horizontal ? (ay - dy1) / (dy2 - dy1) : (ax - dx1) / (dx2 - dx1)
     const crossingX = dx1 + t * (dx2 - dx1)
     const crossingY = dy1 + t * (dy2 - dy1)
-    const alongNeighbor = Math.min(
-      Math.hypot(crossingX - dx1, crossingY - dy1),
-      Math.hypot(crossingX - dx2, crossingY - dy2)
+    const alongNeighborSquared = Math.min(
+      (crossingX - dx1) ** 2 + (crossingY - dy1) ** 2,
+      (crossingX - dx2) ** 2 + (crossingY - dy2) ** 2
     )
-    if (alongNeighbor < CROSSING_CORNER_CLEARANCE)
+    if (alongNeighborSquared < CROSSING_CORNER_CLEARANCE_SQUARED)
       penalty += CROSSING_NEAR_CORNER_PENALTY
   }
 
@@ -734,8 +791,8 @@ export const routeConflictsWithNeighborEdges = (
       }
       const at = crossingPoint(seg, n)
       if (
-        distanceToEnds(at, seg) < CROSSING_CORNER_CLEARANCE ||
-        distanceToEnds(at, n) < CROSSING_CORNER_CLEARANCE
+        distanceSquaredToEnds(at, seg) < CROSSING_CORNER_CLEARANCE_SQUARED ||
+        distanceSquaredToEnds(at, n) < CROSSING_CORNER_CLEARANCE_SQUARED
       ) {
         return true
       }
@@ -823,7 +880,9 @@ const collectLines = (
 }
 
 /**
- * A minimal deterministic binary min-heap keyed on a numeric priority.
+ * A minimal deterministic 4-ary min-heap keyed on a numeric priority. Four
+ * children halve the depth of the frontier compared with a binary heap while
+ * preserving the exact `(priority, insertion sequence)` total order.
  *
  * Three parallel typed arrays rather than an array of `{priority, seq, state}`:
  * the frontier is the innermost loop, and one object per push (thousands per route)
@@ -863,30 +922,29 @@ class MinHeap {
     return pa < pb || (pa === pb && this.seqs[a] < this.seqs[b])
   }
 
-  private swap(a: number, b: number): void {
-    const p = this.priorities[a]
-    this.priorities[a] = this.priorities[b]
-    this.priorities[b] = p
-    const s = this.seqs[a]
-    this.seqs[a] = this.seqs[b]
-    this.seqs[b] = s
-    const t = this.states[a]
-    this.states[a] = this.states[b]
-    this.states[b] = t
-  }
-
   push(priority: number, seq: number, state: number): void {
     if (this.count === this.priorities.length) this.grow()
     let i = this.count++
+    // Sift a HOLE upward rather than swapping the new tuple at every level. A
+    // swap performs six typed-array writes; copying each parent down performs
+    // three, then the new tuple is written once at its final position.
+    while (i > 0) {
+      const parent = (i - 1) >> 2
+      const parentPriority = this.priorities[parent]
+      const parentSeq = this.seqs[parent]
+      if (
+        parentPriority < priority ||
+        (parentPriority === priority && parentSeq < seq)
+      )
+        break
+      this.priorities[i] = parentPriority
+      this.seqs[i] = parentSeq
+      this.states[i] = this.states[parent]
+      i = parent
+    }
     this.priorities[i] = priority
     this.seqs[i] = seq
     this.states[i] = state
-    while (i > 0) {
-      const parent = (i - 1) >> 1
-      if (!this.less(i, parent)) break
-      this.swap(i, parent)
-      i = parent
-    }
   }
 
   /** The lowest-priority state, or -1 when empty. */
@@ -895,20 +953,34 @@ class MinHeap {
     const top = this.states[0]
     this.count--
     if (this.count > 0) {
-      this.priorities[0] = this.priorities[this.count]
-      this.seqs[0] = this.seqs[this.count]
-      this.states[0] = this.states[this.count]
+      const priority = this.priorities[this.count]
+      const seq = this.seqs[this.count]
+      const state = this.states[this.count]
       let i = 0
+      // The symmetric hole sift: promote the smaller child until the saved tail
+      // tuple belongs, avoiding a six-write swap at every level.
       for (;;) {
-        const left = 2 * i + 1
-        const right = 2 * i + 2
-        let smallest = i
-        if (left < this.count && this.less(left, smallest)) smallest = left
-        if (right < this.count && this.less(right, smallest)) smallest = right
-        if (smallest === i) break
-        this.swap(i, smallest)
-        i = smallest
+        const first = 4 * i + 1
+        if (first >= this.count) break
+        let child = first
+        const end = Math.min(first + 4, this.count)
+        for (let candidate = first + 1; candidate < end; candidate++)
+          if (this.less(candidate, child)) child = candidate
+        const childPriority = this.priorities[child]
+        const childSeq = this.seqs[child]
+        if (
+          priority < childPriority ||
+          (priority === childPriority && seq < childSeq)
+        )
+          break
+        this.priorities[i] = childPriority
+        this.seqs[i] = childSeq
+        this.states[i] = this.states[child]
+        i = child
       }
+      this.priorities[i] = priority
+      this.seqs[i] = seq
+      this.states[i] = state
     }
     return top
   }
@@ -966,9 +1038,41 @@ export const routeAroundObstaclesBetweenCandidates = (
   sources: readonly RouteEndpointCandidate[],
   targets: readonly RouteTarget[],
   obstacles: readonly ObstacleRect[],
-  neighborEdges: readonly IPoint[][] = []
+  neighborEdges: readonly IPoint[][] = [],
+  incumbentRoute?: readonly IPoint[]
 ): CandidateRouteResult | null => {
   if (sources.length === 0 || targets.length === 0) return null
+  const searchStartedAt =
+    import.meta.env.DEV || import.meta.env.VITE_E2E === "true"
+      ? performance.now()
+      : 0
+  let searchLoopStartedAt = 0
+  let stepPricings = 0
+  let heuristicEvaluations = 0
+  let heapPushes = 0
+  let boundPrunes = 0
+  let searchCellCount = 0
+  let usesIncumbentBound = false
+  const recordSearch = (expansions: number, abandoned: boolean): void => {
+    const elapsed =
+      import.meta.env.DEV || import.meta.env.VITE_E2E === "true"
+        ? performance.now() - searchStartedAt
+        : 0
+    const setup =
+      searchLoopStartedAt > 0 ? searchLoopStartedAt - searchStartedAt : elapsed
+    recordRouterSearch(
+      expansions,
+      abandoned,
+      elapsed,
+      setup,
+      stepPricings,
+      heuristicEvaluations,
+      heapPushes,
+      usesIncumbentBound,
+      boundPrunes,
+      searchCellCount
+    )
+  }
   const grid = CANVAS.SNAP_TO_GRID_PX
   const idealClearance = EDGES.NODE_CLEARANCE_PX
   const minClearance = EDGES.MIN_NODE_CLEARANCE_PX
@@ -1032,7 +1136,8 @@ export const routeAroundObstaclesBetweenCandidates = (
       targets,
       sources,
       obstacles,
-      neighborEdges
+      neighborEdges,
+      incumbentRoute ? [...incumbentRoute].reverse() : undefined
     )
     return reversed
       ? {
@@ -1074,7 +1179,6 @@ export const routeAroundObstaclesBetweenCandidates = (
       forceStubTurn: t.forceStubTurn ?? false,
     }
   })
-
   const hard = obstacles.filter((o) => !o.soft)
   const soft = obstacles.filter((o) => o.soft)
 
@@ -1158,6 +1262,26 @@ export const routeAroundObstaclesBetweenCandidates = (
     }
   }
 
+  // The heuristic touches target geometry once per expanded STATE. Keep its hot,
+  // overwhelmingly common non-forced form in flat arrays: candidate objects and a
+  // helper call inside that loop cost more than the few integer operations in the
+  // lower bound itself. Deliberately below the straight-route return so a proven
+  // optimal direct edge allocates no search tables at all.
+  const targetCount = targetInfos.length
+  const targetX = new Float64Array(targetCount)
+  const targetY = new Float64Array(targetCount)
+  const targetArrival = new Uint8Array(targetCount)
+  const targetCost = new Float64Array(targetCount)
+  let hasForcedTarget = false
+  for (let i = 0; i < targetCount; i++) {
+    const target = targetInfos[i]
+    targetX[i] = target.point.x
+    targetY[i] = target.point.y
+    targetArrival[i] = target.requiredArrival
+    targetCost[i] = target.cost
+    hasForcedTarget ||= target.forceStubTurn
+  }
+
   // Only the neighbouring edges this route can reach: an edge outside the box its
   // endpoints and obstacles span can be neither crossed nor lain on, and every
   // lane derived from one costs cells quadratically for nothing. Callers
@@ -1173,63 +1297,6 @@ export const routeAroundObstaclesBetweenCandidates = (
     neighborEdges
   )
   const neighborIndex = indexNeighbors(neighborSegments)
-  /** Maximal strictly-overlapping collinear reservations for the heuristic only.
-   * A bundle often contains several segments on the same line; considering each
-   * short piece independently makes its nearest endpoint look like a cheap escape.
-   * Their geometric union is one continuous barrier. Merely touching intervals
-   * stay separate because their shared endpoint is a legal zero-crossing passage. */
-  const mergedNeighborBarriers = (() => {
-    const merge = (
-      segments: readonly Segment[],
-      vertical: boolean
-    ): Segment[] => {
-      const byLine = new Map<number, Array<{ lo: number; hi: number }>>()
-      for (const segment of segments) {
-        if (
-          vertical
-            ? segment.x1 !== segment.x2 || segment.y1 === segment.y2
-            : segment.y1 !== segment.y2 || segment.x1 === segment.x2
-        )
-          continue
-        const line = vertical ? segment.x1 : segment.y1
-        const lo = vertical
-          ? Math.min(segment.y1, segment.y2)
-          : Math.min(segment.x1, segment.x2)
-        const hi = vertical
-          ? Math.max(segment.y1, segment.y2)
-          : Math.max(segment.x1, segment.x2)
-        const spans = byLine.get(line)
-        if (spans) spans.push({ lo, hi })
-        else byLine.set(line, [{ lo, hi }])
-      }
-      const result: Segment[] = []
-      for (const [line, spans] of byLine) {
-        spans.sort((a, b) => a.lo - b.lo || a.hi - b.hi)
-        let lo = spans[0].lo
-        let hi = spans[0].hi
-        const emit = (): void => {
-          result.push(
-            vertical
-              ? { x1: line, y1: lo, x2: line, y2: hi }
-              : { x1: lo, y1: line, x2: hi, y2: line }
-          )
-        }
-        for (let i = 1; i < spans.length; i++) {
-          if (spans[i].lo < hi) {
-            hi = Math.max(hi, spans[i].hi)
-            continue
-          }
-          emit()
-          lo = spans[i].lo
-          hi = spans[i].hi
-        }
-        emit()
-      }
-      return result
-    }
-    return [...merge(neighborSegments, true), ...merge(neighborSegments, false)]
-  })()
-
   // Turning lines. Endpoints and stub exits are kept exact (the route must reach
   // them); obstacle sides are snapped to the grid (what interior corners land on).
   // A margin ring beyond everything gives U-shaped detours somewhere to turn when
@@ -1445,40 +1512,50 @@ export const routeAroundObstaclesBetweenCandidates = (
 
   const nodeAt = (xi: number, yi: number): IPoint => ({ x: xs[xi], y: ys[yi] })
   const stride = ys.length
+  const cellCount = xs.length * ys.length
+  searchCellCount = cellCount
+  // Decline before allocating or filling any cell/state-sized tables.
+  if (cellCount > MAX_CELLS) {
+    recordSearch(0, true)
+    return null
+  }
+  const stateCount = cellCount * 4
   const stateId = (xi: number, yi: number, h: Heading): number =>
     (xi * stride + yi) * 4 + h
 
-  // Targets are keyed by the complete arrival STATE, not only their cell: two
-  // candidates may share a corner point but require different arrival headings.
-  // The lower-cost candidate wins an identical state; input index is the total
-  // tie-break and is reported back to the caller.
-  const targetStates = new Map<
-    number,
-    {
-      inputIndex: number
-      canonicalIndex: number
-      cost: number
-      forceStubTurn: boolean
-    }
-  >()
+  // Targets are keyed by the complete dense arrival STATE, not only their cell:
+  // two candidates may share a corner point but require different headings. Flat
+  // arrays make the millions of target/source membership checks below direct
+  // indexed reads rather than Map/Set hashing.
+  const targetInputByState = new Int32Array(stateCount).fill(-1)
+  const targetCanonicalByState = new Int32Array(stateCount).fill(-1)
+  const targetCostByState = new Float64Array(stateCount)
+  const targetForceTurnByState = new Uint8Array(stateCount)
+  const targetCellMask = new Uint8Array(cellCount)
+  const sourceCellMask = new Uint8Array(cellCount)
+  sourceInfos.forEach((source) => {
+    const xi = xIndex.get(source.point.x)
+    const yi = yIndex.get(source.point.y)
+    if (xi !== undefined && yi !== undefined)
+      sourceCellMask[xi * stride + yi] = 1
+  })
   targetInfos.forEach((t, canonicalIndex) => {
-    const state = stateId(
-      xIndex.get(t.point.x)!,
-      yIndex.get(t.point.y)!,
-      t.requiredArrival
-    )
-    const existing = targetStates.get(state)
+    const cell = xIndex.get(t.point.x)! * stride + yIndex.get(t.point.y)!
+    const state = cell * 4 + t.requiredArrival
+    const existing = targetInputByState[state]
     if (
-      !existing ||
-      t.cost < existing.cost ||
-      (t.cost === existing.cost && existing.forceStubTurn && !t.forceStubTurn)
-    )
-      targetStates.set(state, {
-        inputIndex: t.inputIndex,
-        canonicalIndex,
-        cost: t.cost,
-        forceStubTurn: t.forceStubTurn,
-      })
+      existing === -1 ||
+      t.cost < targetCostByState[state] ||
+      (t.cost === targetCostByState[state] &&
+        targetForceTurnByState[state] === 1 &&
+        !t.forceStubTurn)
+    ) {
+      targetInputByState[state] = t.inputIndex
+      targetCanonicalByState[state] = canonicalIndex
+      targetCostByState[state] = t.cost
+      targetForceTurnByState[state] = t.forceStubTurn ? 1 : 0
+    }
+    targetCellMask[cell] = 1
   })
 
   // Admissible AND consistent: this is the exact cost in a relaxation with no
@@ -1490,13 +1567,6 @@ export const routeAroundObstaclesBetweenCandidates = (
   // candidate lattice, where almost every target requires at least one bend.
   // Cache it per STATE: evaluating every target on every relaxation was
   // O(expansions × candidates).
-  const cellCount = xs.length * ys.length
-  // Decline before allocating or filling any cell-sized heuristic tables. Dense
-  // candidate lattices are exactly where an eager lower-bound prepass hurts most.
-  if (cellCount > MAX_CELLS) {
-    recordRouterSearch(0, true)
-    return null
-  }
   const relaxedCostTo = (
     x: number,
     y: number,
@@ -1518,240 +1588,49 @@ export const routeAroundObstaclesBetweenCandidates = (
       ]
     return Math.abs(dx) + Math.abs(dy) + bends * bendPenalty
   }
-  /** Exact rectilinear distance around the most restrictive single hard body.
-   * Each body's distance-to-target is itself a metric, so their maximum remains
-   * a consistent lower bound for the world containing every body. It captures
-   * the unavoidable trip to the top/bottom (or left/right) of a blocking node
-   * without double-counting several obstacles whose detours may overlap. */
-  const obstacleDetourDistanceTo = (
-    x: number,
-    y: number,
-    point: IPoint
-  ): number => {
-    const dx = Math.abs(point.x - x)
-    const dy = Math.abs(point.y - y)
-    let lowerBound = dx + dy
-    for (const rect of hard) {
-      const x1 = rect.x
-      const x2 = rect.x + rect.width
-      const y1 = rect.y
-      const y2 = rect.y + rect.height
-      const horizontallySeparated =
-        (x <= x1 && point.x >= x2) || (point.x <= x1 && x >= x2)
-      if (
-        horizontallySeparated &&
-        y > y1 &&
-        y < y2 &&
-        point.y > y1 &&
-        point.y < y2
-      ) {
-        const verticalDetour = Math.min(
-          y - y1 + (point.y - y1),
-          y2 - y + (y2 - point.y)
-        )
-        lowerBound = Math.max(lowerBound, dx + verticalDetour)
-      }
-
-      const verticallySeparated =
-        (y <= y1 && point.y >= y2) || (point.y <= y1 && y >= y2)
-      if (
-        verticallySeparated &&
-        x > x1 &&
-        x < x2 &&
-        point.x > x1 &&
-        point.x < x2
-      ) {
-        const horizontalDetour = Math.min(
-          x - x1 + (point.x - x1),
-          x2 - x + (x2 - point.x)
-        )
-        lowerBound = Math.max(lowerBound, dy + horizontalDetour)
-      }
-    }
-    return lowerBound
-  }
-  /** Exact shortest rectilinear distance in the presence of the most restrictive
-   * single neighbouring H/V segment, when crossing that segment pays the shared
-   * crossing cost. A route may instead pass either real endpoint. Taking the
-   * maximum across segments is a consistent lower bound and never assumes that
-   * two independent crossing penalties must both be paid. */
-  const neighborBarrierDistanceTo = (
-    x: number,
-    y: number,
-    point: IPoint
-  ): number => {
-    const dx = Math.abs(point.x - x)
-    const dy = Math.abs(point.y - y)
-    const direct = dx + dy
-    let lowerBound = direct
-    for (const segment of mergedNeighborBarriers) {
-      if (segment.x1 === segment.x2) {
-        const line = segment.x1
-        const lo = Math.min(segment.y1, segment.y2)
-        const hi = Math.max(segment.y1, segment.y2)
-        const straddles =
-          (x < line && point.x > line) || (point.x < line && x > line)
-        if (!(straddles && y > lo && y < hi && point.y > lo && point.y < hi))
-          continue
-        lowerBound = Math.max(
-          lowerBound,
-          dx +
-            Math.min(
-              dy + ROUTING_COST.edgeCrossing,
-              y - lo + (point.y - lo),
-              hi - y + (hi - point.y)
-            )
-        )
-      } else if (segment.y1 === segment.y2) {
-        const line = segment.y1
-        const lo = Math.min(segment.x1, segment.x2)
-        const hi = Math.max(segment.x1, segment.x2)
-        const straddles =
-          (y < line && point.y > line) || (point.y < line && y > line)
-        if (!(straddles && x > lo && x < hi && point.x > lo && point.x < hi))
-          continue
-        lowerBound = Math.max(
-          lowerBound,
-          dy +
-            Math.min(
-              dx + ROUTING_COST.edgeCrossing,
-              x - lo + (point.x - lo),
-              hi - x + (hi - point.x)
-            )
-        )
-      }
-    }
-    return lowerBound
-  }
-  // Most lattice cells are never expanded. Compute the expensive body/edge-aware
-  // bound only for cells A* actually reaches, while retaining the exact same
-  // admissible bound and caching its heading-independent part per cell/target.
+  // Most lattice cells are never expanded. Cache the exact obstacle-free heading
+  // relaxation per state; it is substantially cheaper than rescanning bodies and
+  // neighbouring edges for every state/target. Those scans reduced expansion
+  // counts but took more wall time than the states they avoided.
   const heuristicByState = new Float64Array(cellCount * 4).fill(NaN)
   const heuristicTargetRankByState = new Uint16Array(cellCount * 4)
-  const geometricLowerBound = new Float64Array(
-    cellCount * targetInfos.length
-  ).fill(NaN)
-  let obstacleWorldDistance: Float64Array | undefined
-  /** Exact shortest travel distance to any target on this lattice when hard
-   * bodies remain walls and neighbour crossings retain their base 400px price,
-   * but headings and every other soft penalty are removed. Unlike a single-edge
-   * bound, this sees several unavoidable reservations in one corridor. It is a
-   * consistent lower bound because the real graph has the same directed crossing
-   * charges and only adds bends, crowding, clearance and corner penalties. */
-  const obstacleDistanceToAnyTarget = (): Float64Array => {
-    if (obstacleWorldDistance) return obstacleWorldDistance
-    const distance = new Float64Array(cellCount).fill(Infinity)
-    const queue = new MinHeap(Math.min(cellCount, 1024))
-    let queueSequence = 0
-    for (const target of targetInfos) {
-      const cell =
-        xIndex.get(target.point.x)! * stride + yIndex.get(target.point.y)!
-      if (target.cost >= distance[cell]) continue
-      distance[cell] = target.cost
-      queue.push(target.cost, queueSequence++, cell)
-    }
-
-    const blockedByHardBody = (
-      ax: number,
-      ay: number,
-      bx: number,
-      by: number
-    ): boolean => {
-      const left = Math.min(ax, bx)
-      const right = Math.max(ax, bx)
-      const top = Math.min(ay, by)
-      const bottom = Math.max(ay, by)
-      return hard.some(
-        (rect) =>
-          left < rect.x + rect.width &&
-          right > rect.x &&
-          top < rect.y + rect.height &&
-          bottom > rect.y
-      )
-    }
-    const baseCrossingCost = (
-      ax: number,
-      ay: number,
-      bx: number,
-      by: number
-    ): number => {
-      const horizontal = ay === by
-      const fixed = horizontal ? ay : ax
-      const from = horizontal ? ax : ay
-      const to = horizontal ? bx : by
-      const at = horizontal ? neighborIndex.vx : neighborIndex.hy
-      const lo = horizontal ? neighborIndex.vyLo : neighborIndex.hxLo
-      const hi = horizontal ? neighborIndex.vyHi : neighborIndex.hxHi
-      let crossings = 0
-      for (let i = 0; i < at.length; i++) {
-        if (!(lo[i] < fixed && fixed < hi[i])) continue
-        const arrives =
-          to > from ? from < at[i] && at[i] <= to : to <= at[i] && at[i] < from
-        if (arrives) crossings++
-      }
-      for (let i = 0; i < neighborIndex.dx1.length; i++) {
-        const x1 = neighborIndex.dx1[i]
-        const y1 = neighborIndex.dy1[i]
-        const x2 = neighborIndex.dx2[i]
-        const y2 = neighborIndex.dy2[i]
-        if (
-          orient(ax, ay, bx, by, x1, y1) * orient(ax, ay, bx, by, x2, y2) >=
-          0
-        )
-          continue
-        const fromSide = orient(x1, y1, x2, y2, ax, ay)
-        const toSide = orient(x1, y1, x2, y2, bx, by)
-        if ((fromSide < 0 && toSide >= 0) || (fromSide > 0 && toSide <= 0))
-          crossings++
-      }
-      return crossings * EDGE_CROSSING_PENALTY
-    }
-
-    while (queue.size > 0) {
-      const settledDistance = queue.peekPriority()
-      const cell = queue.pop()
-      if (settledDistance !== distance[cell]) continue
-      const xi = (cell / stride) | 0
-      const yi = cell - xi * stride
-      for (let heading = Heading.Up; heading <= Heading.Left; heading++) {
-        const nxi =
-          heading === Heading.Left
-            ? xi - 1
-            : heading === Heading.Right
-              ? xi + 1
-              : xi
-        const nyi =
-          heading === Heading.Up
-            ? yi - 1
-            : heading === Heading.Down
-              ? yi + 1
-              : yi
-        if (nxi < 0 || nxi >= xs.length || nyi < 0 || nyi >= ys.length) continue
-        if (blockedByHardBody(xs[xi], ys[yi], xs[nxi], ys[nyi])) continue
-        const nextCell = nxi * stride + nyi
-        const nextDistance =
-          settledDistance +
-          Math.abs(xs[nxi] - xs[xi]) +
-          Math.abs(ys[nyi] - ys[yi]) +
-          // Reverse Dijkstra: this relaxation represents the real directed step
-          // from the predecessor cell `(nxi, nyi)` toward settled `(xi, yi)`.
-          baseCrossingCost(xs[nxi], ys[nyi], xs[xi], ys[yi])
-        if (nextDistance >= distance[nextCell]) continue
-        distance[nextCell] = nextDistance
-        queue.push(nextDistance, queueSequence++, nextCell)
-      }
-    }
-    obstacleWorldDistance = distance
-    return distance
-  }
   const heuristic = (xi: number, yi: number, heading: Heading): number => {
     const state = stateId(xi, yi, heading)
     const cached = heuristicByState[state]
     if (!Number.isNaN(cached)) return cached
 
-    const cell = xi * stride + yi
+    heuristicEvaluations++
     let best = Infinity
     let bestTargetRank = 0
+    if (!hasForcedTarget) {
+      const x = xs[xi]
+      const y = ys[yi]
+      for (let targetRank = 0; targetRank < targetCount; targetRank++) {
+        const dx = targetX[targetRank] - x
+        const dy = targetY[targetRank] - y
+        let requiredDirections = 0
+        if (dx > 0) requiredDirections |= 1 << Heading.Right
+        else if (dx < 0) requiredDirections |= 1 << Heading.Left
+        if (dy > 0) requiredDirections |= 1 << Heading.Down
+        else if (dy < 0) requiredDirections |= 1 << Heading.Up
+        const bends =
+          MIN_BENDS_BY_HEADINGS_AND_DIRECTIONS[
+            (heading * 4 + targetArrival[targetRank]) * 16 + requiredDirections
+          ]
+        const cost =
+          Math.abs(dx) +
+          Math.abs(dy) +
+          bends * bendPenalty +
+          targetCost[targetRank]
+        if (cost < best) {
+          best = cost
+          bestTargetRank = targetRank
+        }
+      }
+      heuristicByState[state] = best
+      heuristicTargetRankByState[state] = bestTargetRank
+      return best
+    }
     for (let targetRank = 0; targetRank < targetInfos.length; targetRank++) {
       const target = targetInfos[targetRank]
       let pathCost: number
@@ -1784,22 +1663,12 @@ export const routeAroundObstaclesBetweenCandidates = (
         )
       }
 
-      const geometryIndex = cell * targetInfos.length + targetRank
-      let geometry = geometricLowerBound[geometryIndex]
-      if (Number.isNaN(geometry)) {
-        geometry = Math.max(
-          obstacleDetourDistanceTo(xs[xi], ys[yi], target.point),
-          neighborBarrierDistanceTo(xs[xi], ys[yi], target.point)
-        )
-        geometricLowerBound[geometryIndex] = geometry
-      }
-      const cost = Math.max(pathCost, geometry) + target.cost
+      const cost = pathCost + target.cost
       if (cost < best) {
         best = cost
         bestTargetRank = targetRank
       }
     }
-    best = Math.max(best, obstacleDistanceToAnyTarget()[cell])
     heuristicByState[state] = best
     heuristicTargetRankByState[state] = bestTargetRank
     return best
@@ -1818,6 +1687,12 @@ export const routeAroundObstaclesBetweenCandidates = (
   // Direction matters — a crossing is charged to the arriving step, so the two
   // directions across one crossing are not priced alike.
   const stepCost = new Float64Array(cellCount * 4).fill(UNPRICED)
+  // Blocking, body clearance and container traversal are symmetric: the same
+  // lattice segment has the same cost left→right as right→left. Cache that base
+  // once per undirected horizontal/vertical adjacency. `stepCost` above remains
+  // directional because a crossing is deliberately charged only to the step
+  // ARRIVING at it.
+  const symmetricStepCost = new Float64Array(cellCount * 2).fill(UNPRICED)
 
   // Whether a corner AT each cell would be crowded by a neighbouring edge. Asked at
   // most once per cell.
@@ -1849,6 +1724,7 @@ export const routeAroundObstaclesBetweenCandidates = (
     const slot = (xi * stride + yi) * 4 + nh
     const cached = stepCost[slot]
     if (cached !== UNPRICED) return cached
+    stepPricings++
 
     const ax = xs[xi]
     const ay = ys[yi]
@@ -1861,6 +1737,12 @@ export const routeAroundObstaclesBetweenCandidates = (
     const top = ay < by ? ay : by
     const bottom = ay < by ? by : ay
 
+    const baseCell = horizontal
+      ? Math.min(xi, nxi) * stride + yi
+      : xi * stride + Math.min(yi, nyi)
+    const baseSlot = baseCell * 2 + (horizontal ? 0 : 1)
+    let baseCost = symmetricStepCost[baseSlot]
+
     // One pass over the bodies answers both questions: does this step go THROUGH a
     // body (forbidden), and how much room does it leave on EITHER SIDE. Both sides
     // matter: the nearest body alone cannot tell "close to something" from "should
@@ -1868,134 +1750,302 @@ export const routeAroundObstaclesBetweenCandidates = (
     // 7px from each side of, with nowhere better to be. So the ideal is what the
     // CHANNEL allows (its middle, or the full clearance, whichever is less): room
     // you never had is free. The same term also balances the route.
-    let nearestLo = Infinity
-    let nearestHi = Infinity
-    let touchesBodyBoundary = false
-    for (let i = 0; i < bodyCount; i++) {
-      // Hard obstacles here are exclusively THIRD-PARTY bodies: endpoint bodies
-      // were removed by the caller, and containers are soft. Their interior is
-      // solid. Boundary-only contact stays technically routable for degenerate
-      // tight layouts, but is remembered and charged below: a zero-length touch at
-      // a corner otherwise escapes both this strict test and the alongside price.
-      if (
-        left < bodyX2[i] &&
-        right > bodyX1[i] &&
-        top < bodyY2[i] &&
-        bottom > bodyY1[i]
-      ) {
-        stepCost[slot] = BLOCKED
-        return BLOCKED
-      }
-      const boundaryOverlap = horizontal
-        ? Math.min(right, bodyX2[i]) - Math.max(left, bodyX1[i])
-        : Math.min(bottom, bodyY2[i]) - Math.max(top, bodyY1[i])
-      const crossesOtherAxis = horizontal
-        ? ay >= bodyY1[i] && ay <= bodyY2[i]
-        : ax >= bodyX1[i] && ax <= bodyX2[i]
-      if (boundaryOverlap === 0 && crossesOtherAxis) touchesBodyBoundary = true
+    if (baseCost === UNPRICED) {
+      let nearestLo = Infinity
+      let nearestHi = Infinity
+      let touchesBodyBoundary = false
+      for (let i = 0; i < bodyCount; i++) {
+        // Hard obstacles here are exclusively THIRD-PARTY bodies: endpoint bodies
+        // were removed by the caller, and containers are soft. Their interior is
+        // solid. Boundary-only contact stays technically routable for degenerate
+        // tight layouts, but is remembered and charged below: a zero-length touch at
+        // a corner otherwise escapes both this strict test and the alongside price.
+        if (
+          left < bodyX2[i] &&
+          right > bodyX1[i] &&
+          top < bodyY2[i] &&
+          bottom > bodyY1[i]
+        ) {
+          symmetricStepCost[baseSlot] = BLOCKED
+          stepCost[slot] = BLOCKED
+          return BLOCKED
+        }
+        const boundaryOverlap = horizontal
+          ? Math.min(right, bodyX2[i]) - Math.max(left, bodyX1[i])
+          : Math.min(bottom, bodyY2[i]) - Math.max(top, bodyY1[i])
+        const crossesOtherAxis = horizontal
+          ? ay >= bodyY1[i] && ay <= bodyY2[i]
+          : ax >= bodyX1[i] && ax <= bodyX2[i]
+        if (boundaryOverlap === 0 && crossesOtherAxis)
+          touchesBodyBoundary = true
 
-      const spanLo = horizontal ? bodyX1[i] : bodyY1[i]
-      const spanHi = horizontal ? bodyX2[i] : bodyY2[i]
-      const lo = horizontal ? left : top
-      const hi = horizontal ? right : bottom
-      // Only a body this run travels PAST counts; one it runs AT would be crossed,
-      // just ruled out above.
-      if (hi <= spanLo || lo >= spanHi) continue
+        const spanLo = horizontal ? bodyX1[i] : bodyY1[i]
+        const spanHi = horizontal ? bodyX2[i] : bodyY2[i]
+        const lo = horizontal ? left : top
+        const hi = horizontal ? right : bottom
+        // Only a body this run travels PAST counts; one it runs AT would be crossed,
+        // just ruled out above.
+        if (hi <= spanLo || lo >= spanHi) continue
 
-      const at = horizontal ? ay : ax
-      const near = horizontal ? bodyY1[i] : bodyX1[i]
-      const far = horizontal ? bodyY2[i] : bodyX2[i]
-      if (at <= near) {
-        // Body on the far side of the run.
-        const gap = near - at
-        if (gap < nearestHi) nearestHi = gap
-      } else {
-        const gap = at - far
-        if (gap < nearestLo) nearestLo = gap
+        const at = horizontal ? ay : ax
+        const near = horizontal ? bodyY1[i] : bodyX1[i]
+        const far = horizontal ? bodyY2[i] : bodyX2[i]
+        if (at <= near) {
+          // Body on the far side of the run.
+          const gap = near - at
+          if (gap < nearestHi) nearestHi = gap
+        } else {
+          const gap = at - far
+          if (gap < nearestLo) nearestLo = gap
+        }
       }
+
+      const length = horizontal ? right - left : bottom - top
+
+      // A container is crossed only when going around is hopeless. Charged over the
+      // distance travelled inside it, so a wide package costs more than a narrow one.
+      let softCost = 0
+      for (const rect of soft) {
+        if (
+          left < rect.x + rect.width &&
+          right > rect.x &&
+          top < rect.y + rect.height &&
+          bottom > rect.y
+        ) {
+          const inside = horizontal
+            ? Math.min(right, rect.x + rect.width) - Math.max(left, rect.x)
+            : Math.min(bottom, rect.y + rect.height) - Math.max(top, rect.y)
+          softCost += SOFT_CROSSING_COST_PER_PX * inside
+        }
+      }
+
+      let proximity = 0
+      const nearest = nearestLo < nearestHi ? nearestLo : nearestHi
+      if (nearest !== Infinity) {
+        // Best any route through this channel could do: full clearance if open on one
+        // side, the middle if squeezed between two bodies.
+        const half = (nearestLo + nearestHi) / 2
+        const achievable = half < idealClearance ? half : idealClearance
+
+        // Room the route had and did not take, over the distance travelled while short
+        // of it. Zero in the open, zero down the middle of a tight gap.
+        const deficitCells = Math.max(
+          0,
+          Math.ceil((achievable - nearest) / grid)
+        )
+        if (deficitCells > 0) proximity += deficitCells * clearanceRate * length
+
+        // A steeper charge for the two ways a run is WRONG rather than merely tight:
+        //
+        //  - DRAWN ON a body: route line and node border are one line, never forgiven.
+        //    This is the one hole in the channel rule above — two TOUCHING nodes leave
+        //    a zero-width channel, so the shared border would otherwise be free — but
+        //    it reads as broken and there is nearly always a way round. (A hair OFF
+        //    the border is fine: legible, often the only sane line. Hence zero, not
+        //    "under ten".)
+        //  - HUGGING with room to spare: closer than the minimum when a clean lane
+        //    was available.
+        const drawnOnBody = nearest === 0
+        const hugsWithRoomToSpare =
+          nearest < minClearance && achievable >= minClearance
+        if (drawnOnBody || hugsWithRoomToSpare) {
+          proximity += HUGGING_COST_PER_PX * length
+        }
+
+        // Once both walls are at least the ideal clearance away, the main objective
+        // intentionally ties. Resolve only that plateau toward the channel's medial
+        // axis. The epsilon is too small to buy a pixel or a bend; it merely replaces
+        // insertion-order bias with a geometric, reflection-symmetric preference.
+        if (
+          nearestLo !== Infinity &&
+          nearestHi !== Infinity &&
+          nearestLo + nearestHi < 4 * idealClearance
+        ) {
+          const imbalance =
+            Math.abs(nearestLo - nearestHi) / (nearestLo + nearestHi)
+          proximity += CHANNEL_IMBALANCE_TIE_BREAK_PER_PX * imbalance * length
+        }
+      }
+
+      baseCost =
+        length +
+        softCost +
+        proximity +
+        (touchesBodyBoundary ? HUGGING_COST_PER_PX * length : 0)
+      symmetricStepCost[baseSlot] = baseCost
     }
 
-    const length = horizontal ? right - left : bottom - top
-
-    // A container is crossed only when going around is hopeless. Charged over the
-    // distance travelled inside it, so a wide package costs more than a narrow one.
-    let softCost = 0
-    for (const rect of soft) {
-      if (
-        left < rect.x + rect.width &&
-        right > rect.x &&
-        top < rect.y + rect.height &&
-        bottom > rect.y
-      ) {
-        const inside = horizontal
-          ? Math.min(right, rect.x + rect.width) - Math.max(left, rect.x)
-          : Math.min(bottom, rect.y + rect.height) - Math.max(top, rect.y)
-        softCost += SOFT_CROSSING_COST_PER_PX * inside
-      }
+    if (baseCost === BLOCKED) {
+      stepCost[slot] = BLOCKED
+      return BLOCKED
     }
-
-    let proximity = 0
-    const nearest = nearestLo < nearestHi ? nearestLo : nearestHi
-    if (nearest !== Infinity) {
-      // Best any route through this channel could do: full clearance if open on one
-      // side, the middle if squeezed between two bodies.
-      const half = (nearestLo + nearestHi) / 2
-      const achievable = half < idealClearance ? half : idealClearance
-
-      // Room the route had and did not take, over the distance travelled while short
-      // of it. Zero in the open, zero down the middle of a tight gap.
-      const deficitCells = Math.max(0, Math.ceil((achievable - nearest) / grid))
-      if (deficitCells > 0) proximity += deficitCells * clearanceRate * length
-
-      // A steeper charge for the two ways a run is WRONG rather than merely tight:
-      //
-      //  - DRAWN ON a body: route line and node border are one line, never forgiven.
-      //    This is the one hole in the channel rule above — two TOUCHING nodes leave
-      //    a zero-width channel, so the shared border would otherwise be free — but
-      //    it reads as broken and there is nearly always a way round. (A hair OFF
-      //    the border is fine: legible, often the only sane line. Hence zero, not
-      //    "under ten".)
-      //  - HUGGING with room to spare: closer than the minimum when a clean lane
-      //    was available.
-      const drawnOnBody = nearest === 0
-      const hugsWithRoomToSpare =
-        nearest < minClearance && achievable >= minClearance
-      if (drawnOnBody || hugsWithRoomToSpare) {
-        proximity += HUGGING_COST_PER_PX * length
-      }
-
-      // Once both walls are at least the ideal clearance away, the main objective
-      // intentionally ties. Resolve only that plateau toward the channel's medial
-      // axis. The epsilon is too small to buy a pixel or a bend; it merely replaces
-      // insertion-order bias with a geometric, reflection-symmetric preference.
-      if (
-        nearestLo !== Infinity &&
-        nearestHi !== Infinity &&
-        nearestLo + nearestHi < 4 * idealClearance
-      ) {
-        const imbalance =
-          Math.abs(nearestLo - nearestHi) / (nearestLo + nearestHi)
-        proximity += CHANNEL_IMBALANCE_TIE_BREAK_PER_PX * imbalance * length
-      }
-    }
-
     const cost =
-      length +
-      softCost +
-      proximity +
-      (touchesBodyBoundary ? HUGGING_COST_PER_PX * length : 0) +
-      edgePenaltyAt(ax, ay, bx, by, neighborIndex, crowdingClearance)
+      baseCost + edgePenaltyAt(ax, ay, bx, by, neighborIndex, crowdingClearance)
 
     stepCost[slot] = cost
     return cost
   }
+
+  /**
+   * Re-price the last proven route on the CURRENT graph. This is an incremental
+   * shortest-path repair bound, not a history-dependent preference: every step,
+   * bend, endpoint and terminal rule is evaluated again against the new obstacle
+   * and neighbour field. A valid result can only remove states whose admissible
+   * lower bound is already strictly worse than a feasible current route; the
+   * equality plateau remains untouched, so canonical cold-search tie-breaking is
+   * preserved byte-for-byte.
+   */
+  const incumbentUpperBound = (() => {
+    if (!incumbentRoute || incumbentRoute.length === 0) return Infinity
+    const route = incumbentRoute.filter(
+      (point, index) =>
+        index === 0 ||
+        point.x !== incumbentRoute[index - 1].x ||
+        point.y !== incumbentRoute[index - 1].y
+    )
+    if (route.length === 0) return Infinity
+
+    const headingBetween = (a: IPoint, b: IPoint): Heading | null => {
+      if (a.x === b.x)
+        return a.y < b.y ? Heading.Down : a.y > b.y ? Heading.Up : null
+      if (a.y === b.y) return a.x < b.x ? Heading.Right : Heading.Left
+      return null
+    }
+    const samePoint = (a: IPoint, b: IPoint): boolean =>
+      a.x === b.x && a.y === b.y
+    const firstHeading =
+      route.length > 1 ? headingBetween(route[0], route[1]) : null
+    const lastHeading =
+      route.length > 1
+        ? headingBetween(route[route.length - 2], route[route.length - 1])
+        : null
+    let best = Infinity
+
+    for (const source of sourceInfos) {
+      if (!samePoint(route[0], source.point)) continue
+      if (firstHeading !== null && firstHeading !== source.heading) continue
+      if (
+        source.forceStubTurn &&
+        (route.length < 3 || !samePoint(route[1], source.exit))
+      )
+        continue
+
+      for (const target of targetInfos) {
+        if (!samePoint(route[route.length - 1], target.point)) continue
+        if (route.length === 1) {
+          if (source.heading !== target.requiredArrival) continue
+          best = Math.min(best, source.cost + target.cost)
+          continue
+        }
+        if (lastHeading !== target.requiredArrival) continue
+        if (
+          target.forceStubTurn &&
+          (route.length < 3 || !samePoint(route[route.length - 2], target.exit))
+        )
+          continue
+
+        let total = source.cost
+        let priorHeading: Heading | null = null
+        let valid = true
+        for (
+          let segmentIndex = 0;
+          segmentIndex < route.length - 1;
+          segmentIndex++
+        ) {
+          const from = route[segmentIndex]
+          const to = route[segmentIndex + 1]
+          const heading = headingBetween(from, to)
+          const fromXi = xIndex.get(from.x)
+          const fromYi = yIndex.get(from.y)
+          const toXi = xIndex.get(to.x)
+          const toYi = yIndex.get(to.y)
+          if (
+            heading === null ||
+            fromXi === undefined ||
+            fromYi === undefined ||
+            toXi === undefined ||
+            toYi === undefined ||
+            (priorHeading !== null && heading === opposite(priorHeading))
+          ) {
+            valid = false
+            break
+          }
+
+          if (priorHeading !== null && heading !== priorHeading) {
+            total += bendPenalty
+            const cornerCell = fromXi * stride + fromYi
+            let crowded = cornerCrowding[cornerCell]
+            if (crowded === UNKNOWN_CORNER) {
+              crowded = cornerCrowded(
+                from.x,
+                from.y,
+                neighborIndex,
+                CROSSING_CORNER_CLEARANCE
+              )
+                ? 1
+                : 0
+              cornerCrowding[cornerCell] = crowded
+            }
+            if (crowded === 1) total += CROSSING_NEAR_CORNER_PENALTY
+          }
+
+          let xi = fromXi
+          let yi = fromYi
+          while (xi !== toXi || yi !== toYi) {
+            const nxi =
+              heading === Heading.Left
+                ? xi - 1
+                : heading === Heading.Right
+                  ? xi + 1
+                  : xi
+            const nyi =
+              heading === Heading.Up
+                ? yi - 1
+                : heading === Heading.Down
+                  ? yi + 1
+                  : yi
+            if (nxi < 0 || nxi >= xs.length || nyi < 0 || nyi >= ys.length) {
+              valid = false
+              break
+            }
+            const step = priceStep(xi, yi, nxi, nyi, heading)
+            if (step === BLOCKED) {
+              valid = false
+              break
+            }
+            total += step
+            xi = nxi
+            yi = nyi
+
+            const atRouteEnd =
+              segmentIndex === route.length - 2 && xi === toXi && yi === toYi
+            const cell = xi * stride + yi
+            if (
+              sourceCellMask[cell] === 1 ||
+              (targetCellMask[cell] === 1 &&
+                (!atRouteEnd ||
+                  stateId(xi, yi, heading) !==
+                    stateId(toXi, toYi, target.requiredArrival)))
+            ) {
+              valid = false
+              break
+            }
+          }
+          if (!valid) break
+          priorHeading = heading
+        }
+        if (valid) best = Math.min(best, total + target.cost)
+      }
+    }
+    return best
+  })()
+  usesIncumbentBound = incumbentUpperBound !== Infinity
 
   // g-scores and the came-from chain, as flat arrays indexed by state rather than
   // Maps: the state id is already a dense integer, so an array IS the hash, sparing
   // a per-neighbour hash lookup. `NaN` reads as "unvisited" — every real g-score is
   // finite and any comparison against NaN is false, so the same test that relaxes
   // an edge rejects an unvisited one with no extra branch.
-  const stateCount = cellCount * 4
   const gScore = new Float64Array(stateCount).fill(NaN)
   const cameFrom = new Int32Array(stateCount).fill(-1)
   const sourceOf = new Int32Array(stateCount).fill(-1)
@@ -2008,15 +2058,14 @@ export const routeAroundObstaclesBetweenCandidates = (
   // its first segment leave along the declared node side. Candidate cost is paid
   // here exactly once. Identical states keep the cheaper candidate, then the
   // earlier index as the deterministic tie-break.
-  const sourceCells = new Set<number>()
-  const sourceStates = new Set<number>()
+  const sourceStateMask = new Uint8Array(stateCount)
   sourceInfos.forEach((source, canonicalIndex) => {
     const xi = xIndex.get(source.point.x)!
     const yi = yIndex.get(source.point.y)!
     const cell = xi * stride + yi
     const state = stateId(xi, yi, source.heading)
-    sourceCells.add(cell)
-    sourceStates.add(state)
+    sourceCellMask[cell] = 1
+    sourceStateMask[state] = 1
     const known = gScore[state]
     if (!Number.isNaN(known) && known <= source.cost) return
     gScore[state] = source.cost
@@ -2030,7 +2079,7 @@ export const routeAroundObstaclesBetweenCandidates = (
     // still an admissible/consistent lower bound because the real first step costs
     // at least its priced lattice edge, followed by the ordinary state heuristic.
     let sourceHeuristic = heuristic(xi, yi, source.heading)
-    if (!targetStates.has(state)) {
+    if (targetInputByState[state] === -1) {
       const nxi =
         source.heading === Heading.Left
           ? xi - 1
@@ -2048,14 +2097,14 @@ export const routeAroundObstaclesBetweenCandidates = (
       if (firstStep === BLOCKED) return
       sourceHeuristic = firstStep + heuristic(nxi, nyi, source.heading)
     }
-    frontier.push(source.cost + sourceHeuristic, seq++, state)
+    const priority = source.cost + sourceHeuristic
+    if (priority > incumbentUpperBound) {
+      boundPrunes++
+      return
+    }
+    frontier.push(priority, seq++, state)
+    heapPushes++
   })
-
-  const targetCells = new Set<number>()
-  for (const target of targetInfos)
-    targetCells.add(
-      xIndex.get(target.point.x)! * stride + yIndex.get(target.point.y)!
-    )
 
   const unpack = (state: number): { xi: number; yi: number; h: Heading } => {
     const h = (state & 3) as Heading
@@ -2068,23 +2117,22 @@ export const routeAroundObstaclesBetweenCandidates = (
     state: number
     total: number
     sourceRank: number
-    target: {
-      inputIndex: number
-      canonicalIndex: number
-      cost: number
-      forceStubTurn: boolean
-    }
+    targetInputIndex: number
+    targetCanonicalIndex: number
   } | null = null
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+    searchLoopStartedAt = performance.now()
 
   // Once the canonical-first source/target pair has reached the best numeric cost,
   // no equal-cost frontier state can improve its deterministic tie-break. Otherwise
   // retain the equality plateau until a lower-ranked endpoint pair is ruled out.
   while (
     frontier.size > 0 &&
+    frontier.peekPriority() <= incumbentUpperBound &&
     (!bestGoal ||
       frontier.peekPriority() < bestGoal.total ||
       (frontier.peekPriority() === bestGoal.total &&
-        (bestGoal.sourceRank > 0 || bestGoal.target.canonicalIndex > 0)))
+        (bestGoal.sourceRank > 0 || bestGoal.targetCanonicalIndex > 0)))
   ) {
     const current = frontier.pop()
     // A state improved after queueing is in the heap more than once (no decrease-key
@@ -2116,7 +2164,7 @@ export const routeAroundObstaclesBetweenCandidates = (
       if (
         sourceRank > bestGoal.sourceRank ||
         (sourceRank === bestGoal.sourceRank &&
-          targetRank >= bestGoal.target.canonicalIndex)
+          targetRank >= bestGoal.targetCanonicalIndex)
       )
         continue
     }
@@ -2127,26 +2175,33 @@ export const routeAroundObstaclesBetweenCandidates = (
     // step, and every state closes at most once — so this measures real work and
     // bounds the loop by the state space.
     if (++expansions > MAX_EXPANSIONS) {
-      recordRouterSearch(expansions, true)
+      recordSearch(expansions, true)
       return null
     }
 
-    const target = targetStates.get(current)
-    if (target) {
+    const targetInputIndex = targetInputByState[current]
+    if (targetInputIndex !== -1) {
       // Target placement is paid here, including the coincident source/target
       // case. Continue through every frontier state whose lower bound can tie or
       // beat this result because the heuristic deliberately omits terminal cost.
-      const total = gScore[current] + target.cost
+      const total = gScore[current] + targetCostByState[current]
       const sourceRank = sourceRankOf[current]
+      const targetCanonicalIndex = targetCanonicalByState[current]
       if (
         !bestGoal ||
         total < bestGoal.total ||
         (total === bestGoal.total &&
           (sourceRank < bestGoal.sourceRank ||
             (sourceRank === bestGoal.sourceRank &&
-              target.canonicalIndex < bestGoal.target.canonicalIndex)))
+              targetCanonicalIndex < bestGoal.targetCanonicalIndex)))
       ) {
-        bestGoal = { state: current, total, sourceRank, target }
+        bestGoal = {
+          state: current,
+          total,
+          sourceRank,
+          targetInputIndex,
+          targetCanonicalIndex,
+        }
       }
       continue
     }
@@ -2155,17 +2210,28 @@ export const routeAroundObstaclesBetweenCandidates = (
     // Leaving the source, only the declared side is legal; everywhere else all four
     // directions are open. Iterated rather than collected into an array to save an
     // allocation per expansion.
-    const leavingSource = sourceStates.has(current) && cameFrom[current] === -1
+    const leavingSource =
+      sourceStateMask[current] === 1 && cameFrom[current] === -1
+    const rootSource = sourceInfos[sourceRankOf[current]]
+    const rootForcesStubTurn = rootSource?.forceStubTurn ?? false
+    const atSourceStubExit =
+      rootForcesStubTurn &&
+      xs[xi] === rootSource.exit.x &&
+      ys[yi] === rootSource.exit.y
 
-    for (let nh: Heading = Heading.Up; nh <= Heading.Left; nh++) {
-      if (leavingSource && nh !== h) continue
-      // Reversing immediately traverses the segment we just used a second time,
-      // producing an invisible out-and-back spike. With strictly positive travel
-      // and bend costs it cannot belong to an optimal simple polyline: deleting
-      // the doubled segment is cheaper, and a genuine change of side is represented
-      // by the ordinary two-corner U detour. Besides preventing overlap defects,
-      // this avoids settling a useless opposite-heading state across the lattice.
-      if (nh === opposite(h)) continue
+    const directionCount = leavingSource ? 1 : 3
+    const directionOffset = h * 3
+    for (
+      let directionIndex = 0;
+      directionIndex < directionCount;
+      directionIndex++
+    ) {
+      // Leaving a source has exactly its declared direction. Elsewhere the table
+      // contains the same ascending headings as the old loop, minus the immediate
+      // reverse (an always-costlier invisible out-and-back spike).
+      const nh = (
+        leavingSource ? h : NEXT_HEADINGS[directionOffset + directionIndex]
+      ) as Heading
 
       const nxi =
         nh === Heading.Left ? xi - 1 : nh === Heading.Right ? xi + 1 : xi
@@ -2176,17 +2242,17 @@ export const routeAroundObstaclesBetweenCandidates = (
       // target only along its declared side. This forbids tunnelling through the
       // route's own node bodies.
       const nextCell = nxi * stride + nyi
-      if (sourceCells.has(nextCell)) continue
+      if (sourceCellMask[nextCell] === 1) continue
       const neighbourState = stateId(nxi, nyi, nh)
       // A consistent heuristic makes a closed state's g-score and canonical source
       // final. In particular, do not let a later equal-cost source rewrite its
       // predecessor: that can point two settled states at each other and make route
       // reconstruction cycle even though the numeric optimum is unchanged.
       if (closed[neighbourState]) continue
-      const targetHere = targetStates.get(neighbourState)
-      if (targetCells.has(nextCell) && !targetHere) continue
-      if (targetHere?.forceStubTurn) {
-        const targetInfo = targetInfos[targetHere.canonicalIndex]
+      const targetHere = targetInputByState[neighbourState]
+      if (targetCellMask[nextCell] === 1 && targetHere === -1) continue
+      if (targetForceTurnByState[neighbourState] === 1) {
+        const targetInfo = targetInfos[targetCanonicalByState[neighbourState]]
         const atStubExit =
           xs[xi] === targetInfo.exit.x && ys[yi] === targetInfo.exit.y
         // The final stub begins at its seeded exit and must be preceded by a
@@ -2194,12 +2260,7 @@ export const routeAroundObstaclesBetweenCandidates = (
         if (!atStubExit || nh === h) continue
       }
 
-      const rootSource = sourceInfos[sourceRankOf[current]]
-      if (rootSource?.forceStubTurn) {
-        const atStubExit =
-          xs[xi] === rootSource.exit.x && ys[yi] === rootSource.exit.y
-        if (atStubExit && nh === h) continue
-      }
+      if (atSourceStubExit && nh === h) continue
 
       const step = priceStep(xi, yi, nxi, nyi, nh)
       if (step === BLOCKED) continue
@@ -2236,11 +2297,17 @@ export const routeAroundObstaclesBetweenCandidates = (
       if (!unvisited && tentative === known && !improvesCanonicalSource)
         continue
 
+      const priority = tentative + heuristic(nxi, nyi, nh)
+      if (priority > incumbentUpperBound) {
+        boundPrunes++
+        continue
+      }
       gScore[neighbourState] = tentative
       cameFrom[neighbourState] = current
       sourceOf[neighbourState] = sourceOf[current]
       sourceRankOf[neighbourState] = sourceRankOf[current]
-      frontier.push(tentative + heuristic(nxi, nyi, nh), seq++, neighbourState)
+      frontier.push(priority, seq++, neighbourState)
+      heapPushes++
     }
   }
 
@@ -2254,7 +2321,7 @@ export const routeAroundObstaclesBetweenCandidates = (
       // prevents cycles: corrupt provenance must degrade to the caller's fallback,
       // never grow an array until the product crashes.
       if (remaining-- === 0) {
-        recordRouterSearch(expansions, true)
+        recordSearch(expansions, true)
         return null
       }
       const p = unpack(state)
@@ -2262,17 +2329,29 @@ export const routeAroundObstaclesBetweenCandidates = (
       state = cameFrom[state]
     }
     raw.reverse()
-    recordRouterSearch(expansions, false)
+    recordSearch(expansions, false)
     return {
       route: simplifyCollinear(raw),
       sourceIndex: sourceOf[bestGoal.state],
-      targetIndex: bestGoal.target.inputIndex,
+      targetIndex: bestGoal.targetInputIndex,
       cost: bestGoal.total,
     }
   }
 
+  // A successfully re-priced incumbent is represented by this graph, so A* must
+  // reach a goal no dearer than its bound. If an unforeseen terminal-topology
+  // interaction violates that assumption, discard the optimisation and repeat
+  // cold rather than returning a degraded fallback.
+  if (incumbentUpperBound !== Infinity)
+    return routeAroundObstaclesBetweenCandidates(
+      sources,
+      targets,
+      obstacles,
+      neighborEdges
+    )
+
   // Walled off by hard obstacles: no route exists.
-  recordRouterSearch(expansions, false)
+  recordSearch(expansions, false)
   return null
 }
 

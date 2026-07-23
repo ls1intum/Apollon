@@ -1,4 +1,4 @@
-import { CANVAS, EDGES, INTERFACE } from "@/constants"
+import { CANVAS, EDGES, INTERFACE } from "@/utils/geometry/routingConstants"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import type { ObstacleRect } from "@/utils/geometry/obstacles"
@@ -10,11 +10,11 @@ import {
 } from "@/utils/geometry/orthogonalRouter"
 import {
   Position,
-  Rect,
-  XYPosition,
   ConnectionLineType,
   getSmoothStepPath,
-} from "@xyflow/react"
+  type Rect,
+  type XYPosition,
+} from "@xyflow/system"
 
 export const adjustTargetCoordinates = (
   targetX: number,

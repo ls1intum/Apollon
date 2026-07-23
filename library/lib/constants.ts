@@ -56,18 +56,13 @@ import {
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
 import { ClassStereotype, UMLDiagramType } from "@/types"
+import { CANVAS, EDGES, INTERFACE } from "@/utils/geometry/routingConstants"
+
+export { CANVAS, EDGES, INTERFACE }
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
 /* -------------------------------------------------------------------------- */
-export const CANVAS = Object.freeze({
-  MIN_SCALE_TO_ZOOM_OUT: 0.4,
-  MAX_SCALE_TO_ZOOM_IN: 2.5,
-  MOUSE_UP_OFFSET_PX: 5,
-  SNAP_TO_GRID_PX: 5,
-  EXTRA_SPACE_FOR_EXTENSION: 10,
-  PASTE_OFFSET_PX: 20,
-} as const)
 
 /* -------------------------------------------------------------------------- */
 /* Theme                                                                      */
@@ -197,20 +192,6 @@ export const generateUUID = (): string => {
   return `${h.slice(0, 4).join("")}-${h.slice(4, 6).join("")}-${h.slice(6, 8).join("")}-${h.slice(8, 10).join("")}-${h.slice(10, 16).join("")}`
 }
 
-// Interface-component sizing. The flat aliases below are local-only; public
-// consumers (and the rest of the library) should reach for `INTERFACE.*`.
-const INTERFACE_SIZE = 30
-const INTERFACE_RADIUS = INTERFACE_SIZE / 2
-const INTERFACE_STROKE_WIDTH = 2
-const INTERFACE_SOCKET_GAP = 4
-
-export const INTERFACE = Object.freeze({
-  SIZE: INTERFACE_SIZE,
-  RADIUS: INTERFACE_RADIUS,
-  STROKE_WIDTH: INTERFACE_STROKE_WIDTH,
-  SOCKET_GAP: INTERFACE_SOCKET_GAP,
-} as const)
-
 /* -------------------------------------------------------------------------- */
 /* Edges                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -227,108 +208,6 @@ const BPMN_MARKER_SIZE = 11
 const RHOMBUS_MARKER_SIZE = 24
 // 1/phi, inside the 0.588-0.706 thickness band those tools use.
 const RHOMBUS_HEIGHT_FACTOR = 0.618
-
-export const EDGES = Object.freeze({
-  /** Negative padding extends target point to node boundary (React Flow handles are offset 3px) */
-  MARKER_PADDING: -3,
-  /** Positive padding pulls source point back to node boundary (React Flow handles are offset 3px from node edge) */
-  SOURCE_CONNECTION_POINT_PADDING: 3,
-  /** Border radius for step-style edge corners */
-  STEP_BORDER_RADIUS: 0,
-  /** Width of the invisible stroke used for edge selection/highlighting */
-  EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
-  /** Height of the line-jump bridge used when edges cross */
-  EDGE_LINE_JUMP_HEIGHT: 10,
-  /** Length of the line-jump bridge along the crossed segment */
-  EDGE_LINE_JUMP_WIDTH: 16,
-  /** Stub length locked to node, matches getSmoothStepPath offset */
-  STUB_LENGTH: 30,
-  /** How much clear space an edge WANTS on either side of a run that travels
-   * past a node — its own endpoint or a stranger, the rule does not care. Five
-   * grid cells: roughly the stub length, so the approach and the stub read as
-   * one clean run.
-   *
-   * This is a want, not a wall. It is priced (see the router's proximity term),
-   * so an edge keeps its breathing room wherever there is room to keep, and
-   * gives it up — rather than circling the diagram — when two nodes sit closer
-   * together than twice this. And because the price falls off smoothly with
-   * distance, the cheapest lane through a gap too narrow for the full margin is
-   * the one down the MIDDLE of it: balance falls out of the same term, instead
-   * of being a separate tiebreak bolted on beside it. */
-  NODE_CLEARANCE_PX: 5 * CANVAS.SNAP_TO_GRID_PX,
-  /** The closest a route may pass a node body before the legacy step route is
-   * considered unfit and the search takes over. Two grid cells: an edge drawn
-   * within 10px of a border reads as welded to it — and drawn AT 0px, which is
-   * what a plain step route does whenever its lane lands on a node's edge, it
-   * reads as a mistake. Anything roomier than this is left exactly as it was. */
-  MIN_NODE_CLEARANCE_PX: 2 * CANVAS.SNAP_TO_GRID_PX,
-  /** Smallest stub the router keeps when two facing connection points sit too
-   * close to fit STUB_LENGTH on both sides. Below 2 * MIN_STUB_LENGTH of gap
-   * the two stubs cross and the edge has to take the detour route, so this sets
-   * the minimum node distance before an edge loops: one grid cell of stub per
-   * side, so nodes may sit a single 10px step apart and still route cleanly.
-   * The grid is the real floor here — keep it at SNAP_TO_GRID_PX. */
-  MIN_STUB_LENGTH: CANVAS.SNAP_TO_GRID_PX,
-  /** Bend handle long-axis size, in screen px — the size a handle reaches when
-   * its segment has room. A shorter segment gets a SHORTER handle, never no
-   * handle: availability is not a function of length any more. */
-  BEND_HANDLE_SCREEN_LENGTH_PX: 34,
-  /** Smallest a bend handle may shrink to, in screen px. Below this a handle
-   * stops being a touch target, so it stays this big and simply overlaps its
-   * segment's ends a little. Kept a comfortable mouse target: on a tight,
-   * many-bend edge every handle clamps here, so a too-small floor leaves the
-   * near-node handles ungrabbable. */
-  BEND_HANDLE_MIN_SCREEN_LENGTH_PX: 18,
-  /** Smallest an endpoint hit target may shrink to on a very short edge. Each
-   * endpoint owns half the run between them, but half of nothing is nothing —
-   * two small targets are still two targets, a zero-sized one is not. Sized so
-   * the arrow-tip endpoint stays grabbable on a short terminal segment (where the
-   * terminal bend handle is withheld and the endpoint owns that stub). */
-  MIN_ENDPOINT_HIT_TARGET_PX: 15,
-  /** Minimum clearance, in screen px, between a bend handle and the segment's
-   * corners — how close a handle is allowed to sit to a corner. */
-  BEND_HANDLE_CORNER_CLEARANCE_PX: 10,
-  /** "Safe area" next to a node, in flow px: a bend handle is never placed
-   * within this distance of a node connection point, and that part of a
-   * terminal segment is excluded when deciding whether a handle fits. Keeps
-   * handles out of the locked stub so dragging never produces a detached
-   * slim sliver near the node. */
-  BEND_HANDLE_SAFE_AREA_PX: 25,
-  /** Size of the invisible endpoint hit target used for edge reconnection */
-  ENDPOINT_HIT_TARGET_SIZE: 24,
-  /** Gap kept between the endpoint reconnect target and the nearest bend handle so the
-   * (on-top) target never abuts or buries the handle. Small — just enough to separate
-   * them cleanly at the handle's rounded corner. */
-  ENDPOINT_HANDLE_CLEARANCE_PX: 4,
-  /** Grid step a dragged bend snaps to; matches the canvas grid so bends line
-   * up with grid-snapped node handles. */
-  BEND_SNAP_GRID_PX: CANVAS.SNAP_TO_GRID_PX,
-  /** Connector length at/below which a *monotonic* orthogonal stair-step (a
-   * same-direction dogleg) is treated as a rounding artifact and flattened.
-   * Must stay strictly below BEND_SNAP_GRID_PX, otherwise the smallest
-   * deliberate single-step bend would be flattened and the edge would snap
-   * back to a straight line on release. */
-  ORTHOGONAL_DOGLEG_TOLERANCE_PX: 2,
-  /** Gap at/below which two parallel arms that double back over each other
-   * (an opposite-direction U-turn) are treated as a degenerate self-overlap
-   * and the route is reset. Independent of the snap grid: a doubled-back
-   * U-turn is never a deliberate edit, so this stays at the visual-merge
-   * threshold rather than the per-step threshold. */
-  ORTHOGONAL_ARM_OVERLAP_PX: 10,
-  /** Perpendicular gap (flow px) between an edge's mid-segment line and the
-   * near edge of its relationship/stereotype label. The label sits this far
-   * off the line on whichever side is clearer. */
-  LABEL_GAP: 14,
-  /** Nominal label line height (flow px) used as the across-text depth of the
-   * candidate box when scoring which side a label sits on. Constant by
-   * construction — placement never measures the rendered text (mirrors the
-   * messageLayout.ts invariant). */
-  LABEL_LINE_HEIGHT: 14,
-  /** Nominal half-width (flow px) of a label along its text axis, used only to
-   * build the candidate box for side scoring. Coarse on purpose: we choose a
-   * side, not a pixel-perfect fit. */
-  LABEL_NOMINAL_HALF_EXTENT: 40,
-} as const)
 
 /* -------------------------------------------------------------------------- */
 /* Z-Index                                                                    */
@@ -365,7 +244,7 @@ export interface MarkerConfig {
 }
 
 // Interface socket markers - radius derived from INTERFACE.RADIUS
-const INTERFACE_SOCKET_SIZE = INTERFACE_RADIUS // Must equal INTERFACE.SIZE / 2
+const INTERFACE_SOCKET_SIZE = INTERFACE.RADIUS // Must equal INTERFACE.SIZE / 2
 
 export const MARKER_CONFIGS = Object.freeze({
   // Class diagram markers
@@ -718,8 +597,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "componentInterface",
-      width: INTERFACE_SIZE,
-      height: INTERFACE_SIZE,
+      width: INTERFACE.SIZE,
+      height: INTERFACE.SIZE,
       defaultData: { name: "Interface" },
       svg: ComponentInterfaceNodeSVG,
       marginTop: 10,
@@ -753,8 +632,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "deploymentInterface",
-      width: INTERFACE_SIZE,
-      height: INTERFACE_SIZE,
+      width: INTERFACE.SIZE,
+      height: INTERFACE.SIZE,
       defaultData: { name: "Interface" },
       svg: DeploymentInterfaceSVG,
       marginTop: 10,

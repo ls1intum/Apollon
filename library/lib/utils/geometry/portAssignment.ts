@@ -1,8 +1,9 @@
-import { Position, type Rect } from "@xyflow/react"
-import { CANVAS } from "@/constants"
+import { Position, type Rect } from "@xyflow/system"
+import { CANVAS } from "@/utils/geometry/routingConstants"
 import { clamp, lexLess } from "@/utils/geometry/scalar"
 import type { IPoint } from "@/edges/Connection"
 import {
+  balancedPortOffsets,
   polylineConflictCost,
   ROUTING_COST,
 } from "@/utils/geometry/routingCost"
@@ -35,13 +36,6 @@ const GRID = CANVAS.SNAP_TO_GRID_PX
  * side reads as a tight centred band, not anchors flung to the corners (ELK's
  * `portPort` default is 10, yFiles' border-gap ratio 0.5, Hegemann–Wolff 18). */
 export const PORT_PITCH_PX = 3 * GRID
-
-/** The widest gap an even spread will open between neighbouring ports. Ports are
- * distributed evenly across the side (ELK's DISTRIBUTED alignment) so the stretches
- * between and around them read as deliberate, but a very wide side would otherwise
- * fling two ports far apart — which buys nothing and pushes each toward a corner,
- * where the route can pick up an extra bend. Caps the spread at a legible spacing. */
-const MAX_PORT_GAP_PX = 8 * GRID
 
 /** Minimum gap kept between the outermost port and a corner — a corner anchor
  * makes the first segment graze the node it just left. */
@@ -797,7 +791,10 @@ const bundleNeedsMirror = (side: Position, partnerSide: Position): boolean =>
 
 /** The port chosen for one end: its side (unchanged from the input) and the
  * along-side ratio from the centred band. */
-export type AssignedPort = { side: Position; ratio: number }
+export type AssignedPort = {
+  side: Position
+  ratio: number
+}
 
 /** Key for one end in the returned map: `${edgeId}|${end}`. */
 export const endKey = (edgeId: string, end: "source" | "target"): string =>
@@ -861,7 +858,11 @@ const spreadCoords = (
   if (count <= 0) return []
   const centre = (lo + hi) / 2
   if (count === 1) return [centre]
-  const gap = clamp((hi - lo) / (count + 1), minGap, MAX_PORT_GAP_PX)
+  const balanced = balancedPortOffsets(count, hi - lo, GRID).map(
+    (offset) => lo + offset
+  )
+  if (balanced[1] - balanced[0] >= minGap) return balanced
+  const gap = minGap
   return Array.from(
     { length: count },
     (_, i) => centre + ((2 * i - (count - 1)) * gap) / 2
@@ -1102,12 +1103,7 @@ export const assignPorts = (
         cmpStr(a.e.edgeId, b.e.edgeId) ||
         cmpStr(a.e.end, b.e.end)
     )
-    const lCoords = spreadCoords(
-      myLo + margin,
-      myLo + axis - margin,
-      lMembers.length,
-      pitchPx
-    )
+    const lCoords = spreadCoords(myLo, myLo + axis, lMembers.length, pitchPx)
     lMembers.forEach(({ e, rot }, i) => {
       const immutableCoord =
         e.immutableRatio === undefined ? null : myLo + e.immutableRatio * axis

@@ -1,7 +1,7 @@
-import { Position } from "@xyflow/react"
+import { Position } from "@xyflow/system"
 import { IPoint } from "@/edges/Connection"
 import { removeDuplicatePoints } from "@/utils/edgeUtils"
-import { EDGES } from "@/constants"
+import { EDGES } from "@/utils/geometry/routingConstants"
 
 export function collapseCollinearPoints(points: IPoint[]): IPoint[] {
   if (points.length <= 2) return points

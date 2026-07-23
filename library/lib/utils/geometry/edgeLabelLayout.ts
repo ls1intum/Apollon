@@ -1,5 +1,5 @@
 import { IPoint } from "@/edges/Connection"
-import { EDGES } from "@/constants"
+import { EDGES } from "@/utils/geometry/routingConstants"
 import { clamp, lexLess } from "@/utils/geometry/scalar"
 import { collapseCollinearPoints, getSegmentOrientation } from "./bendHandles"
 import { getAxisAlignedSegments } from "@/utils/edgeUtils"

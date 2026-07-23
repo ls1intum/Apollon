@@ -72,6 +72,9 @@ interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
   collaboration: CollaborationLayerOptions
   awareness: CollaborationAwarenessApi
+  /** Disabled by the off-screen export mount, which must materialize the whole
+   * model regardless of its synthetic viewport. */
+  onlyRenderVisibleElements?: boolean
 }
 const proOptions = { hideAttribution: true }
 const isPointArray = (value: unknown): value is IPoint[] =>
@@ -86,7 +89,12 @@ const isPointArray = (value: unknown): value is IPoint[] =>
       typeof point.y === "number"
   )
 
-function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
+function App({
+  onReactFlowInit,
+  collaboration,
+  awareness,
+  onlyRenderVisibleElements = true,
+}: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId, previewMode } =
@@ -212,6 +220,11 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             edgeTypes={diagramEdgeTypes}
             nodes={displayNodes}
             edges={edges}
+            // React Flow's viewport culling keeps large off-screen diagrams out
+            // of the DOM while the central solver still optimizes every edge.
+            // This is purely a rendering boundary: export and exact geometry
+            // continue to use the complete diagram.
+            onlyRenderVisibleElements={onlyRenderVisibleElements}
             onDragOver={onDragOver}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}

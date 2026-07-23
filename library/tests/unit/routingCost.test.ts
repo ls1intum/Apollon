@@ -1,15 +1,47 @@
 import { describe, expect, it } from "vitest"
 import { Position } from "@xyflow/react"
 import {
+  endpointPlacementCost,
   endpointPreferenceCost,
   polylineConflictCost,
   ROUTING_COST,
+  sideGapBalance,
   weightedRoutingCost,
 } from "@/utils/geometry/routingCost"
 import { routeAroundObstaclesBetweenCandidates } from "@/utils/geometry/orthogonalRouter"
 
 describe("shared routing cost", () => {
-  it("keeps a coordinated side soft enough for one saved bend to overrule it", () => {
+  it("prices every n+1 side stretch against its grid-balanced counterpart", () => {
+    expect(sideGapBalance([0.5], 100, 5)).toEqual({
+      cost: 0,
+      maxGapErrorPx: 0,
+      totalGapErrorPx: 0,
+    })
+    expect(sideGapBalance([0.55], 100, 5)).toEqual({
+      cost: 10,
+      maxGapErrorPx: 5,
+      totalGapErrorPx: 10,
+    })
+
+    // On a 160px side the closest equal thirds are 55/50/55px.
+    expect(sideGapBalance([55 / 160, 105 / 160], 160, 5).cost).toBe(0)
+    expect(sideGapBalance([0.25, 0.5, 0.75], 160, 5).cost).toBe(0)
+    expect(sideGapBalance([0.7, 0.3], 100, 5)).toEqual(
+      sideGapBalance([0.3, 0.7], 100, 5)
+    )
+    expect(sideGapBalance([0.3, 0.7], 100, 5).cost).toBe(20)
+  })
+
+  it("uses the complete two-gap error for a lone endpoint", () => {
+    expect(
+      endpointPlacementCost({ side: Position.Top, ratio: 0.5 }, 160, 5)
+    ).toBe(0)
+    expect(
+      endpointPlacementCost({ side: Position.Top, ratio: 0.375 }, 160, 5)
+    ).toBe(40)
+  })
+
+  it("keeps side selection soft while preserving coordinated seats", () => {
     const preferred = { side: Position.Right, ratio: 0.5 }
     const otherSide = { side: Position.Top, ratio: 0.5 }
     const cost = endpointPreferenceCost(otherSide, preferred, 100, 5)
@@ -21,7 +53,7 @@ describe("shared routing cost", () => {
     )
 
     expect(cost).toBeLessThan(ROUTING_COST.bendInGridCells * 5)
-    expect(sameSideDisplacement).toBeLessThan(cost)
+    expect(sameSideDisplacement).toBe(31)
     expect(
       endpointPreferenceCost(
         { side: Position.Right, ratio: 1 },
@@ -29,7 +61,7 @@ describe("shared routing cost", () => {
         800,
         5
       )
-    ).toBe(cost)
+    ).toBe(1201)
   })
 
   it("scores diagonal crossings and crowding independent of direction/order", () => {

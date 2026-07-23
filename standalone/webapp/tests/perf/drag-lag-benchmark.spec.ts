@@ -5,11 +5,15 @@ import { openLocalWithPerf, readPerf, dragNodeBy } from "./perfHelpers"
  * Wall-clock drag-lag benchmark across diagram sizes. It asserts NOTHING — wall
  * time is machine-specific, which is what the expansion-count budgets in
  * edge-routing.spec.ts are for. It exists to profile scaling, and prints a table
- * of per-frame solve cost.
+ * of pointer-down frame time. Pointer-up exact-solve latency is reported in the
+ * separate solve columns; folding it into frame p95 would make a background
+ * result look like interaction jank. Measured pointer moves are paced one per
+ * paint, rather than queued as a synthetic protocol burst.
  *
  * Because it cannot fail, it is excluded from the `perf` projects that CI runs
  * (see playwright.config.ts) — otherwise every PR would spend two minutes
- * producing output nobody reads. Run it deliberately:
+ * producing output nobody reads. It reports background exact-solve latency and
+ * foreground animation-frame tails separately. Run it deliberately:
  *
  *   pnpm --filter @tumaet/webapp exec playwright test tests/perf/drag-lag-benchmark.spec.ts --project=perf
  */
@@ -75,12 +79,24 @@ type Row = {
   searchesPerFrame: number
   worstSearchExpansions: number
   abandoned: number
+  mainFrameP95Ms: number
+  mainFrameWorstMs: number
+  workerSolves: number
+  workerAttempts: number
+  workerFallbacks: number
+  initialSyncs: number
+  smallSyncs: number
+  edgeRendersPerInput: number
 }
 
 const rows: Row[] = []
 
 for (const n of SIZES) {
-  test(`bench ${n} nodes`, async ({ page }) => {
+  test(`bench ${n} nodes`, async ({ page }, testInfo) => {
+    page.on("console", (message) => {
+      if (message.text().includes("edge-geometry-worker"))
+        console.log(message.text())
+    })
     const fixture = benchDiagram(n)
     await openLocalWithPerf(page, fixture)
 
@@ -122,20 +138,71 @@ for (const n of SIZES) {
     )
     const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
 
+    const profiler =
+      process.env.PROFILE === "1"
+        ? await page.context().newCDPSession(page)
+        : null
+    if (profiler) {
+      await profiler.send("Profiler.enable")
+      await profiler.send("Profiler.setSamplingInterval", { interval: 100 })
+      await profiler.send("Profiler.start")
+    }
+
     const before = await readPerf(page)
+    const mainFrames: number[] = []
     for (let i = 0; i < DRAG_COUNT; i++) {
+      const dx = i % 2 === 0 ? 30 : -30
       const dy = i % 2 === 0 ? 40 : -40
-      await dragNodeBy(node, page, 30, dy)
+      mainFrames.push(...(await dragNodeBy(node, page, dx, dy, 12, true)))
     }
     const after = await readPerf(page)
+    if (profiler) {
+      const { profile } = await profiler.send("Profiler.stop")
+      const nodeById = new Map(profile.nodes.map((node) => [node.id, node]))
+      const selfMicros = new Map<string, number>()
+      for (let index = 0; index < (profile.samples?.length ?? 0); index++) {
+        const node = nodeById.get(profile.samples![index])
+        if (!node) continue
+        const frame = node.callFrame
+        const key = `${frame.functionName || "(anonymous)"} ${frame.url}:${frame.lineNumber + 1}`
+        selfMicros.set(
+          key,
+          (selfMicros.get(key) ?? 0) + (profile.timeDeltas?.[index] ?? 0)
+        )
+      }
+      console.log(
+        "\n===== MAIN-THREAD CPU SELF TIME =====\n" +
+          [...selfMicros]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 20)
+            .map(
+              ([frame, micros]) => `${(micros / 1000).toFixed(1)} ms ${frame}`
+            )
+            .join("\n") +
+          "\n==============================\n"
+      )
+      await testInfo.attach("main-thread.cpuprofile", {
+        body: Buffer.from(JSON.stringify(profile)),
+        contentType: "application/json",
+      })
+      await profiler.detach()
+    }
 
     const dFrames = after.solveCount - before.solveCount
     const dSolveMs = after.solveMs - before.solveMs
     const dSearches = after.edgeSearches - before.edgeSearches
     const f = Math.max(1, dFrames)
+    const sortedFrames = [...mainFrames].sort((a, b) => a - b)
+    const frameP95 =
+      sortedFrames[
+        Math.min(
+          sortedFrames.length - 1,
+          Math.floor(sortedFrames.length * 0.95)
+        )
+      ] ?? 0
     rows.push({
       nodes: n,
-      edges: fixture.edges ? (fixture.edges as unknown[]).length : 0,
+      edges: after.diagramEdgeCount,
       initialSolveMs: Number(
         (afterLoad.solveMs / Math.max(1, afterLoad.solveCount)).toFixed(2)
       ),
@@ -145,6 +212,19 @@ for (const n of SIZES) {
       searchesPerFrame: Number((dSearches / f).toFixed(1)),
       worstSearchExpansions: after.edgeSearchesMaxExpansions,
       abandoned: after.edgeSearchesAbandoned,
+      mainFrameP95Ms: Number(frameP95.toFixed(2)),
+      mainFrameWorstMs: Number(Math.max(0, ...mainFrames).toFixed(2)),
+      workerSolves: after.workerSolveCount,
+      workerAttempts: after.workerAttemptCount,
+      workerFallbacks: after.workerFallbackCount,
+      initialSyncs: after.workerInitialSyncCount,
+      smallSyncs: after.workerSmallSyncCount,
+      edgeRendersPerInput: Number(
+        (
+          (after.edgeRenderCount - before.edgeRenderCount) /
+          (DRAG_COUNT * 12)
+        ).toFixed(2)
+      ),
     })
   })
 }
@@ -158,8 +238,16 @@ test.afterAll(() => {
     "worstMs",
     "search/fr",
     "worstExp",
+    "frameP95",
+    "frameMax",
+    "workers",
+    "attempts",
+    "fallback",
+    "initial",
+    "small",
+    "edgeR/in",
   ]
-  const w = [6, 6, 12, 11, 9, 10, 9]
+  const w = [6, 6, 12, 11, 9, 10, 9, 10, 10, 9, 9, 9, 9, 9, 10]
   const fmt = (cells: (string | number)[]) =>
     cells.map((c, i) => String(c).padStart(w[i])).join("")
 
@@ -176,6 +264,14 @@ test.afterAll(() => {
         r.worstSolveMs,
         r.searchesPerFrame,
         r.worstSearchExpansions,
+        r.mainFrameP95Ms,
+        r.mainFrameWorstMs,
+        r.workerSolves,
+        r.workerAttempts,
+        r.workerFallbacks,
+        r.initialSyncs,
+        r.smallSyncs,
+        r.edgeRendersPerInput,
       ])
     )
   }

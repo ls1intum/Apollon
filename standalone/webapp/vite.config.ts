@@ -23,13 +23,18 @@ const apollonAliases = [
   },
 ]
 
+// Pure routing kernel loaded by a module Worker. It contains no JSX and must not
+// receive React Refresh's browser-only `window` preamble in dev mode.
+const ROUTING_KERNEL =
+  /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
+
 // The editor library uses a `@/` alias -> library/lib, which collides with the
 // webapp's own `@/` -> src. Rewrite `@/…` imports in library files to an absolute
 // library/lib path (the webapp's `@/` keeps mapping to src). Only files that
 // actually import `@/…` are intercepted, so every other library file keeps Vite's
 // native source maps; the rewrite is line-preserving, so only the import lines of
 // the rewritten files shift.
-const apollonAliasResolver = {
+const createApollonAliasResolver = () => ({
   name: "apollon-alias-resolver",
   enforce: "pre" as const,
   async load(id: string) {
@@ -55,7 +60,7 @@ const apollonAliasResolver = {
     if (code === original) return null
     return { code, map: null }
   },
-}
+})
 
 const webappPort = Number(process.env.APOLLON_WEBAPP_PORT || 5173)
 const serverPort = Number(process.env.APOLLON_SERVER_PORT || 8000)
@@ -68,11 +73,18 @@ export default defineConfig({
     // (re)generate src/routeTree.gen.ts. File options live in tsr.config.json.
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react({
+      exclude: ROUTING_KERNEL,
       babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
     }),
     tailwindcss(),
-    apollonAliasResolver,
+    createApollonAliasResolver(),
   ],
+  // Worker bundles run their own plugin pipeline. The edge-geometry worker is
+  // reached through the library source alias, so it needs the same `@/` rewrite
+  // as the main webapp graph rather than resolving those imports into webapp/src.
+  worker: {
+    plugins: () => [createApollonAliasResolver()],
+  },
   resolve: {
     alias: apollonAliases,
     // Avoid duplicate React copies across workspace

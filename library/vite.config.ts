@@ -97,9 +97,19 @@ const RUNTIME_DEPS = [
   "@chenglou/pretext",
 ]
 
+// Pure routing kernel loaded by a module Worker. It contains no JSX and must not
+// receive React Refresh's browser-only `window` preamble in Vite dev mode.
+const ROUTING_KERNEL =
+  /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
+
 export default defineConfig({
+  // Runtime assets emitted by the published library (notably the geometry
+  // Worker) must resolve beside dist/index.js in whichever host installs the
+  // package, never from that host application's `/assets` root.
+  base: "./",
   plugins: [
     react({
+      exclude: ROUTING_KERNEL,
       babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
     }),
     dts({

@@ -4,8 +4,8 @@
  * It calculates port positions based solely on a node's width and height.
  */
 
-import { EDGES, INTERFACE } from "@/constants"
-import { Position } from "@xyflow/react"
+import { EDGES, INTERFACE } from "@/utils/geometry/routingConstants"
+import { Position } from "@xyflow/system"
 
 export interface IPoint {
   x: number

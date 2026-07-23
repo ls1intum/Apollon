@@ -1,4 +1,4 @@
-import { Position, type Rect, type XYPosition } from "@xyflow/react"
+import { Position, type Rect, type XYPosition } from "@xyflow/system"
 import {
   type FreeformEdgeAnchor,
   getFreeformAnchorFromPoint,

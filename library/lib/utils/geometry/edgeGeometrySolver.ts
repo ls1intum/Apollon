@@ -1,14 +1,13 @@
 import {
-  Position,
   type Edge,
   type Node,
   type InternalNode,
   type Rect,
 } from "@xyflow/react"
-import { getEdgePosition, ConnectionMode } from "@xyflow/system"
-import { CANVAS, EDGES } from "@/constants"
+import { getEdgePosition, ConnectionMode, Position } from "@xyflow/system"
+import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
-import { getPositionOnCanvas } from "@/utils/nodeUtils"
+import { getRoutingPositionOnCanvas } from "@/utils/geometry/nodeGeometry"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
@@ -30,7 +29,10 @@ import {
   type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
-import { selectEdgeAnchors } from "@/utils/geometry/edgeAnchoring"
+import {
+  routeChosenAnchors,
+  selectEdgeAnchors,
+} from "@/utils/geometry/edgeAnchoring"
 import {
   assignPorts,
   assignSides,
@@ -39,17 +41,22 @@ import {
   type ReservedSideEnd,
   type SideEdge,
 } from "@/utils/geometry/portAssignment"
-import { canRunStraight, centerOf } from "@/utils/geometry/rectSides"
 import {
+  canRunStraight,
+  centerOf,
+  sideAxisLength,
+} from "@/utils/geometry/rectSides"
+import {
+  neighborsWithinReach,
   routeConflictScore,
   routeConflictsWithNeighborEdges,
 } from "@/utils/geometry/orthogonalRouter"
 import { lexLess } from "@/utils/geometry/scalar"
-import { recordRouteScorePair } from "@/sync/perfCounters"
+import { recordRouteScorePair, recordRouteScoreRun } from "@/sync/perfCounters"
 import {
-  endpointPlacementCost,
   polylineConflictCost,
   ROUTING_COST,
+  sideGapBalance,
   weightedRoutingCost,
 } from "@/utils/geometry/routingCost"
 
@@ -102,7 +109,11 @@ function resolveEdgeEndpoints(
    * anchor, which every auto-selection candidate and every cache-hit re-resolve
    * does. Safe only once a plain resolve has confirmed the nodes are measured;
    * this is the single hottest call in the solve, run for every candidate. */
-  skipBase?: boolean
+  skipBase?: boolean,
+  /** Solve-scoped absolute node geometry. Candidate resolution calls this hot
+   * path repeatedly; reuse the exact snapshot the obstacle solver already built
+   * instead of re-walking parent chains for every candidate pair. */
+  nodeIndex?: NodeIndex
 ): ResolvedEdgeEndpoints | null {
   const sourceInternal = nodeLookup.get(edge.source)
   const targetInternal = nodeLookup.get(edge.target)
@@ -112,21 +123,23 @@ function resolveEdgeEndpoints(
   const targetNode = nodeById.get(edge.target)
 
   const sourceRect =
-    sourceNode && (nodeWidth(sourceNode) ?? 0) > 0
+    nodeIndex?.entries.get(edge.source)?.body ??
+    (sourceNode && (nodeWidth(sourceNode) ?? 0) > 0
       ? {
-          ...getPositionOnCanvas(sourceNode, nodes),
+          ...getRoutingPositionOnCanvas(sourceNode, nodes),
           width: nodeWidth(sourceNode)!,
           height: nodeHeight(sourceNode) ?? 0,
         }
-      : null
+      : null)
   const targetRect =
-    targetNode && (nodeWidth(targetNode) ?? 0) > 0
+    nodeIndex?.entries.get(edge.target)?.body ??
+    (targetNode && (nodeWidth(targetNode) ?? 0) > 0
       ? {
-          ...getPositionOnCanvas(targetNode, nodes),
+          ...getRoutingPositionOnCanvas(targetNode, nodes),
           width: nodeWidth(targetNode)!,
           height: nodeHeight(targetNode) ?? 0,
         }
-      : null
+      : null)
 
   const sourceAnchor =
     overrideAnchors?.sourceAnchor ??
@@ -328,8 +341,10 @@ export function polylineIntersectsBox(
   return false
 }
 
-/** Gather the polylines this edge must not be drawn on top of — geometrically
- * earlier neighbours' finished routes plus container borders. */
+/** Gather nearby routed edges and synthetic container borders separately.
+ * Borders prevent a route from lying along a package/pool frame, but crossing a
+ * frame to leave its own container is not an edge crossing and must not inherit
+ * the diagram-edge crossing price. */
 function collectNeighbors(
   edge: Edge,
   endpoints: ResolvedEdgeEndpoints,
@@ -338,7 +353,7 @@ function collectNeighbors(
   obstacles: readonly ObstacleRect[],
   routeById: Record<string, IPoint[]>,
   grid: NeighborGrid
-): IPoint[][] {
+): { edgeRoutes: IPoint[][]; containerBorders: IPoint[][] } {
   const borders = getContainerBorderPolylines(
     nodes,
     edge.source,
@@ -359,10 +374,20 @@ function collectNeighbors(
   const tx1 = tx0 + endpoints.targetSize.width
   const ty1 = ty0 + endpoints.targetSize.height
   const pad = EDGES.STUB_LENGTH * 6
-  const minX = Math.min(sx0, tx0, ...obstacles.map((o) => o.x)) - pad
-  const maxX = Math.max(sx1, tx1, ...obstacles.map((o) => o.x + o.width)) + pad
-  const minY = Math.min(sy0, ty0, ...obstacles.map((o) => o.y)) - pad
-  const maxY = Math.max(sy1, ty1, ...obstacles.map((o) => o.y + o.height)) + pad
+  let minX = Math.min(sx0, tx0)
+  let maxX = Math.max(sx1, tx1)
+  let minY = Math.min(sy0, ty0)
+  let maxY = Math.max(sy1, ty1)
+  for (const obstacle of obstacles) {
+    if (obstacle.x < minX) minX = obstacle.x
+    if (obstacle.x + obstacle.width > maxX) maxX = obstacle.x + obstacle.width
+    if (obstacle.y < minY) minY = obstacle.y
+    if (obstacle.y + obstacle.height > maxY) maxY = obstacle.y + obstacle.height
+  }
+  minX -= pad
+  maxX += pad
+  minY -= pad
+  maxY += pad
 
   // Candidate committed edges: those with a segment in a cell overlapping the box.
   // indexRoutePolyline buckets every cell a segment crosses, so a long run spanning
@@ -405,8 +430,7 @@ function collectNeighbors(
       neighbors.push(polyline)
     }
   }
-  neighbors.push(...borders)
-  return neighbors
+  return { edgeRoutes: neighbors, containerBorders: borders }
 }
 
 export type LiveEdgeOverride = {
@@ -467,6 +491,10 @@ export type SolverInput = {
    * edges the move can actually have shifted re-search.
    */
   solveCache?: Map<string, EdgeSolveCacheEntry>
+  /** Solve-scoped immutable geometry shared by the canonical and bounded
+   * refinement passes. Internal only: callers may omit it and receive a fresh
+   * snapshot. */
+  nodeIndex?: NodeIndex
 }
 
 /** One edge's cached solve. For auto edges `sig` is the complete JOINT signature:
@@ -479,6 +507,50 @@ export type EdgeSolveCacheEntry = {
   computed: IPoint[]
   sourceAnchor?: FreeformEdgeAnchor
   targetAnchor?: FreeformEdgeAnchor
+  /** A small exact-result history. Interactive edits commonly revisit the same
+   * snapped geometry while a pointer crosses a grid boundary in either direction.
+   * Keeping those prior signatures avoids throwing away a fully proven solve just
+   * because one intermediate frame temporarily replaced the edge's active entry. */
+  alternatives?: EdgeSolveCacheEntry[]
+}
+
+const MAX_EDGE_SOLVE_HISTORY = 4
+
+const cachedSolve = (
+  cache: Map<string, EdgeSolveCacheEntry> | undefined,
+  edgeId: string,
+  sig: string
+): EdgeSolveCacheEntry | undefined => {
+  const active = cache?.get(edgeId)
+  if (!active) return undefined
+  if (active.sig === sig) return active
+  const matched = active.alternatives?.find((entry) => entry.sig === sig)
+  if (!matched || !cache) return matched
+  const history = [active, ...(active.alternatives ?? [])]
+    .filter((entry) => entry.sig !== matched.sig)
+    .slice(0, MAX_EDGE_SOLVE_HISTORY)
+    .map(({ alternatives: _alternatives, ...entry }) => entry)
+  const promoted = { ...matched, alternatives: history }
+  cache.set(edgeId, promoted)
+  return promoted
+}
+
+const rememberSolve = (
+  cache: Map<string, EdgeSolveCacheEntry> | undefined,
+  edgeId: string,
+  entry: EdgeSolveCacheEntry
+): void => {
+  if (!cache) return
+  const previous = cache.get(edgeId)
+  if (!previous || previous.sig === entry.sig) {
+    cache.set(edgeId, entry)
+    return
+  }
+  const history = [previous, ...(previous.alternatives ?? [])]
+    .filter((candidate) => candidate.sig !== entry.sig)
+    .slice(0, MAX_EDGE_SOLVE_HISTORY)
+    .map(({ alternatives: _alternatives, ...candidate }) => candidate)
+  cache.set(edgeId, { ...entry, alternatives: history })
 }
 
 /** Lossless digest of every input `routeStepEdge` reads. Geometry only (obstacle
@@ -488,7 +560,7 @@ function routeSignature(
   enableStraightPath: boolean,
   endpoints: ResolvedEdgeEndpoints,
   obstacles: readonly ObstacleRect[],
-  neighborEdges: readonly IPoint[][]
+  neighborSignature: string
 ): string {
   const e = endpoints
   const r = e.rounded
@@ -500,24 +572,55 @@ function routeSignature(
     `${e.sourceAbsolutePosition.x},${e.sourceAbsolutePosition.y},${e.targetAbsolutePosition.x},${e.targetAbsolutePosition.y}`,
     `${e.sourceSize.width},${e.sourceSize.height},${e.targetSize.width},${e.targetSize.height}`,
   ]
-  parts.push(serializeObstacles(obstacles), serializeNeighbors(neighborEdges))
+  parts.push(serializeObstacles(obstacles), neighborSignature)
   return parts.join("|")
 }
 
 const serializeObstacles = (obstacles: readonly ObstacleRect[]): string => {
-  let o = "O"
+  let key = "O"
   for (const b of obstacles)
-    o += `;${b.x},${b.y},${b.width},${b.height},${b.soft ? 1 : 0}`
-  return o
+    key += `;${b.x},${b.y},${b.width},${b.height},${b.soft ? 1 : 0}`
+  return key
 }
 
-const serializeNeighbors = (neighborEdges: readonly IPoint[][]): string => {
-  let n = "N"
-  for (const pl of neighborEdges) {
-    n += ";"
-    for (const p of pl) n += `${p.x},${p.y} `
+/** Cache exactly the part of neighbouring geometry that the router can observe.
+ * Long polylines are clipped to the reachable corridor, including whether a
+ * surviving endpoint is a real terminal. Moving a remote endpoint outside that
+ * corridor therefore no longer invalidates an otherwise identical route. */
+function reachableNeighborSignature(
+  endpoints: ResolvedEdgeEndpoints,
+  obstacles: readonly ObstacleRect[],
+  neighborEdges: readonly IPoint[][],
+  allEndpointSides: boolean
+): string {
+  const sourceRect = rectFromEndpoint(
+    endpoints.sourceAbsolutePosition,
+    endpoints.sourceSize
+  )
+  const targetRect = rectFromEndpoint(
+    endpoints.targetAbsolutePosition,
+    endpoints.targetSize
+  )
+  const corners = (rect: Rect): IPoint[] => [
+    { x: rect.x, y: rect.y },
+    { x: rect.x + rect.width, y: rect.y },
+    { x: rect.x + rect.width, y: rect.y + rect.height },
+    { x: rect.x, y: rect.y + rect.height },
+  ]
+  const points = allEndpointSides
+    ? [...corners(sourceRect), ...corners(targetRect)]
+    : [endpoints.adjustedSource, endpoints.adjustedTarget]
+  const segments = neighborsWithinReach(
+    points[0],
+    points.slice(1),
+    obstacles,
+    neighborEdges
+  )
+  let key = "N"
+  for (const segment of segments) {
+    key += `;${segment.x1},${segment.y1},${segment.x2},${segment.y2},${segment.startTerminal ? 1 : 0},${segment.endTerminal ? 1 : 0}`
   }
-  return n
+  return key
 }
 
 /** The router's input for one resolved endpoint pair. Shared by the fixed-edge
@@ -567,7 +670,7 @@ function autoAnchorSignature(
   targetPreferred: FreeformEdgeAnchor | undefined,
   enableStraightPath: boolean,
   obstacles: readonly ObstacleRect[],
-  neighborEdges: readonly IPoint[][]
+  neighborSignature: string
 ): string {
   const e = endpoints
   const anchor = (a: FreeformEdgeAnchor | undefined) =>
@@ -587,7 +690,7 @@ function autoAnchorSignature(
     // Full route geometry, including soft containers. Endpoint selection and A*
     // are one optimisation, so there is no valid anchor-only subset of this key.
     serializeObstacles(obstacles),
-    serializeNeighbors(neighborEdges),
+    neighborSignature,
   ].join("|")
 }
 
@@ -617,7 +720,7 @@ function nodeRect(
   const w = nodeWidth(node)
   if (!w || w <= 0) return null
   return {
-    ...getPositionOnCanvas(node, nodes),
+    ...getRoutingPositionOnCanvas(node, nodes),
     width: w,
     height: nodeHeight(node) ?? 0,
   }
@@ -639,7 +742,8 @@ function collectFixedPorts(
   connectionMode: ConnectionMode,
   straightHookTypes: ReadonlySet<string>,
   liveOverride: LiveEdgeOverride | null | undefined,
-  fixedRoutes: Readonly<Record<string, IPoint[]>>
+  fixedRoutes: Readonly<Record<string, IPoint[]>>,
+  nodeIndex: NodeIndex
 ): FixedPortByEnd {
   const result: FixedPortByEnd = new Map()
   for (const edge of edges) {
@@ -661,7 +765,10 @@ function collectFixedPorts(
       nodes,
       nodeById,
       nodeLookup,
-      connectionMode
+      connectionMode,
+      undefined,
+      undefined,
+      nodeIndex
     )
     if (!endpoints) continue
     const fixedRoute =
@@ -706,7 +813,11 @@ function collectPortEnds(
   nodes: readonly Node[],
   nodeById: Map<string, Node>,
   fixedPorts: FixedPortByEnd,
-  reservedRoutes: readonly IPoint[][]
+  reservedRoutes: readonly IPoint[][],
+  /** Optional feedback from a completed route set. It closes the side → port →
+   * route loop: when the joint router legitimately changes a proposed side, the
+   * next bounded pass balances the ports that actually remained on each side. */
+  sideOverrideByEnd?: ReadonlyMap<string, Position>
 ): EndRef[] {
   // Every endpoint consumes node-side capacity, including customized endpoints.
   // A lone mutable edge next to a pin is therefore still coordinated rather than
@@ -802,9 +913,13 @@ function collectPortEnds(
     const sourceFixed = fixedPorts.get(endKey(edge.id, "source"))
     const targetFixed = fixedPorts.get(endKey(edge.id, "target"))
     const sourceSide =
-      sourceFixed?.side ?? sideByEnd.get(endKey(edge.id, "source"))
+      sourceFixed?.side ??
+      sideOverrideByEnd?.get(endKey(edge.id, "source")) ??
+      sideByEnd.get(endKey(edge.id, "source"))
     const targetSide =
-      targetFixed?.side ?? sideByEnd.get(endKey(edge.id, "target"))
+      targetFixed?.side ??
+      sideOverrideByEnd?.get(endKey(edge.id, "target")) ??
+      sideByEnd.get(endKey(edge.id, "target"))
     if (sourceSide !== undefined && (endsByNode.get(edge.source) ?? 0) > 1)
       out.push({
         edgeId: edge.id,
@@ -844,7 +959,8 @@ function collectPortEnds(
 function computeAllEdgeGeometryPass(
   input: SolverInput,
   generatedOrderVariant: number | "reverse",
-  fixedRoutes: Readonly<Record<string, IPoint[]>> = {}
+  fixedRoutes: Readonly<Record<string, IPoint[]>> = {},
+  sideOverrideByEnd?: ReadonlyMap<string, Position>
 ): {
   routeById: Record<string, IPoint[]>
 } {
@@ -861,12 +977,12 @@ function computeAllEdgeGeometryPass(
     solveCache,
   } = input
 
-  const edgeById = new Map(edges.map((e) => [e.id, e]))
-  const nodeById = new Map(nodes.map((n) => [n.id, n]))
   // Exact, solve-scoped snapshot. React Flow can retain `nodes` identity while
   // mutating measurements/geometry in place, so this must be rebuilt for every
   // invocation, then shared by all edge obstacle and container-border queries.
-  const nodeIndex = createNodeIndex(nodes)
+  const nodeIndex = input.nodeIndex ?? createNodeIndex(nodes)
+  const nodeById = nodeIndex.byId
+  const edgeById = new Map(edges.map((e) => [e.id, e]))
   // AUTHORITATIVE edges route first: any user-pinned endpoint, authored bend
   // topology, or the current live drag. Committing them before auto edges puts the
   // customized geometry in every relevant neighbour set, so generated routes yield
@@ -997,7 +1113,8 @@ function computeAllEdgeGeometryPass(
     connectionMode,
     straightHookTypes,
     liveOverride,
-    fixedRoutes
+    fixedRoutes,
+    nodeIndex
   )
   const reservedRouteById = new Map<string, IPoint[]>(
     Object.entries(fixedRoutes)
@@ -1014,7 +1131,10 @@ function computeAllEdgeGeometryPass(
         nodes,
         nodeById,
         nodeLookup,
-        connectionMode
+        connectionMode,
+        undefined,
+        undefined,
+        nodeIndex
       )
       reservedRouteById.set(
         edge.id,
@@ -1036,7 +1156,10 @@ function computeAllEdgeGeometryPass(
         nodes,
         nodeById,
         nodeLookup,
-        connectionMode
+        connectionMode,
+        undefined,
+        undefined,
+        nodeIndex
       )
       if (endpoints)
         reservedRouteById.set(edge.id, [
@@ -1046,9 +1169,14 @@ function computeAllEdgeGeometryPass(
     }
   }
   const bandPorts = assignPorts(
-    collectPortEnds(coordinationEdges, nodes, nodeById, fixedPorts, [
-      ...reservedRouteById.values(),
-    ])
+    collectPortEnds(
+      coordinationEdges,
+      nodes,
+      nodeById,
+      fixedPorts,
+      [...reservedRouteById.values()],
+      sideOverrideByEnd
+    )
   )
 
   for (const edge of ordered) {
@@ -1063,7 +1191,10 @@ function computeAllEdgeGeometryPass(
       nodes,
       nodeById,
       nodeLookup,
-      connectionMode
+      connectionMode,
+      undefined,
+      undefined,
+      nodeIndex
     )
     if (!endpoints) {
       // Node not measured yet — hold the previous route, never paint a guess.
@@ -1128,7 +1259,7 @@ function computeAllEdgeGeometryPass(
     const thirdPartyObstacles = obstacles.filter(
       (o) => !o.soft && o.id !== edge.source && o.id !== edge.target
     )
-    const neighborEdges = collectNeighbors(
+    const { edgeRoutes: neighborEdges, containerBorders } = collectNeighbors(
       edge,
       endpoints,
       nodes,
@@ -1136,6 +1267,13 @@ function computeAllEdgeGeometryPass(
       obstacles,
       routeById,
       neighborGrid
+    )
+    const signatureNeighbors = [...neighborEdges, ...containerBorders]
+    const autoNeighborSignature = reachableNeighborSignature(
+      endpoints,
+      obstacles,
+      signatureNeighbors,
+      true
     )
 
     const enableStraightPath = straightPathTypes.has(edge.type ?? "")
@@ -1174,11 +1312,12 @@ function computeAllEdgeGeometryPass(
             targetBand,
             enableStraightPath,
             obstacles,
-            neighborEdges
+            autoNeighborSignature
           )
         : ""
-      const cached = solveCache?.get(edge.id)
-      if (cached && cached.sig === sig) {
+      const previousSolve = solveCache?.get(edge.id)
+      const cached = cachedSolve(solveCache, edge.id, sig)
+      if (cached) {
         // Anchor pick still stands. Re-resolve endpoints so fresh manual bends
         // can be re-merged (they are not part of the signature).
         endpointsUsed =
@@ -1192,7 +1331,8 @@ function computeAllEdgeGeometryPass(
               sourceAnchor: cached.sourceAnchor,
               targetAnchor: cached.targetAnchor,
             },
-            true
+            true,
+            nodeIndex
           ) ?? endpoints
         computed = cached.computed
       } else {
@@ -1219,17 +1359,29 @@ function computeAllEdgeGeometryPass(
               nodeLookup,
               connectionMode,
               overrides,
-              true
+              true,
+              nodeIndex
             ),
           obstacles,
           thirdPartyObstacles,
           neighborEdges,
           enableStraightPath,
+          incumbentRoute: previousSolve?.computed,
         })
         if (selected) {
           endpointsUsed = selected.endpoints
-          computed = selected.route
-          solveCache?.set(edge.id, {
+          computed = routeConflictsWithNeighborEdges(
+            selected.route,
+            containerBorders
+          )
+            ? routeChosenAnchors(
+                selected.endpoints,
+                obstacles,
+                signatureNeighbors,
+                enableStraightPath
+              )
+            : selected.route
+          rememberSolve(solveCache, edge.id, {
             sig,
             routeSig: "",
             computed,
@@ -1246,6 +1398,15 @@ function computeAllEdgeGeometryPass(
               enableStraightPath
             )
           )
+          if (routeConflictsWithNeighborEdges(computed, containerBorders))
+            computed = routeStepEdge(
+              routeStepParams(
+                endpoints,
+                obstacles,
+                signatureNeighbors,
+                enableStraightPath
+              )
+            )
         }
       }
     } else {
@@ -1254,11 +1415,16 @@ function computeAllEdgeGeometryPass(
             enableStraightPath,
             endpoints,
             obstacles,
-            neighborEdges
+            reachableNeighborSignature(
+              endpoints,
+              obstacles,
+              signatureNeighbors,
+              false
+            )
           )
         : ""
-      const cached = solveCache?.get(edge.id)
-      if (cached && cached.sig === sig) {
+      const cached = cachedSolve(solveCache, edge.id, sig)
+      if (cached) {
         computed = cached.computed
       } else {
         computed = routeStepEdge(
@@ -1269,10 +1435,16 @@ function computeAllEdgeGeometryPass(
             enableStraightPath
           )
         )
-        // Non-auto edges key on one combined `routeSignature` (which already
-        // folds in obstacles and neighbours), so the split's `routeSig` is
-        // unused here.
-        solveCache?.set(edge.id, { sig, routeSig: "", computed })
+        if (routeConflictsWithNeighborEdges(computed, containerBorders))
+          computed = routeStepEdge(
+            routeStepParams(
+              endpoints,
+              obstacles,
+              signatureNeighbors,
+              enableStraightPath
+            )
+          )
+        rememberSolve(solveCache, edge.id, { sig, routeSig: "", computed })
       }
     }
 
@@ -1297,18 +1469,85 @@ type RouteSetScore = Readonly<{
   proximityPx: number
   straightBroken: number
   bends: number
-  maxCentroidImbalancePermille: number
-  totalCentroidImbalancePermille: number
+  maxSideGapImbalancePx: number
+  totalSideGapImbalancePx: number
   maxCornerJamPermille: number
   totalCornerJamPermille: number
   length: number
 }>
 
+type BoundaryPort = Readonly<{
+  side: Position
+  ratio: number
+}>
+
+/** Classify a routed endpoint by the closest side of its node. Route-set scoring
+ * and side-feedback must use the exact same tie-break, otherwise a corner endpoint
+ * could be scored on one side and rebalanced on another. */
+const boundaryPort = (point: IPoint, rect: Rect): BoundaryPort => {
+  const distances = [
+    {
+      side: Position.Left,
+      distance: Math.abs(point.x - rect.x),
+      ratio: (point.y - rect.y) / rect.height,
+    },
+    {
+      side: Position.Right,
+      distance: Math.abs(point.x - (rect.x + rect.width)),
+      ratio: (point.y - rect.y) / rect.height,
+    },
+    {
+      side: Position.Top,
+      distance: Math.abs(point.y - rect.y),
+      ratio: (point.x - rect.x) / rect.width,
+    },
+    {
+      side: Position.Bottom,
+      distance: Math.abs(point.y - (rect.y + rect.height)),
+      ratio: (point.x - rect.x) / rect.width,
+    },
+  ].sort((a, b) => a.distance - b.distance || (a.side < b.side ? -1 : 1))
+  return {
+    side: distances[0].side,
+    ratio: Math.max(0, Math.min(1, distances[0].ratio)),
+  }
+}
+
+/** Feed the sides selected by obstacle-aware routing back into the next bounded
+ * coordination pass. This repairs stale proposed groups: if a route moved away
+ * from a side, the endpoints that actually remain there can occupy balanced n+1
+ * seats instead of preserving a hole for an edge that is no longer present. */
+const actualRouteSides = (
+  routeById: Readonly<Record<string, readonly IPoint[]>>,
+  edges: readonly Edge[],
+  nodes: readonly Node[]
+): Map<string, Position> => {
+  const result = new Map<string, Position>()
+  const nodeById = new Map(nodes.map((node) => [node.id, node]))
+  for (const edge of edges) {
+    const route = routeById[edge.id]
+    if (!route || route.length === 0) continue
+    const sourceRect = nodeRect(edge.source, nodes, nodeById)
+    const targetRect = nodeRect(edge.target, nodes, nodeById)
+    if (sourceRect)
+      result.set(
+        endKey(edge.id, "source"),
+        boundaryPort(route[0], sourceRect).side
+      )
+    if (targetRect)
+      result.set(
+        endKey(edge.id, "target"),
+        boundaryPort(route[route.length - 1], targetRect).side
+      )
+  }
+  return result
+}
+
 const routeSetScoreValues = (score: RouteSetScore): readonly number[] => [
   score.hardInvalidity,
   score.weightedCost,
-  score.maxCentroidImbalancePermille,
-  score.totalCentroidImbalancePermille,
+  score.maxSideGapImbalancePx,
+  score.totalSideGapImbalancePx,
   score.maxCornerJamPermille,
   score.totalCornerJamPermille,
   score.straightBroken,
@@ -1328,8 +1567,44 @@ const routeSetNeedsRefinement = (score: RouteSetScore): boolean =>
   score.crossings > 0 ||
   score.proximityPx > 0 ||
   score.straightBroken > 0 ||
-  score.maxCentroidImbalancePermille > 100 ||
+  score.maxSideGapImbalancePx > 0 ||
   score.maxCornerJamPermille > 800
+
+type PolylineBounds = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const polylineBounds = (route: readonly IPoint[]): PolylineBounds => {
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  for (const point of route) {
+    if (point.x < minX) minX = point.x
+    if (point.x > maxX) maxX = point.x
+    if (point.y < minY) minY = point.y
+    if (point.y > maxY) maxY = point.y
+  }
+  return { minX, maxX, minY, maxY }
+}
+
+/** Necessary broad-phase condition for any crossing, overlap or crowding cost.
+ * A pair farther apart than the crowding band contributes exactly zero to every
+ * route-set interaction term, so skipping it cannot change the objective. */
+const boundsMayConflict = (
+  a: PolylineBounds,
+  b: PolylineBounds,
+  clearance: number
+): boolean =>
+  !(
+    a.maxX + clearance <= b.minX ||
+    b.maxX + clearance <= a.minX ||
+    a.maxY + clearance <= b.minY ||
+    b.maxY + clearance <= a.minY
+  )
 
 const routeSetScore = (
   routeById: Readonly<Record<string, readonly IPoint[]>>,
@@ -1345,6 +1620,10 @@ const routeSetScore = (
    * auto-layout defect and must not trigger or improve refinement. */
   immutableEdgeIds: ReadonlySet<string> = new Set()
 ): RouteSetScore => {
+  const scoreStartedAt =
+    import.meta.env.DEV || import.meta.env.VITE_E2E === "true"
+      ? performance.now()
+      : 0
   let hardInvalidity = 0
   let weightedCost = 0
   let crossings = 0
@@ -1354,7 +1633,10 @@ const routeSetScore = (
   let length = 0
   let maxCornerJamPermille = 0
   let totalCornerJamPermille = 0
-  const portsByNodeSide = new Map<string, number[]>()
+  const portsByNodeSide = new Map<
+    string,
+    { ratios: number[]; sideLength: number }
+  >()
   const nodeById = new Map(nodes.map((node) => [node.id, node]))
   const focusNodeIds = focusEdgeIds
     ? new Set(
@@ -1366,50 +1648,25 @@ const routeSetScore = (
   const recordPort = (
     nodeId: string,
     point: IPoint,
-    movable: boolean,
-    chargePlacement: boolean
+    movable: boolean
   ): void => {
     if (focusNodeIds && !focusNodeIds.has(nodeId)) return
     const rect = nodeRect(nodeId, nodes, nodeById)
     if (!rect || rect.width <= 0 || rect.height <= 0) return
-    const distances = [
-      {
-        side: Position.Left,
-        distance: Math.abs(point.x - rect.x),
-        ratio: (point.y - rect.y) / rect.height,
-      },
-      {
-        side: Position.Right,
-        distance: Math.abs(point.x - (rect.x + rect.width)),
-        ratio: (point.y - rect.y) / rect.height,
-      },
-      {
-        side: Position.Top,
-        distance: Math.abs(point.y - rect.y),
-        ratio: (point.x - rect.x) / rect.width,
-      },
-      {
-        side: Position.Bottom,
-        distance: Math.abs(point.y - (rect.y + rect.height)),
-        ratio: (point.x - rect.x) / rect.width,
-      },
-    ].sort((a, b) => a.distance - b.distance || (a.side < b.side ? -1 : 1))
-    const nearest = distances[0]
-    const ratio = Math.max(0, Math.min(1, nearest.ratio))
+    const port = boundaryPort(point, rect)
     if (movable) {
-      const cornerJam = Math.round(2_000 * Math.abs(ratio - 0.5))
+      const cornerJam = Math.round(2_000 * Math.abs(port.ratio - 0.5))
       maxCornerJamPermille = Math.max(maxCornerJamPermille, cornerJam)
       totalCornerJamPermille += cornerJam
-      if (chargePlacement)
-        weightedCost += endpointPlacementCost(
-          { side: nearest.side, ratio },
-          CANVAS.SNAP_TO_GRID_PX
-        )
     }
-    const key = `${nodeId}|${nearest.side}`
+    const key = `${nodeId}|${port.side}`
     const group = portsByNodeSide.get(key)
-    if (group) group.push(ratio)
-    else portsByNodeSide.set(key, [ratio])
+    if (group) group.ratios.push(port.ratio)
+    else
+      portsByNodeSide.set(key, {
+        ratios: [port.ratio],
+        sideLength: sideAxisLength(port.side, rect),
+      })
   }
   const routes = edges.flatMap((edge) => {
     const focused = !focusEdgeIds || focusEdgeIds.has(edge.id)
@@ -1422,14 +1679,12 @@ const routeSetScore = (
     recordPort(
       edge.source,
       route[0],
-      !topologyImmutable && !asFreeformAnchor(edge.data?.sourceAnchor),
-      focused
+      !topologyImmutable && !asFreeformAnchor(edge.data?.sourceAnchor)
     )
     recordPort(
       edge.target,
       route[route.length - 1],
-      !topologyImmutable && !asFreeformAnchor(edge.data?.targetAnchor),
-      focused
+      !topologyImmutable && !asFreeformAnchor(edge.data?.targetAnchor)
     )
     const sourceRect = nodeRect(edge.source, nodes, nodeById)
     const targetRect = nodeRect(edge.target, nodes, nodeById)
@@ -1462,12 +1717,22 @@ const routeSetScore = (
         CANVAS.SNAP_TO_GRID_PX
       )
     }
-    return [{ route, focused }]
+    return [{ route, focused, bounds: polylineBounds(route) }]
   })
+  const conflictClearance =
+    ROUTING_COST.parallelCrowdingClearanceInGridCells * CANVAS.SNAP_TO_GRID_PX
   for (let i = 0; i < routes.length; i++) {
     if (!routes[i].focused) continue
     for (let j = 0; j < routes.length; j++) {
       if (i === j || (routes[j].focused && j < i)) continue
+      if (
+        !boundsMayConflict(
+          routes[i].bounds,
+          routes[j].bounds,
+          conflictClearance
+        )
+      )
+        continue
       recordRouteScorePair()
       const first = routes[i].route as IPoint[]
       const second = routes[j].route as IPoint[]
@@ -1477,12 +1742,7 @@ const routeSetScore = (
       const forward = routeConflictScore(first, [second])
       const reverse = routeConflictScore(second, [first])
       const pairCrossings = Math.max(forward.crossings, reverse.crossings)
-      const general = polylineConflictCost(
-        first,
-        [second],
-        ROUTING_COST.parallelCrowdingClearanceInGridCells *
-          CANVAS.SNAP_TO_GRID_PX
-      )
+      const general = polylineConflictCost(first, [second], conflictClearance)
       crossings += pairCrossings
       proximityPx += general.overlapPx + general.crowdingPx
       weightedCost += weightedRoutingCost(
@@ -1495,43 +1755,35 @@ const routeSetScore = (
       )
     }
   }
-  let maxCentroidImbalancePermille = 0
-  let totalCentroidImbalancePermille = 0
-  for (const ratios of portsByNodeSide.values()) {
-    if (ratios.length < 2) continue
-    ratios.sort((a, b) => a - b)
-    const mean = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
-    // Individual placement alone prefers a tight cluster around the centre and
-    // cannot distinguish a balanced fan from every port shifted to one half of
-    // the side. Price the group's centroid through the SAME convex placement
-    // curve, once per member. Balance can therefore trade against real path cost
-    // in pixel units; it is neither a lexicographic override nor a free tie-break.
-    weightedCost +=
-      ratios.length *
-      endpointPlacementCost(
-        { side: Position.Top, ratio: mean },
-        CANVAS.SNAP_TO_GRID_PX
-      )
-    const imbalance = Math.round(2_000 * Math.abs(mean - 0.5))
-    maxCentroidImbalancePermille = Math.max(
-      maxCentroidImbalancePermille,
-      imbalance
+  let maxSideGapImbalancePx = 0
+  let totalSideGapImbalancePx = 0
+  for (const { ratios, sideLength } of portsByNodeSide.values()) {
+    const balance = sideGapBalance(ratios, sideLength, CANVAS.SNAP_TO_GRID_PX)
+    // Charge the complete n+1 gap vector once. Per-port centre costs would count
+    // the same displacement twice and still miss a centred but uneven fan.
+    weightedCost += balance.cost
+    maxSideGapImbalancePx = Math.max(
+      maxSideGapImbalancePx,
+      balance.maxGapErrorPx
     )
-    totalCentroidImbalancePermille += imbalance
+    totalSideGapImbalancePx += balance.totalGapErrorPx
   }
-  return {
+  const result = {
     hardInvalidity,
     weightedCost,
     crossings,
     proximityPx,
     straightBroken,
     bends,
-    maxCentroidImbalancePermille,
-    totalCentroidImbalancePermille,
+    maxSideGapImbalancePx,
+    totalSideGapImbalancePx,
     maxCornerJamPermille,
     totalCornerJamPermille,
     length,
   }
+  if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+    recordRouteScoreRun(performance.now() - scoreStartedAt)
+  return result
 }
 
 const refinementEdgeKey = (
@@ -1605,6 +1857,13 @@ const refinementComponents = (
     }
   })
 
+  const conflictClearance =
+    ROUTING_COST.parallelCrowdingClearanceInGridCells * CANVAS.SNAP_TO_GRID_PX
+  const bounds = edges.map((edge) => {
+    const route = routeById[edge.id]
+    return route && route.length >= 2 ? polylineBounds(route) : null
+  })
+
   for (let i = 0; i < edges.length; i++) {
     const first = routeById[edges[i].id]
     if (!first || first.length < 2) continue
@@ -1612,6 +1871,14 @@ const refinementComponents = (
       if (find(i) === find(j)) continue
       const second = routeById[edges[j].id]
       if (!second || second.length < 2) continue
+      const firstBounds = bounds[i]
+      const secondBounds = bounds[j]
+      if (
+        firstBounds &&
+        secondBounds &&
+        !boundsMayConflict(firstBounds, secondBounds, conflictClearance)
+      )
+        continue
       const forward = routeConflictScore(first as IPoint[], [
         second as IPoint[],
       ])
@@ -1639,7 +1906,8 @@ const refinementComponents = (
     if (component) component.push(edge)
     else byRoot.set(root, [edge])
   })
-  return [...byRoot.values()]
+  const result = [...byRoot.values()]
+  return result
 }
 
 /**
@@ -1661,11 +1929,13 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     ...input,
     edges: prepared.edges,
     liveOverride: prepared.liveOverride,
+    nodeIndex: input.nodeIndex ?? createNodeIndex(input.nodes),
   }
   const primary = computeAllEdgeGeometryPass(solveInput, 0)
-  // Four component passes are the interactive ceiling: primary, reverse, and two
-  // rotations. Above eight INTERACTING edges even that bounded repair can dominate
-  // a node-drag frame, so large conflict components keep the fast canonical solve.
+  // Five component passes are the interactive ceiling: primary, reverse, two
+  // rotations, and one actual-side feedback pass. Above eight INTERACTING edges
+  // even that bounded repair can dominate a node-drag frame, so large conflict
+  // components keep the fast canonical solve.
   // Remote components do not consume this budget or change one another's geometry.
   // Crucially the rule is identical while an edge is live and after commit,
   // preventing drag-start/end snaps.
@@ -1762,6 +2032,40 @@ export function computeAllEdgeGeometry(input: SolverInput): {
         bestRoutes = candidate.routeById
         bestComponentScore = score
       }
+    }
+
+    // Route choice is allowed to overrule a proposed side to save a bend or avoid
+    // an obstacle. Re-coordinate once from the sides the current best routes
+    // actually use, so the remaining endpoints do not retain empty seats. The
+    // candidate is still accepted only on a strict whole-component improvement.
+    const feedbackSides = actualRouteSides(
+      bestRoutes,
+      solveInput.edges,
+      solveInput.nodes
+    )
+    const feedbackCandidate = computeAllEdgeGeometryPass(
+      {
+        ...solveInput,
+        edges: mutableEdges,
+        fixedEdges: immutableEdges,
+        solveCache: undefined,
+      },
+      0,
+      fixedRoutes,
+      feedbackSides
+    )
+    const feedbackScore = routeSetScore(
+      feedbackCandidate.routeById,
+      solveInput.edges,
+      solveInput.nodes,
+      solveInput.straightPathTypes,
+      componentIds,
+      immutableEdgeIds
+    )
+    candidates.push(feedbackCandidate)
+    if (routeSetScoreLess(feedbackScore, bestComponentScore)) {
+      bestRoutes = feedbackCandidate.routeById
+      bestComponentScore = feedbackScore
     }
 
     // Every candidate route has already passed the same hard-obstacle solver.

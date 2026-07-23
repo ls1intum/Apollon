@@ -250,6 +250,61 @@ describe("computeAllEdgeGeometry", () => {
     expect(hot).toEqual(noCache)
   })
 
+  it("reuses an earlier snapped-frame signature with no new search and cold-identical output", () => {
+    const frame = (targetY: number) => {
+      const source = makeNode("source", 0, 0)
+      const blocker = makeNode("blocker", 260, -20, 100, 120)
+      const target = makeNode("target", 560, targetY)
+      const entries = [source, blocker, target]
+      return {
+        nodes: entries.map((entry) => entry.node),
+        nodeLookup: new Map(
+          entries.map((entry) => [entry.node.id, entry.internal])
+        ) as Map<string, InternalNode>,
+        connectionMode: ConnectionMode.Loose,
+        edges: [
+          {
+            id: "route",
+            source: "source",
+            target: "target",
+            type: "ClassUnidirectional",
+          },
+        ] as Edge[],
+        straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+        straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+      }
+    }
+
+    const firstFrame = frame(0)
+    const intermediateFrame = frame(10)
+    const cache = new Map()
+    const counters = getPerfCounters()!
+    const searchesBeforeFirst = counters.routerSearches
+    const first = computeAllEdgeGeometry({
+      ...firstFrame,
+      solveCache: cache,
+    }).routeById
+    expect(counters.routerSearches).toBeGreaterThan(searchesBeforeFirst)
+
+    const searchesBeforeIntermediate = counters.routerSearches
+    computeAllEdgeGeometry({
+      ...intermediateFrame,
+      solveCache: cache,
+    })
+    expect(counters.routerSearches).toBeGreaterThan(searchesBeforeIntermediate)
+
+    const searchesBeforeReturn = counters.routerSearches
+    const returned = computeAllEdgeGeometry({
+      ...frame(0),
+      solveCache: cache,
+    }).routeById
+    expect(counters.routerSearches).toBe(searchesBeforeReturn)
+
+    const cold = computeAllEdgeGeometry(frame(0)).routeById
+    expect(returned).toEqual(cold)
+    expect(returned).toEqual(first)
+  })
+
   it("invalidates only the edges a moved node changed", () => {
     const build = (bx: number) => {
       const a = makeNode("a", 0, 0)
@@ -284,6 +339,70 @@ describe("computeAllEdgeGeometry", () => {
     }).routeById
     const freshAfterMove = computeAllEdgeGeometry(moved).routeById
     expect(cachedAfterMove).toEqual(freshAfterMove)
+  })
+
+  it("keeps a searched route cached when only unreachable neighbour geometry changes", () => {
+    const a = makeNode("a", 0, 0)
+    const blocker = makeNode("blocker", 200, 0)
+    const b = makeNode("b", 400, 0)
+    const c = makeNode("c", -300, 90)
+    const d = makeNode("d", 800, 90)
+    const nodes = [a, blocker, b, c, d]
+    const auto: Edge = {
+      id: "auto",
+      source: "a",
+      target: "b",
+      type: "ClassUnidirectional",
+    }
+    const neighbor = (points: { x: number; y: number }[]): Edge => ({
+      id: "neighbor",
+      source: "c",
+      target: "d",
+      type: "ClassUnidirectional",
+      data: { points },
+    })
+    const input = (points: { x: number; y: number }[]) => ({
+      nodes: nodes.map((entry) => entry.node),
+      nodeLookup: new Map(
+        nodes.map((entry) => [entry.node.id, entry.internal])
+      ) as Map<string, InternalNode>,
+      connectionMode: ConnectionMode.Loose,
+      edges: [neighbor(points), auto],
+      straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+      straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+    })
+    const firstPoints = [
+      { x: -200, y: 120 },
+      { x: 800, y: 120 },
+    ]
+    const changedRemotePoints = [
+      { x: -200, y: 120 },
+      { x: -150, y: 120 },
+      { x: -150, y: 130 },
+      { x: 850, y: 130 },
+      { x: 850, y: 120 },
+      { x: 800, y: 120 },
+    ]
+    const cache = new Map()
+    computeAllEdgeGeometry({ ...input(firstPoints), solveCache: cache })
+    const counters = getPerfCounters()!
+    const searchesBefore = counters.routerSearches
+
+    const cached = computeAllEdgeGeometry({
+      ...input(changedRemotePoints),
+      solveCache: cache,
+    }).routeById
+    expect(counters.routerSearches).toBe(searchesBefore)
+    const fresh = computeAllEdgeGeometry(input(changedRemotePoints)).routeById
+
+    expect(cached).toEqual(fresh)
+    expect(counters.routerSearches - searchesBefore).toBeGreaterThan(0)
+    const searchesAfterFresh = counters.routerSearches
+    computeAllEdgeGeometry({
+      ...input(changedRemotePoints),
+      solveCache: cache,
+    })
+    expect(counters.routerSearches).toBe(searchesAfterFresh)
   })
 
   it("rebuilds obstacle geometry after in-place measurement on the same node array", () => {
@@ -438,6 +557,48 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     expect(routeById["e1"].length).toBeGreaterThan(2) // but not straight
   })
 
+  it("separates sibling routes that leave a nested node through the same corridor", () => {
+    // edge-margin-around-a.json: one sibling exits through its package roof and
+    // reaches A from above, while the other wraps around A. Their middle runs
+    // have ample room to separate and must not collapse into one visible edge.
+    const container = makeNode("package", -980, 410, 290, 275)
+    container.node.type = "package"
+    const source = makeNode("source", 60, 80, 160, 100)
+    source.node.parentId = "package"
+    source.internal.parentId = "package"
+    source.internal.internals.positionAbsolute = { x: -920, y: 490 }
+    const target = makeNode("target", -545, 490, 160, 100)
+    const lower = makeNode("lower", -295, 700, 160, 100)
+    const edges: Edge[] = [
+      {
+        id: "upper",
+        source: "source",
+        target: "target",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "lower",
+        source: "target",
+        target: "lower",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "wrapping",
+        source: "source",
+        target: "target",
+        type: "ClassUnidirectional",
+      },
+    ]
+
+    const { routeById } = computeAllEdgeGeometry(
+      base([container, source, target, lower], edges)
+    )
+
+    expect(
+      routeConflictScore(routeById.upper, [routeById.wrapping]).proximityPx
+    ).toBe(0)
+  })
+
   it("respects a custom source anchor and never re-chooses it", () => {
     // A pinned TOP anchor must be honoured even though the facing side is right.
     const a = makeNode("a", 0, 0)
@@ -563,7 +724,7 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     // One initial whole-set score is unavoidable. Every refinement score after
     // that is component-vs-fixed (O(component × diagram)), never another O(E²)
     // remote-vs-remote scan. The old implementation exceeded 14,000 pairs here.
-    expect(counters.routeScorePairs - before).toBeLessThan(5_000)
+    expect(counters.routeScorePairs - before).toBeLessThan(100)
   })
 
   it("keeps the route set unchanged when the current free endpoint is pinned", () => {
@@ -846,6 +1007,102 @@ describe("computeAllEdgeGeometry — auto anchor optimization", () => {
     }).routeById
 
     expect(live).toEqual(pristine)
+  })
+
+  it("centres the lone arrival side in the diagram-91 topology", () => {
+    const top = makeNode("top", 635, 145, 160, 100)
+    const left = makeNode("left", 360, 420, 160, 100)
+    const right = makeNode("right", 940, 420, 160, 100)
+    const middle = makeNode("middle", 640, 420, 160, 100)
+    const edges: Edge[] = [
+      {
+        id: "centre-right",
+        source: "middle",
+        target: "right",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "top-right",
+        source: "top",
+        target: "right",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "top-left",
+        source: "top",
+        target: "left",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "middle-top",
+        source: "middle",
+        target: "top",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "left-middle",
+        source: "left",
+        target: "middle",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "left-right",
+        source: "left",
+        target: "right",
+        type: "ClassUnidirectional",
+      },
+    ]
+
+    const { routeById } = computeAllEdgeGeometry(
+      base([top, left, right, middle], edges)
+    )
+    const topRight = routeById["top-right"]
+    const topLeft = routeById["top-left"]
+
+    // The target is alone on that side. The two stretches it creates are equal,
+    // rather than shortening the route by sliding 20px toward its partner.
+    expect(topRight.at(-1)).toEqual({ x: 1020, y: 420 })
+    expect(topLeft.at(-1)).toEqual({ x: 440, y: 420 })
+  })
+
+  it("centres lone ports instead of using an extreme narrow-overlap lane", () => {
+    const adapter = makeNode("adapter", 270, 120, 190, 70)
+    const left = makeNode("left", 120, 330, 160, 70)
+    const right = makeNode("right", 435, 330, 160, 70)
+    const client = makeNode("client", -90, 105, 170, 100)
+    const edges: Edge[] = [
+      {
+        id: "client-adapter",
+        source: "client",
+        target: "adapter",
+        type: "ClassUnidirectional",
+      },
+      {
+        id: "left-adapter",
+        source: "left",
+        target: "adapter",
+        type: "ClassInheritance",
+      },
+      {
+        id: "right-adapter",
+        source: "right",
+        target: "adapter",
+        type: "ClassInheritance",
+      },
+    ]
+
+    const { routeById } = computeAllEdgeGeometry(
+      base([adapter, left, right, client], edges)
+    )
+
+    // The right subclass and adapter overlap by only 25px, so their straight
+    // lane would attach near both corners. One clean bend is preferable when it
+    // lets each lone side divide itself into two equal stretches.
+    expect(routeById["right-adapter"]).toEqual([
+      { x: 515, y: 330 },
+      { x: 515, y: 155 },
+      { x: 460, y: 155 },
+    ])
   })
 
   it("coordinates a live endpoint reconnect against its predicted committed node", () => {

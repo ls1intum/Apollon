@@ -1,5 +1,5 @@
-import { Position, type Rect } from "@xyflow/react"
-import { CANVAS, EDGES } from "@/constants"
+import { Position, type Rect } from "@xyflow/system"
+import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
 import type { IPoint } from "@/edges/Connection"
 import { getConnectionMode, getEdgeAnchorPoint } from "@/utils/connectionModes"
 import { type FreeformEdgeAnchor } from "@/utils/edgeUtils"
@@ -404,8 +404,16 @@ const scoreKey = (
   const ds = Math.round(1000 * Math.abs(source.anchor.ratio - 0.5))
   const dt = Math.round(1000 * Math.abs(target.anchor.ratio - 0.5))
   const placement =
-    endpointPlacementCost(source.anchor, GRID) +
-    endpointPlacementCost(target.anchor, GRID)
+    endpointPlacementCost(
+      source.anchor,
+      sideAxisLength(source.anchor.side, sourceRect),
+      GRID
+    ) +
+    endpointPlacementCost(
+      target.anchor,
+      sideAxisLength(target.anchor.side, targetRect),
+      GRID
+    )
   const preference =
     endpointPreferenceCost(
       source.anchor,
@@ -569,6 +577,11 @@ export type AutoAnchorInput = {
   thirdPartyObstacles?: readonly ObstacleRect[]
   neighborEdges: readonly IPoint[][]
   enableStraightPath: boolean
+  /** Previously proven route for this edge. When its endpoints still occur in
+   * the current candidate set, A* may use its freshly re-priced cost as an exact
+   * upper bound. The route is never accepted on memory alone: the current graph
+   * still proves that no cheaper or canonically earlier result exists. */
+  incumbentRoute?: readonly IPoint[]
 }
 
 export type AutoAnchorResult = {
@@ -748,11 +761,37 @@ export const selectEdgeAnchors = (
     if (aligned) sourceOptions.push(aligned)
   }
 
-  // Resolve the Cartesian candidate set once, retaining the exact marker-padded
-  // endpoint geometry for the winning pair. Although one end's resolution is
-  // independent today, keeping the matrix avoids baking that implementation detail
-  // into the optimiser's contract.
-  const resolved = new Map<string, ResolvedEdgeEndpoints>()
+  // Endpoint resolution is separable: a source anchor determines only the source
+  // half of ResolvedEdgeEndpoints, and likewise for the target. Resolve each choice
+  // once, then compose pairs. The former Cartesian loop repeated identical shape
+  // projection/marker work sourceOptions × targetOptions times (up to 64 resolves
+  // for eight choices per end) on every cache miss.
+  const combineEndpoints = (
+    source: ResolvedEdgeEndpoints,
+    target: ResolvedEdgeEndpoints
+  ): ResolvedEdgeEndpoints => ({
+    adjustedSource: source.adjustedSource,
+    adjustedTarget: target.adjustedTarget,
+    sourcePosition: source.sourcePosition,
+    targetPosition: target.targetPosition,
+    rounded: {
+      sourceX: source.rounded.sourceX,
+      sourceY: source.rounded.sourceY,
+      targetX: target.rounded.targetX,
+      targetY: target.rounded.targetY,
+    },
+    sourceAbsolutePosition: source.sourceAbsolutePosition,
+    targetAbsolutePosition: target.targetAbsolutePosition,
+    sourceSize: source.sourceSize,
+    targetSize: target.targetSize,
+    padding: source.padding,
+  })
+  const resolvedSources: Array<ResolvedEdgeEndpoints | undefined> = new Array(
+    sourceOptions.length
+  )
+  const resolvedTargets: Array<ResolvedEdgeEndpoints | undefined> = new Array(
+    targetOptions.length
+  )
   const sourceCandidates: Array<RouteEndpointCandidate | undefined> = new Array(
     sourceOptions.length
   )
@@ -766,54 +805,66 @@ export const selectEdgeAnchors = (
       EDGES.MIN_NODE_CLEARANCE_PX
     )
   }
+  const referenceSource = sourceOptions[0]
+  const referenceTarget = targetOptions[0]
   for (let sourceIndex = 0; sourceIndex < sourceOptions.length; sourceIndex++) {
     const source = sourceOptions[sourceIndex]
-    for (
-      let targetIndex = 0;
-      targetIndex < targetOptions.length;
-      targetIndex++
-    ) {
-      const target = targetOptions[targetIndex]
-      const endpoints = input.resolve({
-        sourceAnchor: source.anchor,
-        targetAnchor: target.anchor,
-      })
-      if (!endpoints) continue
-      resolved.set(`${sourceIndex}:${targetIndex}`, endpoints)
-      sourceCandidates[sourceIndex] ??= {
-        point: endpoints.adjustedSource,
-        position: endpoints.sourcePosition,
-        stubLength: EDGES.STUB_LENGTH,
-        cost: input.sourceCustom
-          ? 0
-          : endpointPlacementCost(source.anchor, GRID) +
-            endpointPreferenceCost(
-              source.anchor,
-              input.sourcePreferred,
-              sideAxisLength(source.anchor.side, input.sourceRect),
-              GRID
-            ),
-        forceStubTurn:
-          Boolean(input.sourceCustom) &&
-          forceStubTurn(source.anchor, input.sourceRect),
-      }
-      targetCandidates[targetIndex] ??= {
-        point: endpoints.adjustedTarget,
-        position: endpoints.targetPosition,
-        stubLength: EDGES.STUB_LENGTH,
-        cost: input.targetCustom
-          ? 0
-          : endpointPlacementCost(target.anchor, GRID) +
-            endpointPreferenceCost(
-              target.anchor,
-              input.targetPreferred,
-              sideAxisLength(target.anchor.side, input.targetRect),
-              GRID
-            ),
-        forceStubTurn:
-          Boolean(input.targetCustom) &&
-          forceStubTurn(target.anchor, input.targetRect),
-      }
+    const endpoints = input.resolve({
+      sourceAnchor: source.anchor,
+      targetAnchor: referenceTarget.anchor,
+    })
+    if (!endpoints) continue
+    resolvedSources[sourceIndex] = endpoints
+    sourceCandidates[sourceIndex] = {
+      point: endpoints.adjustedSource,
+      position: endpoints.sourcePosition,
+      stubLength: EDGES.STUB_LENGTH,
+      cost: input.sourceCustom
+        ? 0
+        : endpointPlacementCost(
+            source.anchor,
+            sideAxisLength(source.anchor.side, input.sourceRect),
+            GRID
+          ) +
+          endpointPreferenceCost(
+            source.anchor,
+            input.sourcePreferred,
+            sideAxisLength(source.anchor.side, input.sourceRect),
+            GRID
+          ),
+      forceStubTurn:
+        Boolean(input.sourceCustom) &&
+        forceStubTurn(source.anchor, input.sourceRect),
+    }
+  }
+  for (let targetIndex = 0; targetIndex < targetOptions.length; targetIndex++) {
+    const target = targetOptions[targetIndex]
+    const endpoints = input.resolve({
+      sourceAnchor: referenceSource.anchor,
+      targetAnchor: target.anchor,
+    })
+    if (!endpoints) continue
+    resolvedTargets[targetIndex] = endpoints
+    targetCandidates[targetIndex] = {
+      point: endpoints.adjustedTarget,
+      position: endpoints.targetPosition,
+      stubLength: EDGES.STUB_LENGTH,
+      cost: input.targetCustom
+        ? 0
+        : endpointPlacementCost(
+            target.anchor,
+            sideAxisLength(target.anchor.side, input.targetRect),
+            GRID
+          ) +
+          endpointPreferenceCost(
+            target.anchor,
+            input.targetPreferred,
+            sideAxisLength(target.anchor.side, input.targetRect),
+            GRID
+          ),
+      forceStubTurn:
+        Boolean(input.targetCustom) &&
+        forceStubTurn(target.anchor, input.targetRect),
     }
   }
 
@@ -833,15 +884,17 @@ export const selectEdgeAnchors = (
     jointSources,
     jointTargets,
     input.obstacles,
-    input.neighborEdges
+    input.neighborEdges,
+    input.incumbentRoute
   )
   if (joint) {
     const sourceIndex = sourceMap[joint.sourceIndex]
     const targetIndex = targetMap[joint.targetIndex]
-    const endpoints = resolved.get(`${sourceIndex}:${targetIndex}`)
-    if (endpoints) {
+    const resolvedSource = resolvedSources[sourceIndex]
+    const resolvedTarget = resolvedTargets[targetIndex]
+    if (resolvedSource && resolvedTarget) {
       return {
-        endpoints,
+        endpoints: combineEndpoints(resolvedSource, resolvedTarget),
         route: joint.route,
         sourceAnchor: input.sourceCustom
           ? undefined
@@ -866,17 +919,18 @@ export const selectEdgeAnchors = (
   // Score every (source, target) pair on its IDEAL route — obstacle- and
   // neighbour-free, so free of any A* search. This is where the weighed cost
   // trades bends against off-centre; the winner alone pays for a real route.
-  for (const source of sourceOptions) {
-    for (const target of targetOptions) {
-      const endpoints = input.resolve({
-        // Always resolve the chosen anchor explicitly. For a free end it is the
-        // candidate; for a PINNED end (a user anchor OR a solver-assigned band port)
-        // it is that fixed anchor — and a band port is NOT stored on the edge, so it
-        // must be passed here or the resolve would fall back to the default point.
-        sourceAnchor: source.anchor,
-        targetAnchor: target.anchor,
-      })
-      if (!endpoints) continue
+  for (let sourceIndex = 0; sourceIndex < sourceOptions.length; sourceIndex++) {
+    const source = sourceOptions[sourceIndex]
+    for (
+      let targetIndex = 0;
+      targetIndex < targetOptions.length;
+      targetIndex++
+    ) {
+      const target = targetOptions[targetIndex]
+      const resolvedSource = resolvedSources[sourceIndex]
+      const resolvedTarget = resolvedTargets[targetIndex]
+      if (!resolvedSource || !resolvedTarget) continue
+      const endpoints = combineEndpoints(resolvedSource, resolvedTarget)
       const idealRoute = routeStepEdge(
         toRouteParams(
           endpoints,

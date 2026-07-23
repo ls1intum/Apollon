@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { useInternalNode } from "@xyflow/react"
 import { useDiagramStore, useEdgeGeometryStore } from "@/store"
 import {
@@ -11,8 +12,8 @@ import {
  * memoryless router derives attachment sides itself, so the stored handle is often
  * stale), with the stored handle as the pre-route fallback.
  *
- * Returns a primitive, so a component using it re-renders only when the side flips —
- * even though it reacts to every geometry update. Shared by the component and deployment
+ * The hook subscribes to the settled map reference, so display-only preview writes
+ * do not repeat the occupied-side scan. Shared by the component and deployment
  * interface nodes so both behave identically.
  */
 export function useInterfaceLabelSide(
@@ -21,19 +22,28 @@ export function useInterfaceLabelSide(
 ): InterfaceLabelSide {
   const edges = useDiagramStore((state) => state.edges)
   const internal = useInternalNode(id)
-  const rect =
-    internal && internal.measured.width && internal.measured.height
-      ? {
-          x: internal.internals.positionAbsolute.x,
-          y: internal.internals.positionAbsolute.y,
-          width: internal.measured.width,
-          height: internal.measured.height,
-        }
-      : undefined
-  return useEdgeGeometryStore((state) =>
-    computeInterfaceLabelSide(edges, id, {
+  const rectX = internal?.internals.positionAbsolute.x
+  const rectY = internal?.internals.positionAbsolute.y
+  const rectWidth = internal?.measured.width
+  const rectHeight = internal?.measured.height
+  const geometryById = useEdgeGeometryStore((state) => state.geometryById)
+  return useMemo(() => {
+    const rect =
+      rectX !== undefined && rectY !== undefined && rectWidth && rectHeight
+        ? { x: rectX, y: rectY, width: rectWidth, height: rectHeight }
+        : undefined
+    return computeInterfaceLabelSide(edges, id, {
       badgeTopRight: opts?.badgeTopRight,
-      geometry: rect ? { rect, routeById: state.geometryById } : undefined,
+      geometry: rect ? { rect, routeById: geometryById } : undefined,
     })
-  )
+  }, [
+    edges,
+    id,
+    opts?.badgeTopRight,
+    rectX,
+    rectY,
+    rectWidth,
+    rectHeight,
+    geometryById,
+  ])
 }

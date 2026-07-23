@@ -32,7 +32,10 @@ import {
   type AssessmentSelectionStore,
 } from "@/store/assessmentSelectionStore"
 import { createAlignmentGuidesStore } from "@/store/alignmentGuidesStore"
-import { createEdgeGeometryStore } from "@/store/edgeGeometryStore"
+import {
+  createEdgeGeometryStore,
+  type EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
 import {
   DiagramStoreContext,
   MetadataStoreContext,
@@ -128,6 +131,7 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
+  private readonly edgeGeometryStore: StoreApi<EdgeGeometryStore>
   private readonly overlayStore: StoreApi<OverlayStore>
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private readonly controlGenerations = new Map<string, number>()
@@ -159,7 +163,7 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
-    const edgeGeometryStore = createEdgeGeometryStore()
+    this.edgeGeometryStore = createEdgeGeometryStore()
     this.overlayStore = createOverlayStore()
     this.syncManager = new YjsSync(
       this.ydoc,
@@ -273,7 +277,9 @@ export class ApollonEditor {
               <AlignmentGuidesStoreContext.Provider
                 value={alignmentGuidesStore}
               >
-                <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
+                <EdgeGeometryStoreContext.Provider
+                  value={this.edgeGeometryStore}
+                >
                   <OverlayStoreContext.Provider value={this.overlayStore}>
                     <AppWithProvider
                       onReactFlowInit={this.setReactFlowInstance.bind(this)}
@@ -683,6 +689,7 @@ export class ApollonEditor {
                         onReactFlowInit={setReactFlowInstance}
                         collaboration={disabledCollaboration}
                         awareness={noopCollaborationAwareness}
+                        onlyRenderVisibleElements={false}
                       />
                     </OverlayStoreContext.Provider>
                   </EdgeGeometryStoreContext.Provider>
@@ -741,6 +748,20 @@ export class ApollonEditor {
           })
         }, 150)
       })
+
+      // Large diagrams route in a versioned Worker after their handles measure.
+      // Export must observe the accepted exact generation, not whichever settled
+      // route happened to be visible after the historical fixed delay above.
+      await Promise.race([
+        edgeGeometryStore.getState().waitForSettled(),
+        new Promise<never>((_, reject) => {
+          setTimeout(
+            () =>
+              reject(new Error("Edge geometry did not settle before export")),
+            3000
+          )
+        }),
+      ])
 
       filterRenderedElements(container, options)
 
@@ -1147,9 +1168,34 @@ export class ApollonEditor {
         edgeSearchExpansions: number
         edgeSearchesMaxExpansions: number
         edgeSearchesAbandoned: number
+        edgeSearchMs: number
+        edgeSearchMaxMs: number
+        edgeSearchSetupMs: number
+        edgeSearchLoopMs: number
+        edgeStepPricings: number
+        edgeHeuristicEvaluations: number
+        edgeHeapPushes: number
+        edgeIncumbentBounds: number
+        edgeBoundPrunes: number
+        edgeMaxCells: number
+        routeScorePairs: number
+        routeScoreMs: number
+        routeScoreRuns: number
         solveMs: number
         solveMaxMs: number
         solveCount: number
+        workerSolveCount: number
+        workerAttemptCount: number
+        workerFallbackCount: number
+        workerInitialSyncCount: number
+        workerSmallSyncCount: number
+        previewDecisionHoldCount: number
+        previewDecisionConfirmCount: number
+        previewDecisionInvalidationCount: number
+        edgeRenderCount: number
+        routingSolving: number
+        routingPreviewCount: number
+        diagramEdgeCount: number
       }
     | undefined {
     if (!import.meta.env.DEV && import.meta.env.VITE_E2E !== "true")
@@ -1165,9 +1211,37 @@ export class ApollonEditor {
       edgeSearchExpansions: counters?.routerExpansions ?? 0,
       edgeSearchesMaxExpansions: counters?.routerMaxExpansions ?? 0,
       edgeSearchesAbandoned: counters?.routerAbandoned ?? 0,
+      edgeSearchMs: counters?.routerSearchMs ?? 0,
+      edgeSearchMaxMs: counters?.routerSearchMaxMs ?? 0,
+      edgeSearchSetupMs: counters?.routerSetupMs ?? 0,
+      edgeSearchLoopMs: counters?.routerLoopMs ?? 0,
+      edgeStepPricings: counters?.routerStepPricings ?? 0,
+      edgeHeuristicEvaluations: counters?.routerHeuristicEvaluations ?? 0,
+      edgeHeapPushes: counters?.routerHeapPushes ?? 0,
+      edgeIncumbentBounds: counters?.routerIncumbentBounds ?? 0,
+      edgeBoundPrunes: counters?.routerBoundPrunes ?? 0,
+      edgeMaxCells: counters?.routerMaxCells ?? 0,
+      routeScorePairs: counters?.routeScorePairs ?? 0,
+      routeScoreMs: counters?.routeScoreMs ?? 0,
+      routeScoreRuns: counters?.routeScoreRuns ?? 0,
       solveMs: counters?.solveMs ?? 0,
       solveMaxMs: counters?.solveMaxMs ?? 0,
       solveCount: counters?.solveCount ?? 0,
+      workerSolveCount: counters?.workerSolveCount ?? 0,
+      workerAttemptCount: counters?.workerAttemptCount ?? 0,
+      workerFallbackCount: counters?.workerFallbackCount ?? 0,
+      workerInitialSyncCount: counters?.workerInitialSyncCount ?? 0,
+      workerSmallSyncCount: counters?.workerSmallSyncCount ?? 0,
+      previewDecisionHoldCount: counters?.previewDecisionHoldCount ?? 0,
+      previewDecisionConfirmCount: counters?.previewDecisionConfirmCount ?? 0,
+      previewDecisionInvalidationCount:
+        counters?.previewDecisionInvalidationCount ?? 0,
+      edgeRenderCount: counters?.edgeRenderCount ?? 0,
+      routingSolving: this.edgeGeometryStore.getState().isSolving ? 1 : 0,
+      routingPreviewCount: Object.keys(
+        this.edgeGeometryStore.getState().previewById
+      ).length,
+      diagramEdgeCount: this.diagramStore.getState().edges.length,
     }
   }
 

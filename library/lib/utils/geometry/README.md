@@ -1,8 +1,9 @@
 # Orthogonal edge routing
 
-Four stages turn a diagram into edge polylines. Each is a pure function of the current
-geometry — nothing is remembered between frames, so two collaborators and a page reload
-derive the same picture.
+Four stages turn a diagram into edge polylines. Each solve is a pure function of the
+current geometry, so two collaborators and a page reload derive the same picture. Runtime
+caches retain only proven results and exact search bounds between frames; cold and warm
+execution are required to produce byte-identical routes.
 
 | Stage                      | File                                      | Decides                                                                      |
 | -------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
@@ -26,6 +27,50 @@ release.
 Anything both a stage and the router must agree on belongs there; a second copy that
 drifts is how this subsystem has broken before.
 
+## Incremental and Worker execution
+
+The React integration keeps one persistent solve cache per editor. A complete signature
+covers each edge's endpoint candidates, local obstacle corridor, relevant neighbouring
+segments, port proposals, and authored constraints. Unchanged edges therefore reuse their
+exact route; a small bounded history also makes reversible A → B → A gestures reuse the
+already-proven A result instead of searching again. When a changed signature still has a
+representable previous route, A\* re-prices that route under the new cost field and uses it
+as an exact upper bound. It may prune work strictly above the bound, but it must still
+explore equal-cost states so deterministic canonical tie-breaking remains identical to a
+cold solve.
+
+The first solve and small diagrams run synchronously so geometry is available before
+paint. Larger subsequent solves run in a versioned module Worker with one request in
+flight and one replaceable pending snapshot. This gives the solver backpressure: a pointer
+storm cannot build an obsolete FIFO queue. Above the measured large-scene crossover,
+the newest changing snapshot is sampled at an 80 ms cadence. A successful superseded
+generation cannot commit, but it can become the display-only route baseline projected onto
+the current pointer position. This keeps neighboring edges flowing holistically throughout
+a sustained drag without putting routing on the interaction frame. Pointer-up dispatches
+the final revision immediately, and only a matching session and latest revision may replace
+settled geometry. Because sampled Worker generations can lag a fast pointer, preview-only
+hysteresis requires a changed side, port, or route-direction sequence to appear in two
+consecutive exact samples before displaying it. Coordinate refinements within the current
+decision still flow immediately, and a displayed route that now crosses a solid unrelated
+node yields immediately rather than preserving invalid geometry. This filter never enters
+the exact cost model, so collaboration and reload determinism remain history-independent. A
+customized edge's authored preview stays authoritative throughout. The exact accepted result
+then becomes authoritative atomically. When its topology differs from the last display
+preview, the rendered path takes a 120 ms orthogonal handoff to the exact route: alternating
+horizontal/vertical segments are aligned with zero-length segments before interpolation, so
+even different bend counts never produce a diagonal. Exact spatial consumers already see
+the accepted generation, and `waitForSettled` resolves only after the display handoff,
+preventing export from capturing an intermediate path. Reduced-motion clients skip the
+handoff. Label obstacle queries read the node snapshot paired with the same accepted
+generation, so a transient drag cannot wake every edge through a second geometry channel.
+The interactive React Flow mount viewport-culls DOM elements, while the dedicated export
+mount explicitly renders the whole model. Export also waits for the accepted generation
+rather than racing a fixed timeout.
+
+`routingConstants.ts` is the Worker-safe leaf for canvas and connector geometry values.
+The public constants module re-exports those same objects; the routing kernel must import
+the leaf directly so its dependency graph never traverses React components.
+
 ## Why it is shaped this way
 
 The literature is consistent that fixed-node connector routing wants **one cohesive per-edge
@@ -38,6 +83,13 @@ enough to prefer several bends and a moderate detour, but not enough to create e
 when crossing is the coherent result. Authored diagonal segments participate in this same
 crossing, overlap, and crowding model rather than being approximated as staircases.
 
+Container frames are synthetic boundaries, not diagram edges. The solver first prices real
+neighbouring routes with the crossing model above, then consults package/pool borders only if
+the result would run along or crowd a frame. A clean perpendicular exit from a container is
+therefore free, while lying on its outline still triggers a reroute. Keeping those geometries
+distinct prevents a necessary package exit from masquerading as an edge crossing and pushing
+sibling connectors into the same detour lane.
+
 For a small interacting edge component with a crossing, overlap, or visibly displaced
 shared-side band, Apollon tries a bounded family of deterministic ordering variants.
 Disconnected remote edges do not enter that combinatorial budget. Their routes stay fixed,
@@ -48,6 +100,15 @@ Manual/live/plain-line topology is seeded as immutable geometry in every variant
 not consume the eight-mutable-edge repair budget. A pinned-only edge keeps its endpoint seats
 but its generated route remains mutable, so the optimizer can still remove crossings between
 pins.
+
+Port balance is measured over the complete side, not just by the ports' centroid. `n` ports
+make `n + 1` stretches (one port makes two, two make three), and `sideGapBalance` compares
+that whole gap vector with the most even placement available on the 5 px canvas grid. This
+catches both a lone off-centre endpoint and a symmetric-but-too-tight group. The joint router
+may legitimately move an edge to a different side after node-local coordination; one bounded
+feedback candidate therefore reassigns seats from the sides the routes actually chose. That
+closes the side → port → route loop without weakening pins, authored bends, or live drag
+geometry, and a candidate is accepted only when the whole component score strictly improves.
 
 - **Wybrow, Marriott & Stuckey, _Orthogonal Connector Routing_ (GD 2009)** —
   [PDF](https://users.monash.edu/~mwybrow/papers/wybrow-gd-2009.pdf). Per-connector cost
@@ -87,10 +148,15 @@ must be **totally ordered and exactly computed**:
   `Array.prototype.sort` is free to differ between engines
   ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort));
 - caches may make things faster, never different: a key must cover every input its
-  computation reads.
+  computation reads, but only the clipped obstacle/edge corridor the search can actually
+  reach — remote changes outside that corridor cannot influence or invalidate a route;
+- heuristics may change the order of exact A\* work, never the cost being optimized. A
+  stronger lower bound is retained only when profiling shows that it saves more work than
+  it spends; exact cost/validity checks remain authoritative either way.
 
 `edge-routing-quality.spec.ts` parses the rendered `M`/`L` vertices exactly and guards the
 output as measurements — crossings, collinear overlap, corners, straightness, corner-jam,
-and shared-side centroid balance — rather than screenshots or sampled paths. One-grid-cell
-doglegs therefore remain visible to the regression suite, while the router can still be
-rewritten freely as long as the drawing does not get worse.
+shared-side centroid balance, lone-port balance, and complete shared-side `n + 1` gap balance
+— rather than screenshots or sampled paths. One-grid-cell doglegs therefore remain visible
+to the regression suite, while the router can still be rewritten freely as long as the
+drawing does not get worse.

@@ -27,31 +27,104 @@ export const ROUTING_COST = Object.freeze({
   // side costs less than one bend, so the exact route can overrule an approximate
   // side assignment as soon as it saves a corner or a real conflict.
   preferredSideChangeInGridCells: 7,
-  preferredPortDisplacementPerPx: 2,
+  // Holding a coordinated n+1 seat must cover both competing local terms: moving
+  // toward the singleton midpoint changes two gaps by d (2d), and can shorten the
+  // route by at most d. The cost adds one deterministic unit beyond this exact 3d
+  // bound below; side changes retain their separate sub-bend cap.
+  preferredPortDisplacementPerPx: 3,
 })
 
-/**
- * Convex placement cost for one freely-selected port. At 30% off-centre on both
- * ends the pair costs one bend, preserving the editor's established crossover
- * while putting it in the same pixel units as A*.
- */
-export const endpointPlacementCost = (
-  anchor: FreeformEdgeAnchor,
+export type SideGapBalance = Readonly<{
+  cost: number
+  maxGapErrorPx: number
+  totalGapErrorPx: number
+}>
+
+/** Grid-constrained port offsets whose n+1 stretches are as equal as possible.
+ * Mirrored pairs share one rounding decision, so half-grid ties cannot bias the
+ * complete group toward the positive end of the side. */
+export const balancedPortOffsets = (
+  count: number,
+  sideLength: number,
   gridSize: number
-): number => {
-  const deviationPermille = Math.round(1000 * Math.abs(anchor.ratio - 0.5))
-  const balanced = (deviationPermille * deviationPermille * gridSize) / 22_500
-  // Past 30% displacement the port enters the visual corner zone. Keep the
-  // established 30%-versus-one-bend crossover, then steepen the curve so shaving
-  // a short amount of path cannot jam both endpoints against corners.
-  const cornerExcess = Math.max(0, deviationPermille - 300)
-  const corner = (cornerExcess * cornerExcess * gridSize) / 2_500
-  return Math.round(balanced + corner)
+): number[] => {
+  if (count <= 0) return []
+  const length = Math.max(0, sideLength)
+  const grid = Math.max(1, gridSize)
+  const result = new Array<number>(count)
+  for (let leftIndex = 0; leftIndex < Math.ceil(count / 2); leftIndex++) {
+    const rightIndex = count - 1 - leftIndex
+    const left = Math.max(
+      0,
+      Math.min(
+        length,
+        Math.round((length * (leftIndex + 1)) / (count + 1) / grid) * grid
+      )
+    )
+    result[leftIndex] = left
+    if (rightIndex !== leftIndex) result[rightIndex] = length - left
+  }
+  return result
 }
 
-/** Cost of departing from a node-local side/seat proposal. Kept deliberately
- * below one bend: shared-node coordination breaks otherwise equal choices, while
- * the obstacle-aware route remains free to choose a genuinely better side. */
+/**
+ * Compare the `n + 1` stretches made by `n` ports with the most even placement
+ * available on the canvas grid. This sees both defects a centroid misses:
+ *
+ * - one lone port away from the midpoint makes its two stretches unequal;
+ * - a symmetric group can still have unequal outer/inner stretches.
+ *
+ * The L1 difference between the actual and balanced gap vectors is already in
+ * route pixels. Moving a lone port `d` pixels changes both adjacent stretches,
+ * so it costs `2d`; that is exactly the visual imbalance being introduced, not
+ * an arbitrary multiplier. Sorting makes the result independent of edge order.
+ */
+export const sideGapBalance = (
+  ratios: readonly number[],
+  sideLength: number,
+  gridSize: number
+): SideGapBalance => {
+  const length = Math.max(0, sideLength)
+  const grid = Math.max(1, gridSize)
+  if (ratios.length === 0 || length === 0)
+    return { cost: 0, maxGapErrorPx: 0, totalGapErrorPx: 0 }
+
+  const snap = (value: number): number =>
+    Math.max(0, Math.min(length, Math.round(value / grid) * grid))
+  const positions = ratios
+    .map((ratio) => snap(Math.max(0, Math.min(1, ratio)) * length))
+    .sort((a, b) => a - b)
+  const balanced = balancedPortOffsets(ratios.length, length, grid)
+  const gaps = (values: readonly number[]): number[] => [
+    values[0],
+    ...values.slice(1).map((value, index) => value - values[index]),
+    length - values[values.length - 1],
+  ]
+  const actualGaps = gaps(positions)
+  const balancedGaps = gaps(balanced)
+  const errors = actualGaps.map((gap, index) =>
+    Math.abs(gap - balancedGaps[index])
+  )
+  const totalGapErrorPx = errors.reduce((sum, error) => sum + error, 0)
+  const maxGapErrorPx = Math.max(...errors)
+  return {
+    cost: Math.round(totalGapErrorPx),
+    maxGapErrorPx,
+    totalGapErrorPx,
+  }
+}
+
+/** Cost of the two side stretches created by one freely-selected port. */
+export const endpointPlacementCost = (
+  anchor: FreeformEdgeAnchor,
+  sideLength: number,
+  gridSize: number
+): number => sideGapBalance([anchor.ratio], sideLength, gridSize).cost
+
+/** Cost of departing from a node-local side/seat proposal. A side change stays
+ * below one bend because the approximate side pass is soft. Along the same side,
+ * displacement is uncapped: it must preserve the shared gap seat against both the
+ * singleton midpoint regularizer and ordinary path-length savings. */
 export const endpointPreferenceCost = (
   anchor: FreeformEdgeAnchor,
   preferred: FreeformEdgeAnchor | undefined,
@@ -64,14 +137,12 @@ export const endpointPreferenceCost = (
     ROUTING_COST.preferredSideChangeInGridCells * gridSize
   )
   if (anchor.side !== preferred.side) return maximum
-  return Math.min(
-    maximum,
-    Math.round(
-      Math.abs(anchor.ratio - preferred.ratio) *
-        Math.max(0, sideLength) *
-        ROUTING_COST.preferredPortDisplacementPerPx
-    )
+  const displacement = Math.round(
+    Math.abs(anchor.ratio - preferred.ratio) *
+      Math.max(0, sideLength) *
+      ROUTING_COST.preferredPortDisplacementPerPx
   )
+  return displacement === 0 ? 0 : displacement + 1
 }
 
 export type WeightedRoutingMetrics = {

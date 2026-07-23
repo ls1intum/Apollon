@@ -6,11 +6,10 @@ import { getPerfCounters } from "@/sync/perfCounters"
 import type { IPoint } from "@/edges/Connection"
 
 /**
- * The router runs on the render path: every edge re-routes while a node is
- * dragged, so its cost is paid per edge, per frame. A search that is merely "fast
- * enough" on two nodes is not fast enough on a real diagram — and a router nobody
- * can afford to run gets bypassed, which is how edges end up drawn through the
- * nodes it was written to avoid.
+ * Large subsequent solves run in a Worker, but their CPU and completion latency
+ * still matter. A search that is merely "fast enough" on two nodes is not fast
+ * enough on a real diagram — and a router nobody can afford to run gets bypassed,
+ * which is how edges end up drawn through the nodes it was written to avoid.
  *
  * Budgeted in WORK (searches, expansions), never in milliseconds. A stopwatch
  * measures the machine: it passes on a laptop, fails on a loaded CI box, and gets
@@ -161,8 +160,8 @@ describe("router performance", () => {
     //
     // Every state is expanded at most once (the heuristic is consistent, so a closed
     // state is settled), which bounds a search by its own lattice. These budgets are
-    // deliberately close to the measured cost — 912 expansions a search, worst edge
-    // 6_866 — because the count is deterministic: there is no machine variance to
+    // deliberately close to the measured cost — 852 expansions a search, worst edge
+    // 6_787 — because the count is deterministic: there is no machine variance to
     // leave headroom for, and headroom is only room for a regression to hide in.
     expect(expansions / searches).toBeLessThan(1_500)
 

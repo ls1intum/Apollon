@@ -307,12 +307,10 @@ describe("assignPorts — forks, nesting, merges emerge", () => {
     const ports = assignPorts(ends)
     const rs = [...ports.values()].map((p) => p.ratio).sort((x, y) => x - y)
     expect(rs).toHaveLength(2)
-    // Symmetric about the side centre, not pulled toward the right corner.
+    // Symmetric about the side centre, and as close to equal thirds as the 5px
+    // grid permits: 55 / 50 / 55px across the complete 160px side.
     expect(rs[0] + rs[1]).toBeCloseTo(1.0, 5)
-    for (const r of rs) {
-      expect(r).toBeGreaterThan(0.35)
-      expect(r).toBeLessThan(0.65)
-    }
+    expect(rs).toEqual([55 / 160, 105 / 160])
   })
 
   it("two same-side edges get distinct, symmetric, centred ports (nesting)", () => {
