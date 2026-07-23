@@ -72,6 +72,11 @@ test("the selected edge's toolbar buttons remain interactive", async ({
   await clickEdgeLine(page)
   expect(await selectedEdgeIds(page)).toEqual([EDGE])
 
-  await page.getByRole("button", { name: "Edit edge" }).click()
+  const edit = page.getByRole("button", { name: "Edit edge" })
+  const box = (await edit.boundingBox())!
+  expect(box.width).toBe(28)
+  expect(box.height).toBe(28)
+  // Exercise the button box outside the centered 16px icon mask.
+  await page.mouse.click(box.x + box.width - 2, box.y + 2)
   await expect(page.locator(".apollon-popover")).toBeVisible()
 })

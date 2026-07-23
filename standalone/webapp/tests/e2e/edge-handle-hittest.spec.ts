@@ -72,7 +72,7 @@ test("the edge toolbar body does not capture pointer events (only its buttons do
     )
     .evaluate((root) => {
       const body = root.querySelector(
-        ".apollon-edge-toolbar"
+        ".apollon-element-toolbar"
       ) as HTMLElement | null
       const button = body?.querySelector("button") as HTMLElement | null
       if (!body || !button) return null

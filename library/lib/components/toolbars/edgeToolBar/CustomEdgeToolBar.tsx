@@ -5,7 +5,7 @@ import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { useLabels } from "@/i18n/useLabels"
-import { IconButton } from "@/components/ui"
+import { ButtonGroup, IconButton } from "@/components/ui"
 
 interface CustomEdgeToolbarProps {
   edgeId: string
@@ -38,24 +38,17 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       x={position.x + 20}
       y={position.y + 20}
       isVisible={isVisible}
+      className="apollon-element-toolbar-host"
       style={{
         zIndex: ZINDEX.TOOLTIP,
         pointerEvents: "none",
       }}
     >
-      <div
+      <ButtonGroup
         ref={anchorRef}
-        className="apollon-edge-toolbar"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 8,
-          padding: 8,
-          borderRadius: "var(--apollon-radius-lg, 8px)",
-          backgroundColor: "var(--apollon-background, white)",
-          boxShadow: "0 0 4px var(--apollon-background-variant, #f8f9fa)",
-        }}
+        aria-label={t.selectionActions}
+        orientation="vertical"
+        className="apollon-element-toolbar nodrag nopan"
       >
         <IconButton
           ariaLabel={t.deleteEdge}
@@ -89,7 +82,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             <RotateCcw width={16} height={16} aria-hidden="true" />
           </IconButton>
         )}
-      </div>
+      </ButtonGroup>
     </EdgeToolbar>
   )
 }

@@ -2,6 +2,8 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useHandleDelete } from "@/hooks/useHandleDelete"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { usePopoverStore } from "@/store"
+import { ButtonGroup, IconButton } from "@/components/ui"
+import { useLabels } from "@/i18n/useLabels"
 import { Position, NodeToolbar as ReactFlowNodeToolbar } from "@xyflow/react"
 import { Pencil, Trash2 } from "lucide-react"
 import { FC } from "react"
@@ -19,6 +21,7 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
 
   const isDiagramModifiable = useDiagramModifiable()
   const selected = useIsOnlyThisElementSelected(elementId)
+  const t = useLabels()
 
   return (
     <ReactFlowNodeToolbar
@@ -26,46 +29,37 @@ export const NodeToolbar: FC<Props> = ({ elementId, showEdit = true }) => {
       position={Position.Top}
       align="end"
       offset={10}
-      // The toolbar wrapper is larger than its two icons; left opaque to the
-      // pointer, its empty margins and the gap between the icons swallow clicks
-      // meant for whatever node sits beneath (the toolbar floats at the node's
-      // top-right). Make the box transparent and re-enable only the icons, so
-      // only the icons themselves capture — matching the edge toolbar.
+      className="apollon-element-toolbar-host"
       style={{ pointerEvents: "none" }}
     >
-      <div
-        className="nodrag nopan"
+      <ButtonGroup
+        aria-label={t.selectionActions}
+        orientation="vertical"
+        className="apollon-element-toolbar nodrag nopan"
         onPointerDownCapture={(event) => event.stopPropagation()}
         onMouseDownCapture={(event) => event.stopPropagation()}
         onTouchStartCapture={(event) => event.stopPropagation()}
-        style={{ display: "flex", gap: 8, flexDirection: "column" }}
       >
-        <Trash2
+        <IconButton
+          ariaLabel={t.deleteElement}
+          tooltip={t.deleteElement}
           onClick={handleDelete}
-          style={{
-            cursor: "pointer",
-            pointerEvents: "auto",
-            width: 16,
-            height: 16,
-            color: "var(--apollon-foreground, #000000)",
-          }}
-        />
+        >
+          <Trash2 width={16} height={16} aria-hidden="true" />
+        </IconButton>
 
         {showEdit && (
-          <Pencil
+          <IconButton
+            ariaLabel={t.editElement}
+            tooltip={t.editElement}
             onClick={() => {
               setPopOverElementId(elementId)
             }}
-            style={{
-              cursor: "pointer",
-              pointerEvents: "auto",
-              width: 16,
-              height: 16,
-              color: "var(--apollon-foreground, #000000)",
-            }}
-          />
+          >
+            <Pencil width={16} height={16} aria-hidden="true" />
+          </IconButton>
         )}
-      </div>
+      </ButtonGroup>
     </ReactFlowNodeToolbar>
   )
 }

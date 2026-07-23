@@ -1472,12 +1472,30 @@ svg.react-flow__connectionline {
   cursor: grabbing;
 }
 
-/* Edge toolbar: only buttons capture pointer events, not the box body. */
-.apollon-edge-toolbar {
+/* Node and edge actions use the same compact shadcn-style button group. React
+   Flow owns positioning/scaling; the shared group owns appearance and hit areas. */
+.react-flow__node-toolbar.apollon-element-toolbar-host,
+.react-flow__edge-toolbar.apollon-element-toolbar-host {
+  padding: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   pointer-events: none;
 }
 
-.apollon-edge-toolbar > * {
+.apollon-element-toolbar {
+  padding: 2px;
+  background: var(--apollon-surface, #fff);
+  border: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: var(--apollon-radius-md, 6px);
+  box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
+  pointer-events: none;
+}
+
+.apollon-element-toolbar [data-slot="icon-button"] {
   pointer-events: auto;
 }
 
