@@ -1,4 +1,4 @@
-import type { UMLModel } from "@tumaet/apollon"
+import { importDiagram, type UMLModel } from "@tumaet/apollon"
 import adapter from "../../assets/diagramTemplates/Adapter.json"
 import bridge from "../../assets/diagramTemplates/Bridge.json"
 import command from "../../assets/diagramTemplates/Command.json"
@@ -27,6 +27,15 @@ const routingPolicies = [
 ] as const
 
 describe("diagram template routing policy", () => {
+  it.each(templates)(
+    "%s is directly importable as a valid Apollon diagram",
+    (_, source) => {
+      const model = importDiagram(structuredClone(source))
+
+      expect(model.edges.every((edge) => edge.data != null)).toBe(true)
+    }
+  )
+
   it.each(routingPolicies)(
     "%s keeps associations automatic and pins only canonical hierarchy seats",
     (_name, source, expected) => {

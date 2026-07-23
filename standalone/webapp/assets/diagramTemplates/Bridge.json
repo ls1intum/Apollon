@@ -141,6 +141,7 @@
       "targetHandle": "left",
       "type": "ClassBidirectional",
       "selected": false,
+      "data": { "points": [] },
       "id": "xy-edge__286257b1-ebd3-424f-b3e4-c1c2a722531bright-2eb1ceb2-266e-4669-89f1-c61e246cb10cleft"
     },
     {
@@ -206,7 +207,8 @@
       "targetHandle": "left",
       "id": "1737993220311-2eb1ceb2-266e-4669-89f1-c61e246cb10c-889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "ClassBidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     }
   ],
   "assessments": {}

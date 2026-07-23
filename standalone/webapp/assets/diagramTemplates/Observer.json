@@ -113,7 +113,8 @@
       "targetHandle": "left-top",
       "id": "1737998083879-ea2576c6-d132-47d0-8caa-8f4a6df78256-b399bebd-10a6-444d-9c09-cf14f41aec7d",
       "type": "ClassBidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "659c7ab7-a771-400c-bd7c-ef061f1668f3",

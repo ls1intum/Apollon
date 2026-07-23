@@ -124,6 +124,7 @@
       "targetHandle": "left",
       "type": "ClassBidirectional",
       "selected": false,
+      "data": { "points": [] },
       "id": "xy-edge__cfc9b781-debe-4ca3-903c-9a9e555f6812right-1c0330be-83dd-4d92-9bd1-d62a36e90c7bleft"
     },
     {

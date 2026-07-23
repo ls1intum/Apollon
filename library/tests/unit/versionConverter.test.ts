@@ -1221,6 +1221,22 @@ describe("isV4Format", () => {
     expect(isV4Format(makeV4Model({ version: "4.1.0" }))).toBe(true)
   })
 
+  it("accepts legacy V4 edges with absent or null data for migration", () => {
+    expect(
+      isV4Format(
+        makeV4Model({
+          edges: [{ id: "without-data" }, { id: "null-data", data: null }],
+        })
+      )
+    ).toBe(true)
+  })
+
+  it("rejects V4 edges with non-object data", () => {
+    expect(
+      isV4Format(makeV4Model({ edges: [{ id: "bad-data", data: "invalid" }] }))
+    ).toBe(false)
+  })
+
   it("returns false for V3 data", () => {
     expect(isV4Format(makeV3Model())).toBe(false)
   })
@@ -1260,6 +1276,38 @@ describe("importDiagram", () => {
     const v4 = makeV4Model()
     const result = importDiagram(v4)
     expect(result).toBe(v4) // Same reference
+  })
+
+  it("hydrates legacy V4 edges with absent or null data", () => {
+    const result = importDiagram(
+      makeV4Model({
+        edges: [{ id: "without-data" }, { id: "null-data", data: null }],
+      })
+    )
+
+    expect(result.edges).toEqual([
+      { id: "without-data", data: { points: [] } },
+      { id: "null-data", data: { points: [] } },
+    ])
+  })
+
+  it("strips transient interaction state from imported V4 models", () => {
+    const result = importDiagram(
+      makeV4Model({
+        nodes: [
+          {
+            id: "node",
+            selected: false,
+            dragging: true,
+            resizing: false,
+          },
+        ],
+        edges: [{ id: "edge", selected: true, data: {} }],
+      })
+    )
+
+    expect(result.nodes[0]).toEqual({ id: "node" })
+    expect(result.edges[0]).toEqual({ id: "edge", data: { points: [] } })
   })
 
   it("converts V3 wrapped format", () => {

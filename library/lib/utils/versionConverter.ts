@@ -906,8 +906,8 @@ export function isV4Format(data: any): data is UMLModel {
       (edge: unknown) =>
         edge != null &&
         typeof edge === "object" &&
-        (edge as { data?: unknown }).data != null &&
-        typeof (edge as { data: unknown }).data === "object"
+        ((edge as { data?: unknown }).data == null ||
+          typeof (edge as { data: unknown }).data === "object")
     )
   )
 }
@@ -965,12 +965,57 @@ export function normalizeElementTags(model: UMLModel): UMLModel {
 }
 
 /**
+ * Remove React Flow interaction state that older exports and captured fixtures
+ * could persist. Imported models should contain only durable diagram data, not
+ * the selection or drag state of the editor that produced the file.
+ */
+function stripRuntimeInteractionState(model: UMLModel): UMLModel {
+  let changed = false
+
+  const nodes = model.nodes.map((node) => {
+    if (
+      !("selected" in node) &&
+      !("dragging" in node) &&
+      !("resizing" in node)
+    ) {
+      return node
+    }
+
+    changed = true
+    const persistentNode = { ...node } as ApollonNode & {
+      selected?: unknown
+      dragging?: unknown
+      resizing?: unknown
+    }
+    delete persistentNode.selected
+    delete persistentNode.dragging
+    delete persistentNode.resizing
+    return persistentNode
+  })
+
+  const edges = model.edges.map((edge) => {
+    if (!("selected" in edge)) return edge
+
+    changed = true
+    const persistentEdge = { ...edge } as ApollonEdge & {
+      selected?: unknown
+    }
+    delete persistentEdge.selected
+    return persistentEdge
+  })
+
+  return changed ? { ...model, nodes, edges } : model
+}
+
+/**
  * The single normalization pass every incoming model must pass through, whatever
  * its origin. Keep it idempotent and version-agnostic so already-saved `4.0.0`
  * files are repaired on load rather than gated behind a version check.
  */
 export function normalizeModel(model: UMLModel): UMLModel {
-  return normalizeElementTags(normalizeClassStereotypes(model))
+  return stripRuntimeInteractionState(
+    normalizeElementTags(normalizeClassStereotypes(model))
+  )
 }
 
 /**
