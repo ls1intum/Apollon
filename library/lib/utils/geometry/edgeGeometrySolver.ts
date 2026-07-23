@@ -12,6 +12,7 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getEdgeMarkerStyles,
+  getTargetConnectionPointPadding,
   preserveOrthogonalEdgePoints,
   isFreeformEdgeAnchor,
   roundAnchorPointOutward,
@@ -191,7 +192,10 @@ function resolveEdgeEndpoints(
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
-  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
+  const targetConnectionPointPadding = getTargetConnectionPointPadding(
+    padding,
+    resolvedTargetAnchor !== null
+  )
 
   const roundedSource = resolvedSourceAnchor
     ? roundAnchorPointOutward(resolvedSourceAnchor.point, sourcePosition)

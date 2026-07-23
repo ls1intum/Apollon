@@ -18,6 +18,7 @@ import {
   getFreeformAnchorFromPoint,
   getFreeformAnchorPoint,
   getSideHandleIdForPosition,
+  getTargetConnectionPointPadding,
   reduceVisibleArcCountForZoom,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
@@ -273,7 +274,7 @@ describe("getEdgeMarkerStyles", () => {
     {
       type: "ComponentRequiredInterface",
       end: "url(#required-interface)",
-      pad: MP + INTERFACE.SOCKET_GAP,
+      pad: MP + INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP,
     },
     {
       type: "ComponentRequiredQuarterInterface",
@@ -297,6 +298,26 @@ describe("getEdgeMarkerStyles", () => {
     if ("dash" in c) expect(result.strokeDashArray).toBe(c.dash)
     if ("offset" in c) expect(result.offset).toBe(c.offset)
     if ("pad" in c) expect(result.markerPadding).toBe(c.pad)
+  })
+})
+
+describe("getTargetConnectionPointPadding", () => {
+  it("keeps React Flow handle compensation for an unpinned endpoint", () => {
+    expect(getTargetConnectionPointPadding(EDGES.MARKER_PADDING, false)).toBe(
+      EDGES.MARKER_PADDING
+    )
+  })
+
+  it("removes handle compensation from an exact shape anchor", () => {
+    expect(getTargetConnectionPointPadding(EDGES.MARKER_PADDING, true)).toBe(0)
+  })
+
+  it("preserves the full ball-to-socket and line-to-socket gaps on an exact interface anchor", () => {
+    const requiredPadding =
+      EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP
+    expect(getTargetConnectionPointPadding(requiredPadding, true)).toBe(
+      INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP
+    )
   })
 })
 // ---------------------------------------------------------------------------

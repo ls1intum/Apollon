@@ -3,7 +3,9 @@ import {
   getInterfaceSocketGeometry,
   getMarkerHalfHeight,
 } from "@/components/svgs/edges"
-import { INTERFACE, MARKER_CONFIGS } from "@/constants"
+import { EDGES, INTERFACE, MARKER_CONFIGS } from "@/constants"
+import { adjustTargetCoordinates, getEdgeMarkerStyles } from "@/utils/edgeUtils"
+import { Position } from "@xyflow/system"
 
 // The aggregation/composition diamond and the inheritance triangle sit side by
 // side in a class diagram, so what a reader perceives is their proportions, not
@@ -58,8 +60,10 @@ describe("class diagram marker geometry", () => {
 })
 
 describe("required interface marker geometry", () => {
-  it("uses a true semicircle for the standard UML socket", () => {
-    expect(MARKER_CONFIGS["required-interface"].arcSpanDegrees).toBe(180)
+  it("wraps the standard socket beyond a half-circle without closing it", () => {
+    const span = MARKER_CONFIGS["required-interface"].arcSpanDegrees
+    expect(span).toBeGreaterThan(180)
+    expect(span).toBeLessThan(270)
   })
 
   it.each([
@@ -97,4 +101,52 @@ describe("required interface marker geometry", () => {
     expect(getMarkerHalfHeight("required-interface", 10)).toBe(14)
     expect(getMarkerHalfHeight("required-interface", 15)).toBe(19)
   })
+
+  it.each([
+    { position: Position.Left, direction: 0 },
+    { position: Position.Top, direction: Math.PI / 2 },
+    { position: Position.Right, direction: Math.PI },
+    { position: Position.Bottom, direction: -Math.PI / 2 },
+  ])(
+    "keeps a visible line-to-socket gap when entering from $position",
+    ({ position, direction }) => {
+      const center = { x: 100, y: 100 }
+      const towardTarget = {
+        x: Math.cos(direction),
+        y: Math.sin(direction),
+      }
+      // React Flow's handle center is three pixels outside the circle. The
+      // shared MARKER_PADDING compensates for this before marker-specific
+      // spacing is applied.
+      const rawHandle = {
+        x:
+          center.x - towardTarget.x * (INTERFACE.RADIUS - EDGES.MARKER_PADDING),
+        y:
+          center.y - towardTarget.y * (INTERFACE.RADIUS - EDGES.MARKER_PADDING),
+      }
+      const markerPadding = getEdgeMarkerStyles(
+        "ComponentRequiredInterface"
+      ).markerPadding!
+      const adjustedTarget = adjustTargetCoordinates(
+        rawHandle.x,
+        rawHandle.y,
+        position,
+        markerPadding
+      )
+      const edgeEnd = {
+        x: adjustedTarget.targetX,
+        y: adjustedTarget.targetY,
+      }
+      const socketPoint = {
+        x:
+          center.x - towardTarget.x * (INTERFACE.RADIUS + INTERFACE.SOCKET_GAP),
+        y:
+          center.y - towardTarget.y * (INTERFACE.RADIUS + INTERFACE.SOCKET_GAP),
+      }
+
+      expect(
+        Math.hypot(edgeEnd.x - socketPoint.x, edgeEnd.y - socketPoint.y)
+      ).toBe(INTERFACE.EDGE_SOCKET_GAP)
+    }
+  )
 })

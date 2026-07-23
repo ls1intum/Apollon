@@ -53,6 +53,38 @@ export const adjustSourceCoordinates = (
 }
 
 /**
+ * Convert marker padding from React Flow handle coordinates to a
+ * shape-projected anchor.
+ *
+ * Unpinned endpoints start at an RF handle whose center is
+ * `-EDGES.MARKER_PADDING` pixels outside the node. A projected/pinned anchor
+ * already lies on the exact shape boundary, so only the marker-specific
+ * remainder belongs there. Keeping this conversion shared prevents the
+ * centralized router and the two rendering hooks from disagreeing.
+ */
+export const getTargetConnectionPointPadding = (
+  markerPadding: number,
+  hasResolvedAnchor: boolean
+): number =>
+  hasResolvedAnchor ? markerPadding - EDGES.MARKER_PADDING : markerPadding
+
+/**
+ * Resolve the node side occupied by an endpoint from its terminal segment.
+ * `from` is the endpoint and `toward` is its neighboring route point, so this
+ * works for a source as-is and for a target when the route is read backwards.
+ */
+export const getEndpointSideFromSegment = (
+  from: IPoint,
+  toward: IPoint
+): Position => {
+  const dx = toward.x - from.x
+  const dy = toward.y - from.y
+  if (Math.abs(dx) >= Math.abs(dy))
+    return dx >= 0 ? Position.Right : Position.Left
+  return dy >= 0 ? Position.Bottom : Position.Top
+}
+
+/**
  * Round a shape-projected connection point without moving it back inside its
  * node. Fractional text measurements make this distinction observable at the
  * right and bottom boundaries.
@@ -280,10 +312,14 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredInterface":
     case "DeploymentRequiredInterface":
       return {
-        // markerPadding = MARKER_PADDING + gap
+        // markerPadding = MARKER_PADDING + ball/socket gap + line/socket gap
         // MARKER_PADDING (-3) compensates for React Flow handle offset
-        // gap is the spacing between socket arc and ball circle
-        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
+        // SOCKET_GAP keeps the arc off the ball, while EDGE_SOCKET_GAP keeps
+        // the relationship line from visually merging into the arc.
+        markerPadding:
+          EDGES.MARKER_PADDING +
+          INTERFACE.SOCKET_GAP +
+          INTERFACE.EDGE_SOCKET_GAP,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -291,7 +327,10 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
+        markerPadding:
+          EDGES.MARKER_PADDING +
+          INTERFACE.SOCKET_GAP +
+          INTERFACE.EDGE_SOCKET_GAP,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -299,7 +338,10 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
+        markerPadding:
+          EDGES.MARKER_PADDING +
+          INTERFACE.SOCKET_GAP +
+          INTERFACE.EDGE_SOCKET_GAP,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,

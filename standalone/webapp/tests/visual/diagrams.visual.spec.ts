@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Page } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -60,6 +60,86 @@ function pathBendCount(d: string | null): number {
       bends++
   }
   return bends
+}
+
+const REQUIRED_INTERFACE_TYPES = new Set([
+  "ComponentRequiredInterface",
+  "DeploymentRequiredInterface",
+  "ComponentRequiredQuarterInterface",
+  "DeploymentRequiredQuarterInterface",
+  "ComponentRequiredThreeQuarterInterface",
+  "DeploymentRequiredThreeQuarterInterface",
+])
+const STANDARD_REQUIRED_INTERFACE_ARC_RADIANS = (210 * Math.PI) / 180
+
+/**
+ * Whole-editor screenshots intentionally tolerate a small amount of
+ * anti-aliasing noise. A required-interface socket occupies too few pixels for
+ * that threshold to protect its topology, so assert its SVG geometry exactly:
+ * the relationship must stop before the arc, and each socket variant must keep
+ * its intended angular span.
+ */
+async function expectRequiredInterfaceGeometry(
+  page: Page,
+  fixture: Record<string, unknown>,
+  expectedArcByEdgeId?: Readonly<Record<string, number>>
+) {
+  const edges = (fixture.edges ?? []) as Array<{
+    id: string
+    type: string
+    target: string
+  }>
+  const requiredEdges = edges.filter((edge) =>
+    REQUIRED_INTERFACE_TYPES.has(edge.type)
+  )
+
+  for (const edge of requiredEdges) {
+    const geometry = await page
+      .locator(`.react-flow__edge[data-id="${edge.id}"]`)
+      .evaluate((element) => {
+        const line = element.querySelector<SVGPathElement>(
+          "path.react-flow__edge-path"
+        )
+        const socket = element.querySelector<SVGPathElement>(
+          'path[data-inline-marker="true"]'
+        )
+        if (!line || !socket)
+          throw new Error("required socket paths are absent")
+
+        const lineEnd = line.getPointAtLength(line.getTotalLength())
+        const socketLength = socket.getTotalLength()
+        let minimumGap = Number.POSITIVE_INFINITY
+        for (let sample = 0; sample <= 720; sample++) {
+          const point = socket.getPointAtLength((socketLength * sample) / 720)
+          minimumGap = Math.min(
+            minimumGap,
+            Math.hypot(point.x - lineEnd.x, point.y - lineEnd.y)
+          )
+        }
+        const radiusMatch = socket.getAttribute("d")?.match(/A([\d.]+),/)
+        if (!radiusMatch) throw new Error("required socket radius is absent")
+
+        return {
+          minimumGap,
+          arcRadians: socketLength / Number(radiusMatch[1]),
+        }
+      })
+
+    expect(geometry.minimumGap).toBeCloseTo(3, 1)
+    const explicitExpectedArc = expectedArcByEdgeId?.[edge.id]
+    if (explicitExpectedArc === undefined) {
+      // Every interface in the canonical fixtures has one required edge. Its
+      // rendered marker must therefore be the embracing standard socket even
+      // when an older fixture persisted a reduced marker variant.
+      expect(
+        requiredEdges.filter((candidate) => candidate.target === edge.target)
+      ).toHaveLength(1)
+    }
+    expect(geometry.arcRadians).toBeCloseTo(
+      explicitExpectedArc ?? STANDARD_REQUIRED_INTERFACE_ARC_RADIANS,
+      2
+    )
+  }
 }
 
 // All 13 diagram fixtures with human-readable name + kebab-case file slug.
@@ -149,6 +229,10 @@ test.describe("Visual regression - diagram fixtures", () => {
         await clickFitView(page)
       }
 
+      if (name === "ComponentDiagram" || name === "DeploymentDiagram") {
+        await expectRequiredInterfaceGeometry(page, fixture)
+      }
+
       // Screenshot the editor area (sidebar + canvas). The header floats inside
       // the canvas, so mask it — visual diffs stay focused on diagram rendering,
       // not unrelated UI chrome. Baselines MUST be generated inside the
@@ -157,6 +241,99 @@ test.describe("Visual regression - diagram fixtures", () => {
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(`visual-${file}.png`, {
         mask: [page.locator("header")],
+      })
+    })
+  }
+})
+
+const requiredInterfaceCombinationFixture = (
+  id: string,
+  lowerComponentPosition: { x: number; y: number }
+) => ({
+  id,
+  version: "4.1.0",
+  title: "",
+  type: "ComponentDiagram",
+  nodes: [
+    {
+      id: `${id}-upper`,
+      width: 180,
+      height: 120,
+      type: "component",
+      position: { x: 520, y: 210 },
+      data: { name: "Component", isComponentHeaderShown: true },
+      measured: { width: 180, height: 120 },
+    },
+    {
+      id: `${id}-lower`,
+      width: 180,
+      height: 120,
+      type: "component",
+      position: lowerComponentPosition,
+      data: { name: "Component", isComponentHeaderShown: true },
+      measured: { width: 180, height: 120 },
+    },
+    {
+      id: `${id}-interface`,
+      width: 30,
+      height: 30,
+      type: "componentInterface",
+      position: { x: 580, y: 420 },
+      data: { name: "Interface" },
+      measured: { width: 30, height: 30 },
+    },
+  ],
+  edges: [
+    {
+      id: `${id}-side`,
+      source: `${id}-lower`,
+      target: `${id}-interface`,
+      type: "ComponentRequiredInterface",
+      sourceHandle: "right",
+      targetHandle: "left",
+      data: { points: [] },
+    },
+    {
+      id: `${id}-top`,
+      source: `${id}-upper`,
+      target: `${id}-interface`,
+      type: "ComponentRequiredInterface",
+      sourceHandle: "top-mid-left",
+      targetHandle: "top",
+      data: { points: [] },
+    },
+  ],
+  assessments: {},
+})
+
+test.describe("Required interface socket combinations", () => {
+  const cases = [
+    {
+      name: "opposite routed sides use embracing sockets",
+      fixture: requiredInterfaceCombinationFixture("socket-opposite", {
+        x: 465,
+        y: 500,
+      }),
+      expectedArc: STANDARD_REQUIRED_INTERFACE_ARC_RADIANS,
+    },
+    {
+      name: "adjacent routed sides use separated quarter sockets",
+      fixture: requiredInterfaceCombinationFixture("socket-adjacent", {
+        x: 320,
+        y: 390,
+      }),
+      expectedArc: Math.PI / 2,
+    },
+  ]
+
+  for (const { name, fixture, expectedArc } of cases) {
+    test(name, async ({ page }) => {
+      await injectFixtureIntoLocalStorage(page, fixture)
+      await page.goto(resolveLocalDiagramRoute(fixture))
+      await waitForCanvasReady(page)
+      await expectRequiredInterfaceGeometry(page, fixture, {
+        [`${fixture.id}-side`]: expectedArc,
+        [`${fixture.id}-top`]: expectedArc,
       })
     })
   }

@@ -14,6 +14,7 @@ import {
   getEdgeMarkerStyles,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
+  getTargetConnectionPointPadding,
   getSideHandleIdForPosition,
   isFreeformEdgeAnchor,
   roundAnchorPointOutward,
@@ -262,7 +263,10 @@ export const useStraightPathEdge = ({
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
-  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
+  const targetConnectionPointPadding = getTargetConnectionPointPadding(
+    padding,
+    resolvedTargetAnchor !== null
+  )
 
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd

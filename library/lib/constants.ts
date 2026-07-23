@@ -291,7 +291,11 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 180,
+    // A slightly embracing socket reads more clearly around the ball than a
+    // mathematically exact half-circle, especially when approached from a
+    // cardinal side. Keep a generous opening so adjacent sockets remain
+    // visually distinct.
+    arcSpanDegrees: 210,
   },
   "required-interface-quarter": {
     type: "semicircle",

@@ -16,6 +16,7 @@ import {
 } from "@/edges/edgeRoutingBehavior"
 import { routeConflictScore } from "@/utils/geometry/orthogonalRouter"
 import { getPerfCounters } from "@/sync/perfCounters"
+import { INTERFACE } from "@/constants"
 
 /**
  * Build a minimal RF node + its InternalNode entry with the handle bounds and
@@ -27,7 +28,8 @@ function makeNode(
   x: number,
   y: number,
   w = 100,
-  h = 60
+  h = 60,
+  type = "Class"
 ): { node: Node; internal: InternalNode } {
   const node: Node = {
     id,
@@ -36,7 +38,7 @@ function makeNode(
     height: h,
     measured: { width: w, height: h },
     data: {},
-    type: "Class",
+    type,
   } as Node
   const internal = {
     ...node,
@@ -90,6 +92,57 @@ const crossesInterior = (
   })
 
 describe("computeAllEdgeGeometry", () => {
+  it.each([
+    "ComponentRequiredInterface",
+    "ComponentRequiredQuarterInterface",
+    "ComponentRequiredThreeQuarterInterface",
+  ])("keeps %s lines separated from a pinned interface socket", (type) => {
+    const source = makeNode("source", 0, 0)
+    const target = makeNode(
+      "interface",
+      300,
+      15,
+      INTERFACE.SIZE,
+      INTERFACE.SIZE,
+      "componentInterface"
+    )
+    const nodes = [source.node, target.node]
+    const nodeLookup = new Map<string, InternalNode>([
+      ["source", source.internal],
+      ["interface", target.internal],
+    ])
+    const edges: Edge[] = [
+      {
+        id: "required",
+        source: "source",
+        target: "interface",
+        type,
+        data: {
+          targetAnchor: { side: Position.Left, ratio: 0.5 },
+        },
+      },
+    ]
+
+    const { routeById } = computeAllEdgeGeometry({
+      nodes,
+      nodeLookup,
+      connectionMode: ConnectionMode.Loose,
+      edges,
+      straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+      straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+    })
+
+    const route = routeById.required
+    const targetPoint = route[route.length - 1]
+    expect(targetPoint).toEqual({
+      x:
+        target.node.position.x -
+        INTERFACE.SOCKET_GAP -
+        INTERFACE.EDGE_SOCKET_GAP,
+      y: target.node.position.y + INTERFACE.RADIUS,
+    })
+  })
+
   it("routes a single edge between two nodes as an orthogonal polyline", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)

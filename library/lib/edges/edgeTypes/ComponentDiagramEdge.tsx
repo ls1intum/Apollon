@@ -7,7 +7,7 @@ import { useToolbar } from "@/hooks"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
-import { resolveRequiredInterfaceEdgeType } from "@/utils"
+import { useRequiredInterfaceEdgeType } from "@/hooks/useRequiredInterfaceEdgeType"
 
 const COMPONENT_REQUIRED_INTERFACE_TYPES = [
   "ComponentRequiredInterface",
@@ -44,23 +44,17 @@ export const ComponentDiagramEdge = ({
   const allowMidpointDragging =
     "allowMidpointDragging" in config ? config.allowMidpointDragging : true
 
-  const { edges, assessments } = useDiagramStore(
-    useShallow((state) => ({
-      edges: state.edges,
-      assessments: state.assessments,
-    }))
-  )
+  const assessments = useDiagramStore(useShallow((state) => state.assessments))
 
   const setPopOverElementId = usePopoverStore(
     useShallow((state) => state.setPopOverElementId)
   )
 
-  const dynamicEdgeType = resolveRequiredInterfaceEdgeType({
+  const dynamicEdgeType = useRequiredInterfaceEdgeType({
     type,
     id,
     target,
     targetHandleId,
-    edges,
     requiredTypes: COMPONENT_REQUIRED_INTERFACE_TYPES,
     defaultType: "ComponentRequiredInterface",
     reducedType: "ComponentRequiredQuarterInterface",

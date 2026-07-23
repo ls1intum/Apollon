@@ -35,6 +35,8 @@ import {
   resolveOrthogonalEdgeReleasePoints,
   isInvalidOrthogonalEdgeRelease,
   getSideHandleIdForPosition,
+  getEndpointSideFromSegment,
+  getTargetConnectionPointPadding,
   isFreeformEdgeAnchor,
   roundAnchorPointOutward,
   type FreeformEdgeAnchor,
@@ -135,18 +137,6 @@ type EndpointDragCommit = {
 const arePointsEqual = (a: IPoint[], b: IPoint[]): boolean =>
   a.length === b.length &&
   a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
-
-/** The node side an endpoint sits on, read off the route: `from` is the endpoint,
- * `toward` the next point along. The first step leaves the source along its side,
- * so the direction from the source to its neighbour IS that side; at the target,
- * pass the points in reverse (endpoint, then inward neighbour). */
-const sideFromSegment = (from: IPoint, toward: IPoint): Position => {
-  const dx = toward.x - from.x
-  const dy = toward.y - from.y
-  if (Math.abs(dx) >= Math.abs(dy))
-    return dx >= 0 ? Position.Right : Position.Left
-  return dy >= 0 ? Position.Bottom : Position.Top
-}
 
 export const useStepPathEdge = ({
   id,
@@ -406,7 +396,10 @@ export const useStepPathEdge = ({
   const sourceConnectionPointPadding = resolvedSourceAnchor
     ? 0
     : EDGES.SOURCE_CONNECTION_POINT_PADDING
-  const targetConnectionPointPadding = resolvedTargetAnchor ? 0 : padding
+  const targetConnectionPointPadding = getTargetConnectionPointPadding(
+    padding,
+    resolvedTargetAnchor !== null
+  )
 
   // Round coordinates to whole pixels for pixel-perfect rendering
   // React Flow may return fractional values when node dimensions are odd
@@ -445,10 +438,10 @@ export const useStepPathEdge = ({
   const routeEndpoints =
     centralRoute && centralRoute.length >= 2 ? centralRoute : null
   const sourcePosition = routeEndpoints
-    ? sideFromSegment(routeEndpoints[0], routeEndpoints[1])
+    ? getEndpointSideFromSegment(routeEndpoints[0], routeEndpoints[1])
     : baseSourcePosition
   const targetPosition = routeEndpoints
-    ? sideFromSegment(
+    ? getEndpointSideFromSegment(
         routeEndpoints[routeEndpoints.length - 1],
         routeEndpoints[routeEndpoints.length - 2]
       )
