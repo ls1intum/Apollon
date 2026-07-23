@@ -60,10 +60,16 @@ describe("class diagram marker geometry", () => {
 })
 
 describe("required interface marker geometry", () => {
-  it("wraps the standard socket beyond a half-circle without closing it", () => {
+  it("leaves a stroke-safe seam between opposing standard sockets", () => {
     const span = MARKER_CONFIGS["required-interface"].arcSpanDegrees
-    expect(span).toBeGreaterThan(180)
-    expect(span).toBeLessThan(270)
+    expect(span).toBe(172)
+    expect(180 - span).toBeGreaterThanOrEqual(5)
+  })
+
+  it("leaves a five-degree seam between adjacent reduced sockets", () => {
+    const span = MARKER_CONFIGS["required-interface-quarter"].arcSpanDegrees
+    expect(span).toBe(85)
+    expect(90 - span).toBe(5)
   })
 
   it.each([
@@ -98,8 +104,8 @@ describe("required interface marker geometry", () => {
   )
 
   it("scales its bounds with imported interface sizes", () => {
-    expect(getMarkerHalfHeight("required-interface", 10)).toBe(14)
-    expect(getMarkerHalfHeight("required-interface", 15)).toBe(19)
+    expect(getMarkerHalfHeight("required-interface", 10)).toBeCloseTo(13, 1)
+    expect(getMarkerHalfHeight("required-interface", 15)).toBeCloseTo(18, 1)
   })
 
   it.each([
@@ -108,7 +114,7 @@ describe("required interface marker geometry", () => {
     { position: Position.Right, direction: Math.PI },
     { position: Position.Bottom, direction: -Math.PI / 2 },
   ])(
-    "keeps a visible line-to-socket gap when entering from $position",
+    "joins the line to the socket when entering from $position",
     ({ position, direction }) => {
       const center = { x: 100, y: 100 }
       const towardTarget = {
@@ -146,7 +152,7 @@ describe("required interface marker geometry", () => {
 
       expect(
         Math.hypot(edgeEnd.x - socketPoint.x, edgeEnd.y - socketPoint.y)
-      ).toBe(INTERFACE.EDGE_SOCKET_GAP)
+      ).toBeCloseTo(0, 10)
     }
   )
 })

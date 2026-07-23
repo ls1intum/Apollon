@@ -70,13 +70,13 @@ const REQUIRED_INTERFACE_TYPES = new Set([
   "ComponentRequiredThreeQuarterInterface",
   "DeploymentRequiredThreeQuarterInterface",
 ])
-const STANDARD_REQUIRED_INTERFACE_ARC_RADIANS = (210 * Math.PI) / 180
+const STANDARD_REQUIRED_INTERFACE_ARC_RADIANS = (172 * Math.PI) / 180
 
 /**
  * Whole-editor screenshots intentionally tolerate a small amount of
  * anti-aliasing noise. A required-interface socket occupies too few pixels for
  * that threshold to protect its topology, so assert its SVG geometry exactly:
- * the relationship must stop before the arc, and each socket variant must keep
+ * the relationship must join the arc, and each socket variant must keep
  * its intended angular span.
  */
 async function expectRequiredInterfaceGeometry(
@@ -125,7 +125,7 @@ async function expectRequiredInterfaceGeometry(
         }
       })
 
-    expect(geometry.minimumGap).toBeCloseTo(3, 1)
+    expect(geometry.minimumGap).toBeCloseTo(0, 1)
     const explicitExpectedArc = expectedArcByEdgeId?.[edge.id]
     if (explicitExpectedArc === undefined) {
       // Every interface in the canonical fixtures has one required edge. Its
@@ -140,6 +140,62 @@ async function expectRequiredInterfaceGeometry(
       2
     )
   }
+}
+
+async function expectProvidedInterfaceClearsRequiredSockets(
+  page: Page,
+  providedEdgeId: string,
+  requiredEdgeIds: readonly string[]
+) {
+  const clearance = await page.evaluate(
+    ({ providedEdgeId, requiredEdgeIds }) => {
+      const edgePath = (edgeId: string) =>
+        document.querySelector<SVGPathElement>(
+          `.react-flow__edge[data-id="${edgeId}"] path.react-flow__edge-path`
+        )
+      const provided = edgePath(providedEdgeId)
+      const sockets = requiredEdgeIds.map((edgeId) =>
+        document.querySelector<SVGPathElement>(
+          `.react-flow__edge[data-id="${edgeId}"] path[data-inline-marker="true"]`
+        )
+      )
+      if (!provided || sockets.some((socket) => socket === null))
+        throw new Error("provided/required interface paths are absent")
+
+      const sample = (path: SVGPathElement, count: number) =>
+        Array.from({ length: count + 1 }, (_, index) =>
+          path.getPointAtLength((path.getTotalLength() * index) / count)
+        )
+      const providedPoints = sample(provided, 360)
+      let minimumDistance = Number.POSITIVE_INFINITY
+      for (const socket of sockets as SVGPathElement[]) {
+        for (const edgePoint of providedPoints) {
+          for (const socketPoint of sample(socket, 720)) {
+            minimumDistance = Math.min(
+              minimumDistance,
+              Math.hypot(
+                edgePoint.x - socketPoint.x,
+                edgePoint.y - socketPoint.y
+              )
+            )
+          }
+        }
+      }
+
+      return {
+        minimumDistance,
+        providedHalfStroke:
+          Number.parseFloat(getComputedStyle(provided).strokeWidth) / 2,
+      }
+    },
+    { providedEdgeId, requiredEdgeIds }
+  )
+
+  // The required arcs use butt caps, so clearing the provided line's
+  // half-stroke is the exact non-intersection condition at their seam.
+  expect(clearance.minimumDistance).toBeGreaterThan(
+    clearance.providedHalfStroke
+  )
 }
 
 // All 13 diagram fixtures with human-readable name + kebab-case file slug.
@@ -306,6 +362,47 @@ const requiredInterfaceCombinationFixture = (
   assessments: {},
 })
 
+const requiredInterfaceWithProvidedFixture = (() => {
+  const fixture = requiredInterfaceCombinationFixture("socket-provided", {
+    x: 485,
+    y: 545,
+  })
+  return {
+    ...fixture,
+    nodes: [
+      ...fixture.nodes,
+      {
+        id: "socket-provided-subsystem",
+        width: 180,
+        height: 120,
+        type: "componentSubsystem",
+        position: { x: 725, y: 365 },
+        data: { name: "Subsystem", isComponentSubsystemHeaderShown: true },
+        measured: { width: 180, height: 120 },
+      },
+    ],
+    edges: [
+      ...fixture.edges,
+      {
+        id: "socket-provided-line",
+        source: "socket-provided-subsystem",
+        target: "socket-provided-interface",
+        type: "ComponentProvidedInterface",
+        sourceHandle: "left",
+        targetHandle: "right",
+        data: {
+          points: [
+            { x: 725, y: 435 },
+            { x: 610, y: 435 },
+          ],
+          sourceAnchor: { side: "left", ratio: 7 / 12 },
+          targetAnchor: { side: "right", ratio: 0.5 },
+        },
+      },
+    ],
+  }
+})()
+
 test.describe("Required interface socket combinations", () => {
   const cases = [
     {
@@ -322,7 +419,7 @@ test.describe("Required interface socket combinations", () => {
         x: 320,
         y: 390,
       }),
-      expectedArc: Math.PI / 2,
+      expectedArc: (85 * Math.PI) / 180,
     },
   ]
 
@@ -337,6 +434,28 @@ test.describe("Required interface socket combinations", () => {
       })
     })
   }
+
+  test("a provided edge passes cleanly through the seam between required sockets", async ({
+    page,
+  }) => {
+    const fixture = requiredInterfaceWithProvidedFixture
+    await injectFixtureIntoLocalStorage(page, fixture)
+    await page.goto(resolveLocalDiagramRoute(fixture))
+    await waitForCanvasReady(page)
+    const requiredEdgeIds = [
+      "socket-provided-side",
+      "socket-provided-top",
+    ] as const
+    await expectRequiredInterfaceGeometry(page, fixture, {
+      [requiredEdgeIds[0]]: STANDARD_REQUIRED_INTERFACE_ARC_RADIANS,
+      [requiredEdgeIds[1]]: STANDARD_REQUIRED_INTERFACE_ARC_RADIANS,
+    })
+    await expectProvidedInterfaceClearsRequiredSockets(
+      page,
+      "socket-provided-line",
+      requiredEdgeIds
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------

@@ -96,7 +96,7 @@ describe("computeAllEdgeGeometry", () => {
     "ComponentRequiredInterface",
     "ComponentRequiredQuarterInterface",
     "ComponentRequiredThreeQuarterInterface",
-  ])("keeps %s lines separated from a pinned interface socket", (type) => {
+  ])("joins %s lines to a pinned interface socket", (type) => {
     const source = makeNode("source", 0, 0)
     const target = makeNode(
       "interface",
@@ -135,10 +135,7 @@ describe("computeAllEdgeGeometry", () => {
     const route = routeById.required
     const targetPoint = route[route.length - 1]
     expect(targetPoint).toEqual({
-      x:
-        target.node.position.x -
-        INTERFACE.SOCKET_GAP -
-        INTERFACE.EDGE_SOCKET_GAP,
+      x: target.node.position.x - INTERFACE.SOCKET_GAP,
       y: target.node.position.y + INTERFACE.RADIUS,
     })
   })

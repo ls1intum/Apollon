@@ -291,11 +291,11 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    // A slightly embracing socket reads more clearly around the ball than a
-    // mathematically exact half-circle, especially when approached from a
-    // cardinal side. Keep a generous opening so adjacent sockets remain
-    // visually distinct.
-    arcSpanDegrees: 210,
+    // Two opposing sockets leave an 8° seam at both joins instead of merging
+    // into a visually indistinguishable 360° ring. At the canonical 18px
+    // socket radius, 8° is the smallest grid-friendly seam that also clears a
+    // provided-interface line passing through it at the current stroke width.
+    arcSpanDegrees: 172,
   },
   "required-interface-quarter": {
     type: "semicircle",
@@ -303,7 +303,8 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 90,
+    // Adjacent cardinal sockets retain the same 5° seam.
+    arcSpanDegrees: 85,
   },
   "required-interface-threequarter": {
     type: "semicircle",
@@ -311,7 +312,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 270,
+    arcSpanDegrees: 265,
   },
   // BPMN markers - compact style
   "bpmn-white-triangle": {

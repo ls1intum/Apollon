@@ -18,19 +18,15 @@ export const CANVAS = Object.freeze({
 const INTERFACE_SIZE = 30
 const INTERFACE_RADIUS = INTERFACE_SIZE / 2
 const INTERFACE_STROKE_WIDTH = 2
-const INTERFACE_SOCKET_GAP = 4
-// Keep the relationship line visibly separate from the required-interface
-// socket. React Flow places its handle center 3px outside the node; routing
-// padding accounts for that independently, so this is the actual canvas-space
-// air gap between the line endpoint and the socket stroke centerline.
-const INTERFACE_EDGE_SOCKET_GAP = 3
+// The socket is concentric with the provided-interface ball. With two 2px
+// strokes, a 3px centerline difference leaves a crisp 1px visible gap.
+const INTERFACE_SOCKET_GAP = 3
 
 export const INTERFACE = Object.freeze({
   SIZE: INTERFACE_SIZE,
   RADIUS: INTERFACE_RADIUS,
   STROKE_WIDTH: INTERFACE_STROKE_WIDTH,
   SOCKET_GAP: INTERFACE_SOCKET_GAP,
-  EDGE_SOCKET_GAP: INTERFACE_EDGE_SOCKET_GAP,
 } as const)
 
 export const EDGES = Object.freeze({

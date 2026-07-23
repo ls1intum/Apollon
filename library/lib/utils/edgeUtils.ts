@@ -312,14 +312,11 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredInterface":
     case "DeploymentRequiredInterface":
       return {
-        // markerPadding = MARKER_PADDING + ball/socket gap + line/socket gap
+        // markerPadding = MARKER_PADDING + ball/socket gap
         // MARKER_PADDING (-3) compensates for React Flow handle offset
-        // SOCKET_GAP keeps the arc off the ball, while EDGE_SOCKET_GAP keeps
-        // the relationship line from visually merging into the arc.
-        markerPadding:
-          EDGES.MARKER_PADDING +
-          INTERFACE.SOCKET_GAP +
-          INTERFACE.EDGE_SOCKET_GAP,
+        // SOCKET_GAP moves the line endpoint onto the socket's outermost point:
+        // the relationship joins its arc, while the arc stays off the ball.
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -327,10 +324,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        markerPadding:
-          EDGES.MARKER_PADDING +
-          INTERFACE.SOCKET_GAP +
-          INTERFACE.EDGE_SOCKET_GAP,
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -338,10 +332,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        markerPadding:
-          EDGES.MARKER_PADDING +
-          INTERFACE.SOCKET_GAP +
-          INTERFACE.EDGE_SOCKET_GAP,
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,

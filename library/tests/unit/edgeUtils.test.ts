@@ -274,7 +274,7 @@ describe("getEdgeMarkerStyles", () => {
     {
       type: "ComponentRequiredInterface",
       end: "url(#required-interface)",
-      pad: MP + INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP,
+      pad: MP + INTERFACE.SOCKET_GAP,
     },
     {
       type: "ComponentRequiredQuarterInterface",
@@ -312,11 +312,10 @@ describe("getTargetConnectionPointPadding", () => {
     expect(getTargetConnectionPointPadding(EDGES.MARKER_PADDING, true)).toBe(0)
   })
 
-  it("preserves the full ball-to-socket and line-to-socket gaps on an exact interface anchor", () => {
-    const requiredPadding =
-      EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP
+  it("preserves the ball-to-socket gap on an exact interface anchor", () => {
+    const requiredPadding = EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP
     expect(getTargetConnectionPointPadding(requiredPadding, true)).toBe(
-      INTERFACE.SOCKET_GAP + INTERFACE.EDGE_SOCKET_GAP
+      INTERFACE.SOCKET_GAP
     )
   })
 })
