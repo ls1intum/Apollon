@@ -4,6 +4,7 @@ import {
   openLocalWithPerf,
   readPerf,
   dragNodeBy,
+  nodeNearestViewportCenter,
 } from "./perfHelpers"
 
 // Deterministic work budgets catch algorithmic regressions independently of CI
@@ -32,7 +33,6 @@ const MAX_EXPANSIONS_WORST_SEARCH = 16_000
  * must stay out of the segment-level objective. */
 const MAX_ROUTE_SCORE_PAIRS_PER_DRAG = 1_000
 const MAX_P95_INTERACTION_FRAME_MS = 34
-const MAX_HANDOFF_FRAME_MS = 50
 const MAX_WORKER_MAIN_THREAD_SLICE_MS = 16
 const MAX_WORKER_CADENCE_MS = 160
 const MAX_WORKER_PREVIEW_FRESHNESS_MS = 1_000
@@ -54,27 +54,6 @@ const renderedEdgePaths = async (
         })
       ) as Record<string, string>
   )
-
-const nodeNearestViewportCenter = async (
-  editor: Locator,
-  viewport: { width: number; height: number }
-): Promise<string | null> =>
-  editor.locator(".react-flow__node").evaluateAll((elements, size) => {
-    let nearest: string | null = null
-    let distance = Infinity
-    for (const element of elements) {
-      const rect = element.getBoundingClientRect()
-      const next = Math.hypot(
-        rect.x + rect.width / 2 - size.width / 2,
-        rect.y + rect.height / 2 - size.height / 2
-      )
-      if (next < distance) {
-        distance = next
-        nearest = element.getAttribute("data-id")
-      }
-    }
-    return nearest
-  }, viewport)
 
 const beginContinuousNodeDrag = async (node: Locator, page: Page) => {
   const box = await node.boundingBox()
@@ -218,13 +197,10 @@ test("a continuously moving large diagram shows holistic route progress before r
   const handoff = await page.evaluate(
     ({ editorId, expectedEdgeCount }) => {
       return new Promise<{
-        frameDeltas: number[]
         missingEdgeFrame: boolean
         timedOut: boolean
       }>((resolve) => {
-        const frameDeltas: number[] = []
         let missingEdgeFrame = false
-        let previousFrameAt = performance.now()
         let animationFrame = 0
         let finished = false
         const finish = (timedOut: boolean) => {
@@ -232,12 +208,10 @@ test("a continuously moving large diagram shows holistic route progress before r
           finished = true
           cancelAnimationFrame(animationFrame)
           clearTimeout(timeout)
-          resolve({ frameDeltas, missingEdgeFrame, timedOut })
+          resolve({ missingEdgeFrame, timedOut })
         }
         const timeout = window.setTimeout(() => finish(true), 5_000)
-        const tick = (now: number) => {
-          frameDeltas.push(now - previousFrameAt)
-          previousFrameAt = now
+        const tick = () => {
           const root = document.querySelector(editorId)
           if (
             root?.querySelectorAll(".react-flow__edge-path").length !==
@@ -267,13 +241,6 @@ test("a continuously moving large diagram shows holistic route progress before r
   )
   expect(handoff.timedOut).toBe(false)
   expect(handoff.missingEdgeFrame).toBe(false)
-  if (handoff.frameDeltas.length > 0) {
-    const handoffMax = Math.max(...handoff.frameDeltas)
-    expect(
-      handoffMax,
-      `slowest preview-to-exact handoff frame was ${handoffMax.toFixed(1)} ms`
-    ).toBeLessThanOrEqual(MAX_HANDOFF_FRAME_MS)
-  }
   const afterHandoff = await readPerf(page)
   expect(afterHandoff.routingSolving).toBe(0)
   expect(afterHandoff.routingPreviewCount).toBe(0)

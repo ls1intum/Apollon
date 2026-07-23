@@ -91,7 +91,7 @@ try {
 // Matches a `__perf` method whose body is empty (whitespace-only). Checked
 // per-occurrence below so a single non-empty body can't hide behind another
 // file's empty stub.
-const PERF_METHOD = /__perf\(\)\s*\{([^}]*)\}/g
+const PERF_METHOD = /__perf\([^)]*\)\s*\{([^}]*)\}/g
 
 const offenders = []
 // Comments are not code: the bundler emits `//#region lib/sync/perfCounters.ts`

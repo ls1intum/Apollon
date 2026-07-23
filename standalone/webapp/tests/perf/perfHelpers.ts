@@ -98,6 +98,27 @@ export async function readPerf(page: Page): Promise<PerfSnapshot> {
   })
 }
 
+export const nodeNearestViewportCenter = async (
+  editor: Locator,
+  viewport: { width: number; height: number }
+): Promise<string | null> =>
+  editor.locator(".react-flow__node").evaluateAll((elements, size) => {
+    let nearest: string | null = null
+    let distance = Infinity
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect()
+      const next = Math.hypot(
+        rect.x + rect.width / 2 - size.width / 2,
+        rect.y + rect.height / 2 - size.height / 2
+      )
+      if (next < distance) {
+        distance = next
+        nearest = element.getAttribute("data-id")
+      }
+    }
+    return nearest
+  }, viewport)
+
 /**
  * Drag a node by (dx, dy) screen pixels in `steps` intermediate moves, then
  * release. The intermediate moves mimic React-Flow's per-frame position

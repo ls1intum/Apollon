@@ -4,6 +4,7 @@ import {
   openLocalWithPerf,
   readPerf,
   dragNodeBy,
+  nodeNearestViewportCenter,
 } from "./perfHelpers"
 
 /**
@@ -19,7 +20,6 @@ test.describe.configure({ mode: "serial" })
 
 const fixture = loadFixture("perf-30-nodes.json")
 const DRAG_COUNT = 40
-const VISIBLE_DRAG_NODE_COUNT = 24
 const BYTE_BUDGET = 256 * 1024
 // A drag commits ~one settle write; writing every frame would be ~one per
 // frame. 1.5 writes/gesture sits well under the per-frame rate and tolerates an
@@ -37,17 +37,14 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const baseline = await readPerf(page)
   expect(baseline.nodesMapSize).toBe(30)
 
-  // Scope to this editor's container: the page can mount more than one editor
-  // instance, so a bare `.react-flow__node[data-id=…]` selector matches the
-  // same node id in every instance and trips Playwright's strict mode.
+  // React Flow virtualizes off-viewport nodes, so fixture order is not a stable
+  // source of mounted targets across browser engines and viewport sizes.
   const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
+  const nodeId = await nodeNearestViewportCenter(editor, page.viewportSize()!)
+  expect(nodeId).not.toBeNull()
+  const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
   for (let i = 0; i < DRAG_COUNT; i++) {
-    const node = editor.locator(
-      `.react-flow__node[data-id="perf-node-${String(
-        i % VISIBLE_DRAG_NODE_COUNT
-      ).padStart(2, "0")}"]`
-    )
-    // Alternate direction so nodes don't march off-screen and stay grabbable.
+    // Alternate direction so the target returns to its starting position.
     const dir = i % 2 === 0 ? 1 : -1
     await dragNodeBy(node, page, 24 * dir, 16 * dir, {
       waitForRouting: false,
