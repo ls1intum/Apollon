@@ -921,6 +921,7 @@
   opacity: 0;
   fill: var(--apollon-background, #fff);
   stroke: var(--apollon-primary, #3e8acc);
+
   /* stroke-width is set inline, scaled by the handle screen scale, so the outline
      tracks the handle across zoom (NO non-scaling-stroke — that would pin it to a
      constant screen width and read as too thick zoomed out / too thin zoomed in).

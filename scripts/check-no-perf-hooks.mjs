@@ -35,13 +35,27 @@ const perfModule = join(
   "perfCounters.ts"
 )
 const perfSource = readFileSync(perfModule, "utf8")
+const perfCountersType = perfSource.match(
+  /export type PerfCounters = \{([\s\S]*?)^\}/m
+)
+if (!perfCountersType) {
+  console.error(
+    "[check-no-perf-hooks] PerfCounters type not found — the check would miss counter fields."
+  )
+  process.exit(1)
+}
+
 const FORBIDDEN_SYMBOLS = [
   // Exported bindings: `export const foo` / `export function foo`.
   ...[...perfSource.matchAll(/export\s+(?:const|function)\s+(\w+)/g)].map(
     (m) => m[1]
   ),
-  // The counter fields themselves: the keys of the PerfCounters type.
-  ...[...perfSource.matchAll(/^\s{2}(\w+):\s*number$/gm)].map((m) => m[1]),
+  // The counter fields themselves. Restrict the scan to the PerfCounters type:
+  // later function-parameter types use the same indentation and may contain
+  // legitimate production-domain names.
+  ...[...perfCountersType[1].matchAll(/^\s{2}(\w+):\s*number$/gm)].map(
+    (m) => m[1]
+  ),
 ]
 
 if (FORBIDDEN_SYMBOLS.length === 0) {
