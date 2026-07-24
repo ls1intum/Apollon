@@ -1,7 +1,7 @@
 import React, { KeyboardEvent, useState } from "react"
 import { Check, Plus, Tag, X } from "lucide-react"
 import { Popover } from "@base-ui/react/popover"
-import { IconButton } from "@/components/ui"
+import { IconButton, Tooltip } from "@/components/ui"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
 import { useLabels } from "@/i18n/useLabels"
 import { useTagConfig } from "@/hooks/useTagConfig"
@@ -96,13 +96,15 @@ export const TagPicker: React.FC<TagControlProps> = ({
 
   return (
     <Popover.Root onOpenChange={(open) => !open && setDraft("")}>
-      <Popover.Trigger
-        ref={setTrigger}
-        data-slot="icon-button"
-        aria-label={t.editTagsFor(subject)}
-      >
-        <Tag width={16} height={16} aria-hidden="true" />
-      </Popover.Trigger>
+      <Tooltip title={t.editTagsFor(subject)}>
+        <Popover.Trigger
+          ref={setTrigger}
+          data-slot="icon-button"
+          aria-label={t.editTagsFor(subject)}
+        >
+          <Tag width={16} height={16} aria-hidden="true" />
+        </Popover.Trigger>
+      </Tooltip>
       <Popover.Portal>
         <Popover.Positioner sideOffset={6} align="start">
           <Popover.Popup
