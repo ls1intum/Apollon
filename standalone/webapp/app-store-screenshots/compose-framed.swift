@@ -66,7 +66,7 @@ func color(_ hex: UInt32) -> CGColor {
       CGFloat((hex >> 16) & 0xff) / 255,
       CGFloat((hex >> 8) & 0xff) / 255,
       CGFloat(hex & 0xff) / 255,
-      1,
+      1
     ]
   )!
 }
@@ -77,6 +77,26 @@ func color(_ hex: UInt32) -> CGColor {
 struct ScreenAperture {
   let bounds: CGRect
   let mask: CGImage
+}
+
+func grayscaleMask(from visited: [UInt8], width: Int, height: Int) -> CGImage? {
+  let maskData = Data(visited.map { $0 == 1 ? 255 : 0 })
+  guard let maskProvider = CGDataProvider(data: maskData as CFData) else {
+    return nil
+  }
+  return CGImage(
+    width: width,
+    height: height,
+    bitsPerComponent: 8,
+    bitsPerPixel: 8,
+    bytesPerRow: width,
+    space: CGColorSpaceCreateDeviceGray(),
+    bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+    provider: maskProvider,
+    decode: nil,
+    shouldInterpolate: false,
+    intent: .defaultIntent
+  )
 }
 
 func transparentScreenAperture(in image: CGImage) -> ScreenAperture? {
@@ -132,18 +152,18 @@ func transparentScreenAperture(in image: CGImage) -> ScreenAperture? {
     let index = queue[head]
     head += 1
 
-    let x = index % width
-    let y = index / width
-    minimumX = min(minimumX, x)
-    minimumY = min(minimumY, y)
-    maximumX = max(maximumX, x)
-    maximumY = max(maximumY, y)
+    let column = index % width
+    let row = index / width
+    minimumX = min(minimumX, column)
+    minimumY = min(minimumY, row)
+    maximumX = max(maximumX, column)
+    maximumY = max(maximumY, row)
 
     let neighbors = [
-      x > 0 ? index - 1 : -1,
-      x + 1 < width ? index + 1 : -1,
-      y > 0 ? index - width : -1,
-      y + 1 < height ? index + width : -1,
+      column > 0 ? index - 1 : -1,
+      column + 1 < width ? index + 1 : -1,
+      row > 0 ? index - width : -1,
+      row + 1 < height ? index + width : -1
     ]
 
     for neighbor in neighbors where neighbor >= 0 {
@@ -174,24 +194,8 @@ func transparentScreenAperture(in image: CGImage) -> ScreenAperture? {
     height: maximumY - minimumY + 1
   )
 
-  let maskData = Data(visited.map { $0 == 1 ? 255 : 0 })
   guard
-    let maskProvider = CGDataProvider(data: maskData as CFData),
-    let mask = CGImage(
-      width: width,
-      height: height,
-      bitsPerComponent: 8,
-      bitsPerPixel: 8,
-      bytesPerRow: width,
-      space: CGColorSpaceCreateDeviceGray(),
-      bitmapInfo: CGBitmapInfo(
-        rawValue: CGImageAlphaInfo.none.rawValue
-      ),
-      provider: maskProvider,
-      decode: nil,
-      shouldInterpolate: false,
-      intent: .defaultIntent
-    )
+    let mask = grayscaleMask(from: visited, width: width, height: height)
   else {
     return nil
   }
@@ -235,7 +239,7 @@ let attributedHeadline = NSAttributedString(
   attributes: [
     NSAttributedString.Key(kCTFontAttributeName as String): headlineFont,
     NSAttributedString.Key(kCTForegroundColorAttributeName as String):
-      headlineColor,
+      headlineColor
   ]
 )
 let headlineLine = CTLineCreateWithAttributedString(attributedHeadline)

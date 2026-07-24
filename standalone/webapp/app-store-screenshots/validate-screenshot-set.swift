@@ -32,11 +32,16 @@ let expectedFeatures = [
   "02-Your-Diagrams",
   "03-Diagram-Types",
   "04-Dark-Appearance",
-  "05-Export-Formats",
+  "05-Export-Formats"
 ]
-let expectedDevices: [(prefix: String, width: Int, height: Int)] = [
-  ("iPhone 17 Pro Max", 1320, 2868),
-  ("iPad Pro 13-inch (M4)", 2752, 2064),
+struct ExpectedDevice {
+  let prefix: String
+  let width: Int
+  let height: Int
+}
+let expectedDevices = [
+  ExpectedDevice(prefix: "iPhone 17 Pro Max", width: 1320, height: 2868),
+  ExpectedDevice(prefix: "iPad Pro 13-inch (M4)", width: 2752, height: 2064)
 ]
 
 guard screenshots.count == expectedFeatures.count * expectedDevices.count else {
