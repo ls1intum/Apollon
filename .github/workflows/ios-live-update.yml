@@ -55,7 +55,7 @@ jobs:
       # Upload the immutable bundle zip(s) FIRST so the manifest never points at
       # a file that is not yet on the host.
       - name: Copy bundle zips to the VM
-        uses: appleboy/scp-action@2a0db1c1e7a927c67b7fb09f9f27a5b7b8e10a7c # v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USERNAME }}
@@ -69,7 +69,7 @@ jobs:
           strip_components: 3
 
       - name: Copy manifest to the VM
-        uses: appleboy/scp-action@2a0db1c1e7a927c67b7fb09f9f27a5b7b8e10a7c # v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USERNAME }}
