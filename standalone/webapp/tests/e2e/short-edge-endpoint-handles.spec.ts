@@ -25,9 +25,10 @@ test("a short straight edge keeps usable endpoint grips alongside its bend handl
 }) => {
   await openFixtureInLocalEditor(page, fx)
   await waitForCanvasReady(page)
-  await page.waitForTimeout(300)
   await page.locator(".react-flow__edge").first().click({ force: true })
-  await page.waitForTimeout(300)
+  // Selecting the edge renders its endpoint grips; wait for that instead of a
+  // fixed sleep (the grip size is a synchronous render floor once it mounts).
+  await expect(page.locator(".edge-endpoint-grip--source")).toBeVisible()
 
   const sizes = await page.evaluate(() => {
     const measure = (sel: string) => {
@@ -67,9 +68,10 @@ test("a short pinned S-jog edge keeps usable endpoint grips and still shows its 
   )
   await openFixtureInLocalEditor(page, fx)
   await waitForCanvasReady(page)
-  await page.waitForTimeout(300)
   await page.locator(".react-flow__edge").first().click({ force: true })
-  await page.waitForTimeout(300)
+  // Selecting the edge renders its endpoint grips; wait for that instead of a
+  // fixed sleep (the grip size is a synchronous render floor once it mounts).
+  await expect(page.locator(".edge-endpoint-grip--source")).toBeVisible()
 
   const info = await page.evaluate(() => {
     const m = (sel: string) => {
@@ -116,9 +118,10 @@ test("the endpoint reconnect handle takes precedence over an overlapping bend ha
   )
   await openFixtureInLocalEditor(page, fx)
   await waitForCanvasReady(page)
-  await page.waitForTimeout(300)
   await page.locator(".react-flow__edge").first().click({ force: true })
-  await page.waitForTimeout(300)
+  // Selecting the edge renders its endpoint grips; wait for that instead of a
+  // fixed sleep (the grip size is a synchronous render floor once it mounts).
+  await expect(page.locator(".edge-endpoint-grip--source")).toBeVisible()
 
   const overlaps = await page.evaluate(() => {
     const box = (el: Element) => el.getBoundingClientRect()

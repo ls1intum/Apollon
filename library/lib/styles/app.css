@@ -300,7 +300,21 @@
   justify-content: center;
 }
 
-/* width/height come inline from the computed cell size. */
+/* Native <button> reset so the palette cell renders as a bare container; its
+   width/height come inline from the computed cell size. */
+.apollon-palette__cell {
+  display: block;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: inherit;
+}
+
 .apollon-palette__cell:focus-visible {
   outline: 2px solid var(--apollon-primary, #3e8acc);
   outline-offset: 2px;
@@ -1666,8 +1680,7 @@ svg.react-flow__connectionline {
   outline-offset: 3px;
 }
 
-.apollon-color-swatch[aria-pressed="true"],
-.apollon-color-swatch[data-state="on"] {
+.apollon-color-swatch[aria-pressed="true"] {
   opacity: 1;
 }
 /* The selected check mark must read on ANY swatch fill with no JS luminance

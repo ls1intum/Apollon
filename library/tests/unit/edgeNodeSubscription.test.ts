@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
-import type { InternalNode, Node } from "@xyflow/react"
+import type { Node } from "@xyflow/react"
 import {
   createNearbySettledNodeGeometrySelector,
   resolveEdgeGeometryNodes,
   selectEdgeNodeSubscription,
-  selectNearbyLabelNodeGeometry,
 } from "@/utils/geometry/edgeNodeSubscription"
 
 const node = (id: string): Node =>
@@ -73,69 +72,5 @@ describe("step-edge node subscriptions", () => {
       subscribed
     )
     expect(getNodes).not.toHaveBeenCalled()
-  })
-
-  it("reacts to unrelated nodes only while they affect the label corridor", () => {
-    const internal = (id: string, x: number, y: number, type = "class") =>
-      ({
-        ...node(id),
-        type,
-        width: 100,
-        height: 80,
-        measured: { width: 100, height: 80 },
-        internals: { positionAbsolute: { x, y } },
-      }) as InternalNode
-    const bounds = { minX: 0, minY: 0, maxX: 400, maxY: 100 }
-    const isContainer = (type?: string) => type === "package"
-    const signature = (nodes: InternalNode[]) =>
-      selectNearbyLabelNodeGeometry(
-        new Map(nodes.map((value) => [value.id, value])),
-        bounds,
-        220,
-        isContainer
-      )
-
-    const baseline = signature([
-      internal("near", 200, 120),
-      internal("far", 2000, 2000),
-      internal("background", 100, 20, "package"),
-    ])
-    expect(baseline).toEqual([200, 120, 100, 80])
-
-    // Moving a far-away node leaves the primitive selector shallow-equal.
-    expect(
-      signature([
-        internal("near", 200, 120),
-        internal("far", 2100, 2100),
-        internal("background", 100, 20, "package"),
-      ])
-    ).toEqual(baseline)
-
-    // An unrelated node entering the corridor changes the subscription value,
-    // so label placement re-renders before it can overlap that node.
-    expect(
-      signature([
-        internal("near", 200, 120),
-        internal("far", 450, 100),
-        internal("background", 100, 20, "package"),
-      ])
-    ).toEqual([200, 120, 100, 80, 450, 100, 100, 80])
-  })
-
-  it("tracks measured label obstacles before React Flow copies dimensions onto the node", () => {
-    const measuredOnly = {
-      ...node("measured-only"),
-      measured: { width: 120, height: 70 },
-      internals: { positionAbsolute: { x: 150, y: 40 } },
-    } as InternalNode
-
-    expect(
-      selectNearbyLabelNodeGeometry(
-        new Map([[measuredOnly.id, measuredOnly]]),
-        { minX: 0, minY: 0, maxX: 400, maxY: 100 },
-        220,
-        () => false
-      )
-    ).toEqual([150, 40, 120, 70])
   })
 })

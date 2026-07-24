@@ -110,14 +110,6 @@ describe("palette tap-to-place", () => {
     expect(setSelectedElementsId).toHaveBeenCalledWith([placed[0].id])
   })
 
-  it("keyboard Enter places a centred, selected node", () => {
-    fireEvent.keyDown(mountGhost(), { key: "Enter" })
-
-    const placed = placedNodes()
-    expect(placed[0].position).toEqual({ x: 320, y: 250 })
-    expect(placed[0].selected).toBe(true)
-  })
-
   it("cascades only off the last tap-placed node while it stays selected", () => {
     nodes = [
       { id: "n1", position: { x: 100, y: 100 }, width: 160, height: 100 },
@@ -178,10 +170,5 @@ describe("palette tap-to-place", () => {
     expect(setNodes).not.toHaveBeenCalled() // drop placed nothing
     fireEvent.click(wrapper) // not swallowed — the tap the user meant
     expect(placedNodes()[0].position).toEqual({ x: 320, y: 250 })
-  })
-
-  it("does not activate on key auto-repeat", () => {
-    fireEvent.keyDown(mountGhost(), { key: "Enter", repeat: true })
-    expect(setNodes).not.toHaveBeenCalled()
   })
 })

@@ -162,10 +162,6 @@ async function drawStraightEdge(page: Page): Promise<Locator> {
   return edge
 }
 
-/** Drag the first bend handle of an edge by dy (screen px). A drawn edge
- * auto-selects, so its handle is already present — dragging it is the user's
- * "grab the middle and drag" gesture with no separate select-click. Using the
- * handle locator (not the path bbox) stays robust once the edge is bent. */
 /** The centre of a HORIZONTAL bend handle (wider than tall) on the edge — one a
  * vertical drag actually reshapes. After the edge bends, `.first()` may be a vertical
  * stub handle a vertical drag cannot move. */
@@ -184,6 +180,10 @@ async function pickHorizontalBendHandle(
   throw new Error("no horizontal bend handle to drag")
 }
 
+/** Drag the first bend handle of an edge by dy (screen px). A drawn edge
+ * auto-selects, so its handle is already present — dragging it is the user's
+ * "grab the middle and drag" gesture with no separate select-click. Using the
+ * handle locator (not the path bbox) stays robust once the edge is bent. */
 async function dragFirstHandle(
   page: Page,
   edge: Locator,

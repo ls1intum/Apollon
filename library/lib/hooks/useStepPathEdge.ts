@@ -649,8 +649,9 @@ export const useStepPathEdge = ({
 
   // Bridge over edges this one crosses. Computed from `renderPoints` so the
   // arcs follow a live bend drag frame-by-frame (during a bend only THIS edge's
-  // points change, so only its own scan re-runs — cheap). Suppressed only while
-  // Other edges' geometry is read from the shared registry the solver populates.
+  // points change, so only its own scan re-runs — cheap). Crossed edges come
+  // from the displayed snapshot in the store, so both sides of a crossing stay
+  // on one generation.
   const lineJumps = useEdgeLineJumps(id, renderPoints, true)
 
   // While THIS edge is being bend/endpoint-dragged (`dragPreviewPoints` set),

@@ -7,6 +7,10 @@ import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelect
 import { useLabels } from "@/i18n/useLabels"
 import { ButtonGroup, IconButton } from "@/components/ui"
 
+/** Pixels the toolbar is nudged down-right of the edge label anchor so it clears
+ * the edge path and its endpoint grips instead of sitting on top of them. */
+const EDGE_TOOLBAR_OFFSET_PX = 20
+
 interface CustomEdgeToolbarProps {
   edgeId: string
   position: IPoint
@@ -35,8 +39,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
   return (
     <EdgeToolbar
       edgeId={edgeId}
-      x={position.x + 20}
-      y={position.y + 20}
+      x={position.x + EDGE_TOOLBAR_OFFSET_PX}
+      y={position.y + EDGE_TOOLBAR_OFFSET_PX}
       isVisible={isVisible}
       className="apollon-element-toolbar-host"
       style={{

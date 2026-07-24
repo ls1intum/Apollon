@@ -1,4 +1,4 @@
-import type { InternalNode, Node } from "@xyflow/react"
+import type { Node } from "@xyflow/react"
 import type { EdgeGeometryNodeSnapshot } from "./edgeGeometryPreview"
 import { isRoutingParentNodeType } from "./nodeGeometry"
 
@@ -30,35 +30,6 @@ export type EdgeLabelQueryBounds = {
   minY: number
   maxX: number
   maxY: number
-}
-
-/**
- * A flat primitive signature lets Zustand's shallow comparator wake an edge only
- * when a node relevant to its label actually enters, leaves, or moves inside the
- * label corridor. Absolute RF positions preserve nesting without a whole-node
- * array subscription.
- */
-export const selectNearbyLabelNodeGeometry = (
-  nodeLookup: ReadonlyMap<string, InternalNode>,
-  edgeBounds: EdgeLabelQueryBounds,
-  reach: number,
-  isContainer: (type?: string) => boolean
-): number[] => {
-  const left = edgeBounds.minX - reach
-  const top = edgeBounds.minY - reach
-  const right = edgeBounds.maxX + reach
-  const bottom = edgeBounds.maxY + reach
-  const geometry: number[] = []
-
-  for (const node of nodeLookup.values()) {
-    const width = node.measured?.width ?? node.width ?? 0
-    const height = node.measured?.height ?? node.height ?? 0
-    if (!width || !height || isContainer(node.type)) continue
-    const { x, y } = node.internals.positionAbsolute
-    if (x < right && x + width > left && y < bottom && y + height > top)
-      geometry.push(x, y, width, height)
-  }
-  return geometry
 }
 
 export const selectNearbySettledNodeGeometry = (

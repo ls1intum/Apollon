@@ -363,7 +363,7 @@ const toSegments = (polylines: readonly IPoint[][]): Segment[] => {
 }
 
 /** One segment of a neighbouring edge, in the reach box of some route. */
-export type NeighborSegment = Segment
+type NeighborSegment = Segment
 
 /**
  * The neighbour segments a route between these endpoints can actually reach:
@@ -2371,8 +2371,9 @@ export const routeAroundObstaclesBetweenCandidates = (
   return null
 }
 
-/** Backwards-compatible one-source form. New endpoint-selection code should use
- * {@link routeAroundObstaclesBetweenCandidates} so both ends remain variable. */
+/** Single-source convenience wrapper over
+ * {@link routeAroundObstaclesBetweenCandidates}. Endpoint-selection code that
+ * varies both ends should call that directly. */
 export const routeAroundObstaclesToTargets = (
   sourcePoint: IPoint,
   sourcePosition: Position,
@@ -2399,7 +2400,7 @@ export const routeAroundObstaclesToTargets = (
 }
 
 /**
- * Point-to-point orthogonal route (the classic single-target case), kept as the
+ * Point-to-point orthogonal route (single fixed-endpoint case), kept as the
  * shared primitive for every caller that already knows both endpoints. A thin
  * shim over {@link routeAroundObstaclesToTargets} with one target, so the two can
  * never diverge.
