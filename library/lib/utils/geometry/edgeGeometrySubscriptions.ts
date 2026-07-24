@@ -71,6 +71,31 @@ export const selectRouteEntriesIntersectingRect = (
 }
 
 /**
+ * Broad-phase selection from the routes users currently see. A preview route
+ * replaces its exact counterpart; exact routes remain the fallback for edges
+ * without a preview entry.
+ */
+export const selectDisplayedRouteEntriesIntersectingRect = (
+  geometryById: Readonly<Record<string, IPoint[]>>,
+  previewById: Readonly<Record<string, IPoint[]>>,
+  query: GeometryRect,
+  excludeId?: string
+): SelectedRouteEntries => {
+  const selected: SelectedRouteEntries = []
+  const append = (id: string, route: IPoint[]) => {
+    if (
+      id !== excludeId &&
+      route.length >= 2 &&
+      mayIntersect(query, registryRouteBounds(route))
+    )
+      selected.push(id, route)
+  }
+  for (const [id, exact] of Object.entries(geometryById))
+    append(id, previewById[id] ?? exact)
+  return selected
+}
+
+/**
  * Creates a selector scoped to one edge/query and memoized by the settled map's
  * identity. Preview-only store writes leave `geometryById` untouched, so every
  * unaffected edge returns its previous selection in O(1).
@@ -88,6 +113,31 @@ export const createRouteEntriesSelector = (
     previousGeometry = geometryById
     previousSelection = selectRouteEntriesIntersectingRect(
       geometryById,
+      query,
+      excludeId
+    )
+    return previousSelection
+  }
+}
+
+export const createDisplayedRouteEntriesSelector = (
+  query: GeometryRect,
+  excludeId?: string
+): ((
+  geometryById: Readonly<Record<string, IPoint[]>>,
+  previewById: Readonly<Record<string, IPoint[]>>
+) => SelectedRouteEntries) => {
+  let previousGeometry: Readonly<Record<string, IPoint[]>> | undefined
+  let previousPreview: Readonly<Record<string, IPoint[]>> | undefined
+  let previousSelection: SelectedRouteEntries = []
+  return (geometryById, previewById) => {
+    if (geometryById === previousGeometry && previewById === previousPreview)
+      return previousSelection
+    previousGeometry = geometryById
+    previousPreview = previewById
+    previousSelection = selectDisplayedRouteEntriesIntersectingRect(
+      geometryById,
+      previewById,
       query,
       excludeId
     )

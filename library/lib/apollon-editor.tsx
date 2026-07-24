@@ -1067,6 +1067,7 @@ export class ApollonEditor {
   set model(incoming: Apollon.UMLModel) {
     const model = normalizeModel(incoming)
     const { nodes, edges, assessments, interactive } = model
+    this.edgeGeometryStore.getState().beginRoutingBootstrap()
     // Every store action below routes its Yjs writes through the
     // shared `transactStore` helper that no-ops in preview mode, so
     // the assignment is safe whether or not preview is active.

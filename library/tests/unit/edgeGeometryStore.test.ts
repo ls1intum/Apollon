@@ -1,7 +1,51 @@
 import { describe, expect, it, vi } from "vitest"
-import { createEdgeGeometryStore } from "@/store/edgeGeometryStore"
+import {
+  createEdgeGeometryStore,
+  type EdgeGeometryStore,
+} from "@/store/edgeGeometryStore"
+
+const commitGeometry = (
+  store: ReturnType<typeof createEdgeGeometryStore>,
+  routes: Parameters<EdgeGeometryStore["setAllGeometry"]>[0],
+  nodeGeometry?: Parameters<EdgeGeometryStore["setAllGeometry"]>[2],
+  settlementPreview?: Parameters<EdgeGeometryStore["setAllGeometry"]>[3]
+) =>
+  store
+    .getState()
+    .setAllGeometry(
+      routes,
+      store.getState().routingEpoch,
+      nodeGeometry,
+      settlementPreview
+    )
 
 describe("edge geometry store", () => {
+  it("rejects obsolete geometry after model replacement", () => {
+    const store = createEdgeGeometryStore()
+    const obsoleteEpoch = store.getState().routingEpoch
+    commitGeometry(store, { previous: [{ x: -1, y: -1 }] })
+    store.getState().beginRoutingBootstrap()
+
+    expect(store.getState().routingReady).toBe(false)
+    expect(store.getState().isSolving).toBe(true)
+    expect(
+      store
+        .getState()
+        .setAllGeometry({ obsolete: [{ x: 0, y: 0 }] }, obsoleteEpoch)
+    ).toBe(false)
+    expect(store.getState().geometryById).toEqual({})
+    expect(store.getState().routingReady).toBe(false)
+
+    const currentEpoch = store.getState().routingEpoch
+    expect(
+      store
+        .getState()
+        .setAllGeometry({ current: [{ x: 1, y: 1 }] }, currentEpoch)
+    ).toBe(true)
+    expect(store.getState().geometryById).toHaveProperty("current")
+    expect(store.getState().routingReady).toBe(true)
+  })
+
   it("lets exact consumers await the accepted background generation", async () => {
     const store = createEdgeGeometryStore()
     store.getState().setSolving(true)
@@ -26,7 +70,7 @@ describe("edge geometry store", () => {
     await Promise.resolve()
     expect(settled).not.toHaveBeenCalled()
 
-    store.getState().setAllGeometry({})
+    commitGeometry(store, {})
     await waiting
     expect(settled).toHaveBeenCalledOnce()
     expect(store.getState().acceptedGeneration).toBe(generation + 1)
@@ -38,9 +82,9 @@ describe("edge geometry store", () => {
       { x: 0, y: 0 },
       { x: 100, y: 0 },
     ]
-    store.getState().setAllGeometry({ edge: route })
+    commitGeometry(store, { edge: route })
     const first = store.getState().geometryById.edge
-    store.getState().setAllGeometry({
+    commitGeometry(store, {
       edge: route.map((point) => ({ ...point })),
     })
     expect(store.getState().geometryById.edge).toBe(first)
@@ -55,7 +99,7 @@ describe("edge geometry store", () => {
     const firstNodes = new Map([
       ["node", { x: 0, y: 0, width: 100, height: 80, type: "class" }],
     ])
-    store.getState().setAllGeometry({ edge: route }, firstNodes)
+    commitGeometry(store, { edge: route }, firstNodes)
     const accepted = store.getState().settledNodeGeometry
 
     store.getState().setPreviewGeometry({
@@ -68,20 +112,17 @@ describe("edge geometry store", () => {
 
     // A content-identical exact snapshot retains its identity, keeping every
     // memoized label selector asleep.
-    store
-      .getState()
-      .setAllGeometry(
-        { edge: route },
-        new Map([
-          ["node", { x: 0, y: 0, width: 100, height: 80, type: "class" }],
-        ])
-      )
+    commitGeometry(
+      store,
+      { edge: route },
+      new Map([["node", { x: 0, y: 0, width: 100, height: 80, type: "class" }]])
+    )
     expect(store.getState().settledNodeGeometry).toBe(accepted)
 
     const movedNodes = new Map([
       ["node", { x: 20, y: 0, width: 100, height: 80, type: "class" }],
     ])
-    store.getState().setAllGeometry({ edge: route }, movedNodes)
+    commitGeometry(store, { edge: route }, movedNodes)
     expect(store.getState().settledNodeGeometry).toBe(movedNodes)
   })
 
@@ -95,7 +136,7 @@ describe("edge geometry store", () => {
       { x: 0, y: 20 },
       { x: 100, y: 20 },
     ]
-    store.getState().setAllGeometry({ a: exactA, b: exactB })
+    commitGeometry(store, { a: exactA, b: exactB })
     const settled = store.getState().geometryById
 
     const movedB = [
@@ -126,7 +167,7 @@ describe("edge geometry store", () => {
       { x: 0, y: 0 },
       { x: 100, y: 0 },
     ]
-    store.getState().setAllGeometry({ edge: exact })
+    commitGeometry(store, { edge: exact })
     const settledMap = store.getState().geometryById
     const settledRoute = store.getState().geometryById.edge
     store.getState().setPreviewGeometry({
@@ -146,7 +187,7 @@ describe("edge geometry store", () => {
         preview: state.previewById.edge,
       })
     )
-    store.getState().setAllGeometry({
+    commitGeometry(store, {
       edge: exact.map((point) => ({ ...point })),
     })
     unsubscribe()
@@ -163,7 +204,7 @@ describe("edge geometry store", () => {
 
   it("promotes a matching preview route on exact commit", () => {
     const store = createEdgeGeometryStore()
-    store.getState().setAllGeometry({
+    commitGeometry(store, {
       edge: [
         { x: 0, y: 0 },
         { x: 100, y: 0 },
@@ -176,7 +217,7 @@ describe("edge geometry store", () => {
     store.getState().setPreviewGeometry({ edge: preview })
     const displayed = store.getState().previewById.edge
 
-    store.getState().setAllGeometry({
+    commitGeometry(store, {
       edge: preview.map((point) => ({ ...point })),
     })
 
@@ -194,7 +235,7 @@ describe("edge geometry store", () => {
       { x: 0, y: 20 },
       { x: 100, y: 20 },
     ]
-    store.getState().setAllGeometry({ edge: preview })
+    commitGeometry(store, { edge: preview })
     store.getState().setPreviewGeometry({ edge: preview })
 
     const observed: Array<{
@@ -207,9 +248,7 @@ describe("edge geometry store", () => {
         preview: state.previewById.edge,
       })
     )
-    store.getState().setAllGeometry({ edge: exact }, undefined, {
-      edge: preview,
-    })
+    commitGeometry(store, { edge: exact }, undefined, { edge: preview })
     unsubscribe()
 
     expect(observed).toHaveLength(1)
@@ -223,7 +262,7 @@ describe("edge geometry store", () => {
       { x: 0, y: 0 },
       { x: 100, y: 0 },
     ]
-    store.getState().setAllGeometry({ edge: exact })
+    commitGeometry(store, { edge: exact })
     const settled = store.getState().geometryById
     store.getState().setPreviewGeometry({
       edge: [

@@ -1,5 +1,5 @@
 import { use, useLayoutEffect, useRef } from "react"
-import { useStore, type InternalNode } from "@xyflow/react"
+import { useNodesInitialized, useStore, type InternalNode } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import {
   EdgeGeometryStoreContext,
@@ -68,9 +68,9 @@ import type { IPoint } from "@/edges/Connection"
  * solves may improve the display-only preview, but cannot commit obsolete drag
  * geometry.
  *
- * Display projections are published separately from accepted geometry. The
- * moving edge follows the pointer immediately, while spatial consumers keep a
- * stable settled snapshot until the holistic side/port/route solve commits.
+ * Display projections are published separately from accepted geometry. Routes
+ * and their line jumps follow the pointer together, while exact consumers such
+ * as export and label placement keep the settled holistic snapshot.
  */
 export const EdgeGeometrySolver = () => {
   const nodes = useStore((s) => s.nodes)
@@ -78,19 +78,33 @@ export const EdgeGeometrySolver = () => {
     (s) => s.nodeLookup as unknown as Map<string, InternalNode>
   )
   const connectionMode = useStore((s) => s.connectionMode)
-  const { edges, nodeInteractionActive } = useDiagramStore(
-    useShallow((state) => ({
-      edges: state.edges,
-      // Controlled React Flow nodes round-trip their transient flags through the
-      // diagram store. The RF store's `nodes` input does not reliably retain
-      // those flags, so use the authoritative onNodesChange result here.
-      nodeInteractionActive: state.nodes.some(
-        (node) => node.dragging || node.resizing
-      ),
-    }))
-  )
+  const nodesInitialized = useNodesInitialized()
+  const visibleHandleBoundsInitialized = useStore((state) => {
+    let hasVisibleNodes = false
+    for (const node of state.nodeLookup.values()) {
+      if (node.hidden) continue
+      hasVisibleNodes = true
+      if (node.internals.handleBounds === undefined) return false
+    }
+    return hasVisibleNodes
+  })
+  const { edges, visibleDiagramNodeCount, nodeInteractionActive } =
+    useDiagramStore(
+      useShallow((state) => ({
+        edges: state.edges,
+        visibleDiagramNodeCount: state.nodes.filter((node) => !node.hidden)
+          .length,
+        // Controlled React Flow nodes round-trip their transient flags through the
+        // diagram store. The RF store's `nodes` input does not reliably retain
+        // those flags, so use the authoritative onNodesChange result here.
+        nodeInteractionActive: state.nodes.some(
+          (node) => node.dragging || node.resizing
+        ),
+      }))
+    )
   const setAllGeometry = useEdgeGeometryStore((s) => s.setAllGeometry)
   const setPreviewGeometry = useEdgeGeometryStore((s) => s.setPreviewGeometry)
+  const routingEpoch = useEdgeGeometryStore((s) => s.routingEpoch)
   // The raw store, read via getState() inside the effect (not subscribed — that
   // would re-trigger the solve it commits) to hold the last routes for edges
   // whose nodes are momentarily unmeasured.
@@ -108,6 +122,7 @@ export const EdgeGeometrySolver = () => {
   // ref (not state) — it is a cache, never a render trigger.
   const solveCacheRef = useRef<Map<string, EdgeSolveCacheEntry>>(new Map())
   const hasRunInitialSolveRef = useRef(false)
+  const activeRoutingEpochRef = useRef<number | null>(null)
   const workerDisabledRef = useRef(false)
   const workerControllerRef = useRef<EdgeGeometryWorkerController | null>(null)
   const workerHasSubmittedRef = useRef(false)
@@ -206,6 +221,35 @@ export const EdgeGeometrySolver = () => {
       clearTimeout(scheduledWorkerSubmitRef.current)
       scheduledWorkerSubmitRef.current = null
     }
+    if (activeRoutingEpochRef.current !== routingEpoch) {
+      activeRoutingEpochRef.current = routingEpoch
+      clearScheduledWorkerSubmit()
+      workerControllerRef.current?.dispose()
+      workerControllerRef.current = null
+      workerHasSubmittedRef.current = false
+      workerDisabledRef.current = false
+      submitLatestWorkerSnapshotRef.current = null
+      hasRunInitialSolveRef.current = false
+      solveCacheRef.current.clear()
+      settledRoutesRef.current = {}
+      settledNodeGeometryRef.current = null
+      provisionalRoutesRef.current = null
+      provisionalNodeGeometryRef.current = null
+      provisionalDecisionRef.current.clear()
+      submittedNodeGeometryRef.current.clear()
+      workerRequestTimingRef.current.clear()
+    }
+    // React Flow can publish a partial nodeLookup while it measures the initial
+    // canvas. Do not consume the one synchronous first solve on that incomplete
+    // obstacle field: use its readiness signal so the first routes users see
+    // are computed from every visible node's measured dimensions.
+    if (
+      !hasRunInitialSolveRef.current &&
+      visibleDiagramNodeCount > 0 &&
+      (!nodesInitialized || !visibleHandleBoundsInitialized)
+    )
+      return
+
     const solverEdges = pendingConnectionEdge
       ? [...edges, pendingConnectionEdge]
       : edges
@@ -274,7 +318,15 @@ export const EdgeGeometrySolver = () => {
       const acceptedNodeGeometry = snapshotEdgeGeometryNodes(
         solveInput.nodeLookup
       )
-      setAllGeometry(routeById, acceptedNodeGeometry)
+      if (
+        !setAllGeometry(
+          routeById,
+          routingEpoch,
+          acceptedNodeGeometry,
+          undefined
+        )
+      )
+        return
       releasedEdgePreviewRef.current = null
       provisionalRoutesRef.current = null
       provisionalNodeGeometryRef.current = null
@@ -466,11 +518,15 @@ export const EdgeGeometrySolver = () => {
               settlement,
               0
             )
-            setAllGeometry(
-              result.routeById,
-              acceptedNodeGeometry,
-              initialSettlementPreview
+            if (
+              !setAllGeometry(
+                result.routeById,
+                routingEpoch,
+                acceptedNodeGeometry,
+                initialSettlementPreview
+              )
             )
+              return
             observeHolisticPreview(receivedAt)
             releasedEdgePreviewRef.current = null
             provisionalRoutesRef.current = null
@@ -491,10 +547,10 @@ export const EdgeGeometrySolver = () => {
               return
             }
 
-            // Exact geometry is already authoritative for spatial consumers.
-            // Keep only the rendered route on a short orthogonal handoff, then
-            // clear it before resolving waitForSettled (exports cannot capture a
-            // halfway display generation).
+            // Exact geometry is already authoritative for exact consumers.
+            // Keep rendered routes and their jumps on a short orthogonal
+            // handoff, then clear it before resolving waitForSettled (exports
+            // cannot capture a halfway display generation).
             const animationToken = ++settlementAnimationTokenRef.current
             const startedAt = performance.now()
             const animateSettlement = (now: number) => {
@@ -678,6 +734,10 @@ export const EdgeGeometrySolver = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     nodeGeometryKey,
+    routingEpoch,
+    nodesInitialized,
+    visibleHandleBoundsInitialized,
+    visibleDiagramNodeCount,
     connectionMode,
     edges,
     nodeInteractionActive,

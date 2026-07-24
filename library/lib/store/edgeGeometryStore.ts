@@ -6,16 +6,16 @@ import type { EdgeGeometryNodeSnapshot } from "@/utils/geometry/edgeGeometryPrev
 /**
  * Runtime-only registry of jump-free edge polylines, keyed by edge id.
  * `geometryById` is the last accepted holistic solve; `previewById` is the
- * transient display projection while a newer generation is in flight. Spatial
- * consumers use the settled map for stable line jumps, label avoidance, and
- * reconnect routing; an edge renderer may prefer its own preview entry.
+ * transient display projection while a newer generation is in flight. Rendered
+ * line jumps follow that same display map so crossings and bridges remain on
+ * one generation.
  *
  * Not persisted (Yjs never sees it) — it is ephemeral view geometry, exactly
  * the kind of "computed segments" the model deliberately does not store.
  */
 export type EdgeGeometryStore = {
-  /** Last accepted holistic solve. Spatial consumers deliberately read only
-   * this map so transient pointer projections do not invalidate every edge. */
+  /** Last accepted holistic solve. Stable consumers such as label avoidance
+   * read this map; line jumps overlay the preview users currently see. */
   geometryById: Record<string, IPoint[]>
   /** Display-only routes while a newer exact generation is in flight. Entries
    * may reuse `geometryById` arrays for edges whose endpoints did not move. */
@@ -31,6 +31,11 @@ export type EdgeGeometryStore = {
   /** Monotonic count of accepted exact solves, including content-identical
    * generations. Consumers use it as a barrier, never as persisted state. */
   acceptedGeneration: number
+  /** Identifies the model whose geometry is being solved. Model replacement
+   * increments the epoch so an obsolete Worker result cannot become visible. */
+  routingEpoch: number
+  /** True once the current model has an accepted holistic route generation. */
+  routingReady: boolean
   /**
    * Replace the WHOLE map in one write — the central edge solver's single-pass
    * output. Reuses each edge's previous `IPoint[]` reference when its content is
@@ -38,13 +43,15 @@ export type EdgeGeometryStore = {
    * only re-renders the edges the solve actually moved, and edges absent from
    * the new map (deleted) are pruned. An optional display-only settlement
    * preview lets the renderer converge onto the already-authoritative exact map
-   * without exposing a mixed generation to spatial consumers.
+   * without exposing a mixed generation to exact consumers.
    */
   setAllGeometry: (
     routeById: Record<string, IPoint[]>,
+    routingEpoch: number,
     nodeGeometry?: EdgeGeometryNodeSnapshot,
     settlementPreview?: Record<string, IPoint[]>
-  ) => void
+  ) => boolean
+  beginRoutingBootstrap: () => void
   setPreviewGeometry: (routeById: Record<string, IPoint[]>) => void
   clearPreviewGeometry: () => void
   setSolving: (solving: boolean) => void
@@ -108,9 +115,17 @@ export const createEdgeGeometryStore = (): UseBoundStore<
           settledNodeGeometry: new Map(),
           isSolving: false,
           acceptedGeneration: 0,
+          routingEpoch: 0,
+          routingReady: false,
 
-          setAllGeometry: (routeById, nodeGeometry, settlementPreview) => {
+          setAllGeometry: (
+            routeById,
+            routingEpoch,
+            nodeGeometry,
+            settlementPreview
+          ) => {
             const state = get()
+            if (routingEpoch !== state.routingEpoch) return false
             const previous = state.geometryById
             const prevIds = Object.keys(previous)
             const nextIds = Object.keys(routeById)
@@ -161,11 +176,29 @@ export const createEdgeGeometryStore = (): UseBoundStore<
                   ? nodeGeometry
                   : state.settledNodeGeometry,
                 acceptedGeneration: state.acceptedGeneration + 1,
+                routingReady: true,
               },
               undefined,
               "setAllGeometry"
             )
             resolveReadyWaiters()
+            return true
+          },
+
+          beginRoutingBootstrap: () => {
+            const state = get()
+            set(
+              {
+                geometryById: {},
+                previewById: {},
+                settledNodeGeometry: new Map(),
+                isSolving: true,
+                routingEpoch: state.routingEpoch + 1,
+                routingReady: false,
+              },
+              undefined,
+              "beginRoutingBootstrap"
+            )
           },
 
           setPreviewGeometry: (routeById) => {

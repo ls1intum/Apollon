@@ -4,8 +4,10 @@ import type { IPoint } from "@/edges/Connection"
 import { computeLineJumpsForEdge } from "@/utils/edgeUtils"
 import { collectNeighborPolylines } from "@/utils/geometry/edgeLabelLayout"
 import {
+  createDisplayedRouteEntriesSelector,
   createRouteEntriesSelector,
   selectedRoutesToRecord,
+  selectDisplayedRouteEntriesIntersectingRect,
   selectRouteEntriesIntersectingRect,
 } from "@/utils/geometry/edgeGeometrySubscriptions"
 
@@ -41,6 +43,72 @@ describe("selectRouteEntriesIntersectingRect", () => {
       },
       query
     )
+
+    expect(before).toEqual(["near", near])
+    expect(shallow(before, after)).toBe(true)
+  })
+
+  it("selects preview geometry over exact geometry without dropping exact fallbacks", () => {
+    const exactCrossing = [p(20, 0), p(20, 100)]
+    const previewCrossing = [p(80, 0), p(80, 100)]
+    const exactOnly = [p(40, 0), p(40, 100)]
+    const selected = selectDisplayedRouteEntriesIntersectingRect(
+      {
+        crossing: exactCrossing,
+        exactOnly,
+      },
+      { crossing: previewCrossing },
+      query
+    )
+
+    expect(selected).toEqual([
+      "crossing",
+      previewCrossing,
+      "exactOnly",
+      exactOnly,
+    ])
+  })
+
+  it("computes settlement jumps at the displayed crossing, not the accepted future crossing", () => {
+    const base = [p(0, 50), p(100, 50)]
+    const exactCrossing = [p(20, 0), p(20, 100)]
+    const previewCrossing = [p(80, 0), p(80, 100)]
+    const selected = selectedRoutesToRecord(
+      selectDisplayedRouteEntriesIntersectingRect(
+        { other: exactCrossing },
+        { other: previewCrossing },
+        query,
+        "base"
+      )
+    )
+
+    const jumps = computeLineJumpsForEdge(
+      "base",
+      base,
+      [{ id: "other" }],
+      new Map(Object.entries(selected))
+    )
+
+    expect(jumps).toHaveLength(1)
+    expect(jumps[0].point).toEqual(p(80, 50))
+    expect(
+      createRouteEntriesSelector(query, "base")({ other: exactCrossing })
+    ).toEqual(["other", exactCrossing])
+  })
+
+  it("keeps displayed-route selections shallow-equal when only a far preview changes", () => {
+    const near = [p(20, 0), p(20, 100)]
+    const exact = {
+      near,
+      far: [p(500, 500), p(600, 500)],
+    }
+    const select = createDisplayedRouteEntriesSelector(query)
+    const before = select(exact, {
+      far: [p(510, 500), p(610, 500)],
+    })
+    const after = select(exact, {
+      far: [p(520, 500), p(620, 500)],
+    })
 
     expect(before).toEqual(["near", near])
     expect(shallow(before, after)).toBe(true)

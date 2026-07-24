@@ -9,7 +9,7 @@ import {
   computeLineJumpsForEdge,
 } from "@/utils/edgeUtils"
 import {
-  createRouteEntriesSelector,
+  createDisplayedRouteEntriesSelector,
   polylineBounds,
   selectedRoutesToRecord,
 } from "@/utils/geometry/edgeGeometrySubscriptions"
@@ -17,10 +17,10 @@ import {
 /**
  * Returns where this edge should bridge over the edges it crosses, using the
  * stable horizontal-hops-vertical convention (see `computeLineJumpsForEdge`).
- * Other edges' geometry is read from the registry's last accepted holistic
- * snapshot. The moving edge still recomputes from its own `basePoints`; keeping
- * neighbours settled prevents one transient preview from invalidating the whole
- * edge layer. Pass `enabled: false` to skip the scan (e.g. while reconnecting).
+ * Other edges come from the same displayed snapshot as `basePoints`: preview
+ * when present, otherwise accepted. Keeping both sides of a crossing on one
+ * snapshot prevents floating bridge arcs during both interaction and
+ * settlement. Pass `enabled: false` to skip the scan.
  *
  * Shared by both `useStepPathEdge` and `useStraightPathEdge`; the only
  * difference between them is the `basePoints` they feed in.
@@ -32,7 +32,7 @@ export function useEdgeLineJumps(
 ): LineJumpHit[] {
   const baseBounds = useMemo(() => polylineBounds(basePoints), [basePoints])
   const selectIntersectingRoutes = useMemo(
-    () => createRouteEntriesSelector(baseBounds, id),
+    () => createDisplayedRouteEntriesSelector(baseBounds, id),
     [baseBounds, id]
   )
   // A true segment crossing requires the two route bounding boxes to intersect.
@@ -41,7 +41,9 @@ export function useEdgeLineJumps(
   // inside them still re-runs the exact line-jump computation below.
   const selectedRouteEntries = useEdgeGeometryStore(
     useShallow((state) =>
-      enabled && id ? selectIntersectingRoutes(state.geometryById) : []
+      enabled && id
+        ? selectIntersectingRoutes(state.geometryById, state.previewById)
+        : []
     )
   )
 
