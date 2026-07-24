@@ -179,7 +179,7 @@ One-time setup that can't ride on the API key:
 
 - [ ] App Privacy label: generate `fastlane/app_privacy_details.json` once,
       confirm it matches the declaration above, and run `bundle exec fastlane
-  privacy` with an Apple ID session (`FASTLANE_USER` / `FASTLANE_SESSION`).
+privacy` with an Apple ID session (`FASTLANE_USER` / `FASTLANE_SESSION`).
 - [ ] Populate the `IOS_APP_REVIEW_*` CI secrets with the review contact.
 
 Per-release, before enabling **Submit for review**:
