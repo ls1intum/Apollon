@@ -1,0 +1,173 @@
+{
+  "id": "app-store-workflow",
+  "version": "4.0.0",
+  "title": "Order Fulfillment",
+  "type": "ActivityDiagram",
+  "nodes": [
+    {
+      "id": "start",
+      "width": 50,
+      "height": 50,
+      "type": "activityInitialNode",
+      "position": { "x": 20, "y": 235 },
+      "data": { "name": "Start" },
+      "measured": { "width": 50, "height": 50 }
+    },
+    {
+      "id": "receive-order",
+      "width": 190,
+      "height": 110,
+      "type": "activityActionNode",
+      "position": { "x": 125, "y": 205 },
+      "data": { "name": "Receive Order" },
+      "measured": { "width": 190, "height": 110 }
+    },
+    {
+      "id": "fork",
+      "width": 20,
+      "height": 260,
+      "type": "activityForkNode",
+      "position": { "x": 380, "y": 130 },
+      "data": { "name": "Fork" },
+      "measured": { "width": 20, "height": 260 }
+    },
+    {
+      "id": "confirm-payment",
+      "width": 210,
+      "height": 110,
+      "type": "activityActionNode",
+      "position": { "x": 475, "y": 90 },
+      "data": { "name": "Confirm Payment" },
+      "measured": { "width": 210, "height": 110 }
+    },
+    {
+      "id": "reserve-inventory",
+      "width": 210,
+      "height": 110,
+      "type": "activityActionNode",
+      "position": { "x": 475, "y": 320 },
+      "data": { "name": "Reserve Inventory" },
+      "measured": { "width": 210, "height": 110 }
+    },
+    {
+      "id": "join",
+      "width": 20,
+      "height": 260,
+      "type": "activityForkNode",
+      "position": { "x": 760, "y": 130 },
+      "data": { "name": "Join" },
+      "measured": { "width": 20, "height": 260 }
+    },
+    {
+      "id": "pack-order",
+      "width": 190,
+      "height": 110,
+      "type": "activityActionNode",
+      "position": { "x": 850, "y": 205 },
+      "data": { "name": "Pack & Label" },
+      "measured": { "width": 190, "height": 110 }
+    },
+    {
+      "id": "dispatch",
+      "width": 180,
+      "height": 110,
+      "type": "activityActionNode",
+      "position": { "x": 1110, "y": 205 },
+      "data": { "name": "Dispatch Order" },
+      "measured": { "width": 180, "height": 110 }
+    },
+    {
+      "id": "end",
+      "width": 50,
+      "height": 50,
+      "type": "activityFinalNode",
+      "position": { "x": 1360, "y": 235 },
+      "data": { "name": "End" },
+      "measured": { "width": 50, "height": 50 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-to-receive",
+      "source": "start",
+      "target": "receive-order",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "receive-to-fork",
+      "source": "receive-order",
+      "target": "fork",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "fork-to-payment",
+      "source": "fork",
+      "target": "confirm-payment",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "fork-to-inventory",
+      "source": "fork",
+      "target": "reserve-inventory",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right-bottom",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "payment-to-join",
+      "source": "confirm-payment",
+      "target": "join",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left-top",
+      "data": { "points": [] }
+    },
+    {
+      "id": "inventory-to-join",
+      "source": "reserve-inventory",
+      "target": "join",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left-bottom",
+      "data": { "points": [] }
+    },
+    {
+      "id": "join-to-pack",
+      "source": "join",
+      "target": "pack-order",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "pack-to-dispatch",
+      "source": "pack-order",
+      "target": "dispatch",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "dispatch-to-end",
+      "source": "dispatch",
+      "target": "end",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    }
+  ],
+  "assessments": {}
+}

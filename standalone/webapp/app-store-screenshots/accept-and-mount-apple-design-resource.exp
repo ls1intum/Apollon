@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+log_user 0
+
+if {![info exists env(APOLLON_DMG_PATH)] || ![info exists env(APOLLON_MOUNT_PATH)]} {
+    puts stderr "APOLLON_DMG_PATH and APOLLON_MOUNT_PATH are required"
+    exit 2
+}
+
+spawn hdiutil attach -readonly -nobrowse \
+    -mountpoint $env(APOLLON_MOUNT_PATH) \
+    $env(APOLLON_DMG_PATH)
+
+expect {
+    -re {\r\n:$} {
+        send "q"
+        exp_continue
+    }
+    -re {Agree Y/N\?} {
+        send "Y\r"
+    }
+    timeout {
+        puts stderr "Timed out waiting for the Apple license confirmation"
+        exit 1
+    }
+    eof {
+        catch wait result
+        exit [lindex $result 3]
+    }
+}
+
+expect eof
+catch wait result
+exit [lindex $result 3]

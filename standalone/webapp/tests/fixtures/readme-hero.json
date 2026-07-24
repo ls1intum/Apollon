@@ -1,0 +1,256 @@
+{
+  "id": "fixture-readme-hero-001",
+  "version": "4.0.0",
+  "title": "Apollon",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000001",
+      "width": 220,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 40,
+        "y": 55
+      },
+      "data": {
+        "name": "Diagram",
+        "attributes": [
+          {
+            "id": "hero-a1",
+            "name": "- title: string"
+          },
+          {
+            "id": "hero-a2",
+            "name": "- type: DiagramType"
+          }
+        ],
+        "methods": [
+          {
+            "id": "hero-m1",
+            "name": "+ exportAsSVG(): SVG"
+          }
+        ]
+      },
+      "measured": {
+        "width": 220,
+        "height": 130
+      }
+    },
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000002",
+      "width": 200,
+      "height": 170,
+      "type": "class",
+      "position": {
+        "x": 50,
+        "y": 330
+      },
+      "data": {
+        "name": "DiagramType",
+        "stereotype": "Enumeration",
+        "attributes": [
+          {
+            "id": "hero-a3",
+            "name": "CLASS"
+          },
+          {
+            "id": "hero-a4",
+            "name": "ACTIVITY"
+          },
+          {
+            "id": "hero-a5",
+            "name": "BPMN"
+          },
+          {
+            "id": "hero-a6",
+            "name": "SFC"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 170
+      }
+    },
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000003",
+      "width": 230,
+      "height": 135,
+      "type": "class",
+      "position": {
+        "x": 420,
+        "y": 54.5
+      },
+      "data": {
+        "name": "Element",
+        "stereotype": "Abstract",
+        "attributes": [
+          {
+            "id": "hero-a7",
+            "name": "# id: ID"
+          },
+          {
+            "id": "hero-a8",
+            "name": "# name: string"
+          }
+        ],
+        "methods": [
+          {
+            "id": "hero-m2",
+            "name": "+ moveBy(delta: Point)"
+          }
+        ]
+      },
+      "measured": {
+        "width": 230,
+        "height": 135
+      }
+    },
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000004",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 285,
+        "y": 330
+      },
+      "data": {
+        "name": "Node",
+        "attributes": [
+          {
+            "id": "hero-a9",
+            "name": "- position: Point"
+          }
+        ],
+        "methods": [
+          {
+            "id": "hero-m3",
+            "name": "+ resize(w, h)"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000005",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 585,
+        "y": 330
+      },
+      "data": {
+        "name": "Edge",
+        "attributes": [
+          {
+            "id": "hero-a10",
+            "name": "- source: Node"
+          },
+          {
+            "id": "hero-a11",
+            "name": "- target: Node"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "9f1d2a30-0000-4000-8000-000000000006",
+      "width": 200,
+      "height": 115,
+      "type": "class",
+      "position": {
+        "x": 810,
+        "y": 59.5
+      },
+      "data": {
+        "name": "Selectable",
+        "stereotype": "Interface",
+        "attributes": [],
+        "methods": [
+          {
+            "id": "hero-m4",
+            "name": "+ select()"
+          },
+          {
+            "id": "hero-m5",
+            "name": "+ deselect()"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 115
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "hero-edge-node-element",
+      "source": "9f1d2a30-0000-4000-8000-000000000004",
+      "target": "9f1d2a30-0000-4000-8000-000000000003",
+      "type": "ClassInheritance",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "hero-edge-edge-element",
+      "source": "9f1d2a30-0000-4000-8000-000000000005",
+      "target": "9f1d2a30-0000-4000-8000-000000000003",
+      "type": "ClassInheritance",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "hero-edge-element-selectable",
+      "source": "9f1d2a30-0000-4000-8000-000000000003",
+      "target": "9f1d2a30-0000-4000-8000-000000000006",
+      "type": "ClassRealization",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "hero-edge-diagram-element",
+      "source": "9f1d2a30-0000-4000-8000-000000000001",
+      "target": "9f1d2a30-0000-4000-8000-000000000003",
+      "type": "ClassComposition",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "hero-edge-diagram-diagramtype",
+      "source": "9f1d2a30-0000-4000-8000-000000000001",
+      "target": "9f1d2a30-0000-4000-8000-000000000002",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}
