@@ -1366,6 +1366,11 @@ function computeAllEdgeGeometryPass(
     // neighbour map so step edges route around it.
     if (straightHookTypes.has(edge.type ?? "")) {
       const interior = getStraightHookInterior(edge)
+      // Syntax trees are drawn as straight parent→child lines; node overlaps are
+      // resolved by the tidy-tree layout, NOT by per-edge obstacle routing (which
+      // produces backtracking spaghetti on a dense tree). Use-case / petri edges
+      // form general graphs and keep automatic obstacle avoidance.
+      const avoidsObstacles = edge.type !== "SyntaxTreeLink"
       const straightObstacles = getEdgeObstacles(
         nodes,
         edge.source,
@@ -1416,6 +1421,10 @@ function computeAllEdgeGeometryPass(
               true,
               nodeIndex
             ),
+          // Side selection stays obstacle-aware for EVERY straight edge, so a
+          // stacked node makes the edge pick a side that clears it (a straight line
+          // that avoids the overlap) rather than one that runs through it. Only the
+          // bend-generating router below is gated per type.
           obstacles: straightObstacles,
           thirdPartyObstacles: straightObstacles.filter(
             (o) => !o.soft && o.id !== edge.source && o.id !== edge.target
@@ -1428,14 +1437,20 @@ function computeAllEdgeGeometryPass(
           straightTarget = selected.endpoints.adjustedTarget
         }
       }
-      const line = routeStraightPolyline({
-        source: straightSource,
-        target: straightTarget,
-        checkpoints: interior,
-        obstacles: straightObstacles,
-        neighborRoutes: [],
-        clearancePx: EDGES.NODE_CLEARANCE_PX,
-      })
+      const line = avoidsObstacles
+        ? routeStraightPolyline({
+            source: straightSource,
+            target: straightTarget,
+            checkpoints: interior,
+            // Never treat the edge's OWN endpoint nodes as obstacles — they are
+            // where it attaches, and routing around them produces a backwards jog.
+            obstacles: straightObstacles.filter(
+              (o) => o.id !== edge.source && o.id !== edge.target
+            ),
+            neighborRoutes: [],
+            clearancePx: EDGES.NODE_CLEARANCE_PX,
+          })
+        : [straightSource, ...interior, straightTarget]
       routeById[edge.id] = line
       indexRoutePolyline(neighborGrid, edge.id, line)
       continue

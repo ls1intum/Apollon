@@ -23,11 +23,12 @@ const makeNode = (
   x: number,
   y: number,
   width = 120,
-  height = 80
+  height = 80,
+  type = "syntaxTreeNonterminal"
 ): TestNode => {
   const node = {
     id,
-    type: "syntaxTreeNonterminal",
+    type,
     position: { x, y },
     width,
     height,
@@ -137,12 +138,28 @@ describe("straight-hook edge routing", () => {
     expect(routeById["e1"]).toHaveLength(2)
   })
 
-  it("auto-bends around a node sitting directly in the path (Track D)", () => {
-    // Blocker C straddles the horizontal chord between A and B.
-    const blocker = makeNode("c", 210, -20, 100, 120)
-    const nodes = [makeNode("a", 0, 0), makeNode("b", 520, 0), blocker]
+  it("auto-bends a general-graph (use-case) edge around a blocking node", () => {
+    // Obstacle avoidance applies to general-graph straight edges (use-case /
+    // petri), NOT to syntax-tree links (those stay straight — see below). Blocker C
+    // straddles the horizontal chord between A and B.
+    const t = "useCaseActor"
+    const blocker = makeNode("c", 210, -20, 100, 120, t)
+    const nodes = [
+      makeNode("a", 0, 0, 120, 80, t),
+      makeNode("b", 520, 0, 120, 80, t),
+      blocker,
+    ]
+    const useCaseEdge: Edge = {
+      id: "e1",
+      source: "a",
+      target: "b",
+      type: "UseCaseAssociation",
+      sourceHandle: null,
+      targetHandle: null,
+      data: {},
+    }
     const { routeById } = computeAllEdgeGeometry(
-      solverInput(nodes, [straightHookEdge()])
+      solverInput(nodes, [useCaseEdge])
     )
     const route = routeById["e1"]
     expect(route.length).toBeGreaterThan(2)
@@ -150,6 +167,17 @@ describe("straight-hook edge routing", () => {
     for (let i = 0; i < route.length - 1; i++) {
       expect(segIntersectsRect(route[i], route[i + 1], blockerRect)).toBe(false)
     }
+  })
+
+  it("keeps a syntax-tree link straight through a blocker (tidy layout, not routing)", () => {
+    // A dense hand-drawn tree must not sprout obstacle-avoidance bends; overlaps
+    // are the tidy-tree layout's job.
+    const blocker = makeNode("c", 210, -20, 100, 120)
+    const nodes = [makeNode("a", 0, 0, 120, 80), makeNode("b", 520, 0), blocker]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput(nodes, [straightHookEdge()])
+    )
+    expect(routeById["e1"]).toHaveLength(2)
   })
 
   it("attaches at the facing side with a centred port (not the drawn handle)", () => {
