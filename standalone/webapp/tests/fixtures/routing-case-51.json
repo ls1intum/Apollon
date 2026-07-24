@@ -1,0 +1,91 @@
+{
+  "id": "a373e0fc-9edc-43c2-883f-465689d2514d",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "6de6e6d9-8d5a-4fd4-96a7-0276dcaeb3ec",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 165,
+        "y": -575
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "58804209-02b1-4a6b-a209-86df1ca19999",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "43209900-b92a-4ad5-b1e7-9386b78b4839",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "5c19aed9-0659-43df-b226-a6c2e52f56cf",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 110,
+        "y": -375
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "78a9c490-7ed1-4e15-8cb7-c25337a0c177",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "2342339c-36ae-4086-a40e-6e2752356b16",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "f1f038b1-93be-4719-b756-b696dcfa9ac0",
+      "source": "6de6e6d9-8d5a-4fd4-96a7-0276dcaeb3ec",
+      "target": "5c19aed9-0659-43df-b226-a6c2e52f56cf",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-mid-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "26d38bf7-adb3-456d-9536-d9a87545948f",
+      "source": "6de6e6d9-8d5a-4fd4-96a7-0276dcaeb3ec",
+      "target": "5c19aed9-0659-43df-b226-a6c2e52f56cf",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "right-mid-bottom",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

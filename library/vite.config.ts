@@ -43,7 +43,7 @@ function emitFontLicense(): Plugin {
   }
 }
 
-// Single build pass — `dist/{index,internals,export}.js`.
+// Single build pass — `dist/{index,internals,export,model}.js`.
 //
 // EVERY runtime dependency a consumer can install from `@tumaet/apollon` is
 // externalized: the React family (react / react-dom / @xyflow/react), the UI
@@ -76,6 +76,9 @@ const REACT_PEERS = [
   "react/compiler-runtime",
   "react-dom/client",
   "@xyflow/react",
+  // Routing uses low-level coordinate helpers not re-exported by React Flow.
+  // The exact compatible system package is a direct dependency.
+  "@xyflow/system",
 ]
 
 // `@tumaet/apollon` declares in `dependencies`, externalized like the peers
@@ -92,9 +95,19 @@ const RUNTIME_DEPS = [
   "@chenglou/pretext",
 ]
 
+// Pure routing kernel loaded by a module Worker. It contains no JSX and must not
+// receive React Refresh's browser-only `window` preamble in Vite dev mode.
+const ROUTING_KERNEL =
+  /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
+
 export default defineConfig({
+  // Runtime assets emitted by the published library (notably the geometry
+  // Worker) must resolve beside dist/index.js in whichever host installs the
+  // package, never from that host application's `/assets` root.
+  base: "./",
   plugins: [
     react({
+      exclude: ROUTING_KERNEL,
       babel: { plugins: [["babel-plugin-react-compiler", { target: "19" }]] },
     }),
     dts({
@@ -140,6 +153,7 @@ export default defineConfig({
         index: resolve(__dirname, "lib/index.tsx"),
         internals: resolve(__dirname, "lib/internals.ts"),
         export: resolve(__dirname, "lib/export/index.ts"),
+        model: resolve(__dirname, "lib/model.ts"),
       },
       formats: ["es"],
       cssFileName: "style",

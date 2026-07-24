@@ -1,4 +1,5 @@
-import { EdgeTypes } from "@xyflow/react"
+import type { EdgeTypes } from "@xyflow/react"
+import type { DiagramEdgeType } from "../modelElementTypes"
 import { ClassDiagramEdge } from "./edgeTypes/ClassDiagramEdge"
 import { ActivityDiagramEdge } from "./edgeTypes/ActivityDiagramEdge"
 import { UseCaseEdge } from "./edgeTypes/UseCaseDiagramEdge"
@@ -60,7 +61,7 @@ export const diagramEdgeTypes = {
   BPMNMessageFlow: BPMNDiagramEdge,
   BPMNAssociationFlow: BPMNDiagramEdge,
   BPMNDataAssociationFlow: BPMNDiagramEdge,
-} satisfies EdgeTypes
+} satisfies Record<DiagramEdgeType, EdgeTypes[string]>
 
 export const edgeConfig = {
   // Class edges - all allow midpoint dragging
@@ -153,7 +154,7 @@ export const edgeConfig = {
   },
 } as const
 
-export type DiagramEdgeType = keyof typeof diagramEdgeTypes
+export type { DiagramEdgeType } from "../modelElementTypes"
 
 // IPoint has one canonical definition in ./Connection; re-export it here so
 // `@/edges` keeps exposing it without a second, drift-prone declaration.

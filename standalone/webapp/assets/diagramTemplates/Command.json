@@ -1,6 +1,6 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c4",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Command Diagram",
   "type": "ClassDiagram",
   "nodes": [
@@ -9,7 +9,7 @@
       "height": 40,
       "id": "8acfa3c3-de5b-424a-a555-cb68855538d0",
       "type": "class",
-      "position": { "x": -280, "y": 340 },
+      "position": { "x": -5, "y": 15 },
       "data": { "name": "Client", "methods": [], "attributes": [] },
       "selected": false,
       "measured": { "width": 160, "height": 40 },
@@ -17,11 +17,11 @@
       "resizing": false
     },
     {
-      "width": 246.431640625,
+      "width": 250,
       "height": 70,
       "id": "7351d563-b929-460e-a09d-e2b463bfceea",
       "type": "class",
-      "position": { "x": -20, "y": 30 },
+      "position": { "x": 260, "y": 0 },
       "data": {
         "name": "Invoker",
         "methods": [
@@ -33,7 +33,7 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 246, "height": 70 },
+      "measured": { "width": 250, "height": 70 },
       "dragging": true
     },
     {
@@ -41,7 +41,7 @@
       "height": 70,
       "id": "41a9495d-9993-449e-a3b5-a7a704130380",
       "type": "class",
-      "position": { "x": 10, "y": 200 },
+      "position": { "x": 300, "y": 170 },
       "data": {
         "name": "Receiver",
         "methods": [
@@ -58,7 +58,7 @@
       "height": 80,
       "id": "52e53f8b-cac0-4816-a70a-c2f154f3fb67",
       "type": "class",
-      "position": { "x": 395, "y": 25 },
+      "position": { "x": 600, "y": -5 },
       "data": {
         "name": "Command",
         "methods": [
@@ -68,7 +68,7 @@
           }
         ],
         "attributes": [],
-        "stereotype": "Interface"
+        "stereotype": "interface"
       },
       "selected": false,
       "measured": { "width": 170, "height": 80 },
@@ -76,11 +76,11 @@
       "resizing": false
     },
     {
-      "width": 270,
+      "width": 170,
       "height": 100,
       "id": "f235a28a-6d9b-482c-9e67-546dfd92e0d5",
       "type": "class",
-      "position": { "x": 345, "y": 185 },
+      "position": { "x": 600, "y": 155 },
       "data": {
         "name": "ConcreteCommand",
         "methods": [
@@ -94,7 +94,7 @@
         ]
       },
       "selected": false,
-      "measured": { "width": 270, "height": 100 },
+      "measured": { "width": 170, "height": 100 },
       "dragging": true,
       "resizing": false
     }
@@ -107,7 +107,8 @@
       "targetHandle": "left",
       "id": "1737994716146-8acfa3c3-de5b-424a-a555-cb68855538d0-7351d563-b929-460e-a09d-e2b463bfceea",
       "type": "ClassUnidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "8acfa3c3-de5b-424a-a555-cb68855538d0",
@@ -116,7 +117,8 @@
       "targetHandle": "left",
       "id": "1737994722983-8acfa3c3-de5b-424a-a555-cb68855538d0-41a9495d-9993-449e-a3b5-a7a704130380",
       "type": "ClassUnidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "f235a28a-6d9b-482c-9e67-546dfd92e0d5",
@@ -125,7 +127,12 @@
       "targetHandle": "bottom",
       "id": "1737994915434-52e53f8b-cac0-4816-a70a-c2f154f3fb67-f235a28a-6d9b-482c-9e67-546dfd92e0d5",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "f235a28a-6d9b-482c-9e67-546dfd92e0d5",
@@ -134,16 +141,8 @@
       "targetHandle": "right",
       "id": "1737994981686-f235a28a-6d9b-482c-9e67-546dfd92e0d5-41a9495d-9993-449e-a3b5-a7a704130380",
       "type": "ClassUnidirectional",
-      "selected": false
-    },
-    {
-      "source": "726a23e8-c86e-469d-927a-d0f4c199b474",
-      "sourceHandle": "top",
-      "target": "52e53f8b-cac0-4816-a70a-c2f154f3fb67",
-      "targetHandle": "bottom-right",
-      "id": "1737994991158-726a23e8-c86e-469d-927a-d0f4c199b474-52e53f8b-cac0-4816-a70a-c2f154f3fb67",
-      "type": "ClassBidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "7351d563-b929-460e-a09d-e2b463bfceea",
@@ -152,7 +151,8 @@
       "targetHandle": "left",
       "id": "1737995015106-7351d563-b929-460e-a09d-e2b463bfceea-52e53f8b-cac0-4816-a70a-c2f154f3fb67",
       "type": "ClassUnidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     },
     {
       "source": "8acfa3c3-de5b-424a-a555-cb68855538d0",
@@ -161,7 +161,8 @@
       "targetHandle": "bottom",
       "id": "1737995032625-8acfa3c3-de5b-424a-a555-cb68855538d0-f235a28a-6d9b-482c-9e67-546dfd92e0d5",
       "type": "ClassDependency",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     }
   ],
   "assessments": {}

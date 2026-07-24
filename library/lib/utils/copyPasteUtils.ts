@@ -2,6 +2,7 @@
 import { generateUUID } from "@/utils"
 import type { Node, Edge } from "@xyflow/react"
 import { CANVAS } from "@/constants"
+import { remintNestedChildIds } from "@/utils/paletteNode"
 
 /** What a copy or cut puts on the clipboard, as JSON. */
 export interface ClipboardData {
@@ -187,46 +188,5 @@ export const materializeClipboardData = (
 
 export const createNewNodeDataWithNewIds = (originalNodeData: any) => {
   if (!originalNodeData) return originalNodeData
-
-  const newNodeData = { ...originalNodeData }
-
-  if (
-    originalNodeData.attributes &&
-    Array.isArray(originalNodeData.attributes)
-  ) {
-    newNodeData.attributes = originalNodeData.attributes.map(
-      (originalAttr: any) => {
-        return {
-          ...originalAttr,
-          id: generateUUID(),
-        }
-      }
-    )
-  }
-
-  if (originalNodeData.methods && Array.isArray(originalNodeData.methods)) {
-    newNodeData.methods = originalNodeData.methods.map(
-      (originalMethod: any) => {
-        return {
-          ...originalMethod,
-          id: generateUUID(),
-        }
-      }
-    )
-  }
-  if (
-    originalNodeData.actionRows &&
-    Array.isArray(originalNodeData.actionRows)
-  ) {
-    newNodeData.actionRows = originalNodeData.actionRows.map(
-      (originalActionRow: any) => {
-        return {
-          ...originalActionRow,
-          id: generateUUID(),
-        }
-      }
-    )
-  }
-
-  return newNodeData
+  return remintNestedChildIds(originalNodeData)
 }

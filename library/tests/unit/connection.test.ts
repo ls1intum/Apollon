@@ -74,7 +74,7 @@ describe("getPortsForElement", () => {
 })
 
 // ---------------------------------------------------------------------------
-// tryFindStraightPath – basic behavior (without handleCoords)
+// tryFindStraightPath – basic behavior (without endpoint coordinates)
 // ---------------------------------------------------------------------------
 describe("tryFindStraightPath", () => {
   const padding = EDGES.MARKER_PADDING // -3
@@ -156,16 +156,16 @@ describe("tryFindStraightPath", () => {
   })
 
   // -------------------------------------------------------------------------
-  // handleCoords alignment rejection – the core fix for diagonal edges
+  // Endpoint-coordinate alignment rejection – the core fix for diagonal edges
   // -------------------------------------------------------------------------
-  describe("handleCoords alignment rejection", () => {
+  describe("endpoint-coordinate alignment rejection", () => {
     describe("Right → Left with misaligned Y handles", () => {
       it("returns null when handle Y-coords differ by more than 1px", () => {
-        // Nodes overlap vertically, so without handleCoords this would succeed
+        // Nodes overlap vertically, so without endpoint coordinates this succeeds
         const source = makeNode(0, 0, 100, 100, Position.Right)
         const target = makeNode(200, 0, 100, 100, Position.Left)
 
-        // Verify it works without handleCoords
+        // Verify it works without endpoint coordinates
         expect(tryFindStraightPath(source, target, padding)).not.toBeNull()
 
         // Now with misaligned handles (e.g. right-top → left-bottom)
@@ -219,6 +219,25 @@ describe("tryFindStraightPath", () => {
         expect(result).toEqual([
           { x: 100, y: 24 },
           { x: 200, y: 24 },
+        ])
+      })
+
+      it("uses exact adjusted endpoints for marker-specific padding", () => {
+        const source = makeNode(0, 0, 100, 100, Position.Right)
+        const target = makeNode(200, 0, 30, 30, Position.Left)
+
+        const result = tryFindStraightPath(source, target, 1, {
+          sourceX: 100,
+          sourceY: 15,
+          // A required-interface socket around the 30px target contacts the
+          // line four pixels outside its left boundary.
+          targetX: 196,
+          targetY: 15,
+        })
+
+        expect(result).toEqual([
+          { x: 100, y: 15 },
+          { x: 196, y: 15 },
         ])
       })
     })
@@ -314,7 +333,7 @@ describe("tryFindStraightPath", () => {
         const source = makeNode(0, 0, 160, 90, Position.Right)
         const target = makeNode(270, 0, 160, 50, Position.Left)
 
-        // Without handleCoords, nodes overlap vertically => straight path found
+        // Without endpoint coordinates, nodes overlap vertically => straight path
         const baseline = tryFindStraightPath(source, target, padding)
         expect(baseline).not.toBeNull()
 

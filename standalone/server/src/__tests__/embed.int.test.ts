@@ -554,11 +554,46 @@ describe("end-to-end through the real conversion worker", () => {
       /<text x="([\d.]+)" y="([\d.]+)"[^>]*>edgelabel<\/text>/
     )
     expect(m).not.toBeNull()
-    const [lx, ly] = [Number(m![1]), Number(m![2])]
-    // The on-path midpoint is on the vertical segment at ~(469, 352); the label
-    // must sit within a small offset of it (the source→target midpoint ~(438,
-    // 334) is ~37px away, off the line).
-    const dist = Math.hypot(lx - 469, ly - 352)
-    expect(dist).toBeLessThan(25)
+    const label = { x: Number(m![1]), y: Number(m![2]) }
+
+    // The router derives its own path (routes are not persisted), so we assert the
+    // property, not a fixed coordinate: the label must sit ON the rendered edge — i.e.
+    // close to its polyline — rather than at the straight source→target midpoint, which
+    // for this L-shaped route is off the line entirely. That is exactly the fallback the
+    // svgPathGeometry shim exists to avoid.
+    const edgePathTag = asText(res).match(
+      /<path[^>]*class="react-flow__edge-path"[^>]*>/
+    )
+    expect(edgePathTag).not.toBeNull()
+    const pathD = edgePathTag![0].match(/\sd="([^"]+)"/)
+    expect(pathD).not.toBeNull()
+    const verts = [...pathD![1].matchAll(/-?[\d.]+/g)]
+      .map(Number)
+      .reduce<{ x: number; y: number }[]>((acc, n, i) => {
+        if (i % 2 === 0) acc.push({ x: n, y: 0 })
+        else acc[acc.length - 1].y = n
+        return acc
+      }, [])
+    type Pt = { x: number; y: number }
+    const distToSeg = (p: Pt, a: Pt, b: Pt) => {
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const len2 = dx * dx + dy * dy
+      const t =
+        len2 === 0
+          ? 0
+          : Math.max(
+              0,
+              Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)
+            )
+      return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+    }
+    const distToPath = Math.min(
+      ...verts.slice(0, -1).map((v, i) => distToSeg(label, v, verts[i + 1]))
+    )
+    // A label sits beside the line with a small text offset; the straight-midpoint
+    // fallback for this route is ~100px off the polyline, so this cleanly separates
+    // "on the edge" from "at a fallback point".
+    expect(distToPath).toBeLessThan(25)
   }, 20_000)
 })

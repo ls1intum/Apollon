@@ -35,27 +35,29 @@ async function selectEdgeById(page: Page, id: string): Promise<void> {
   }, id)
   if (!pt) throw new Error(`edge ${id} path not found`)
   await page.mouse.click(pt.x, pt.y)
-  await page.waitForTimeout(150)
+  await expect(page.locator(`.react-flow__edge[data-id="${id}"]`)).toHaveClass(
+    /selected/
+  )
 }
 
-/** The toolbar <foreignObject> x/y (flow units). */
+/** The framework toolbar's on-screen centre. */
 async function toolbarXY(page: Page, id: string) {
   return page.evaluate((edgeId) => {
-    const fo = document
-      .querySelector(`.react-flow__edge[data-id="${edgeId}"]`)
-      ?.querySelector("foreignObject")
-    return fo
-      ? { x: Number(fo.getAttribute("x")), y: Number(fo.getAttribute("y")) }
-      : null
+    const toolbar = document.querySelector<HTMLElement>(
+      `.react-flow__edge-toolbar[data-id="${edgeId}"]`
+    )
+    if (!toolbar) return null
+    const rect = toolbar.getBoundingClientRect()
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
   }, id)
 }
 
 /** The toolbar box's on-screen size (px). */
 async function toolbarBoxSize(page: Page, id: string) {
   return page.evaluate((edgeId) => {
-    const box = document
-      .querySelector(`.react-flow__edge[data-id="${edgeId}"] foreignObject`)
-      ?.querySelector(".apollon-edge-toolbar") as HTMLElement | null
+    const box = document.querySelector<HTMLElement>(
+      `.react-flow__edge-toolbar[data-id="${edgeId}"]`
+    )
     if (!box) return null
     const r = box.getBoundingClientRect()
     return { w: Math.round(r.width), h: Math.round(r.height) }
@@ -112,7 +114,6 @@ test("the edit toolbar follows the bend handle live during the drag, not only on
   await page.mouse.move(handle!.x, handle!.y + 90, { steps: 10 })
   const mid = await toolbarXY(page, id)
   await page.mouse.up()
-  await page.waitForTimeout(200)
   const after = await toolbarXY(page, id)
 
   // It actually moved as a result of the drag...
@@ -158,9 +159,7 @@ test("the edit toolbar keeps a constant on-screen size across zoom (does not sca
   for (let i = 0; i < 5; i++) {
     if (!(await zoomIn.isEnabled())) break
     await zoomIn.click()
-    await page.waitForTimeout(60)
   }
-  await page.waitForTimeout(200)
   const zoomedIn = await toolbarBoxSize(page, id)
 
   // Constant on-screen size: before the fix this ballooned (~32 -> ~80px).

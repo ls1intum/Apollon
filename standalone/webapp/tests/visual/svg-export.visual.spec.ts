@@ -9,6 +9,7 @@ import {
 } from "../helpers/canvas"
 import { extractSVGFromPage } from "../helpers/svgExport"
 import { renderSVGtoPNG } from "../helpers/resvgRender"
+import { prepareTemplateModel } from "../../src/utils/templateModels"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -45,7 +46,10 @@ function loadFixture(filename: string): Record<string, unknown> {
 
 function loadTemplate(filename: string): Record<string, unknown> {
   const raw = fs.readFileSync(path.join(templatesDir, filename), "utf-8")
-  return JSON.parse(raw) as Record<string, unknown>
+  return prepareTemplateModel(JSON.parse(raw)) as unknown as Record<
+    string,
+    unknown
+  >
 }
 
 function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {

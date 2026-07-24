@@ -193,6 +193,22 @@
     );
   }
 
+  /* ── Button group (data-slot="button-group") ──────────────────────────── */
+  [data-slot="button-group"] {
+    display: inline-flex;
+    width: fit-content;
+    align-items: stretch;
+  }
+
+  [data-slot="button-group"][data-orientation="vertical"] {
+    flex-direction: column;
+  }
+
+  [data-slot="button-group"] > *:focus-visible {
+    position: relative;
+    z-index: 1;
+  }
+
   /* ── Input (data-slot="input") ────────────────────────────────────────── */
   /* h-9 (36px) matches the default button height for aligned form rows. */
 

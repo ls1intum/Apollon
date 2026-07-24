@@ -1,0 +1,88 @@
+{
+  "id": "e243b057-3904-4787-9718-2324379be5b4",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "b717899c-aa84-40ba-9cc1-786d722f15c0",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 520,
+        "y": 290
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "d0fed8cd-8305-4e3c-8b73-958a007fbd5b",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "232bc354-1126-413d-96f0-6e8d4a220e37",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "3ece7475-efe8-4097-b9af-2184ac36246e",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 520,
+        "y": 425
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "44056373-0e97-4003-9b8b-9db813aaaa65",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "ecce6c5d-4ede-4aad-a6d1-65cd1c3a2bfe",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "1b015227-3e36-4ad2-915e-febe1df31335",
+      "source": "b717899c-aa84-40ba-9cc1-786d722f15c0",
+      "target": "3ece7475-efe8-4097-b9af-2184ac36246e",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-between-mid-left-center",
+      "data": {
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.46875
+        },
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.5
+        },
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

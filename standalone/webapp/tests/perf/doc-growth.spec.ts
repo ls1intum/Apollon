@@ -4,6 +4,7 @@ import {
   openLocalWithPerf,
   readPerf,
   dragNodeBy,
+  nodeNearestViewportCenter,
 } from "./perfHelpers"
 
 /**
@@ -36,20 +37,18 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const baseline = await readPerf(page)
   expect(baseline.nodesMapSize).toBe(30)
 
-  // Scope to this editor's container: the page can mount more than one editor
-  // instance, so a bare `.react-flow__node[data-id=…]` selector matches the
-  // same node id in every instance and trips Playwright's strict mode.
+  // React Flow virtualizes off-viewport nodes, so fixture order is not a stable
+  // source of mounted targets across browser engines and viewport sizes.
   const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
+  const nodeId = await nodeNearestViewportCenter(editor, page.viewportSize()!)
+  expect(nodeId).not.toBeNull()
+  const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
   for (let i = 0; i < DRAG_COUNT; i++) {
-    const node = editor.locator(
-      `.react-flow__node[data-id="perf-node-${String(i % 30).padStart(
-        2,
-        "0"
-      )}"]`
-    )
-    // Alternate direction so nodes don't march off-screen and stay grabbable.
+    // Alternate direction so the target returns to its starting position.
     const dir = i % 2 === 0 ? 1 : -1
-    await dragNodeBy(node, page, 24 * dir, 16 * dir)
+    await dragNodeBy(node, page, 24 * dir, 16 * dir, {
+      waitForRouting: false,
+    })
   }
 
   const after = await readPerf(page)
@@ -57,9 +56,9 @@ test("encoded Yjs doc stays bounded across many drag gestures", async ({
   const writesAdded = after.storeNodeWrites - baseline.storeNodeWrites
   const bytesAdded = after.encodedDocBytes - baseline.encodedDocBytes
 
-  // Meta-assertion: a defanged driver that never actually grabbed a node
-  // would record zero store writes — fail loudly instead of passing green.
-  expect(writesAdded).toBeGreaterThanOrEqual(1)
+  // Meta-assertion: most gestures must commit. This prevents a partially
+  // defanged driver from making the upper write/byte budgets pass vacuously.
+  expect(writesAdded).toBeGreaterThanOrEqual(DRAG_COUNT * 0.75)
 
   // Absolute budget: stays far under a generous ceiling.
   expect(after.encodedDocBytes).toBeLessThan(BYTE_BUDGET)

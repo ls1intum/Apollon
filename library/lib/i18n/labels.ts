@@ -207,8 +207,11 @@ export interface ApollonLabels {
   swapSourceTarget: string
   multiplicityLabel: (name: string) => string
   roleLabel: (name: string) => string
+  deleteElement: string
+  editElement: string
   deleteEdge: string
   editEdge: string
+  resetEdgeRouting: string
 
   // Edge type option labels
   deploymentAssociation: string
@@ -454,8 +457,11 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   swapSourceTarget: "Swap source and target",
   multiplicityLabel: (name) => `${name} Multiplicity`,
   roleLabel: (name) => `${name} Role`,
+  deleteElement: "Delete element",
+  editElement: "Edit element",
   deleteEdge: "Delete edge",
   editEdge: "Edit edge",
+  resetEdgeRouting: "Reset routing",
   deploymentAssociation: "Deployment Association",
   deploymentDependency: "Deployment Dependency",
   providedInterface: "Provided Interface",
