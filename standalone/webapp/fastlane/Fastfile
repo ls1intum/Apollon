@@ -1,10 +1,108 @@
+require "fileutils"
+
 default_platform(:ios)
+opt_out_usage
 
 XCODE_PROJECT = "./ios/App/App.xcodeproj"
 XCODE_WORKSPACE = "./ios/App/App.xcworkspace"
 SCHEME = "App"
+METADATA_PATH = File.expand_path("metadata", __dir__)
+SCREENSHOTS_PATH = File.expand_path("screenshots", __dir__)
+FRAMED_SCREENSHOTS_PATH = File.expand_path("screenshots-framed", __dir__)
+DEVICE_FRAMES_PATH = File.expand_path("device-frames", __dir__)
+SCREENSHOT_NORMALIZER = File.expand_path(
+  "../app-store-screenshots/normalize-png.swift",
+  __dir__
+)
+SCREENSHOT_COMPOSITOR = File.expand_path(
+  "../app-store-screenshots/compose-framed.swift",
+  __dir__
+)
+SCREENSHOT_GALLERY_GENERATOR = File.expand_path(
+  "../app-store-screenshots/generate-review-gallery.mjs",
+  __dir__
+)
+SCREENSHOT_VALIDATOR = File.expand_path(
+  "../app-store-screenshots/validate-screenshot-set.swift",
+  __dir__
+)
+SCREENSHOT_FONT = File.expand_path("../tests/fonts/Inter-Bold.ttf", __dir__)
+SCREENSHOT_STYLE = ENV.fetch("APP_STORE_SCREENSHOT_STYLE", "framed").downcase
+UI.user_error!(
+  "APP_STORE_SCREENSHOT_STYLE must be either 'raw' or 'framed'"
+) unless %w[raw framed].include?(SCREENSHOT_STYLE)
+APP_STORE_SCREENSHOTS_PATH =
+  SCREENSHOT_STYLE == "framed" ? FRAMED_SCREENSHOTS_PATH : SCREENSHOTS_PATH
+SCREENSHOT_HEADLINES = {
+  "01-Class-Diagram" => "Turn ideas into clear diagrams",
+  "02-Your-Diagrams" => "Model across every workspace",
+  "03-Diagram-Types" => "Choose from 13 diagram types",
+  "04-Dark-Appearance" => "Comfortable in light or dark",
+  "05-Export-Formats" => "Export for every workflow"
+}.freeze
+OFFICIAL_DEVICE_FRAMES = {
+  "iPhone 17 Pro Max" => File.join(
+    DEVICE_FRAMES_PATH,
+    "iphone-17-pro-max-deep-blue.png"
+  ),
+  "iPad Pro 13-inch (M4)" => File.join(
+    DEVICE_FRAMES_PATH,
+    "ipad-pro-m5-space-black-landscape.png"
+  )
+}.freeze
 
 platform :ios do
+  desc "Build the web app, sync Capacitor, and capture App Store screenshots in real simulators"
+  lane :screenshots do
+    sh("pnpm --filter @tumaet/apollon run build")
+    sh("pnpm --filter @tumaet/webapp run build")
+    sh("node ../app-store-screenshots/seed-native-build.mjs")
+    sh("pnpm --dir .. exec cap sync ios")
+    capture_screenshots
+
+    # App Store Connect rejects images with an alpha channel. XCUITest emits
+    # opaque-alpha PNGs for some iPad runtimes, so normalize every capture to
+    # a lossless, broadly compatible RGB PNG after Fastlane has collected it.
+    Dir[File.join(SCREENSHOTS_PATH, "*", "*.png")].each do |source|
+      normalized = "#{source}.rgb.png"
+      File.delete(normalized) if File.exist?(normalized)
+      sh("xcrun", "swift", SCREENSHOT_NORMALIZER, source, normalized)
+      File.rename(normalized, source)
+    end
+    sh("xcrun", "swift", SCREENSHOT_VALIDATOR, SCREENSHOTS_PATH)
+
+    if official_device_frames_available?
+      compose_framed_screenshots
+    else
+      UI.important(
+        "Raw screenshots are ready. Official Apple product bezels are not " \
+        "installed, so the framed candidate set was not generated."
+      )
+    end
+  end
+
+  desc "Compose an App Store-sized framed candidate set from the Simulator masters"
+  lane :framed_screenshots do
+    compose_framed_screenshots
+  end
+
+  desc "[CI] Upload App Store metadata and screenshots without uploading a binary"
+  lane :store_assets do
+    ensure_selected_screenshots_available
+    upload_to_app_store(
+      api_key: api_key,
+      metadata_path: METADATA_PATH,
+      screenshots_path: APP_STORE_SCREENSHOTS_PATH,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      force: true
+    )
+  end
+
   desc "[CI] Build the Apollon iOS app and produce an .ipa signed for the App Store"
   lane :build do
     app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
@@ -71,6 +169,24 @@ platform :ios do
     )
   end
 
+  desc "[CI] Upload the build and public App Store assets; submission is opt-in"
+  lane :release_app_store do
+    ensure_selected_screenshots_available
+    upload_to_app_store(
+      api_key: api_key,
+      ipa: "./build/App.ipa",
+      metadata_path: METADATA_PATH,
+      screenshots_path: APP_STORE_SCREENSHOTS_PATH,
+      skip_metadata: false,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "true",
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      force: true
+    )
+  end
+
   lane :api_key do
     app_store_connect_api_key(
       duration: 300,
@@ -79,5 +195,65 @@ platform :ios do
       key_content: ENV["API_KEY_PASSWORD"],
       is_key_content_base64: true
     )
+  end
+
+  private_lane :compose_framed_screenshots do
+    missing_frames = OFFICIAL_DEVICE_FRAMES.values.reject { |path| File.exist?(path) }
+    unless missing_frames.empty?
+      UI.user_error!(
+        "Missing authorized Apple product bezels:\n#{missing_frames.join("\n")}\n" \
+        "Download them from https://developer.apple.com/design/resources/ " \
+        "after an authorized representative accepts Apple's license."
+      )
+    end
+
+    FileUtils.mkdir_p(File.join(FRAMED_SCREENSHOTS_PATH, "en-US"))
+    Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].each do |file|
+      File.delete(file)
+    end
+
+    Dir[File.join(SCREENSHOTS_PATH, "en-US", "*.png")].each do |source|
+      headline = SCREENSHOT_HEADLINES.find do |filter, _text|
+        File.basename(source).include?(filter)
+      end&.last
+      UI.user_error!("No headline configured for #{source}") unless headline
+      frame = OFFICIAL_DEVICE_FRAMES.find do |device, _path|
+        File.basename(source).start_with?(device)
+      end&.last
+      UI.user_error!("No official product bezel configured for #{source}") unless frame
+
+      output = File.join(
+        FRAMED_SCREENSHOTS_PATH,
+        "en-US",
+        File.basename(source)
+      )
+      sh(
+        "xcrun",
+        "swift",
+        SCREENSHOT_COMPOSITOR,
+        source,
+        output,
+        headline,
+        SCREENSHOT_FONT,
+        frame
+      )
+    end
+
+    sh("xcrun", "swift", SCREENSHOT_VALIDATOR, FRAMED_SCREENSHOTS_PATH)
+    sh("node", SCREENSHOT_GALLERY_GENERATOR)
+  end
+
+  private_lane :official_device_frames_available? do
+    OFFICIAL_DEVICE_FRAMES.values.all? { |path| File.exist?(path) }
+  end
+
+  private_lane :ensure_selected_screenshots_available do
+    next unless SCREENSHOT_STYLE == "framed"
+
+    UI.user_error!(
+      "The framed screenshot set has not been generated with authorized " \
+      "Apple product bezels."
+    ) unless official_device_frames_available? &&
+             Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].any?
   end
 end

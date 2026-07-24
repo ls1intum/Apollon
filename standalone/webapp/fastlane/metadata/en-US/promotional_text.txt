@@ -1,0 +1,1 @@
+Apollon has been rebuilt with the editor from the web: 13 diagram types, a touch-friendly canvas, offline work, modern exports, and optional sharing.
