@@ -830,7 +830,7 @@ importers:
     dependencies:
       '@tumaet/apollon':
         specifier: workspace:*
-        version: file:library(@types/react@19.2.17)(@xyflow/react@12.11.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.8))(react@19.2.8))(react-dom@19.2.7(react@19.2.8))(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31)
+        version: link:../library
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
