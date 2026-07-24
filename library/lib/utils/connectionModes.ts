@@ -1,21 +1,24 @@
-import { Position, type Rect, type XYPosition } from "@xyflow/react"
+import { Position, type Rect, type XYPosition } from "@xyflow/system"
 import {
   type FreeformEdgeAnchor,
   getFreeformAnchorFromPoint,
   getFreeformAnchorPoint,
 } from "./edgeUtils"
+import { getNodeConnectionRect } from "./geometry/nodeGeometry"
 
 /**
  * How an edge endpoint may attach to a node, decided by the node's visible
  * shape rather than its bounding box. The anchor math below branches on this so
  * a drop, its preview, and the rendered edge all agree.
  *
- * The stored anchor is always `{side, ratio}` on the node's bounding rectangle;
- * the mode only changes how that anchor is turned into a pixel (project onto the
- * oval, snap to a vertex, …) and how a drop is turned into an anchor.
+ * The stored anchor is always `{side, ratio}` on the node's connection rectangle
+ * (normally its bounds; the package excludes its raised tab). The mode changes
+ * how that anchor becomes a pixel (project onto an oval, snap to a vertex, …)
+ * and how a drop becomes an anchor.
  */
 export type ConnectionMode =
   | "freeform-rect" // anywhere on the rectangle border (default box shapes)
+  | "package" // on the package's main body; the raised tab is notation
   | "ellipse" // on the inscribed oval, at the angle you aimed (use-case)
   | "parallelogram" // anywhere along the sheared outline (flowchart input/output)
   | "four-center" // only the four side points — N/E/S/W (FOUR_WAY-handle nodes)
@@ -33,6 +36,8 @@ const MODE_OVERRIDES: Record<string, ConnectionMode> = {
   titleAndDesctiption: "none",
   bpmnAnnotation: "none",
   activitySwimlane: "none",
+  // A package's raised tab belongs to the notation, not its connection surface.
+  package: "package",
   // The one true oval — full handles, so connect anywhere along the curve.
   useCase: "ellipse",
   // Everything below renders only the four side handles, so it connects at
@@ -57,6 +62,20 @@ const MODE_OVERRIDES: Record<string, ConnectionMode> = {
 
 export function getConnectionMode(nodeType?: string): ConnectionMode {
   return (nodeType ? MODE_OVERRIDES[nodeType] : undefined) ?? "freeform-rect"
+}
+
+/**
+ * Whether a NEW connection dropped on this node should PIN its endpoint to the drop
+ * point rather than auto-anchor it. True only for the continuous non-rectangular
+ * outlines — the oval and the parallelogram — where the exact drop lands on a visible
+ * curve/edge that the live ghost's snap circle marks, so an auto anchor would jump the
+ * endpoint to a different place on release (the preview≠commit drift). Plain rectangles
+ * and four-point nodes carry no sub-side aim, so they keep the auto default: the solver
+ * slides their endpoint for the cleanest route and the user pins later by dragging it.
+ */
+export function dropAnchorIsAimed(nodeType?: string): boolean {
+  const mode = getConnectionMode(nodeType)
+  return mode === "ellipse" || mode === "parallelogram"
 }
 
 /** Distance from a point to a rectangle (0 when the point is inside it). */
@@ -235,6 +254,11 @@ export function getEdgeAnchorFromPoint(
       // Store the anchor ALONG THE RAY to the cursor so the curve projection
       // lands at the aimed angle (no diagonal drift).
       return rectBorderAlongRay(rect, point)
+    case "package":
+      return getFreeformAnchorFromPoint(
+        point,
+        getNodeConnectionRect(nodeType, rect)
+      )
     // parallelogram & freeform-rect store the nearest rect-border anchor; the
     // shape projection at render lands on the slanted outline / border.
     case "parallelogram":
@@ -266,6 +290,11 @@ export function getEdgeAnchorPoint(
       )
     case "parallelogram":
       return projectOntoParallelogram(rect, anchor)
+    case "package":
+      return getFreeformAnchorPoint(
+        getNodeConnectionRect(nodeType, rect),
+        anchor
+      )
     case "none":
     case "freeform-rect":
     default:

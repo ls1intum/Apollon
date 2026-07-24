@@ -106,7 +106,6 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
                     value={itemValue}
                     data-slot="color-picker-swatch"
                     className="apollon-color-swatch"
-                    data-state={selected ? "on" : "off"}
                     aria-label={token.replace("--apollon-swatch-", "")}
                     style={
                       { "--swatch-color": itemValue } as React.CSSProperties

@@ -235,6 +235,26 @@ describe("createNewNodeDataWithNewIds", () => {
     expect(result.actionRows[0].name).toBe("step")
   })
 
+  it("generates new UUIDs for swimlanes so duplicated lanes never collide", () => {
+    const data = {
+      lanes: [
+        { id: "old-lane-1", name: "Lane A" },
+        { id: "old-lane-2", name: "Lane B" },
+      ],
+    }
+    const result = createNewNodeDataWithNewIds(data)
+    expect(result.lanes[0].id).not.toBe("old-lane-1")
+    expect(result.lanes[0].name).toBe("Lane A")
+    expect(result.lanes[1].id).not.toBe("old-lane-2")
+  })
+
+  it("leaves non-id arrays like tags untouched", () => {
+    const data = { tags: ["a", "b"], points: [{ x: 1, y: 2 }] }
+    const result = createNewNodeDataWithNewIds(data)
+    expect(result.tags).toEqual(["a", "b"])
+    expect(result.points).toEqual([{ x: 1, y: 2 }])
+  })
+
   it("preserves data without sub-elements unchanged", () => {
     const data = { name: "Simple", value: 42 }
     const result = createNewNodeDataWithNewIds(data)

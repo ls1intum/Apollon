@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { waitForCanvasReady } from "../helpers/canvas"
+import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * Guards the VersionDrawer infinite-loop regression ("Maximum update depth
@@ -10,32 +10,15 @@ import { waitForCanvasReady } from "../helpers/canvas"
 const MODEL_ID = "e2e-version-history-model"
 
 async function seedLocalDiagram(page: import("@playwright/test").Page) {
-  await page.goto("/")
-  await page.evaluate((id) => {
-    const storeValue = JSON.stringify({
-      state: {
-        models: {
-          [id]: {
-            id,
-            model: {
-              id,
-              type: "ClassDiagram",
-              assessments: {},
-              edges: [],
-              nodes: [],
-              title: "Version History E2E Diagram",
-              version: "4.0.0",
-            },
-            lastModifiedAt: new Date().toISOString(),
-          },
-        },
-        currentModelId: id,
-      },
-      version: 0,
-    })
-    localStorage.setItem("persistenceModelStore", storeValue)
-  }, MODEL_ID)
-  await page.goto(`/local/${MODEL_ID}`)
+  await openFixtureInLocalEditor(page, {
+    id: MODEL_ID,
+    type: "ClassDiagram",
+    assessments: {},
+    edges: [],
+    nodes: [],
+    title: "Version History E2E Diagram",
+    version: "4.0.0",
+  })
 }
 
 test.describe("Version history (regression)", () => {

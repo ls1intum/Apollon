@@ -59,7 +59,6 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -98,20 +97,21 @@ export const UseCaseEdge = ({
             id={id}
             path={currentPath}
             pointerEvents="none"
+            // Select/hover ride `.edge-overlay`, not RF's fat interaction ribbon,
+            // so the ribbon can't paint over a neighbour edge's handle. See GenericEdge.
+            interactionWidth={0}
             style={{
               stroke: strokeColor,
               strokeDasharray: strokeDashArray,
             }}
           />
 
-          {!isReconnecting && (
-            <EdgeInlineMarkers
-              pathD={currentPath}
-              markerEnd={markerEnd}
-              markerStart={markerStart}
-              strokeColor={strokeColor}
-            />
-          )}
+          <EdgeInlineMarkers
+            pathD={currentPath}
+            markerEnd={markerEnd}
+            markerStart={markerStart}
+            strokeColor={strokeColor}
+          />
 
           <path
             ref={pathRef}
@@ -123,18 +123,16 @@ export const UseCaseEdge = ({
             style={{ opacity: 0.4 }}
           />
 
-          {!isReconnecting && (
-            <EdgeEndpointMarkers
-              sourcePoint={sourcePoint}
-              targetPoint={targetPoint}
-              sourcePosition={renderSourcePosition}
-              targetPosition={renderTargetPosition}
-              isDiagramModifiable={isDiagramModifiable}
-              canEditEndpoint={canEditEndpoint}
-              onEndpointPointerDown={handleEndpointPointerDown}
-              straight
-            />
-          )}
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={renderSourcePosition}
+            targetPosition={renderTargetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            canEditEndpoint={canEditEndpoint}
+            onEndpointPointerDown={handleEndpointPointerDown}
+            straight
+          />
         </g>
 
         <EdgeMiddleLabels
@@ -164,6 +162,7 @@ export const UseCaseEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}

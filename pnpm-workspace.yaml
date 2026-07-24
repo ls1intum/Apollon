@@ -57,6 +57,10 @@ catalog:
   "@vitest/browser-playwright": "4.1.9"
   "@vitest/coverage-v8": "4.1.9"
   "@xyflow/react": "12.11.1"
+  # Locked to the exact version @xyflow/react@12.11.1 depends on. The library
+  # imports getEdgePosition from it (not re-exported by @xyflow/react's barrel)
+  # to compute edge endpoints centrally, byte-for-byte as React Flow does.
+  "@xyflow/system": "0.0.78"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"
@@ -64,6 +68,8 @@ catalog:
   clsx: "2.1.1"
   eslint: "10.6.0"
   eslint-plugin-react-hooks: "7.1.1"
+  # Property-based testing (routing invariants). Zero runtime deps.
+  fast-check: "4.4.0"
   globals: "17.7.0"
   jsdom: "29.1.1"
   jspdf: "4.2.1"

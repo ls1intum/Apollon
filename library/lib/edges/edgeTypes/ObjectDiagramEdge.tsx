@@ -49,7 +49,6 @@ export const ObjectDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -76,7 +75,6 @@ export const ObjectDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: false,
   })
 
   const { strokeColor } = getCustomColorsFromDataForEdge(data)
@@ -94,7 +92,6 @@ export const ObjectDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
@@ -113,6 +110,7 @@ export const ObjectDiagramEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}

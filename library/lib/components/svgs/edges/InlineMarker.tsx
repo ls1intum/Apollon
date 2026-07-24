@@ -28,6 +28,17 @@ export interface MarkerProps {
   markerId: string
   /** Optional stroke color override */
   strokeColor?: string
+  /**
+   * Geometry of the provided-interface ball this socket terminates at.
+   * Supplying the actual node geometry keeps imported 20px interfaces and
+   * current 30px interfaces equally concentric.
+   */
+  interfaceGeometry?: InterfaceGeometry
+}
+
+export interface InterfaceGeometry {
+  /** Radius of the provided-interface ball this edge terminates at. */
+  radius: number
 }
 
 const isMarkerId = (id: string): id is keyof typeof MARKER_CONFIGS =>
@@ -41,10 +52,13 @@ const THEME_BACKGROUND_COLOR = "var(--apollon-background, #ffffff)"
  * place or scale a marker (e.g. inline dropdown previews) stay in sync with how
  * `InlineMarker` actually draws it.
  */
-export function getMarkerHalfHeight(markerId: keyof typeof MARKER_CONFIGS) {
+export function getMarkerHalfHeight(
+  markerId: keyof typeof MARKER_CONFIGS,
+  interfaceRadius = INTERFACE.RADIUS
+) {
   const config = MARKER_CONFIGS[markerId]
   if (config.type === "semicircle") {
-    const radius = INTERFACE.RADIUS + INTERFACE.SOCKET_GAP
+    const radius = interfaceRadius + INTERFACE.SOCKET_GAP
     // Once the arc spans past ±90° its extent is the full radius; clamp so a
     // >180° arc (e.g. the three-quarter socket) isn't under-measured.
     const span = Math.min(config.arcSpanDegrees ?? 180, 180)
@@ -52,6 +66,49 @@ export function getMarkerHalfHeight(markerId: keyof typeof MARKER_CONFIGS) {
   }
   if (config.type === "circle") return config.size / 2
   return (config.size * config.heightFactor) / 2
+}
+
+/**
+ * Resolve a required-interface socket exactly like every other inline marker:
+ * the edge endpoint is its contact point and the marker extends beyond it in
+ * the edge's direction. The target contributes only its rendered ball radius.
+ * Routing owns the contact point, so previews, selectors, exports and settled
+ * edges cannot disagree about which geometry the marker belongs to.
+ */
+export function getInterfaceSocketGeometry({
+  endPoint,
+  direction,
+  interfaceGeometry,
+  arcSpanDegrees,
+}: {
+  endPoint: { x: number; y: number }
+  direction: number
+  interfaceGeometry?: InterfaceGeometry
+  arcSpanDegrees: number
+}) {
+  const cos = Math.cos(direction)
+  const sin = Math.sin(direction)
+  const ballRadius = interfaceGeometry?.radius ?? INTERFACE.RADIUS
+  const radius = ballRadius + INTERFACE.SOCKET_GAP
+  const center = {
+    x: endPoint.x + radius * cos,
+    y: endPoint.y + radius * sin,
+  }
+  const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
+  const cosHalf = Math.cos(halfAngle)
+  const sinHalf = Math.sin(halfAngle)
+  const aroundCenter = (x: number, y: number) => ({
+    x: center.x + x * cos - y * sin,
+    y: center.y + x * sin + y * cos,
+  })
+
+  return {
+    center,
+    radius,
+    top: aroundCenter(-radius * cosHalf, -radius * sinHalf),
+    bottom: aroundCenter(-radius * cosHalf, radius * sinHalf),
+    largeArcFlag: arcSpanDegrees > 180 ? 1 : 0,
+  }
 }
 
 /**
@@ -107,6 +164,7 @@ export function InlineMarker({
   direction,
   markerId,
   strokeColor = STROKE_COLOR,
+  interfaceGeometry,
 }: MarkerProps) {
   if (!isMarkerId(markerId)) return null
   const config = MARKER_CONFIGS[markerId]
@@ -234,36 +292,20 @@ export function InlineMarker({
 
     case "semicircle": {
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
-      // Socket radius = Ball radius + gap for visual separation
-      // Keep the socket close to the interface so it reads as a side attachment:
-      //   circle outer edge = RADIUS + strokeWidth/2 = 15 + 1 = 16
-      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 19 - 1 = 18
-      //   With gap=4, the arc inner edge sits 2px away from the circle
-      const gap = INTERFACE.SOCKET_GAP
-      const r = INTERFACE.RADIUS + gap // 15 + 4 = 19
-
-      // Use config-defined arc span (e.g. 150° default, 90° quarter, 270° three-quarter)
+      // Use config-defined arc span (180° default, 90° quarter, 270° three-quarter)
       const arcSpanDegrees = config.arcSpanDegrees ?? 180
-      const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
-      const cosHalf = Math.cos(halfAngle)
-      const sinHalf = Math.sin(halfAngle)
-
-      // large-arc-flag must be 1 when arc span > 180° (SVG arc command requirement)
-      const largeArcFlag = arcSpanDegrees > 180 ? 1 : 0
-
-      const transformExact = (x: number, y: number) => ({
-        x: endPoint.x + x * cos - y * sin,
-        y: endPoint.y + x * sin + y * cos,
+      const { radius, top, bottom, largeArcFlag } = getInterfaceSocketGeometry({
+        endPoint,
+        direction,
+        interfaceGeometry,
+        arcSpanDegrees,
       })
-
-      const top = transformExact(r * (1 - cosHalf), -r * sinHalf)
-      const bottom = transformExact(r * (1 - cosHalf), r * sinHalf)
 
       // sweep=0 (counterclockwise): arc curves AWAY from direction of travel,
       // so the concave opening faces TOWARD the ball
       return (
         <path
-          d={`M${top.x},${top.y} A${r},${r} 0 ${largeArcFlag},0 ${bottom.x},${bottom.y}`}
+          d={`M${top.x},${top.y} A${radius},${radius} 0 ${largeArcFlag},0 ${bottom.x},${bottom.y}`}
           fill="none"
           stroke={strokeColor}
           strokeWidth={strokeW}
@@ -286,11 +328,13 @@ export function EdgeInlineMarkers({
   markerEnd,
   markerStart,
   strokeColor = STROKE_COLOR,
+  targetInterfaceGeometry,
 }: {
   pathD: string
   markerEnd?: string
   markerStart?: string
   strokeColor?: string
+  targetInterfaceGeometry?: InterfaceGeometry
 }) {
   const endMarkerId = extractMarkerId(markerEnd)
   const startMarkerId = extractMarkerId(markerStart)
@@ -307,6 +351,7 @@ export function EdgeInlineMarkers({
               direction={endInfo.direction}
               markerId={endMarkerId}
               strokeColor={strokeColor}
+              interfaceGeometry={targetInterfaceGeometry}
             />
           )
         })()}

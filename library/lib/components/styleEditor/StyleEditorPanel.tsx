@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { PaintRoller } from "lucide-react"
 import { Popover } from "@base-ui/react/popover"
-import { DividerLine, Typography } from "@/components/ui"
+import { DividerLine, Tooltip, Typography } from "@/components/ui"
 import { EditorColorPicker } from "./ColorButtons"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
 import { useLabels } from "@/i18n/useLabels"
@@ -66,13 +66,15 @@ export function StyleEditorPanel<K extends string>({
           className="apollon-style-editor__header-actions"
         >
           <Popover.Root>
-            <Popover.Trigger
-              ref={setTrigger}
-              data-slot="icon-button"
-              aria-label={paintToggleLabel}
-            >
-              <PaintRoller width={16} height={16} aria-hidden="true" />
-            </Popover.Trigger>
+            <Tooltip title={paintToggleLabel}>
+              <Popover.Trigger
+                ref={setTrigger}
+                data-slot="icon-button"
+                aria-label={paintToggleLabel}
+              >
+                <PaintRoller width={16} height={16} aria-hidden="true" />
+              </Popover.Trigger>
+            </Tooltip>
             <Popover.Portal>
               <Popover.Positioner sideOffset={6} align="end">
                 <Popover.Popup

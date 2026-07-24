@@ -140,4 +140,29 @@ describe("computeInterfaceLabelSide", () => {
     )
     expect(side).toBe("left")
   })
+
+  it("reads the ATTACHMENT side from the routed geometry, not the stale handle", () => {
+    // The stored handles say top+bottom, but the router actually attached both edges to
+    // the LEFT and TOP (d76). The label must avoid those derived sides — not the handles.
+    const rect = { x: 320, y: 265, width: 30, height: 30 } // centre (335, 280)
+    const edges = [
+      { id: "e1", source: "c1", target: "iface", targetHandle: "bottom" },
+      { id: "e2", source: "c2", target: "iface", targetHandle: "top" },
+    ]
+    const routeById = {
+      e1: [
+        { x: 0, y: 0 },
+        { x: 320, y: 280 }, // ends on the LEFT border
+      ],
+      e2: [
+        { x: 0, y: 0 },
+        { x: 335, y: 265 }, // ends on the TOP border
+      ],
+    }
+    const side = computeInterfaceLabelSide(edges, "iface", {
+      geometry: { rect, routeById },
+    })
+    // Left + top are taken → the label falls to the first free cardinal, bottom.
+    expect(side).toBe("bottom")
+  })
 })

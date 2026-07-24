@@ -393,18 +393,30 @@ jobs:
         run: pnpm --filter @tumaet/apollon run test
 
       - name: Verify ESM exports-map resolution
-        # The library is ESM-only. `import.meta.resolve` (sync, no side
-        # effects) validates every subpath in the exports map — actually
-        # evaluating the module would require jsdom.
+        # The library is ESM-only. `import.meta.resolve` validates every
+        # subpath in the exports map. The model-only entry is intentionally
+        # DOM-free; the follow-up check evaluates its complete runtime graph.
         working-directory: standalone/server
         run: |
           node --input-type=module -e '
             const root = import.meta.resolve("@tumaet/apollon");
             const internals = import.meta.resolve("@tumaet/apollon/internals");
             const exportEntry = import.meta.resolve("@tumaet/apollon/export");
+            const model = import.meta.resolve("@tumaet/apollon/model");
             const css = import.meta.resolve("@tumaet/apollon/style.css");
-            console.log({ root, internals, exportEntry, css });
+            const schema = import.meta.resolve("@tumaet/apollon/schema");
+            const packageJson = import.meta.resolve("@tumaet/apollon/package.json");
+            console.log({
+              root,
+              internals,
+              exportEntry,
+              model,
+              css,
+              schema,
+              packageJson,
+            });
           '
+          node ../../scripts/check-model-entry.mjs
 
       - name: Lint published package shape (publint)
         working-directory: library

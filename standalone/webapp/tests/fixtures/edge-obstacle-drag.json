@@ -1,0 +1,59 @@
+{
+  "id": "b3f1d2a4-7c56-4e18-9a2b-1f0e6d8c4a90",
+  "version": "4.0.0",
+  "title": "Edge Obstacle Drag",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000001",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 100, "y": 400 },
+      "data": {
+        "name": "Left",
+        "methods": [],
+        "attributes": [{ "id": "a1", "name": "+ attribute: Type" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000002",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 600, "y": 400 },
+      "data": {
+        "name": "Right",
+        "methods": [],
+        "attributes": [{ "id": "b1", "name": "+ attribute: Type" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000003",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 360, "y": 100 },
+      "data": {
+        "name": "Blocker",
+        "methods": [],
+        "attributes": [{ "id": "c1", "name": "+ attribute: Type" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-left-right",
+      "source": "aaaaaaaa-0000-0000-0000-000000000001",
+      "target": "bbbbbbbb-0000-0000-0000-000000000002",
+      "type": "ClassBidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    }
+  ],
+  "assessments": {}
+}

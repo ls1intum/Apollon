@@ -11,6 +11,7 @@ import {
 import { useShallow } from "zustand/shallow"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { isElementInOverlay } from "@/keyboard"
+import { useCallback } from "react"
 
 export const useElementInteractions = () => {
   const isDiagramModifiable = useDiagramModifiable()
@@ -28,7 +29,7 @@ export const useElementInteractions = () => {
   const canOpenAssessmentPopover = mode === ApollonMode.Assessment && !readonly
   const canOpenPopover = isDiagramModifiable || canOpenAssessmentPopover
 
-  const onBeforeDelete: OnBeforeDelete = () => {
+  const onBeforeDelete: OnBeforeDelete = useCallback(() => {
     // React Flow's Delete listener is document-level, so a Delete pressed while
     // focus is in a dialog or menu over the canvas would otherwise remove the
     // selection behind it. Block that here — the one place every RF deletion
@@ -37,21 +38,23 @@ export const useElementInteractions = () => {
       return Promise.resolve(false)
     }
     return Promise.resolve(isDiagramModifiable)
-  }
+  }, [isDiagramModifiable])
 
-  const onNodeDoubleClick: NodeMouseHandler<Node> = (_event, node) => {
-    if (!canOpenPopover) {
-      return
-    }
-    setPopOverElementId(node.id)
-  }
+  const onNodeDoubleClick: NodeMouseHandler<Node> = useCallback(
+    (_event, node) => {
+      if (!canOpenPopover) return
+      setPopOverElementId(node.id)
+    },
+    [canOpenPopover, setPopOverElementId]
+  )
 
-  const onEdgeDoubleClick: EdgeMouseHandler<Edge> = (_event, edge) => {
-    if (!canOpenPopover) {
-      return
-    }
-    setPopOverElementId(edge.id)
-  }
+  const onEdgeDoubleClick: EdgeMouseHandler<Edge> = useCallback(
+    (_event, edge) => {
+      if (!canOpenPopover) return
+      setPopOverElementId(edge.id)
+    },
+    [canOpenPopover, setPopOverElementId]
+  )
   return {
     onBeforeDelete,
     onNodeDoubleClick,

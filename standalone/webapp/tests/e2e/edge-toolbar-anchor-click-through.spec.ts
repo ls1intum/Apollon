@@ -4,12 +4,6 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
-/**
- * The edge toolbar's <foreignObject> anchor sits offset from the edge line and is
- * always present, so it must not capture clicks: an edge is selected only by its
- * line, while the toolbar buttons stay clickable. (Why: CustomEdgeToolBar.tsx.)
- */
-
 const __dirname2 = path.dirname(fileURLToPath(import.meta.url))
 const classDiagram = JSON.parse(
   fs.readFileSync(
@@ -37,7 +31,7 @@ async function clickEdgeLine(page: Page): Promise<void> {
   }, EDGE)
   if (!pt) throw new Error("edge path not found")
   await page.mouse.click(pt.x, pt.y)
-  await page.waitForTimeout(200)
+  await expect(edgeLoc(page)).toHaveClass(/selected/)
 }
 
 const selectedEdgeIds = (page: Page) =>
@@ -47,30 +41,17 @@ const selectedEdgeIds = (page: Page) =>
     )
   )
 
-test("the edge toolbar's offset anchor box does not select the edge", async ({
+test("the edge toolbar's empty surface lets canvas clicks through", async ({
   page,
 }) => {
   await openFixtureInLocalEditor(page, classDiagram)
   await waitForCanvasReady(page)
 
-  // The <foreignObject> anchor is present even while the edge is unselected.
-  const foBox = (await edgeLoc(page)
-    .locator("foreignObject")
-    .first()
-    .boundingBox())!
-  const lineBox = (await edgeLoc(page)
-    .locator(".edge-overlay")
-    .first()
-    .boundingBox())!
-
-  // Sanity: the anchor box really is off the visible line (this is what makes a
-  // click there surprising).
-  const anchorRight = foBox.x + foBox.width
-  expect(anchorRight).toBeLessThanOrEqual(lineBox.x + 1)
-
-  // Click inside the anchor box, well away from the line: must NOT select the edge.
-  await page.mouse.click(foBox.x + 4, foBox.y + 4)
-  await page.waitForTimeout(200)
+  await clickEdgeLine(page)
+  const toolbar = page.locator(`.react-flow__edge-toolbar[data-id="${EDGE}"]`)
+  const box = (await toolbar.boundingBox())!
+  await page.mouse.click(box.x + box.width - 2, box.y + box.height / 2)
+  await expect(edgeLoc(page)).not.toHaveClass(/selected/)
   expect(await selectedEdgeIds(page)).toEqual([])
 })
 
@@ -82,7 +63,7 @@ test("clicking the edge line still selects the edge", async ({ page }) => {
   expect(await selectedEdgeIds(page)).toEqual([EDGE])
 })
 
-test("the selected edge's toolbar buttons still work (foreignObject stays transparent)", async ({
+test("the selected edge's toolbar buttons remain interactive", async ({
   page,
 }) => {
   await openFixtureInLocalEditor(page, classDiagram)
@@ -91,9 +72,11 @@ test("the selected edge's toolbar buttons still work (foreignObject stays transp
   await clickEdgeLine(page)
   expect(await selectedEdgeIds(page)).toEqual([EDGE])
 
-  // The edit (pencil) button sits inside the pointer-events:none foreignObject
-  // and must still receive the click, opening the edit popover.
-  await edgeLoc(page).getByRole("button", { name: "Edit edge" }).click()
-  await page.waitForTimeout(200)
-  await expect(page.locator(".apollon-popover")).toHaveCount(1)
+  const edit = page.getByRole("button", { name: "Edit edge" })
+  const box = (await edit.boundingBox())!
+  expect(box.width).toBe(28)
+  expect(box.height).toBe(28)
+  // Exercise the button box outside the centered 16px icon mask.
+  await page.mouse.click(box.x + box.width - 2, box.y + 2)
+  await expect(page.locator(".apollon-popover")).toBeVisible()
 })

@@ -301,17 +301,20 @@ test.describe("Local version history (#670, /local/:id routing)", () => {
 
     await ensureDrawerOpen(page)
     await composer(page).fill("snapshot one")
-    await saveVersionButton(page).click()
-    await expect(page.getByText("snapshot one").first()).toBeVisible()
+    const save = saveVersionButton(page)
+    await expect(save).toBeEnabled()
+    await save.click()
+    await waitForVersionsPersisted(page)
+    const savedVersion = page
+      .getByRole("link", { name: /snapshot one/i })
+      .first()
+    await expect(savedVersion).toBeVisible()
 
     // Clicking a saved row enters read-only preview — the banner's "Exit
     // preview" affordance appears and the composer is hidden. The row is a
     // stretched-link card (like the gallery cards): its overlay <a> owns the
     // click and intercepts pointer events over the bare text, so target the link.
-    await page
-      .getByRole("link", { name: /snapshot one/i })
-      .first()
-      .click()
+    await savedVersion.click()
     const exitPreview = page.getByRole("button", { name: /Exit preview/i })
     await expect(exitPreview).toBeVisible()
     await expect(composer(page)).toHaveCount(0)

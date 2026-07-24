@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test"
 
+// `PLAYWRIGHT_BUILT=1` reproduces CI's bundled-preview server locally without
+// also enabling CI reporters/retries. This avoids reusing an unrelated dev
+// server and is the reliable release-validation mode for the complete suite.
+const BUILT_PREVIEW = Boolean(process.env.CI || process.env.PLAYWRIGHT_BUILT)
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -160,12 +165,12 @@ export default defineConfig({
     // the test seams (src/pages/ApollonLocal.tsx, src/index.tsx,
     // src/utils/perfHooks) a plain prod build strips; `build:lib` runs earlier in
     // the e2e job so the webapp build resolves `@tumaet/apollon`.
-    command: process.env.CI
+    command: BUILT_PREVIEW
       ? "VITE_E2E=true pnpm run build && pnpm exec vite preview --port 5173 --strictPort"
       : "pnpm run start",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !BUILT_PREVIEW,
     // CI rebuilds before serving, so allow more startup time.
-    timeout: process.env.CI ? 240_000 : 120_000,
+    timeout: BUILT_PREVIEW ? 240_000 : 120_000,
   },
 })

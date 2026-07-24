@@ -1,0 +1,117 @@
+{
+  "id": "74c8efba-164a-4cbe-86e1-1d8231d424e5",
+  "version": "4.1.0",
+  "title": "pinned-anchor-edge",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "bd90d926-3ef7-4ba6-a0ef-f2e40d3f797a",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 545,
+        "y": 165
+      },
+      "data": {
+        "name": "ClassC",
+        "methods": [
+          {
+            "id": "aae4b127-9437-4226-b338-7c03b0c352bc",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a16444ea-4da3-4e24-94ae-49c4daedf0e1",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "073011cf-f222-476a-a903-360937d8a8df",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 335,
+        "y": 245
+      },
+      "data": {
+        "name": "ClassB",
+        "methods": [
+          {
+            "id": "54bd64a3-0930-47ba-b62f-82afbeba80e8",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "0f532a4f-13fd-4898-ad1d-40ab774e59cd",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "1eeabb9f-fd83-4646-bd41-4165e5a6e081",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 750,
+        "y": 185
+      },
+      "data": {
+        "name": "ClassA",
+        "methods": [
+          {
+            "id": "90a88196-42fd-4f10-9d37-4aacfeb80848",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "225bb385-23d6-4bb8-9507-76129f03a829",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "1174fab6-6c57-4a60-b1e2-963ed18deae0",
+      "source": "073011cf-f222-476a-a903-360937d8a8df",
+      "target": "1eeabb9f-fd83-4646-bd41-4165e5a6e081",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "left-mid-bottom",
+      "data": {
+        "points": [],
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.2
+        },
+        "targetAnchor": {
+          "side": "left",
+          "ratio": 0.8
+        }
+      }
+    }
+  ],
+  "assessments": {}
+}

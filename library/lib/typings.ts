@@ -1,5 +1,5 @@
-import { DiagramEdgeType, IPoint } from "./edges/types"
-import { DiagramNodeType } from "./nodes/types"
+import type { IPoint } from "./edges/types"
+import type { DiagramEdgeType, DiagramNodeType } from "./modelElementTypes"
 import { UMLDiagramType } from "./types/DiagramType"
 import type { OverlayControlInput } from "./overlay/types"
 import type { ApollonLabels } from "./i18n/labels"

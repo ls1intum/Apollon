@@ -54,6 +54,10 @@
       "types": "./dist/export.d.ts",
       "import": "./dist/export.js"
     },
+    "./model": {
+      "types": "./dist/model.d.ts",
+      "import": "./dist/model.js"
+    },
     "./style.css": "./dist/assets/style.css",
     "./schema": "./schema/uml-model-4.schema.json",
     "./package.json": "./package.json"
@@ -76,7 +80,25 @@
     {
       "name": "main entry (published JS, deps externalized)",
       "path": "dist/index.js",
-      "limit": "87 kB",
+      "limit": "118 kB",
+      "disablePlugins": [
+        "@size-limit/webpack",
+        "@size-limit/time"
+      ]
+    },
+    {
+      "name": "edge-routing Worker (loaded for large diagrams)",
+      "path": "dist/assets/edgeGeometry.worker-*.js",
+      "limit": "40 kB",
+      "disablePlugins": [
+        "@size-limit/webpack",
+        "@size-limit/time"
+      ]
+    },
+    {
+      "name": "/model normalization chunk (DOM-free)",
+      "path": "dist/versionConverter-*.js",
+      "limit": "8 kB",
       "disablePlugins": [
         "@size-limit/webpack",
         "@size-limit/time"
@@ -105,6 +127,7 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
+    "@xyflow/system": "catalog:",
     "lucide-react": "catalog:",
     "zustand": "catalog:"
   },
@@ -131,6 +154,7 @@
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
+    "fast-check": "catalog:",
     "globals": "catalog:",
     "jsdom": "catalog:",
     "react": "catalog:",
