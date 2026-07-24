@@ -104,6 +104,7 @@ allowBuilds:
   "core-js": false # jspdf transitive; "thank-you" postinstall, no native build
   "cpu-features": true
   "esbuild": true
+  node-pty: false # @capgo/cli (devDep, live-update signing) transitive; not needed for our non-interactive CLI use
   protobufjs: false # testcontainers→dockerode transitive; pure-JS, no native build
   "sharp": true
   "ssh2": true
