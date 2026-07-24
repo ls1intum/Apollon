@@ -134,7 +134,7 @@ func floodFillTransparentRegion(
       column > 0 ? index - 1 : -1,
       column + 1 < width ? index + 1 : -1,
       row > 0 ? index - width : -1,
-      row + 1 < height ? index + width : -1,
+      row + 1 < height ? index + width : -1
     ]
     for neighbor in neighbors where neighbor >= 0 {
       guard visited[neighbor] == 0, pixels[neighbor * 4 + 3] < 16 else { continue }
