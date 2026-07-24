@@ -3,6 +3,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 import { clickFitView, waitForCanvasReady } from "../tests/helpers/canvas"
+import { PERSISTENCE_STORE_VERSION } from "./seed-store-version.mjs"
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
 const fixtureDirectory = path.resolve(currentDirectory, "../tests/fixtures")
@@ -51,7 +52,7 @@ function persistenceValue(
       ),
       currentModelId,
     },
-    version: 1,
+    version: PERSISTENCE_STORE_VERSION,
   })
 }
 

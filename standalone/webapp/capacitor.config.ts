@@ -1,13 +1,19 @@
 import type { CapacitorConfig } from "@capacitor/cli"
 import { KeyboardResize } from "@capacitor/keyboard"
 
-// Public half of the Capgo Encryption V2 signing keypair. It is NOT secret and
-// is safe to ship in the binary; the private half lives only in CI and signs
-// each bundle. When set, the plugin STRICTLY rejects any update whose signature
-// does not verify — so a compromised update host cannot ship malicious JS. Read
-// from the environment at `cap sync`/build time (see fastlane/APP_STORE_READINESS
-// or docs) rather than committed, so rotating the key needs no code change.
+// Public half of the Capgo Encryption V2 signing keypair (safe to ship; the
+// private half lives only in CI). When set, the plugin STRICTLY rejects any
+// update whose signature does not verify, so a compromised host cannot push
+// malicious JS. Read from the env at `cap sync` time so rotating it needs no
+// code change. Release builds set CAPGO_REQUIRE_SIGNING=true so a missing key
+// fails the build LOUDLY rather than silently shipping unsigned OTA.
 const liveUpdatePublicKey = process.env.CAPGO_PUBLIC_KEY
+if (process.env.CAPGO_REQUIRE_SIGNING === "true" && !liveUpdatePublicKey) {
+  throw new Error(
+    "CAPGO_PUBLIC_KEY is required for release builds (CAPGO_REQUIRE_SIGNING=true) " +
+      "so over-the-air updates enforce signatures."
+  )
+}
 
 const config: CapacitorConfig = {
   appId: "de.tum.cit.ase.apollon",

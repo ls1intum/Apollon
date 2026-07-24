@@ -1,71 +1,74 @@
 import { Capacitor } from "@capacitor/core"
 import { App } from "@capacitor/app"
 import { CapacitorUpdater } from "@capgo/capacitor-updater"
+import semver from "semver"
 import { log } from "@/logger"
 
 /**
  * Self-hosted, first-party over-the-air web-bundle updates (Capgo, manual mode).
  *
- * Why manual mode: the update bundle is served as a plain static `manifest.json`
- * + signed `.zip` by the webapp's own nginx (same host, same deploy — "deploy ==
- * OTA publish"), so there is no dynamic endpoint to compare versions server-side.
- * This module is that comparison: it fetches the manifest, refuses anything that
- * would land on an incompatible OLDER native shell (`minNativeVersion`), and only
- * downloads a strictly-newer web bundle. The Capgo plugin still enforces the
- * bundle SIGNATURE on download (Encryption V2), so a tampered host cannot ship
- * malicious code, and auto-rolls-back any bundle that never calls
- * `notifyAppReady()`.
- *
- * Everything here is best-effort and fails closed: any network, parse, gating, or
- * download error simply leaves the device on its current, known-good bundle.
+ * The bundle is served as a static `manifest.json` + signed `.zip` by the
+ * webapp's own nginx (same host, same deploy), so there is no dynamic endpoint
+ * to compare versions server-side — this module is that comparison. The Capgo
+ * plugin still enforces the bundle SIGNATURE on download (Encryption V2) and
+ * auto-rolls-back any bundle that never calls `notifyAppReady()`, so every
+ * failure here fails closed: the device stays on its current, known-good bundle.
  */
 
 const MANIFEST_URL = "https://apollon.aet.cit.tum.de/live-updates/manifest.json"
+const MANIFEST_TIMEOUT_MS = 10_000
 
-interface LiveUpdateManifest {
+export interface LiveUpdateManifest {
   /** Web bundle version (semver), e.g. "5.2.0". */
   version: string
   /** Absolute HTTPS URL of the signed bundle zip. */
   url: string
-  /** SHA-256 of the zip; the plugin verifies it after download. */
+  /** SHA-256 the plugin verifies after download. */
   checksum?: string
   /**
-   * Minimum native app version (CFBundleShortVersionString) this web bundle is
-   * compatible with. A device on an older native shell must NOT apply it —
-   * the web build may rely on native/plugin or server-contract changes that
-   * only ship with a matching App Store release.
+   * Minimum native app version (CFBundleShortVersionString) this bundle needs.
+   * A device on an older native shell must not apply it — the web build may rely
+   * on native/plugin or server-contract changes that ship only with a matching
+   * App Store release.
    */
   minNativeVersion?: string
-  /**
-   * Encryption V2 session key (`ivSessionKey`) for a signed bundle; the plugin
-   * uses it, with the app's public key, to decrypt and verify. Present only for
-   * encrypted bundles.
-   */
+  /** Encryption V2 session key (`ivSessionKey`); present only for signed bundles. */
   sessionKey?: string
 }
 
-/** Numeric semver compare: returns a<0, 0, or >0. Non-numeric parts sort as 0. */
-function compareSemver(a: string, b: string): number {
-  const pa = a.split(".").map((n) => Number.parseInt(n, 10) || 0)
-  const pb = b.split(".").map((n) => Number.parseInt(n, 10) || 0)
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] ?? 0) - (pb[i] ?? 0)
-    if (diff !== 0) return diff
-  }
-  return 0
-}
-
-function isLiveUpdateManifest(value: unknown): value is LiveUpdateManifest {
+export function isLiveUpdateManifest(
+  value: unknown
+): value is LiveUpdateManifest {
   if (typeof value !== "object" || value === null) return false
   const record = value as Record<string, unknown>
   return typeof record.version === "string" && typeof record.url === "string"
 }
 
 /**
- * Confirm the running bundle booted successfully. MUST be called once the app is
- * interactive: if a freshly-applied OTA bundle fails to call this within the
- * plugin's `appReadyTimeout`, the plugin treats it as broken and rolls back to
- * the previous bundle on the next launch. No-op off native.
+ * Pure gate: whether `manifest` should be applied to a device on native version
+ * `nativeVersion` currently running bundle `currentVersion` ("builtin" for the
+ * shipped-in bundle). Only moves forward and never past the native shell.
+ */
+export function shouldApplyUpdate(
+  manifest: LiveUpdateManifest,
+  nativeVersion: string,
+  currentVersion: string
+): boolean {
+  if (
+    manifest.minNativeVersion &&
+    semver.lt(nativeVersion, manifest.minNativeVersion)
+  ) {
+    return false
+  }
+  return (
+    currentVersion === "builtin" || semver.gt(manifest.version, currentVersion)
+  )
+}
+
+/**
+ * Confirm the running bundle booted. MUST be called once the app is interactive:
+ * a freshly-applied OTA bundle that fails to call this within the plugin's
+ * `appReadyTimeout` is treated as broken and rolled back on the next launch.
  */
 export async function notifyLiveUpdateReady(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
@@ -77,9 +80,8 @@ export async function notifyLiveUpdateReady(): Promise<void> {
 }
 
 /**
- * Check the first-party manifest and, if a strictly-newer and native-compatible
- * bundle exists, download it and stage it for the NEXT cold start (never a
- * mid-session reload). Best-effort; safe to call unawaited at startup.
+ * Check the manifest and stage a newer, native-compatible bundle for the NEXT
+ * cold start (never a mid-session reload). Best-effort; safe to call unawaited.
  */
 export async function checkForLiveUpdate(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
@@ -89,26 +91,16 @@ export async function checkForLiveUpdate(): Promise<void> {
       CapacitorUpdater.current(),
     ])
 
-    const response = await fetch(MANIFEST_URL, { cache: "no-store" })
+    const response = await fetch(MANIFEST_URL, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(MANIFEST_TIMEOUT_MS),
+    })
     if (!response.ok) return
 
     const manifest: unknown = await response.json()
-    if (!isLiveUpdateManifest(manifest)) return
-
-    // Gate 1: never apply a bundle newer than this native shell supports.
     if (
-      manifest.minNativeVersion &&
-      compareSemver(appInfo.version, manifest.minNativeVersion) < 0
-    ) {
-      return
-    }
-
-    // Gate 2: only move forward. `current.bundle.version` is "builtin" for the
-    // shipped-in bundle; treat that as "older than any real manifest version".
-    const currentVersion = current.bundle.version
-    if (
-      currentVersion !== "builtin" &&
-      compareSemver(manifest.version, currentVersion) <= 0
+      !isLiveUpdateManifest(manifest) ||
+      !shouldApplyUpdate(manifest, appInfo.version, current.bundle.version)
     ) {
       return
     }
@@ -119,13 +111,9 @@ export async function checkForLiveUpdate(): Promise<void> {
       ...(manifest.checksum ? { checksum: manifest.checksum } : {}),
       ...(manifest.sessionKey ? { sessionKey: manifest.sessionKey } : {}),
     })
-
-    // Apply on the next cold start, not now — avoids reloading the WebView out
-    // from under an active editing session.
     await CapacitorUpdater.next({ id: bundle.id })
     log.debug(`live-update: staged ${manifest.version} for next launch`)
   } catch (error) {
-    // Stay on the current bundle on any failure.
     log.warn("live-update: check failed", error)
   }
 }

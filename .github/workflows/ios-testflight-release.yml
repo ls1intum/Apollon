@@ -86,6 +86,9 @@ jobs:
         # feature is simply disabled, not insecure.
         env:
           CAPGO_PUBLIC_KEY: ${{ vars.CAPGO_PUBLIC_KEY }}
+          # Fail the build if the signing key is missing rather than shipping
+          # OTA with signature enforcement silently disabled.
+          CAPGO_REQUIRE_SIGNING: "true"
         run: pnpm exec cap sync ios
 
       - name: Resolve marketing version and build number

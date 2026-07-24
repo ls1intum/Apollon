@@ -47,7 +47,7 @@ const syncNativeStatusBar = (theme: ThemeMode) => {
   StatusBar.setStyle({
     style: theme === "dark" ? Style.Dark : Style.Light,
   }).catch(() => {
-    // No-op off native / where the plugin is unavailable.
+    // Native plugin call failed; leave the bar as-is.
   })
 }
 

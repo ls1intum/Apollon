@@ -1,18 +1,12 @@
-// Produce the over-the-air live-update artifacts from an already-built `dist/`:
-//   live-updates-dist/apollon-<version>.zip   — the web bundle (encrypted in prod)
-//   live-updates-dist/manifest.json           — the first-party update pointer
+// Package an already-built `dist/` into the over-the-air live-update artifacts
+// (`live-updates-dist/apollon-<version>.zip` + `manifest.json`) for the
+// ios-live-update workflow to publish.
 //
-// The ios-live-update workflow runs this (with the Capgo keys) and copies the
-// output to the directory the webapp nginx serves at /live-updates/, so a normal
-// deploy also publishes the matching bundle. nginx serves it (see nginx.conf);
-// the app checks the manifest (see src/services/liveUpdate.ts).
-//
-// Signing/encryption (Capgo Encryption V2) is the security boundary — with it,
-// the host need not be trusted. When CAPGO_PRIVATE_KEY is set the bundle is
-// encrypted+signed with @capgo/cli (which also needs CAPGO_PUBLIC_KEY in the
-// env, because it reads the public half from capacitor.config); without it a
-// PLAIN bundle is emitted for local/dev use and a warning is logged. An app
-// built WITH a public key rejects a plain bundle, so never mix the two in prod.
+// Signing (Capgo Encryption V2) is the security boundary: with it the host need
+// not be trusted. When CAPGO_PRIVATE_KEY is set the bundle is encrypted+signed
+// (which also needs CAPGO_PUBLIC_KEY, since @capgo/cli reads the public half
+// from capacitor.config); an app built WITH a public key rejects an unsigned
+// bundle, so the plain path is dev-only.
 //
 // Env:
 //   CAPGO_PRIVATE_KEY / CAPGO_PUBLIC_KEY  Encryption V2 keypair. Both enable signing.
@@ -50,7 +44,7 @@ fs.rmSync(outDir, { recursive: true, force: true })
 fs.mkdirSync(outDir, { recursive: true })
 
 const capgo = (args) =>
-  execFileSync("npx", ["--no-install", "@capgo/cli", ...args], {
+  execFileSync("pnpm", ["exec", "capgo", ...args], {
     cwd: webappDir,
     encoding: "utf8",
   })
@@ -58,7 +52,8 @@ const capgo = (args) =>
 const zipName = `apollon-${version}.zip`
 const zipPath = path.join(outDir, zipName)
 
-// 1. Package the built web assets and get Capgo's checksum for them.
+// 1. Package the built web assets and get Capgo's checksum. `--key-v2` selects
+// the Encryption V2 pipeline the app's `publicKey` verifies against.
 const { checksum: plainChecksum } = JSON.parse(
   capgo([
     "bundle",
@@ -69,6 +64,7 @@ const { checksum: plainChecksum } = JSON.parse(
     zipPath,
     "--json",
     "--no-code-check",
+    "--key-v2",
   ])
 )
 

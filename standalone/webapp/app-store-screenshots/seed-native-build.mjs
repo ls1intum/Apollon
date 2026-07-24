@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { PERSISTENCE_STORE_VERSION } from "./seed-store-version.mjs"
 
 const appDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -64,7 +65,7 @@ const store = JSON.stringify({
     models,
     currentModelId: null,
   },
-  version: 3,
+  version: PERSISTENCE_STORE_VERSION,
 })
 const seedScript = `<script data-app-store-screenshot-seed>localStorage.setItem("persistenceModelStore", ${JSON.stringify(store)});</script>`
 

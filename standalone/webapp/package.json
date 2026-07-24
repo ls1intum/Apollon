@@ -72,6 +72,7 @@
     "react-markdown": "10.1.0",
     "react-toastify": "11.1.0",
     "remark-gfm": "4.0.1",
+    "semver": "^7.8.5",
     "svg2pdf.js": "catalog:",
     "tailwindcss": "catalog:",
     "zustand": "catalog:"
@@ -98,6 +99,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/semver": "^7.7.1",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",

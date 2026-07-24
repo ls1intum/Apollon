@@ -1,3 +1,8 @@
+// Composites a Simulator screenshot into an OFFICIAL Apple product bezel with a
+// headline + gradient at exact App Store dimensions. Hand-rolled (not fastlane
+// `frameit`) deliberately: frameit ships Facebook's frames, not Apple's official
+// product bezels, and needs per-device offset files; here the screen aperture is
+// found from the bezel's transparent region, so any official bezel drops in.
 import CoreGraphics
 import CoreText
 import Foundation
