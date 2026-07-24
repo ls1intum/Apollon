@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { SWATCH_NAMES } from "@tumaet/ui/lib/color-swatch-tokens"
 import { CSS_VARIABLE_FALLBACKS } from "@/constants"
 
 // Drift guard for the design-token contract.
@@ -60,6 +61,42 @@ describe("CSS variable contract: CSS_VARIABLE_FALLBACKS ⊆ THEMING.md ∩ token
         declared,
         `${cssVar} is in CSS_VARIABLE_FALLBACKS but is not declared (\`${cssVar}: …\`) in packages/ui/src/styles/tokens.css`
       ).toBe(true)
+    }
+  )
+})
+
+// The color-picker swatches are the one token family a user can paint directly
+// onto exported geometry (as `var(--apollon-swatch-*)` with no inline fallback),
+// so unlike the general one-directional guard above they MUST have a compat
+// fallback or the element vanishes from every headless/embed export (issue
+// #828). And because the fallback duplicates a hex that really lives in
+// tokens.css, guard the VALUE too: each fallback must equal the light-theme
+// `--primitive-swatch-*` the swatch resolves to, so retuning the palette can't
+// silently ship a stale export color.
+//
+// tokens.css layers `--apollon-swatch-red: var(--primitive-swatch-red)` and
+// `--primitive-swatch-red: #dc2626`; the hex lives in the primitive, defined
+// once for light (`:root`, authored first) and again for the dark override.
+// Compat export is always light (like every other entry in the fallback map),
+// so read the first — i.e. light — declaration of each primitive.
+const lightPrimitiveHex = (name: string): string | undefined =>
+  tokensCss.match(
+    new RegExp(`--primitive-swatch-${name}\\s*:\\s*(#[0-9a-fA-F]{3,8})`)
+  )?.[1]
+
+describe("swatch tokens ⊆ CSS_VARIABLE_FALLBACKS (export must never blank or drift a swatch)", () => {
+  it.each(SWATCH_NAMES)(
+    "--apollon-swatch-%s exports the light-theme primitive hex",
+    (name) => {
+      const fallback = CSS_VARIABLE_FALLBACKS[`--apollon-swatch-${name}`]
+      expect(
+        fallback,
+        `--apollon-swatch-${name} has no CSS_VARIABLE_FALLBACKS entry; a swatch of this color would export invisible`
+      ).toBeDefined()
+      expect(
+        fallback,
+        `--apollon-swatch-${name} fallback ${fallback} != light --primitive-swatch-${name} ${lightPrimitiveHex(name)} in tokens.css — retune both together`
+      ).toBe(lightPrimitiveHex(name))
     }
   )
 })

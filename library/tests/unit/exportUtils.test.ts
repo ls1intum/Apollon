@@ -310,6 +310,42 @@ describe("replaceCSSVariables", () => {
 })
 
 // ---------------------------------------------------------------------------
+// Swatch color export (issue #828)
+//
+// A chosen swatch is stored as a fallback-less `var(--apollon-swatch-*)`
+// (ColorButtons.tsx). While those tokens were absent from
+// CSS_VARIABLE_FALLBACKS the compat export resolved them to "", wiping the
+// element's stroke/fill and leaving only the default-black text. (All swatches
+// are guarded present in cssVariableContract.test.ts; here we assert the paint
+// actually survives the export path.)
+// ---------------------------------------------------------------------------
+describe("swatch color export (issue #828)", () => {
+  let svg: SVGSVGElement
+
+  beforeEach(() => {
+    svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  })
+
+  it("resolves a fallback-less swatch color to its hex", () => {
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+    rect.setAttribute("stroke", "var(--apollon-swatch-red)")
+    svg.appendChild(rect)
+
+    replaceCSSVariables(svg)
+    expect(rect.getAttribute("stroke")).toBe("#dc2626")
+  })
+
+  it("leaves a native custom hex untouched", () => {
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+    rect.setAttribute("stroke", "#123456")
+    svg.appendChild(rect)
+
+    replaceCSSVariables(svg)
+    expect(rect.getAttribute("stroke")).toBe("#123456")
+  })
+})
+
+// ---------------------------------------------------------------------------
 // convertStyleToAttributes
 // ---------------------------------------------------------------------------
 describe("convertStyleToAttributes", () => {
