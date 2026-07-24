@@ -40,6 +40,15 @@ const MAX_WORKER_SNAPSHOT_AGE_MS = 2_500
 const MAX_WORKER_RELEASE_MS = 2_000
 const SETTLEMENT_DURATION_MS = 120
 
+type RoutingFilmstripWindow = Window & {
+  apollonEditor?: { model: Record<string, unknown> }
+  __apollonFirstVisibleRoutes?: Record<string, string>
+  __startApollonRoutingFilmstrip?: (
+    selector: string,
+    expectedEdgeCount: number
+  ) => void
+}
+
 const renderedEdgePaths = async (
   editor: Locator
 ): Promise<Record<string, string>> =>
@@ -54,6 +63,157 @@ const renderedEdgePaths = async (
         })
       ) as Record<string, string>
   )
+
+const hasMultipleDirectionChanges = (path: string): boolean => {
+  const commands = [
+    ...path.matchAll(/([ML])\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g),
+  ].map(([, command, x, y]) => ({
+    command,
+    point: { x: Number(x), y: Number(y) },
+  }))
+  let previousPoint: { x: number; y: number } | undefined
+  let previousDirection: "horizontal" | "vertical" | undefined
+  let directionChanges = 0
+  for (const { command, point } of commands) {
+    if (command === "M" || !previousPoint) {
+      previousPoint = point
+      previousDirection = undefined
+      continue
+    }
+    const direction =
+      previousPoint.x === point.x && previousPoint.y !== point.y
+        ? "vertical"
+        : previousPoint.y === point.y && previousPoint.x !== point.x
+          ? "horizontal"
+          : undefined
+    if (direction && previousDirection && direction !== previousDirection) {
+      directionChanges++
+      if (directionChanges >= 2) return true
+    }
+    previousDirection = direction
+    previousPoint = point
+  }
+  return false
+}
+
+const expectStableFirstPaint = async (
+  page: Page,
+  editor: Locator,
+  expectedEdgeCount: number
+): Promise<Record<string, string>> => {
+  await page.waitForFunction(
+    (expected) =>
+      Object.keys(
+        (window as RoutingFilmstripWindow).__apollonFirstVisibleRoutes ?? {}
+      ).length === expected,
+    expectedEdgeCount
+  )
+  const [recording, settled] = await Promise.all([
+    page.evaluate(
+      () =>
+        (window as RoutingFilmstripWindow)
+          .__apollonFirstVisibleRoutes as Record<string, string>
+    ),
+    renderedEdgePaths(editor),
+  ])
+
+  expect(recording).toEqual(settled)
+  return settled
+}
+
+test("initial and replacement routes never paint provisional geometry", async ({
+  page,
+}) => {
+  const initialSelector = `#react-flow-library-${String(fixture.id)}`
+  const expectedEdgeCount = (fixture.edges as unknown[]).length
+  await page.addInitScript(
+    ({ selector, edgeCount }) => {
+      let animationFrame = 0
+      const targetWindow = window as RoutingFilmstripWindow
+      targetWindow.__startApollonRoutingFilmstrip = (
+        nextSelector,
+        nextEdgeCount
+      ) => {
+        cancelAnimationFrame(animationFrame)
+        const firstVisibleRoutes: Record<string, string> = {}
+        targetWindow.__apollonFirstVisibleRoutes = firstVisibleRoutes
+        let captured = 0
+        const sample = () => {
+          const editor = document.querySelector(nextSelector)
+          const paths =
+            editor?.querySelectorAll<SVGPathElement>(
+              ".react-flow__edge-path"
+            ) ?? []
+          for (const path of paths) {
+            const id = path
+              .closest(".react-flow__edge")
+              ?.getAttribute("data-id")
+            const d = path.getAttribute("d")
+            if (id && d && firstVisibleRoutes[id] === undefined) {
+              firstVisibleRoutes[id] = d
+              captured++
+            }
+          }
+          if (captured >= nextEdgeCount) return
+          animationFrame = requestAnimationFrame(sample)
+        }
+        animationFrame = requestAnimationFrame(sample)
+      }
+      targetWindow.__startApollonRoutingFilmstrip(selector, edgeCount)
+    },
+    { selector: initialSelector, edgeCount: expectedEdgeCount }
+  )
+
+  await openLocalWithPerf(page, fixture)
+  const initialRoutes = await expectStableFirstPaint(
+    page,
+    page.locator(initialSelector),
+    expectedEdgeCount
+  )
+  expect(
+    Object.values(initialRoutes).some(hasMultipleDirectionChanges),
+    "fixture no longer exercises an orthogonal route with multiple bends"
+  ).toBe(true)
+
+  const nodes = fixture.nodes as Array<{
+    position: { x: number; y: number }
+  }>
+  const left = Math.min(...nodes.map(({ position }) => position.x))
+  const right = Math.max(...nodes.map(({ position }) => position.x))
+  const replacement = {
+    ...fixture,
+    nodes: nodes.map((node) => ({
+      ...node,
+      position: {
+        ...node.position,
+        x: left + right - node.position.x,
+      },
+    })),
+  }
+  await page.evaluate(
+    ({ selector, edgeCount, model }) => {
+      const targetWindow = window as RoutingFilmstripWindow
+      if (
+        !targetWindow.apollonEditor ||
+        !targetWindow.__startApollonRoutingFilmstrip
+      )
+        throw new Error("public model-replacement test seam is unavailable")
+      targetWindow.__startApollonRoutingFilmstrip(selector, edgeCount)
+      targetWindow.apollonEditor.model = model
+    },
+    {
+      selector: initialSelector,
+      edgeCount: expectedEdgeCount,
+      model: replacement,
+    }
+  )
+  const replacementRoutes = await expectStableFirstPaint(
+    page,
+    page.locator(initialSelector),
+    expectedEdgeCount
+  )
+  expect(replacementRoutes).not.toEqual(initialRoutes)
+})
 
 const beginContinuousNodeDrag = async (node: Locator, page: Page) => {
   const box = await node.boundingBox()

@@ -86,16 +86,21 @@ export async function openLocalWithPerf(
   )
 }
 
-type PerfWindow = Window & { __apollonPerf?: () => PerfSnapshot | undefined }
+type PerfWindow = Window & {
+  __apollonPerf?: (skipDocumentEncoding?: boolean) => PerfSnapshot | undefined
+}
 
-export async function readPerf(page: Page): Promise<PerfSnapshot> {
-  return page.evaluate(() => {
+export async function readPerf(
+  page: Page,
+  skipDocumentEncoding = false
+): Promise<PerfSnapshot> {
+  return page.evaluate((skipEncoding) => {
     const probe = (window as PerfWindow).__apollonPerf
     if (!probe) throw new Error("window.__apollonPerf is not installed")
-    const snapshot = probe()
+    const snapshot = probe(skipEncoding)
     if (!snapshot) throw new Error("__apollonPerf() returned undefined")
     return snapshot
-  })
+  }, skipDocumentEncoding)
 }
 
 export const nodeNearestViewportCenter = async (

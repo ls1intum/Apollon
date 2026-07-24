@@ -30,6 +30,7 @@ import "@/styles/fonts.css"
 import "@/styles/app.css"
 import {
   useDiagramStore,
+  useEdgeGeometryStore,
   useMetadataStore,
   useOverlayStore,
 } from "./store/context"
@@ -139,6 +140,7 @@ function App({
     useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
   const multiSelectionMode = useMultiSelectionMode()
+  const routingReady = useEdgeGeometryStore((state) => state.routingReady)
 
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
@@ -177,12 +179,20 @@ function App({
             nodeTypes={diagramNodeTypes}
             edgeTypes={diagramEdgeTypes}
             nodes={displayNodes}
-            edges={edges}
+            // The solver reads DiagramStore directly. Keep provisional React
+            // Flow edges unmounted until this model's first exact generation;
+            // nodes still mount below so their runtime handles can be measured.
+            edges={routingReady ? edges : []}
             // React Flow's viewport culling keeps large off-screen diagrams out
             // of the DOM while the central solver still optimizes every edge.
             // This is purely a rendering boundary: export and exact geometry
             // continue to use the complete diagram.
-            onlyRenderVisibleElements={onlyRenderVisibleElements}
+            // Bootstrap one complete measurement pass before enabling viewport
+            // culling. Otherwise off-screen nodes never mount their handles and
+            // the holistic router cannot produce a stable first generation.
+            onlyRenderVisibleElements={
+              routingReady ? onlyRenderVisibleElements : false
+            }
             onDragOver={onDragOver}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
