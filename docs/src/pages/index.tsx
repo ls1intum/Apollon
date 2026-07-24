@@ -9,6 +9,7 @@ import clsx from "clsx"
 import styles from "./index.module.css"
 
 const HOSTED_URL = "https://apollon.aet.cit.tum.de"
+const APP_STORE_URL = "https://apps.apple.com/app/id6474762031"
 
 // The read+write loop people actually write: load a saved model and
 // persist edits as they happen. In each host's current idiom.
@@ -100,9 +101,9 @@ function Hero() {
           browser.
         </h1>
         <p className={styles.heroSubtitle}>
-          An open-source UML modeling editor. 13 diagram types, SVG/PNG/PDF/JSON
-          export, real-time collaboration. Use it in the browser, in VS Code, or
-          as an npm library.
+          An open-source UML modeling editor. 13 diagram types,
+          SVG/PNG/PDF/PPTX/JSON export, real-time collaboration. Use it on the
+          web, on iPhone and iPad, in VS Code, or as an npm library.
         </p>
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" href={HOSTED_URL}>
@@ -250,6 +251,18 @@ const WAYS: LinkCard[] = [
     cta: "User guide",
   },
   {
+    kicker: "iPhone & iPad",
+    title: "Model on the go",
+    body: (
+      <>
+        A touch-friendly, local-first editor for iOS and iPadOS. Work offline,
+        then export or share only when you choose.
+      </>
+    ),
+    to: APP_STORE_URL,
+    cta: "View on the App Store",
+  },
+  {
     kicker: "VS Code",
     title: "Edit next to your code",
     body: (
@@ -267,7 +280,7 @@ function Ways() {
   return (
     <section className={clsx(styles.section, styles.tinted)}>
       <div className="container">
-        <h2 className={styles.sectionTitle}>Three ways to use Apollon</h2>
+        <h2 className={styles.sectionTitle}>Four ways to use Apollon</h2>
         <p className={styles.sectionLead}>
           Same editor, same diagram format — only the delivery differs.
         </p>
@@ -323,7 +336,7 @@ const NEXT: LinkCard[] = [
   },
   {
     title: "User Guide",
-    body: "Draw diagrams in the hosted app, the VS Code extension, or a self-hosted instance.",
+    body: "Draw diagrams on iPhone and iPad, in the hosted app, the VS Code extension, or a self-hosted instance.",
     to: "/user/",
     cta: "Open the User Guide",
   },
@@ -349,8 +362,8 @@ function WhereToNext() {
 export default function Home() {
   return (
     <Layout
-      title="UML modeling editor for the web"
-      description="Apollon is an open-source UML modeling editor for the web — an embeddable npm library, a standalone web app, and a VS Code extension."
+      title="UML modeling wherever you work"
+      description="Apollon is an open-source UML modeling editor for the web, iPhone, iPad, VS Code, and embedded products."
     >
       <Hero />
       <main>

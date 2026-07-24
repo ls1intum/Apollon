@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: ["getting-started/requirements", "getting-started/setup"],
     },
+    { type: "doc", id: "support", label: "Support" },
   ],
 }
 

@@ -1,17 +1,28 @@
 ---
 id: setup
 title: Get Apollon
-description: How to use Apollon — hosted webapp, VS Code extension, or self-host.
+description: How to use Apollon on the web, iPhone and iPad, VS Code, or your own server.
 ---
 
 # Get Apollon
 
-Three ways to use Apollon. Pick whichever matches your context — see the
+Choose the version that matches your context — see the
 [Overview](/user/) if you are still deciding.
 
 ## Hosted webapp
 
 Open <https://apollon.aet.cit.tum.de> in a browser. No install, no account. Diagrams persist in your browser and can be shared by URL. Any current browser works — see [Requirements](/user/getting-started/requirements).
+
+## iPhone and iPad
+
+Install [Apollon - UML Modeling Editor](https://apps.apple.com/app/id6474762031)
+from the App Store. The iOS app works without an account, keeps local diagrams
+on your device, and supports both iPhone and iPad.
+
+If you used the previous native iOS app, install the new release as an update
+instead of deleting the app. The in-place update lets Apollon import compatible
+locally saved diagrams. See [Support](/user/support) before updating if the
+diagrams are important and not backed up.
 
 ## VS Code extension
 

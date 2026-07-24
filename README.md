@@ -3,7 +3,10 @@
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](./LICENSE)
 
-Apollon is an open-source UML modeling editor for the web. Draw 13 UML and modeling diagram types (class, component, activity, BPMN, SFC, and more) in the browser, collaborate in real time, and export to SVG, PNG, PDF, or JSON.
+Apollon is an open-source UML modeling editor for the web, iPhone, iPad, VS
+Code, and embedded products. Draw 13 UML and modeling diagram types (class,
+component, activity, BPMN, SFC, and more), collaborate in real time, and export
+to SVG, PNG, PDF, PPTX, or JSON.
 
 This monorepo contains every piece of the Apollon platform:
 
@@ -11,6 +14,15 @@ This monorepo contains every piece of the Apollon platform:
 - **[`standalone/`](./standalone)**: the standalone web app (server and webapp) built on the library.
 - **[`vscode-extension/`](./vscode-extension)**: the Apollon VS Code extension.
 - **[`docs/`](./docs)**: the Docusaurus documentation site, published at <https://ls1intum.github.io/Apollon/>.
+
+## Support
+
+For help with the web app, iPhone or iPad app, VS Code extension, or embeddable
+editor, read the
+[support guide](https://ls1intum.github.io/Apollon/user/support), email
+[ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de), or
+[open an issue](https://github.com/ls1intum/Apollon/issues/new/choose). Do not
+attach confidential diagrams to a public issue.
 
 ## Use the library
 

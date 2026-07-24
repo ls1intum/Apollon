@@ -20,7 +20,7 @@ import type * as Preset from "@docusaurus/preset-classic"
 
 const config: Config = {
   title: "Apollon",
-  tagline: "Open-source UML modeling editor for the web",
+  tagline: "Open-source UML modeling, wherever you work",
   favicon: "img/favicon.ico",
 
   // Docusaurus Faster: Rspack + SWC + LightningCSS → 2-4x faster builds.
@@ -152,7 +152,7 @@ const config: Config = {
       {
         name: "description",
         content:
-          "Open-source UML modeling editor for the web. Embeddable library, standalone web app, and VS Code extension.",
+          "Open-source UML modeling editor for the web, iPhone, iPad, VS Code, and embedded products.",
       },
       {
         name: "keywords",
@@ -219,6 +219,10 @@ const config: Config = {
             {
               label: "VS Code Extension",
               href: "https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode",
+            },
+            {
+              label: "iPhone & iPad",
+              href: "https://apps.apple.com/app/id6474762031",
             },
             {
               label: "Release Notes",
