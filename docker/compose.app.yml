@@ -17,8 +17,9 @@ services:
       # by this container's nginx at /live-updates/ (see nginx.conf). Populated
       # by the ios-live-update workflow on deploy; read-only in the container.
       # An absent/empty directory simply yields 404s and the app stays on its
-      # shipped bundle, so this is safe before the first publish.
-      - "/opt/apollon/app/live-updates:/usr/share/nginx/html/live-updates:ro"
+      # shipped bundle, so this is safe before the first publish and for operators
+      # who ship no mobile app.
+      - "${LIVE_UPDATE_DIR:-/opt/apollon/app/live-updates}:/usr/share/nginx/html/live-updates:ro"
     cap_drop:
       - ALL
     security_opt:

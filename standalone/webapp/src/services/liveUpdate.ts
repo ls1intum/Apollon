@@ -36,6 +36,12 @@ interface LiveUpdateManifest {
    * only ship with a matching App Store release.
    */
   minNativeVersion?: string
+  /**
+   * Encryption V2 session key (`ivSessionKey`) for a signed bundle; the plugin
+   * uses it, with the app's public key, to decrypt and verify. Present only for
+   * encrypted bundles.
+   */
+  sessionKey?: string
 }
 
 /** Numeric semver compare: returns a<0, 0, or >0. Non-numeric parts sort as 0. */
@@ -111,6 +117,7 @@ export async function checkForLiveUpdate(): Promise<void> {
       version: manifest.version,
       url: manifest.url,
       ...(manifest.checksum ? { checksum: manifest.checksum } : {}),
+      ...(manifest.sessionKey ? { sessionKey: manifest.sessionKey } : {}),
     })
 
     // Apply on the next cold start, not now — avoids reloading the WebView out

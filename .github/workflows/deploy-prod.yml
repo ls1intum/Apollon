@@ -82,3 +82,13 @@ jobs:
       image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/app"
     secrets: inherit
+
+  # Publish the matching over-the-air web-bundle update for the mobile app right
+  # after the web app is deployed ("deploy == OTA publish"). Opt-in: only runs
+  # where the ENABLE_LIVE_UPDATE variable is "true", so operators who don't ship
+  # a mobile app are unaffected.
+  publish-live-update:
+    needs: deploy-app
+    if: ${{ inputs.deploy-app && vars.ENABLE_LIVE_UPDATE == 'true' }}
+    uses: ./.github/workflows/ios-live-update.yml
+    secrets: inherit

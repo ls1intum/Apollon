@@ -81,6 +81,11 @@ jobs:
 
       - name: Capacitor sync (iOS)
         working-directory: standalone/webapp
+        # Bake the live-update signing public key into the app so the updater
+        # strictly rejects any bundle it can't verify. Unset (e.g. forks) → the
+        # feature is simply disabled, not insecure.
+        env:
+          CAPGO_PUBLIC_KEY: ${{ vars.CAPGO_PUBLIC_KEY }}
         run: pnpm exec cap sync ios
 
       - name: Resolve marketing version and build number

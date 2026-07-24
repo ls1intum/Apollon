@@ -212,19 +212,26 @@ CI variable to the native version currently in the App Store and bump it **only*
 when a matching native build ships. `resetWhenUpdate` (on) also discards OTA
 bundles when a new native build is installed.
 
-### One-time go-live setup
+### Configuration (already provisioned for `ls1intum/Apollon`)
 
-1. Generate the keypair once: `npx @capgo/cli key create`. Commit **nothing**
-   secret — set the private key as the `CAPGO_PRIVATE_KEY` CI secret and expose
-   the **public** key as `CAPGO_PUBLIC_KEY` at app build/`cap sync` time (it is
-   baked into `capacitor.config.ts`). Verify the exact `@capgo/cli bundle encrypt`
-   invocation in `build-live-update.mjs` against the installed CLI version.
-2. Add the `LIVE_UPDATE_SSH_KEY` / `LIVE_UPDATE_HOST` / `LIVE_UPDATE_USER` secrets
-   and the `CAPGO_MIN_NATIVE_VERSION` variable (Production environment).
-3. Ensure `/opt/apollon/app/live-updates` exists on the VM and is readable by the
-   webapp container, then redeploy so the volume mount takes effect.
-4. Call `ios-live-update` from the production deploy (or dispatch it) so each
-   deploy publishes the matching OTA bundle.
+The signing keypair and wiring are in place; nothing here is manual per release.
 
-Until the keypair and secrets exist the feature is inert: the app checks the
-manifest, gets a 404, and stays on its shipped bundle.
+- **Signing keypair** — an Encryption V2 keypair was generated with
+  `npx @capgo/cli key create`. The private half is the `CAPGO_PRIVATE_KEY`
+  Production secret (used only by `ios-live-update`); the public half is the
+  `CAPGO_PUBLIC_KEY` repo variable, baked into the app during `cap sync` so the
+  updater enforces signatures. The private key is **not** in the repo.
+- **Transport** — `ios-live-update` reuses the existing deploy identity and
+  bastion (`VM_SSH_PRIVATE_KEY`, `VM_HOST`, `VM_USERNAME`, `DEPLOYMENT_GATEWAY_*`)
+  to copy the bundle to `/opt/apollon/app/live-updates` (owned by
+  `github_deployment`, world-readable so the container's nginx can serve it).
+- **Wiring** — `deploy-prod` calls `ios-live-update` after `deploy-app` when the
+  `ENABLE_LIVE_UPDATE` variable is `true`, so a production deploy also publishes
+  the matching bundle. `CAPGO_MIN_NATIVE_VERSION` (repo variable) is the native
+  version gate — bump it only when a matching App Store build ships.
+
+The next production deploy publishes the first bundle. Rotating the keypair means
+re-running `key create`, updating both `CAPGO_*` keys, and shipping a new native
+build (the public key is baked into the binary). For a fork, set the four
+variables/secrets above and flip `ENABLE_LIVE_UPDATE`; without them the feature
+is inert — the app checks the manifest, gets a 404, and keeps its shipped bundle.

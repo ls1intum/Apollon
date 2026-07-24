@@ -1,32 +1,20 @@
 name: ios-live-update
 
 # Publishes an over-the-air web-bundle update for the mobile app. The bundle is
-# the SAME `dist/` the webapp deploy ships, signed with the Capgo private key,
-# and copied to the prod VM directory the webapp nginx serves at /live-updates/.
-# Runs on manual dispatch and is callable from the production deploy so a normal
-# deploy also publishes the matching OTA bundle ("deploy == OTA publish").
+# the SAME dist the webapp deploy ships, signed with the Capgo private key, and
+# copied to the directory the webapp nginx serves at /live-updates/. Reuses the
+# EXISTING deployment identity and gateway (VM_* + DEPLOYMENT_GATEWAY_*), so no
+# new key or user is introduced. Runs on manual dispatch and is callable from
+# the production deploy so a normal deploy also publishes the matching bundle.
 #
-# Required secrets (Production environment):
-#   CAPGO_PRIVATE_KEY         PEM of the RSA signing key (public half is CAPGO_PUBLIC_KEY, baked into the app).
-#   LIVE_UPDATE_SSH_KEY       SSH private key authorized for LIVE_UPDATE_USER@LIVE_UPDATE_HOST.
-#   LIVE_UPDATE_HOST          e.g. apollon-prod.aet.cit.tum.de
-#   LIVE_UPDATE_USER          deploy user with write access to /opt/apollon/app/live-updates
-# Required variable:
-#   CAPGO_MIN_NATIVE_VERSION  Minimum native app version this web bundle supports
-#                             (bump only when a matching App Store build ships).
+# Uses (already configured for deploys):
+#   secrets: CAPGO_PRIVATE_KEY, VM_SSH_PRIVATE_KEY, DEPLOYMENT_GATEWAY_SSH_KEY
+#   vars:    CAPGO_PUBLIC_KEY, CAPGO_MIN_NATIVE_VERSION, VM_HOST, VM_USERNAME,
+#            DEPLOYMENT_GATEWAY_HOST, DEPLOYMENT_GATEWAY_USER, DEPLOYMENT_GATEWAY_PORT
 
 on:
   workflow_dispatch:
   workflow_call:
-    secrets:
-      CAPGO_PRIVATE_KEY:
-        required: true
-      LIVE_UPDATE_SSH_KEY:
-        required: true
-      LIVE_UPDATE_HOST:
-        required: true
-      LIVE_UPDATE_USER:
-        required: true
 
 concurrency:
   group: ios-live-update-${{ github.ref }}
@@ -39,9 +27,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: Production
-    defaults:
-      run:
-        working-directory: standalone/webapp
     steps:
       - uses: actions/checkout@v4
 
@@ -52,33 +37,47 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Build web bundle
-        working-directory: .
         run: |
           pnpm --filter @tumaet/apollon run build
           pnpm --filter @tumaet/webapp run build
 
       - name: Build + sign the live-update bundle
+        working-directory: standalone/webapp
         env:
           CAPGO_PRIVATE_KEY: ${{ secrets.CAPGO_PRIVATE_KEY }}
+          CAPGO_PUBLIC_KEY: ${{ vars.CAPGO_PUBLIC_KEY }}
           CAPGO_MIN_NATIVE_VERSION: ${{ vars.CAPGO_MIN_NATIVE_VERSION }}
         run: pnpm run live-update:build
 
-      - name: Publish to the prod VM
-        env:
-          SSH_KEY: ${{ secrets.LIVE_UPDATE_SSH_KEY }}
-          HOST: ${{ secrets.LIVE_UPDATE_HOST }}
-          USER: ${{ secrets.LIVE_UPDATE_USER }}
-        run: |
-          install -m 600 /dev/stdin "$RUNNER_TEMP/id" <<< "$SSH_KEY"
-          mkdir -p ~/.ssh && ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          # Upload the immutable zip(s) FIRST, then the manifest, so the manifest
-          # never points at a bundle that isn't yet on the host.
-          rsync -az -e "ssh -i $RUNNER_TEMP/id" \
-            --include='*.zip' --exclude='manifest.json' \
-            dist/live-updates/ "$USER@$HOST:/opt/apollon/app/live-updates/"
-          rsync -az -e "ssh -i $RUNNER_TEMP/id" \
-            dist/live-updates/manifest.json "$USER@$HOST:/opt/apollon/app/live-updates/manifest.json"
+      # Upload the immutable bundle zip(s) FIRST so the manifest never points at
+      # a file that is not yet on the host.
+      - name: Copy bundle zips to the VM
+        uses: appleboy/scp-action@2a0db1c1e7a927c67b7fb09f9f27a5b7b8e10a7c # v1.0.0
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: "standalone/webapp/live-updates-dist/*.zip"
+          target: "/opt/apollon/app/live-updates/"
+          strip_components: 3
+
+      - name: Copy manifest to the VM
+        uses: appleboy/scp-action@2a0db1c1e7a927c67b7fb09f9f27a5b7b8e10a7c # v1.0.0
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: "standalone/webapp/live-updates-dist/manifest.json"
+          target: "/opt/apollon/app/live-updates/"
+          strip_components: 3

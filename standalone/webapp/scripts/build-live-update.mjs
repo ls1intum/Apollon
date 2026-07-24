@@ -1,25 +1,25 @@
 // Produce the over-the-air live-update artifacts from an already-built `dist/`:
-//   dist/live-updates/apollon-<version>.zip   — the web bundle, signed in prod
-//   dist/live-updates/manifest.json           — the first-party update pointer
+//   live-updates-dist/apollon-<version>.zip   — the web bundle (encrypted in prod)
+//   live-updates-dist/manifest.json           — the first-party update pointer
 //
-// This runs as part of the webapp image build, so the image the normal deploy
-// ships already contains the current bundle ("deploy == OTA publish"). nginx
-// serves dist/live-updates/ (see nginx.conf); the app checks the manifest (see
-// src/services/liveUpdate.ts).
+// The ios-live-update workflow runs this (with the Capgo keys) and copies the
+// output to the directory the webapp nginx serves at /live-updates/, so a normal
+// deploy also publishes the matching bundle. nginx serves it (see nginx.conf);
+// the app checks the manifest (see src/services/liveUpdate.ts).
 //
-// Signing (Capgo Encryption V2) is the security boundary — with it, the host
-// need not be trusted. When CAPGO_PRIVATE_KEY is set the bundle is signed with
-// @capgo/cli; without it (local/PR builds) an UNSIGNED bundle is emitted and a
-// warning is logged. Never ship a build with CAPGO_PUBLIC_KEY set in the app but
-// no signing here — the plugin would reject every update.
+// Signing/encryption (Capgo Encryption V2) is the security boundary — with it,
+// the host need not be trusted. When CAPGO_PRIVATE_KEY is set the bundle is
+// encrypted+signed with @capgo/cli (which also needs CAPGO_PUBLIC_KEY in the
+// env, because it reads the public half from capacitor.config); without it a
+// PLAIN bundle is emitted for local/dev use and a warning is logged. An app
+// built WITH a public key rejects a plain bundle, so never mix the two in prod.
 //
 // Env:
-//   CAPGO_PRIVATE_KEY         PEM of the RSA private key (CI secret). Enables signing.
-//   CAPGO_MIN_NATIVE_VERSION  Minimum native app version this web bundle supports.
-//                             Bump ONLY when a matching App Store build ships.
-//                             Defaults to the web version's major.0.0.
+//   CAPGO_PRIVATE_KEY / CAPGO_PUBLIC_KEY  Encryption V2 keypair. Both enable signing.
+//   CAPGO_MIN_NATIVE_VERSION              Minimum native app version this web bundle
+//                                         supports; bump only when a matching App
+//                                         Store build ships. Defaults to <major>.0.0.
 import { execFileSync } from "node:child_process"
-import { createHash } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import process from "node:process"
@@ -30,12 +30,12 @@ const webappDir = path.resolve(
   ".."
 )
 const distDir = path.join(webappDir, "dist")
-const outDir = path.join(distDir, "live-updates")
+// Output OUTSIDE dist so zipping dist never recursively includes the artifacts.
+const outDir = path.join(webappDir, "live-updates-dist")
 
 const version = JSON.parse(
   fs.readFileSync(path.join(webappDir, "package.json"), "utf8")
 ).version
-
 const minNativeVersion =
   process.env.CAPGO_MIN_NATIVE_VERSION || `${version.split(".")[0]}.0.0`
 
@@ -49,53 +49,63 @@ if (!fs.existsSync(path.join(distDir, "index.html"))) {
 fs.rmSync(outDir, { recursive: true, force: true })
 fs.mkdirSync(outDir, { recursive: true })
 
+const capgo = (args) =>
+  execFileSync("npx", ["--no-install", "@capgo/cli", ...args], {
+    cwd: webappDir,
+    encoding: "utf8",
+  })
+
 const zipName = `apollon-${version}.zip`
 const zipPath = path.join(outDir, zipName)
 
-// Zip the built web assets at the archive root (Capgo unpacks them as the new
-// web bundle). Exclude the live-updates dir itself so the bundle never nests a
-// copy of prior bundles.
-execFileSync("zip", ["-r", "-q", "-X", zipPath, ".", "-x", "live-updates/*"], {
-  cwd: distDir,
-  stdio: "inherit",
-})
+// 1. Package the built web assets and get Capgo's checksum for them.
+const { checksum: plainChecksum } = JSON.parse(
+  capgo([
+    "bundle",
+    "zip",
+    "--path",
+    distDir,
+    "--name",
+    zipPath,
+    "--json",
+    "--no-code-check",
+  ])
+)
 
-let checksum = createHash("sha256")
-  .update(fs.readFileSync(zipPath))
-  .digest("hex")
+let checksum = plainChecksum
+let sessionKey
 
 const privateKey = process.env.CAPGO_PRIVATE_KEY
 if (privateKey) {
-  // Encryption V2: @capgo/cli encrypts the zip in place and prints the checksum
-  // of the encrypted artifact, which is what the plugin verifies against the
-  // public key baked into the app. Keep the CLI invocation pinned to the
-  // installed @capgo/cli; verify the flags once when generating the keypair.
-  const keyFile = path.join(outDir, ".signing-key.pem")
-  fs.writeFileSync(keyFile, privateKey, { mode: 0o600 })
-  try {
-    const output = execFileSync(
-      "npx",
-      [
-        "--no-install",
-        "@capgo/cli",
-        "bundle",
-        "encrypt",
-        zipPath,
-        checksum,
-        "--key",
-        keyFile,
-      ],
-      { cwd: webappDir, encoding: "utf8" }
+  if (!process.env.CAPGO_PUBLIC_KEY) {
+    console.error(
+      "build-live-update: CAPGO_PRIVATE_KEY set but CAPGO_PUBLIC_KEY is not."
     )
-    const match = output.match(/checksum[^\w]*([a-f0-9]{16,})/i)
-    if (match) checksum = match[1]
-  } finally {
-    fs.rmSync(keyFile, { force: true })
+    process.exit(1)
   }
+  // 2. Encrypt+sign: emits <zip>_encrypted.zip, the SIGNED checksum the plugin
+  // verifies with the public key, and the ivSessionKey the app needs to decrypt.
+  const encrypted = JSON.parse(
+    capgo([
+      "bundle",
+      "encrypt",
+      zipPath,
+      plainChecksum,
+      "--key-data",
+      privateKey,
+      "--json",
+    ])
+  )
+  checksum = encrypted.checksum
+  sessionKey = encrypted.ivSessionKey
+  // @capgo/cli writes the encrypted artifact next to the input as
+  // `<zip>_encrypted.zip`; serve it under the clean bundle name.
+  fs.rmSync(zipPath)
+  fs.renameSync(`${zipPath}_encrypted.zip`, zipPath)
 } else {
   console.warn(
-    "build-live-update: CAPGO_PRIVATE_KEY unset — emitting an UNSIGNED bundle. " +
-      "Do NOT deploy this to production with CAPGO_PUBLIC_KEY set in the app."
+    "build-live-update: CAPGO_PRIVATE_KEY unset — emitting a PLAIN bundle. " +
+      "An app built with CAPGO_PUBLIC_KEY will reject it; do not use in production."
   )
 }
 
@@ -104,6 +114,7 @@ const manifest = {
   url: `https://apollon.aet.cit.tum.de/live-updates/${zipName}`,
   checksum,
   minNativeVersion,
+  ...(sessionKey ? { sessionKey } : {}),
 }
 fs.writeFileSync(
   path.join(outDir, "manifest.json"),
@@ -111,6 +122,6 @@ fs.writeFileSync(
 )
 
 console.log(
-  `build-live-update: ${zipName} (${privateKey ? "signed" : "UNSIGNED"}), ` +
+  `build-live-update: ${zipName} (${sessionKey ? "encrypted+signed" : "PLAIN"}), ` +
     `minNativeVersion ${minNativeVersion}`
 )
