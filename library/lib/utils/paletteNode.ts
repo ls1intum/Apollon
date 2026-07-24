@@ -4,25 +4,43 @@ import { generateUUID, type DropElementConfig } from "@/constants"
 // Pure palette-node helpers, shared by the drag and tap placement paths so both
 // mint identical nodes and can be unit-tested without React Flow.
 
-/** Nested `defaultData` arrays whose entries carry an id that must be re-minted
- *  on every instantiation, so two placed nodes never share a child id. */
-const ID_BEARING_CHILD_KEYS = ["methods", "attributes", "lanes"] as const
+/** True for a nested child that owns an id which must be unique per node. */
+function hasStringId(item: unknown): item is { id: string } {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    typeof (item as { id?: unknown }).id === "string"
+  )
+}
+
+/**
+ * Re-mint the id of every id-bearing nested child (attributes, methods,
+ * actionRows, lanes, …) so a cloned or freshly placed node never shares a
+ * child id with its source. Structural by design: any array whose entries are
+ * `{ id: string, ... }` objects is remapped; string arrays like `tags` and
+ * coordinate `{ x, y }` arrays carry no id and pass through untouched. This is
+ * the single canonical enumeration shared by palette placement and copy/paste,
+ * so the two paths can never drift on which children get new ids.
+ */
+export function remintNestedChildIds<T extends Record<string, unknown>>(
+  data: T
+): T {
+  const result: Record<string, unknown> = { ...data }
+  for (const [key, value] of Object.entries(data)) {
+    if (Array.isArray(value) && value.some(hasStringId)) {
+      result[key] = value.map((item) =>
+        hasStringId(item) ? { ...item, id: generateUUID() } : item
+      )
+    }
+  }
+  return result as T
+}
 
 /** Deep-clone a config's `defaultData`, re-minting every nested child id. */
 export function instantiatePaletteData(
   defaultData?: Record<string, unknown>
 ): Record<string, unknown> {
-  const data = structuredClone(defaultData ?? {})
-  for (const key of ID_BEARING_CHILD_KEYS) {
-    const value = data[key]
-    if (Array.isArray(value)) {
-      data[key] = value.map((child) => ({
-        ...(child as Record<string, unknown>),
-        id: generateUUID(),
-      }))
-    }
-  }
-  return data
+  return remintNestedChildIds(structuredClone(defaultData ?? {}))
 }
 
 /**
