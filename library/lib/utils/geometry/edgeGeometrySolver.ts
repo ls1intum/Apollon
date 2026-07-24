@@ -50,6 +50,7 @@ import {
 import {
   canRunStraight,
   centerOf,
+  normalAlignedSide,
   sideAxisLength,
 } from "@/utils/geometry/rectSides"
 import {
@@ -1307,6 +1308,35 @@ function computeAllEdgeGeometryPass(
       continue
     }
   }
+  // `assignSides` chooses the side pair that minimises ORTHOGONAL corners — the
+  // right objective for a step edge, and the wrong one for a straight line, which
+  // pays no corner to reach any side. What a straight edge pays for is the angle it
+  // leaves at, so its side is decided by the direction of its partner: the
+  // "partner direction decides side" rule this pipeline already follows for
+  // ordering (Hegemann & Wolff, GD 2023 — see geometry/README.md). Because the rule
+  // is a pure function of the two rectangles, a mirror-symmetric diagram yields
+  // mirror-symmetric sides, which corner-minimisation does not guarantee.
+  const straightSideByEnd = new Map<string, Position>(sideOverrideByEnd ?? [])
+  for (const edge of coordinationEdges) {
+    if (!straightHookTypes.has(edge.type ?? "")) continue
+    if (edge.source === edge.target) continue
+    if (getStraightHookInterior(edge).length > 0) continue
+    const sourceRect = nodeRect(edge.source, nodes, nodeById)
+    const targetRect = nodeRect(edge.target, nodes, nodeById)
+    if (!sourceRect || !targetRect) continue
+    const sourceKey = endKey(edge.id, "source")
+    const targetKey = endKey(edge.id, "target")
+    if (!fixedPorts.has(sourceKey) && !sideOverrideByEnd?.has(sourceKey))
+      straightSideByEnd.set(
+        sourceKey,
+        normalAlignedSide(sourceRect, centerOf(targetRect))
+      )
+    if (!fixedPorts.has(targetKey) && !sideOverrideByEnd?.has(targetKey))
+      straightSideByEnd.set(
+        targetKey,
+        normalAlignedSide(targetRect, centerOf(sourceRect))
+      )
+  }
   const bandPorts = assignPorts(
     collectPortEnds(
       coordinationEdges,
@@ -1314,9 +1344,28 @@ function computeAllEdgeGeometryPass(
       nodeById,
       fixedPorts,
       [...reservedRouteById.values()],
-      sideOverrideByEnd
+      straightSideByEnd
     )
   )
+
+  /**
+   * Where a straight edge attaches. On a shared node side the coordinated band seat
+   * applies; a LONE end has no seat, so it takes the CENTRE of its normal-aligned
+   * side — the same "centre it when nothing competes" rule `endpointPlacementCost`
+   * rewards for step edges. Leaving a lone end free instead lets the anchor search
+   * wrap it onto a side the edge does not approach from, and breaks the mirror
+   * symmetry of an otherwise symmetric diagram.
+   */
+  const coordinatedStraightPort = (
+    edgeId: string,
+    end: "source" | "target"
+  ): FreeformEdgeAnchor | undefined => {
+    const key = endKey(edgeId, end)
+    const banded = bandPorts.get(key)
+    if (banded) return banded
+    const side = straightSideByEnd.get(key)
+    return side ? { side, ratio: 0.5 } : undefined
+  }
 
   for (const edge of ordered) {
     if (liveOverride && liveOverride.edgeId === edge.id) {
@@ -1400,6 +1449,7 @@ function computeAllEdgeGeometryPass(
       let straightSourceSide = endpoints.sourcePosition
       let straightTargetSide = endpoints.targetPosition
       let straightNeighbors: IPoint[][] = []
+      let straightSiblings: IPoint[][] = []
       if (interior.length === 0) {
         const sourceType = nodeById.get(edge.source)?.type
         const targetType = nodeById.get(edge.target)?.type
@@ -1424,10 +1474,19 @@ function computeAllEdgeGeometryPass(
           ),
           sourceType,
           targetType,
-          sourceCustom: asFreeformAnchor(edge.data?.sourceAnchor),
-          targetCustom: asFreeformAnchor(edge.data?.targetAnchor),
-          sourcePreferred: bandPorts.get(endKey(edge.id, "source")),
-          targetPreferred: bandPorts.get(endKey(edge.id, "target")),
+          // On a node side shared with other connectors the coordinated seat is
+          // AUTHORITATIVE, not a suggestion. A straight edge can always shorten
+          // itself by aiming its port straight at the partner, so a soft
+          // preference loses every time — and the whole fan collapses onto one or
+          // two points, which is how two edges end up leaving from the SAME pixel.
+          // Pinning the seat is what keeps the fan evenly spread and symmetric.
+          // Lone ends are absent from the band and stay free to optimise.
+          sourceCustom:
+            asFreeformAnchor(edge.data?.sourceAnchor) ??
+            coordinatedStraightPort(edge.id, "source"),
+          targetCustom:
+            asFreeformAnchor(edge.data?.targetAnchor) ??
+            coordinatedStraightPort(edge.id, "target"),
           resolve: (overrides) =>
             resolveEdgeEndpoints(
               edge,
@@ -1461,11 +1520,12 @@ function computeAllEdgeGeometryPass(
           other.target === edge.source ||
           other.target === edge.target
         straightNeighbors = []
+        straightSiblings = []
         for (const [otherId, route] of Object.entries(routeById)) {
           if (otherId === edge.id || route.length < 2) continue
           const other = edgeById.get(otherId)
-          if (other && shares(other)) continue
-          straightNeighbors.push(route)
+          if (other && shares(other)) straightSiblings.push(route)
+          else straightNeighbors.push(route)
         }
         if (selected) {
           straightSource = selected.endpoints.adjustedSource
@@ -1485,6 +1545,7 @@ function computeAllEdgeGeometryPass(
               (o) => o.id !== edge.source && o.id !== edge.target
             ),
             neighborRoutes: straightNeighbors,
+            siblingRoutes: straightSiblings,
             clearancePx: EDGES.NODE_CLEARANCE_PX,
             sourceNormal: outwardNormal(straightSourceSide),
             targetNormal: outwardNormal(straightTargetSide),

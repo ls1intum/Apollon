@@ -66,6 +66,11 @@ export interface StraightRouteRequest {
    * roomier of the two corner rings; the guaranteed margin is MIN_NODE_CLEARANCE_PX.
    * Edge-to-edge crowding is measured separately (EDGE_CROWDING_CLEARANCE_PX). */
   clearancePx: number
+  /** Routes of edges that SHARE a node with this one. They are meant to fan out
+   * side by side, so they are exempt from the crowding term — but never from
+   * crossing or from lying exactly on top of one another, which is always a defect.
+   * Pricing them at zero crowding clearance expresses precisely that. */
+  siblingRoutes?: IPoint[][]
   /** Outward unit normal of the node side the route leaves from, when known. The
    * search then prices a grazing departure (see `ENDPOINT_ANGLE_PENALTY_PX`). */
   sourceNormal?: IPoint
@@ -490,6 +495,7 @@ const routeSubPath = (
   blockRects: readonly IntRect[],
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number,
+  siblingRoutes: readonly (readonly IPoint[])[],
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
 ): IPoint[] => {
@@ -534,7 +540,9 @@ const routeSubPath = (
       vertices[j],
       neighborRoutes,
       crowdingClearancePx
-    )
+    ) +
+    // Zero clearance: a sibling only costs when it is crossed or lain upon.
+    neighborCostPx(vertices[i], vertices[j], siblingRoutes, 0)
 
   for (const v of adjacency[startIndex]) {
     const dir = {
@@ -655,6 +663,7 @@ const totalRouteCostPx = (
   route: readonly IPoint[],
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number,
+  siblingRoutes: readonly (readonly IPoint[])[],
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
 ): number => {
@@ -667,6 +676,7 @@ const totalRouteCostPx = (
       neighborRoutes,
       crowdingClearancePx
     )
+    cost += neighborCostPx(route[i - 1], route[i], siblingRoutes, 0)
     if (i >= 2) cost += turnCostPx(route[i - 2], route[i - 1], route[i])
   }
   if (sourceNormal && route.length >= 2)
@@ -702,6 +712,7 @@ const simplifyRoute = (
   blockRects: readonly IntRect[],
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number,
+  siblingRoutes: readonly (readonly IPoint[])[],
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
 ): IPoint[] => {
@@ -710,6 +721,7 @@ const simplifyRoute = (
     best,
     neighborRoutes,
     crowdingClearancePx,
+    siblingRoutes,
     sourceNormal,
     targetNormal
   )
@@ -731,6 +743,7 @@ const simplifyRoute = (
         candidate,
         neighborRoutes,
         crowdingClearancePx,
+        siblingRoutes,
         sourceNormal,
         targetNormal
       )
@@ -771,6 +784,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
     obstacles,
     neighborRoutes,
     clearancePx,
+    siblingRoutes,
     sourceNormal,
     targetNormal,
   } = req
@@ -823,6 +837,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
             blockRects,
             neighborRoutes,
             EDGE_CROWDING_CLEARANCE_PX,
+            siblingRoutes ?? [],
             k === 1 ? sourceNormal : undefined,
             k === anchors.length - 1 ? targetNormal : undefined
           )
@@ -838,6 +853,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
       blockRects,
       neighborRoutes,
       EDGE_CROWDING_CLEARANCE_PX,
+      siblingRoutes ?? [],
       sourceNormal,
       targetNormal
     ),

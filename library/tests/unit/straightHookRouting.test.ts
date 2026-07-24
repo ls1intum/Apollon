@@ -139,9 +139,7 @@ describe("straight-hook edge routing", () => {
   })
 
   it("auto-bends a general-graph (use-case) edge around a blocking node", () => {
-    // Obstacle avoidance applies to general-graph straight edges (use-case /
-    // petri), NOT to syntax-tree links (those stay straight — see below). Blocker C
-    // straddles the horizontal chord between A and B.
+    // Blocker C straddles the horizontal chord between A and B.
     const t = "useCaseActor"
     const blocker = makeNode("c", 210, -20, 100, 120, t)
     const nodes = [
@@ -262,6 +260,70 @@ describe("straight-hook edge routing", () => {
     for (const x of sourceXs) {
       expect(x).toBeGreaterThanOrEqual(200)
       expect(x).toBeLessThanOrEqual(320)
+    }
+  })
+
+  it("spreads a fan evenly and symmetrically, never twice on one port", () => {
+    // Five children symmetric about the parent's centre. Their source ports must be
+    // five DISTINCT, evenly spaced seats — two edges leaving from one pixel is the
+    // degenerate overlap the coordinated band exists to prevent.
+    // Placed far enough below that every child is "downward" of the parent, so the
+    // whole fan shares one side and the band has to seat all five on it.
+    const parent = makeNode("p", 200, 0, 120, 60)
+    const kids = [-40, 85, 210, 335, 460].map((x, i) =>
+      makeNode(`c${i}`, x, 400, 100, 60)
+    )
+    const edges: Edge[] = kids.map((_, i) => ({
+      id: `e${i}`,
+      source: "p",
+      target: `c${i}`,
+      type: "SyntaxTreeLink",
+      data: {},
+    }))
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput([parent, ...kids], edges)
+    )
+    const ports = edges
+      .map((e) => routeById[e.id][0])
+      .sort((a, b) => a.x - b.x || a.y - b.y)
+    expect(new Set(ports.map((p) => `${p.x},${p.y}`)).size).toBe(ports.length)
+    // All on the parent's bottom side, and mirror-symmetric about its centre.
+    const centre = 200 + 120 / 2
+    expect(ports.every((p) => p.y === 60)).toBe(true)
+    for (let i = 0; i < ports.length; i++) {
+      const mirrored = ports[ports.length - 1 - i]
+      expect(
+        Math.abs(2 * centre - ports[i].x - mirrored.x)
+      ).toBeLessThanOrEqual(1)
+    }
+    // Evenly spaced: no gap more than one grid cell off any other.
+    const gaps = ports.slice(1).map((p, i) => p.x - ports[i].x)
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(5)
+  })
+
+  it("routes a mirror-symmetric diagram symmetrically", () => {
+    // Everything below is an exact reflection about x = AXIS, including the
+    // obstacles, so every route must be the reflection of its partner. Asymmetry
+    // here means some decision is resolving on a non-geometric tie-break.
+    const AXIS = 300
+    const parent = makeNode("p", 260, 0, 80, 60)
+    const leftKid = makeNode("kl", 0, 400, 80, 60)
+    const rightKid = makeNode("kr", 520, 400, 80, 60)
+    const leftBlock = makeNode("bl", 120, 180, 100, 60)
+    const rightBlock = makeNode("br", 380, 180, 100, 60)
+    const edges: Edge[] = [
+      { id: "eL", source: "p", target: "kl", type: "SyntaxTreeLink", data: {} },
+      { id: "eR", source: "p", target: "kr", type: "SyntaxTreeLink", data: {} },
+    ]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput([parent, leftKid, rightKid, leftBlock, rightBlock], edges)
+    )
+    const left = routeById["eL"]
+    const right = routeById["eR"]
+    expect(left.length).toBe(right.length)
+    for (let i = 0; i < left.length; i++) {
+      expect(Math.abs(2 * AXIS - left[i].x - right[i].x)).toBeLessThanOrEqual(1)
+      expect(left[i].y).toBe(right[i].y)
     }
   })
 

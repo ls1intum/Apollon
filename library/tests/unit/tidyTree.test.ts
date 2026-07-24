@@ -78,6 +78,59 @@ describe("layoutTidyTree", () => {
     expect(c("rrr") - root).toBeCloseTo(root - c("ll"), 6)
   })
 
+  it("draws a mirror-symmetric tree symmetrically", () => {
+    // The classic parse-tree shape: a root over a deep middle spine with matching
+    // subtrees either side. Reflecting the input must reflect the output — the
+    // "identical subtrees are drawn identically" aesthetic Reingold–Tilford
+    // guarantees, and the property a reader perceives as the drawing being tidy.
+    const specs = [
+      node("root", 70, 50, ["l", "m", "r"]),
+      node("l", 70, 50, ["lc"]),
+      node("lc", 70, 50, []),
+      node("m", 70, 50, ["mc"]),
+      node("mc", 70, 50, []),
+      node("r", 70, 50, ["rc"]),
+      node("rc", 70, 50, []),
+    ]
+    const map = toMap(specs)
+    const layout = layoutTidyTree(["root"], map, OPTS)
+    const cx = (id: string) => centerX(layout.get(id)!, map.get(id)!)
+
+    // The root and the middle spine share one axis.
+    const axis = cx("root")
+    expect(cx("m")).toBe(axis)
+    expect(cx("mc")).toBe(axis)
+    // Each flanking subtree is the reflection of its partner about that axis.
+    expect(axis - cx("l")).toBe(cx("r") - axis)
+    expect(axis - cx("lc")).toBe(cx("rc") - axis)
+    // Matching depths share a row.
+    expect(layout.get("l")!.y).toBe(layout.get("r")!.y)
+    expect(layout.get("lc")!.y).toBe(layout.get("rc")!.y)
+  })
+
+  it("keeps an odd fan symmetric about its parent", () => {
+    const specs = [
+      node("p", 70, 50, ["a", "b", "c", "d", "e"]),
+      node("a", 50, 50),
+      node("b", 50, 50),
+      node("c", 50, 50),
+      node("d", 50, 50),
+      node("e", 50, 50),
+    ]
+    const map = toMap(specs)
+    const layout = layoutTidyTree(["p"], map, OPTS)
+    const axis = centerX(layout.get("p")!, map.get("p")!)
+    const centres = ["a", "b", "c", "d", "e"].map((id) =>
+      centerX(layout.get(id)!, map.get(id)!)
+    )
+    // Middle child under the parent; outer pairs equidistant; even spacing.
+    expect(centres[2]).toBe(axis)
+    expect(axis - centres[0]).toBe(centres[4] - axis)
+    expect(axis - centres[1]).toBe(centres[3] - axis)
+    const gaps = centres.slice(1).map((c, i) => c - centres[i])
+    expect(new Set(gaps).size).toBe(1)
+  })
+
   it("centres an n-ary parent over its children", () => {
     const specs = [
       node("p", 60, 40, ["a", "b", "c", "d"]),
