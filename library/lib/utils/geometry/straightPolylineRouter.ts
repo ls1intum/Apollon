@@ -66,6 +66,15 @@ export interface StraightRouteRequest {
    * roomier of the two corner rings; the guaranteed margin is MIN_NODE_CLEARANCE_PX.
    * Edge-to-edge crowding is measured separately (EDGE_CROWDING_CLEARANCE_PX). */
   clearancePx: number
+  /**
+   * Which ring of obstacle corners this route should prefer to turn on: 0 hugs the
+   * guaranteed margin, 1 stands further off. Sibling connectors that must clear the
+   * same obstacle otherwise converge on one shared elbow; giving the outer members
+   * of a fan the outer ring nests them instead, so they stay separated and parallel.
+   * Derived from the edge's own coordinated seat, never from routing order, so a
+   * mirror-symmetric diagram still resolves symmetrically.
+   */
+  preferredCornerRing?: number
   /** Routes of edges that SHARE a node with this one. They are meant to fan out
    * side by side, so they are exempt from the crowding term — but never from
    * crossing or from lying exactly on top of one another, which is always a defect.
@@ -149,12 +158,21 @@ const MIN_CLEARANCE_PX = EDGES.MIN_NODE_CLEARANCE_PX
 const SCALE = 1024
 
 /**
- * Flat cost of HAVING a bend at all, independent of how gentle it is — the same
- * `bendInGridCells` charge the orthogonal engine applies per corner. Without a floor,
- * a graduated angle cost makes a staircase of tiny near-free bends cheaper than one
- * honest corner, and the route acquires a shimmer of pointless kinks.
+ * Flat cost of HAVING a bend at all, independent of how gentle it is — the straight
+ * regime's counterpart to the engine's per-corner `bendInGridCells` charge.
+ *
+ * Two jobs. Without a floor, a graduated angle cost makes a staircase of tiny
+ * near-free bends cheaper than one honest corner and the route acquires a shimmer of
+ * pointless kinks. And the floor has to be GENEROUS — four orthogonal corners' worth
+ * — because a diagonal bend may fall anywhere, so a small floor lets the search buy
+ * an extra corner for a few pixels of length. That is exactly what makes a drawing
+ * unstable: nudge a node and a route that was saving 5px suddenly gains a bend.
+ * Pricing a corner well above such savings measurably steadies the picture (bend
+ * flips under a one-grid-cell node move fell by ~70% in the routing fixtures)
+ * without lengthening a single route in them.
  */
-const BEND_PENALTY_PX = ROUTING_COST.bendInGridCells * CANVAS.SNAP_TO_GRID_PX
+const BEND_PENALTY_PX =
+  4 * ROUTING_COST.bendInGridCells * CANVAS.SNAP_TO_GRID_PX
 
 /** Additional cost scaled by how sharply the route turns. `(1 − cos)` keeps a gentle
  * course correction cheap while a right-angle turn costs ~2 further bends and a
@@ -170,10 +188,36 @@ const TURN_PENALTY_PX = 90
  */
 const ENDPOINT_ANGLE_PENALTY_PX = 150
 
-/** Band within which two parallel edges read as crowded. Uses the engine's own
- * edge-to-edge value, NOT the node clearance: they answer different questions. */
-const EDGE_CROWDING_CLEARANCE_PX =
-  ROUTING_COST.parallelCrowdingClearanceInGridCells * CANVAS.SNAP_TO_GRID_PX
+/**
+ * The separation at which two edges stop reading as one thick line. Below it the
+ * crowding term charges, in proportion to how far short the run falls; at or above
+ * it the charge is exactly zero. That is what makes a pair of neatly parallel
+ * connectors the CHEAPEST arrangement available rather than merely a tolerated one —
+ * expressed as a penalty that vanishes, because a literal bonus would be a negative
+ * edge weight and A* may not have those.
+ *
+ * Deliberately the node clearance rather than the engine's tighter edge-to-edge
+ * band: a straight route is free to sit anywhere, so it can afford real daylight,
+ * and the reported drawings read as cramped at the tighter value.
+ */
+const EDGE_CROWDING_CLEARANCE_PX = EDGES.NODE_CLEARANCE_PX
+
+/**
+ * Charged for turning at a point another route already turns at, so connectors that
+ * must clear the same obstacle do not all pile onto one shared elbow.
+ *
+ * Deliberately SMALL. A larger value unties the knot but is order-dependent — the
+ * first route to claim a corner keeps it and the next is pushed out — which makes a
+ * mirror-symmetric diagram resolve differently on its two halves. Symmetry is worth
+ * more than an untied elbow, so this only breaks ties between otherwise equal
+ * corners; genuinely separating a fan needs deterministic port-rank nudging.
+ */
+const SHARED_BEND_PENALTY_PX = 12
+
+/** Charged for turning on a corner ring other than the edge's preferred one. Enough
+ * to outweigh the extra travel of standing further off an obstacle, far below a
+ * crossing, so it nests a fan without ever buying a conflict. */
+const RING_MISMATCH_PENALTY_PX = 70
 
 /** Beyond this many graph vertices the directed-edge search is skipped in favour of
  * the plain vertex search: the corridor window keeps real diagrams far below it, and
@@ -496,6 +540,8 @@ const routeSubPath = (
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number,
   siblingRoutes: readonly (readonly IPoint[])[],
+  occupiedBends: ReadonlySet<string>,
+  preferredCornerRing: number,
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
 ): IPoint[] => {
@@ -532,6 +578,19 @@ const routeSubPath = (
   const stateClosed = new Uint8Array(stateCount)
   const heap = new MinHeap()
   let seq = 0
+
+  const bendCostAt = (i: number): number => {
+    if (i === goalIndex) return 0
+    let cost = occupiedBends.has(`${vertices[i].x},${vertices[i].y}`)
+      ? SHARED_BEND_PENALTY_PX
+      : 0
+    if (
+      vertices[i].kind === KIND_CORNER &&
+      Math.floor(vertices[i].cornerIndex / 4) !== preferredCornerRing
+    )
+      cost += RING_MISMATCH_PENALTY_PX
+    return cost
+  }
 
   const segmentCost = (i: number, j: number): number =>
     segLenInt(vertices[i], vertices[j]) +
@@ -583,7 +642,8 @@ const routeSubPath = (
       let cost =
         stateG[state] +
         segmentCost(v, w) +
-        turnCostPx(vertices[u], vertices[v], vertices[w])
+        turnCostPx(vertices[u], vertices[v], vertices[w]) +
+        bendCostAt(v)
       if (w === goalIndex && targetNormal)
         cost += angleCostPx(
           {
@@ -785,6 +845,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
     neighborRoutes,
     clearancePx,
     siblingRoutes,
+    preferredCornerRing,
     sourceNormal,
     targetNormal,
   } = req
@@ -818,6 +879,12 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
   const blockRects = hardObstacles.map((o) =>
     inflate(rectOf(o), MIN_CLEARANCE_PX)
   )
+  // Elbows other routes already turn at — see SHARED_BEND_PENALTY_PX.
+  const occupiedBends = new Set<string>()
+  for (const route of [...neighborRoutes, ...(siblingRoutes ?? [])])
+    for (const point of route.slice(1, -1))
+      occupiedBends.add(`${point.x},${point.y}`)
+
   // 3. Route each checkpoint sub-chord independently and concatenate. Only the
   //    first sub-chord departs the source node and only the last meets the target,
   //    so the endpoint-angle terms apply to those alone.
@@ -838,6 +905,8 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
             neighborRoutes,
             EDGE_CROWDING_CLEARANCE_PX,
             siblingRoutes ?? [],
+            occupiedBends,
+            preferredCornerRing ?? 0,
             k === 1 ? sourceNormal : undefined,
             k === anchors.length - 1 ? targetNormal : undefined
           )

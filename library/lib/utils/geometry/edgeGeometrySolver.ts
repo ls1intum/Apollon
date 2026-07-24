@@ -50,7 +50,7 @@ import {
 import {
   canRunStraight,
   centerOf,
-  normalAlignedSide,
+  facingSide,
   sideAxisLength,
 } from "@/utils/geometry/rectSides"
 import {
@@ -1308,14 +1308,17 @@ function computeAllEdgeGeometryPass(
       continue
     }
   }
-  // `assignSides` chooses the side pair that minimises ORTHOGONAL corners — the
+  // `assignSides` chooses the side PAIR that minimises ORTHOGONAL corners — the
   // right objective for a step edge, and the wrong one for a straight line, which
-  // pays no corner to reach any side. What a straight edge pays for is the angle it
-  // leaves at, so its side is decided by the direction of its partner: the
-  // "partner direction decides side" rule this pipeline already follows for
-  // ordering (Hegemann & Wolff, GD 2023 — see geometry/README.md). Because the rule
-  // is a pure function of the two rectangles, a mirror-symmetric diagram yields
-  // mirror-symmetric sides, which corner-minimisation does not guarantee.
+  // pays no corner to reach any side. A straight edge's side is instead decided by
+  // where its partner lies: the "partner direction decides side" rule this pipeline
+  // already follows for ordering (Hegemann & Wolff, GD 2023 — see
+  // geometry/README.md). `facingSide` weighs that direction against the node's own
+  // half-extents, so a row of children below a parent all attach on their TOP edge
+  // rather than some of them catching a corner and coming in sideways — which is
+  // what makes a fan of siblings read as parallel. Being a pure function of the two
+  // rectangles, it also yields mirror-symmetric sides for a mirror-symmetric
+  // diagram, which corner-minimisation does not guarantee.
   const straightSideByEnd = new Map<string, Position>(sideOverrideByEnd ?? [])
   for (const edge of coordinationEdges) {
     if (!straightHookTypes.has(edge.type ?? "")) continue
@@ -1329,12 +1332,12 @@ function computeAllEdgeGeometryPass(
     if (!fixedPorts.has(sourceKey) && !sideOverrideByEnd?.has(sourceKey))
       straightSideByEnd.set(
         sourceKey,
-        normalAlignedSide(sourceRect, centerOf(targetRect))
+        facingSide(sourceRect, centerOf(targetRect))
       )
     if (!fixedPorts.has(targetKey) && !sideOverrideByEnd?.has(targetKey))
       straightSideByEnd.set(
         targetKey,
-        normalAlignedSide(targetRect, centerOf(sourceRect))
+        facingSide(targetRect, centerOf(sourceRect))
       )
   }
   const bandPorts = assignPorts(
@@ -1347,6 +1350,50 @@ function computeAllEdgeGeometryPass(
       straightSideByEnd
     )
   )
+
+  // How far off its side's centre each seat sits, and the largest such offset on
+  // every occupied (node, side). Used to nest a fan — see `straightCornerRing`.
+  const seatOffset = (anchor: FreeformEdgeAnchor): number =>
+    Math.abs(anchor.ratio - 0.5)
+  const outermostSeatOffset = new Map<string, number>()
+  for (const edge of coordinationEdges) {
+    for (const [end, nodeId] of [
+      ["source", edge.source],
+      ["target", edge.target],
+    ] as const) {
+      const seat = bandPorts.get(endKey(edge.id, end))
+      if (!seat) continue
+      const key = `${nodeId}|${seat.side}`
+      outermostSeatOffset.set(
+        key,
+        Math.max(outermostSeatOffset.get(key) ?? 0, seatOffset(seat))
+      )
+    }
+  }
+
+  /**
+   * Which corner ring this edge should turn on. The OUTERMOST members of a fan —
+   * those seated furthest from their side's centre — stand off obstacles further,
+   * so siblings clearing one obstacle nest instead of meeting at a single elbow.
+   *
+   * Keyed on the seat's distance from the centre rather than its rank along the
+   * side, because reflecting the diagram preserves that distance but reverses the
+   * rank: a rank-keyed rule would nest a symmetric diagram's two halves differently.
+   * Comparing against the side's own maximum keeps it free of a magic threshold,
+   * which the raw ratios (they depend on side length and seat count) would trip over.
+   */
+  const straightCornerRing = (edge: Edge): number => {
+    for (const [end, nodeId] of [
+      ["source", edge.source],
+      ["target", edge.target],
+    ] as const) {
+      const seat = bandPorts.get(endKey(edge.id, end))
+      if (!seat) continue
+      const outermost = outermostSeatOffset.get(`${nodeId}|${seat.side}`) ?? 0
+      if (outermost > 0 && seatOffset(seat) >= outermost) return 1
+    }
+    return 0
+  }
 
   /**
    * Where a straight edge attaches. On a shared node side the coordinated band seat
@@ -1546,6 +1593,11 @@ function computeAllEdgeGeometryPass(
             ),
             neighborRoutes: straightNeighbors,
             siblingRoutes: straightSiblings,
+            // Outer members of a fan turn on the outer corner ring, so siblings
+            // clearing one obstacle nest instead of stacking on a single elbow.
+            // `|ratio - 1/2|` is mirror-invariant, so the two halves of a
+            // symmetric diagram still make the same choice.
+            preferredCornerRing: straightCornerRing(edge),
             clearancePx: EDGES.NODE_CLEARANCE_PX,
             sourceNormal: outwardNormal(straightSourceSide),
             targetNormal: outwardNormal(straightTargetSide),

@@ -81,35 +81,6 @@ export const facingSide = (rect: Rect, toward: IPoint): Position => {
       : Position.Top
 }
 
-/**
- * The side of `rect` whose outward normal points most directly at `toward` — the
- * side a STRAIGHT run should leave from.
- *
- * This differs from `facingSide` on purpose. `facingSide` scales the displacement by
- * the node's half-extents, because an orthogonal route leaves along an axis and the
- * node's shape decides which axis it can escape on. A straight run pays no corner to
- * reach any side; what it pays for is the angle it departs at, and that is governed
- * by the raw direction alone. On a wide node the two rules genuinely disagree, and
- * using the orthogonal one makes a straight edge slide out along the node's edge.
- *
- * Comparing |dx| against |dy| keeps the rule exact and mirror-symmetric: reflecting
- * the diagram flips the sign of `dx` without touching the comparison, so a symmetric
- * diagram gets symmetric sides. Ties resolve to the vertical axis, which is likewise
- * preserved by reflection.
- */
-export const normalAlignedSide = (rect: Rect, toward: IPoint): Position => {
-  const c = centerOf(rect)
-  const dx = toward.x - c.x
-  const dy = toward.y - c.y
-  return Math.abs(dx) > Math.abs(dy)
-    ? dx >= 0
-      ? Position.Right
-      : Position.Left
-    : dy >= 0
-      ? Position.Bottom
-      : Position.Top
-}
-
 /** How much two intervals overlap (0 when they do not). */
 export const rangeOverlapLen = (
   aLo: number,

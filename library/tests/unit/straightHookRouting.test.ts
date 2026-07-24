@@ -301,6 +301,47 @@ describe("straight-hook edge routing", () => {
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(5)
   })
 
+  it("nests sibling detours instead of stacking them on one elbow", () => {
+    // Two connectors from the same parent must clear the same obstacle. Shortest
+    // paths send both around its corner, so without a ring preference they bend at
+    // the identical point and the fan reads as a knot.
+    // Real parse-tree geometry: a five-way fan whose two left-hand members must
+    // both clear the same column of nodes. Their coordinated seats sit at different
+    // distances from the side's centre, which picks different corner rings.
+    const parent = makeNode("stmt", 155, 215, 70, 50)
+    const column = [
+      makeNode("colTop", 55, 385, 70, 50),
+      makeNode("colBottom", 55, 460, 70, 50),
+    ]
+    const kids = [
+      makeNode("outer", -35, 550, 50, 50),
+      makeNode("inner", 15, 550, 50, 50),
+      makeNode("mid", 155, 310, 70, 50),
+      makeNode("right1", 315, 550, 50, 50),
+      makeNode("right2", 365, 550, 50, 50),
+    ]
+    const edges: Edge[] = kids.map((k, i) => ({
+      id: `e${i}`,
+      source: "stmt",
+      target: k.node.id,
+      type: "SyntaxTreeLink",
+      data: {},
+    }))
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput([parent, ...column, ...kids], edges)
+    )
+    const outerBends = routeById["e0"].slice(1, -1)
+    const innerBends = routeById["e1"].slice(1, -1)
+    expect(outerBends.length).toBeGreaterThan(0)
+    expect(innerBends.length).toBeGreaterThan(0)
+    // The two never turn at the same point, so the fan reads as nested rather than
+    // knotted at a single shared elbow.
+    const shared = outerBends.filter((a) =>
+      innerBends.some((b) => a.x === b.x && a.y === b.y)
+    )
+    expect(shared).toEqual([])
+  })
+
   it("routes a mirror-symmetric diagram symmetrically", () => {
     // Everything below is an exact reflection about x = AXIS, including the
     // obstacles, so every route must be the reflection of its partner. Asymmetry
@@ -324,6 +365,43 @@ describe("straight-hook edge routing", () => {
     for (let i = 0; i < left.length; i++) {
       expect(Math.abs(2 * AXIS - left[i].x - right[i].x)).toBeLessThanOrEqual(1)
       expect(left[i].y).toBe(right[i].y)
+    }
+  })
+
+  it("does not change topology when a node is nudged one grid cell", () => {
+    // Routing is deterministic but not continuous: a small move can in principle
+    // flip a side or buy a corner. Generous bend pricing keeps the drawing from
+    // reorganising itself under an ordinary drag, which is what a user perceives as
+    // the diagram being stable.
+    const layout = (dx: number, dy: number) => {
+      const nodes = [
+        makeNode("a", 150 + dx, 0 + dy, 120, 80),
+        makeNode("b", 420, 320, 120, 80),
+        makeNode("c", 150, 140, 120, 80),
+      ]
+      const route = computeAllEdgeGeometry(
+        solverInput(nodes, [straightHookEdge()])
+      ).routeById["e1"]
+      const rect = { x: 150 + dx, y: 0 + dy, width: 120, height: 80 }
+      const p = route[0]
+      const side = [
+        ["L", Math.abs(p.x - rect.x)],
+        ["R", Math.abs(p.x - (rect.x + rect.width))],
+        ["T", Math.abs(p.y - rect.y)],
+        ["B", Math.abs(p.y - (rect.y + rect.height))],
+      ].sort((l, r) => (l[1] as number) - (r[1] as number))[0][0]
+      return `${side}:${route.length}`
+    }
+    const base = layout(0, 0)
+    for (const [dx, dy] of [
+      [5, 0],
+      [-5, 0],
+      [0, 5],
+      [0, -5],
+      [5, 5],
+      [-5, -5],
+    ]) {
+      expect(layout(dx, dy)).toBe(base)
     }
   })
 
