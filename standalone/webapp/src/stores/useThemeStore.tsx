@@ -1,5 +1,7 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
+import { Capacitor } from "@capacitor/core"
+import { StatusBar, Style } from "@capacitor/status-bar"
 
 const THEME_STORE_VERSION = 2
 const LEGACY_THEME_STORE_NAME = "theme-storage"
@@ -33,7 +35,25 @@ const coerceThemeMode = (value: unknown): ThemeMode | null => {
   return null
 }
 
+// Keep the native iOS status bar legible against the app background. The bar is
+// shown (not hidden) so time/battery stay visible like any first-class native
+// app, and `overlaysWebView` lets the app draw under it while `safe-area-inset-top`
+// reserves its height. Light theme → light background → dark bar content
+// (`Style.Light`); dark theme → dark background → light content (`Style.Dark`).
+const syncNativeStatusBar = (theme: ThemeMode) => {
+  if (!Capacitor.isNativePlatform()) {
+    return
+  }
+  StatusBar.setStyle({
+    style: theme === "dark" ? Style.Dark : Style.Light,
+  }).catch(() => {
+    // No-op off native / where the plugin is unavailable.
+  })
+}
+
 const applyThemeToDocument = (theme: ThemeMode) => {
+  syncNativeStatusBar(theme)
+
   if (typeof document === "undefined") {
     return
   }

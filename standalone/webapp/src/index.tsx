@@ -8,17 +8,13 @@ import {
   setLogger as setApollonLogger,
   setLogLevel as setApollonLogLevel,
 } from "@tumaet/apollon"
-import { StatusBar } from "@capacitor/status-bar"
 import { Keyboard } from "@capacitor/keyboard"
 
 const rootElement = document.getElementById("root")
 
+// Initializes the theme AND, on iOS, the native status-bar style to match it
+// (the bar stays visible — see useThemeStore's syncNativeStatusBar).
 useThemeStore.getState().initializeTheme()
-
-// Hide status bar on mobile
-StatusBar.hide().catch(() => {
-  // Silently fail if not on mobile
-})
 
 // iOS only. WKWebView scrolls a focused input into view by scrolling the whole
 // webview, which on this `position: fixed` document leaves it stranded off-origin

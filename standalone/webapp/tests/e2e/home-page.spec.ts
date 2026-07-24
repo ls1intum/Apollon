@@ -682,6 +682,19 @@ test.describe("Legal pages", () => {
     })
     expect(parseFloat(stickyTop ?? "0")).toBeGreaterThanOrEqual(INSET)
 
+    // Root-cause guard: the shared content wrapper's RESTING padding-top must
+    // also include the top inset — it must match the sticky band's `top`, not a
+    // fixed value. If it doesn't, then at scroll 0 the band (lifted to
+    // `inset + edge` by sticky) floats above its reserved flow box and the first
+    // content row renders UNDERNEATH it. So the resting padding has to clear the
+    // inset for content to flow below the band on a notched device.
+    const wrapperPaddingTop = await page.evaluate(() => {
+      const banner = document.querySelector('header[aria-label="Home"]')
+      const wrapper = banner?.parentElement?.parentElement
+      return wrapper ? getComputedStyle(wrapper).paddingTop : null
+    })
+    expect(parseFloat(wrapperPaddingTop ?? "0")).toBeGreaterThanOrEqual(INSET)
+
     await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
     await page.evaluate((inset) => {
       document.documentElement.style.setProperty("--safe-area-inset-top", "0px")
