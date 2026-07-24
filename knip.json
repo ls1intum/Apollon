@@ -39,26 +39,11 @@
       "entry": ["src/workers/*.{ts,mjs}"]
     },
     "vscode-extension": {
-      "entry": ["webview-vite.config.ts"],
-      "ignoreBinaries": ["vsce"]
+      "ignoreBinaries": ["vsce"],
+      "ignoreDependencies": ["@types/vscode"]
     },
-    "vscode-extension/editor": {
-      "entry": ["src/index.tsx"],
-      "ignoreDependencies": [
-        "@tailwindcss/vite",
-        "@vitejs/plugin-react",
-        "babel-plugin-react-compiler",
-        "@types/vscode-webview"
-      ]
-    },
-    "vscode-extension/menu": {
-      "entry": ["src/index.tsx"],
-      "ignoreDependencies": [
-        "@tailwindcss/vite",
-        "@vitejs/plugin-react",
-        "babel-plugin-react-compiler",
-        "@types/vscode-webview"
-      ]
+    "vscode-extension/webview": {
+      "entry": ["src/main.tsx"]
     },
     "docs": {
       "entry": ["sidebars.{user,library,contributor}.ts", "src/**/*.{ts,tsx}"],

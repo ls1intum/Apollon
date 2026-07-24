@@ -1,5 +1,5 @@
 import { isNamedVersion } from "@/lib/version/predicates"
-import type { PendingVersion } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
 
 export type GroupedEntry =
   | { kind: "single"; version: PendingVersion }

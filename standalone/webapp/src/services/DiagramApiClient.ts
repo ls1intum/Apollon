@@ -152,14 +152,15 @@ export interface RestoreVersionResponse {
 export const VersionApiClient = {
   async list(
     diagramId: string,
-    opts: { limit?: number; before?: string } = {}
+    opts: { limit?: number; before?: string; signal?: AbortSignal } = {}
   ): Promise<ListVersionsResponse> {
     const params = new URLSearchParams()
     if (opts.limit !== undefined) params.set("limit", String(opts.limit))
     if (opts.before !== undefined) params.set("before", opts.before)
     const qs = params.toString()
     const { data } = await request<ListVersionsResponse>(
-      `/api/diagrams/${diagramId}/versions${qs ? `?${qs}` : ""}`
+      `/api/diagrams/${diagramId}/versions${qs ? `?${qs}` : ""}`,
+      { signal: opts.signal }
     )
     return data
   },
@@ -197,9 +198,14 @@ export const VersionApiClient = {
     return data
   },
 
-  async getBody(diagramId: string, versionId: string): Promise<Diagram> {
+  async getBody(
+    diagramId: string,
+    versionId: string,
+    opts: { signal?: AbortSignal } = {}
+  ): Promise<Diagram> {
     const { data } = await request<Diagram>(
-      `/api/diagrams/${diagramId}/versions/${versionId}`
+      `/api/diagrams/${diagramId}/versions/${versionId}`,
+      { signal: opts.signal }
     )
     return data
   },

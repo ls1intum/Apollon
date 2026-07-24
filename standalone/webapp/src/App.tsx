@@ -32,8 +32,8 @@ declare module "@tanstack/history" {
 // bundled System Bars plugin injects --safe-area-inset-* on Android (working
 // around the Android WebView <140 env() bug), and iOS WKWebView resolves
 // env(safe-area-inset-*) natively via viewport-fit=cover — both reactive on
-// rotation. CSS reads the canonical vars with env() as the fallback (see
-// webapp.css / library app.css). Ref: https://capacitorjs.com/docs/apis/system-bars
+// rotation. The canonical vars are declared once, in @tumaet/ui tokens.css, with
+// env() as the fallback. Ref: https://capacitorjs.com/docs/apis/system-bars
 
 function App() {
   // Mark the root on touch/native so hover-only affordances (e.g. the diagram

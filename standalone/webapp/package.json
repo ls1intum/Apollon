@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "5.0.1",
+  "version": "5.1.1",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
@@ -47,12 +47,14 @@
     "@capacitor/file-transfer": "2.0.4",
     "@capacitor/filesystem": "8.1.2",
     "@capacitor/ios": "8.4.1",
+    "@capacitor/keyboard": "^8.0.5",
     "@capacitor/share": "8.0.1",
     "@capacitor/splash-screen": "8.0.1",
     "@capacitor/status-bar": "8.0.2",
     "@resvg/resvg-wasm": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/history": "1.162.0",
+    "@tanstack/react-query": "5.101.2",
     "@tanstack/react-router": "1.170.16",
     "@tumaet/apollon": "workspace:*",
     "@tumaet/ui": "workspace:*",
@@ -84,6 +86,8 @@
     "@storybook/addon-themes": "catalog:",
     "@storybook/addon-vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@tanstack/eslint-plugin-query": "5.100.4",
+    "@tanstack/react-query-devtools": "5.101.2",
     "@tanstack/router-plugin": "1.168.18",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "14.6.1",
@@ -117,10 +121,10 @@
       "limit": "1300 kB"
     },
     {
-      "name": "all CSS (gzipped) — regression ceiling; the MUI/Emotion→shadcn migration moved runtime CSS-in-JS into static CSS (one-time step up), so the budget tracks the static stylesheet, not the old Emotion baseline",
+      "name": "all CSS (gzipped) — regression ceiling; the MUI/Emotion→shadcn migration moved runtime CSS-in-JS into static CSS (one-time step up), so the budget tracks the static stylesheet, not the old Emotion baseline. Raised from 35 kB, which the stylesheet had grown to exactly, leaving the next CSS change of any size to fail the check",
       "path": "dist/assets/*.css",
       "gzip": true,
-      "limit": "35 kB"
+      "limit": "36 kB"
     }
   ]
 }

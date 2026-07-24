@@ -43,7 +43,7 @@ function renderWith(editorModel: UMLModel, initialPath = "/shared/remote-id") {
     <>
       <SaveLocalCopyButton color="black" />
       <LocationProbe />
-      <ToastContainer />
+      <ToastContainer aria-label="Notifications" />
     </>,
     {
       initialEntry: initialPath,

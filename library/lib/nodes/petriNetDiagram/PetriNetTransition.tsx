@@ -1,6 +1,10 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "@/nodes/wrappers"
+import {
+  DefaultNodeWrapper,
+  FOUR_WAY_HANDLES_PRESET,
+  NodeResizer,
+} from "@/nodes/wrappers"
 import { PetriNetTransitionSVG } from "@/components"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"

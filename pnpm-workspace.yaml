@@ -3,8 +3,7 @@ packages:
   - "packages/*"
   - "standalone/*"
   - "vscode-extension"
-  - "vscode-extension/menu"
-  - "vscode-extension/editor"
+  - "vscode-extension/webview"
   - "docs"
 
 # Inject workspace deps as real packages, not symlinks, so `pnpm deploy`

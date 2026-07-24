@@ -80,8 +80,8 @@ interface VersionHistoryButtonProps {
  * Discoverable navbar entry point for the version-history sidebar.
  *
  * Renders on any route with an active diagram that has a version backend:
- * `/shared/:id` (collab, RemoteVersionRepository) and `/local/:id`
- * (standalone, LocalVersionRepository). Legacy `/:id` redirects to
+ * `/shared/:id` (collab, the collab backend) and `/local/:id`
+ * (standalone, the local backend). Legacy `/:id` redirects to
  * `/shared/:id`, so it is also covered. The gallery (`/`) and the
  * playground have no active diagram, so the button is hidden.
  */

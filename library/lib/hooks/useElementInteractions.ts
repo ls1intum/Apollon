@@ -10,6 +10,7 @@ import {
 } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import { useDiagramModifiable } from "./useDiagramModifiable"
+import { isElementInOverlay } from "@/keyboard"
 
 export const useElementInteractions = () => {
   const isDiagramModifiable = useDiagramModifiable()
@@ -28,7 +29,14 @@ export const useElementInteractions = () => {
   const canOpenPopover = isDiagramModifiable || canOpenAssessmentPopover
 
   const onBeforeDelete: OnBeforeDelete = () => {
-    return new Promise((resolve) => resolve(isDiagramModifiable))
+    // React Flow's Delete listener is document-level, so a Delete pressed while
+    // focus is in a dialog or menu over the canvas would otherwise remove the
+    // selection behind it. Block that here — the one place every RF deletion
+    // funnels through — the same way the editor's own shortcuts stand down.
+    if (isElementInOverlay(document.activeElement)) {
+      return Promise.resolve(false)
+    }
+    return Promise.resolve(isDiagramModifiable)
   }
 
   const onNodeDoubleClick: NodeMouseHandler<Node> = (_event, node) => {

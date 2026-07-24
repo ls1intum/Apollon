@@ -32,7 +32,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   return (
     <PageShell
       header={withChrome ? <ChromeSubHeader /> : null}
-      mainClassName="pb-[max(2.5rem,env(safe-area-inset-bottom,0px))]"
+      mainClassName="pb-[max(2.5rem,var(--safe-area-inset-bottom,0px))]"
     >
       {/* Center the message in the remaining space below the header, but inside
           a scroll container so a long error / 404 copy can still scroll to its

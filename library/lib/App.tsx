@@ -8,10 +8,7 @@ import {
 import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
-  CustomControls,
-  CustomMiniMap,
   ReconnectConnectionLine,
-  Sidebar,
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
@@ -47,12 +44,12 @@ import {
 import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
+import { useMultiSelectionMode } from "./hooks/useMultiSelectionMode"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import {
   useRemoteDraggingNodes,
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
-import { ApollonMode } from "./typings"
 import {
   getConnectionLineType,
   resolveReconnectPreviewBasePoints,
@@ -99,21 +96,21 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
     )
 
   const {
-    mode,
     diagramType,
     readonly,
     scrollLock,
     scrollEnabled,
+    keyboardShortcuts,
     connectionGuidanceActive,
     startReconnectPreview,
     stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
-      mode: state.mode,
       diagramType: state.diagramType,
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
+      keyboardShortcuts: state.keyboardShortcuts,
       connectionGuidanceActive: state.connectionGuidanceActive,
       startReconnectPreview: state.startReconnectPreview,
       stopReconnectPreview: state.stopReconnectPreview,
@@ -122,9 +119,10 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
 
   const isDiagramModifiable = useDiagramModifiable()
 
-  // Publish the reserved overlay insets as CSS custom properties so the editor's
-  // own overlays (palette, presence bar, controls, minimap) slide to make room
-  // for host chrome instead of overlapping it.
+  // The reserved-room rect, published as CSS custom properties for fitView and
+  // unmanaged React Flow panels that still opt into top/bottom offsets.
+  // Built-in chrome is grid-managed, so side-rail insets are camera reservation
+  // rather than generic panel offsets.
   const insets = useOverlayStore((state) => state.insets)
 
   // Overlay the live positions/sizes of nodes peers are dragging (carried over
@@ -149,6 +147,7 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
   const { onBeforeDelete, onNodeDoubleClick, onEdgeDoubleClick } =
     useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
+  const multiSelectionMode = useMultiSelectionMode()
 
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
@@ -190,21 +189,15 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             overflow: "hidden",
             backgroundColor: "var(--apollon-background, #ffffff)",
             position: "relative",
-            // Only emit the inset custom properties when chrome actually reserves
-            // room, so an editor with no overlays keeps the exact original style
-            // attribute (byte-identical DOM for embedders like Artemis).
-            ...(insets.top || insets.right || insets.bottom || insets.left
-              ? {
-                  "--apollon-inset-top": `${insets.top}px`,
-                  "--apollon-inset-right": `${insets.right}px`,
-                  "--apollon-inset-bottom": `${insets.bottom}px`,
-                  "--apollon-inset-left": `${insets.left}px`,
-                }
-              : {}),
+            // Fit-view and unmanaged top/bottom panels read these (0 when
+            // no chrome reserves that edge).
+            "--apollon-inset-top": `${insets.top}px`,
+            "--apollon-inset-right": `${insets.right}px`,
+            "--apollon-inset-bottom": `${insets.bottom}px`,
+            "--apollon-inset-left": `${insets.left}px`,
           } as CSSProperties
         }
       >
-        {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
         <div className="apollon-canvas">
           <ReactFlow
             id={`react-flow-library-${diagramId}`}
@@ -256,23 +249,38 @@ function App({ onReactFlowInit, collaboration, awareness }: AppProps) {
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
             zoomOnScroll={!scrollLock || scrollEnabled}
-            // Keep the default left-drag pan (panOnDrag=true) — we do NOT switch
-            // to selectionOnDrag/space-pan. Adding Shift to multiSelectionKeyCode
-            // makes Shift+CLICK on a node/edge toggle it in/out of the
-            // multi-selection. selectionKeyCode keeps its default (Shift), so a
-            // Shift+DRAG on the empty pane still box-selects — no conflict, since
-            // a click on a node and a drag on the pane are different surfaces.
+            // Shift is also selectionKeyCode's default, but there's no conflict:
+            // a click on a node and a Shift+drag on the pane are different
+            // surfaces.
             multiSelectionKeyCode={["Shift", "Meta", "Control"]}
+            // With multiSelectionActive forced on, React Flow's pointerdown
+            // select would toggle the pressed node OUT of the selection and drop
+            // it from the group drag; selecting on click keeps the group whole.
+            selectNodesOnDrag={!multiSelectionMode}
+            // In the mode, a plain left-drag on the pane draws a selection box;
+            // panning moves to middle/right-drag (scroll/trackpad already pans
+            // by default). This is mouse-only by construction: d3-zoom gates the
+            // pan buttons on `mousedown` alone, so a touch drag ignores the [1,2]
+            // gate and keeps panning through the separate touch handler — which
+            // is why a one-finger drag never box-selects and pinch-zoom survives.
+            selectionOnDrag={multiSelectionMode}
+            panOnDrag={multiSelectionMode ? [1, 2] : true}
             // Delete the current selection with either key (Backspace on macOS,
-            // Delete on full keyboards).
-            deleteKeyCode={["Backspace", "Delete"]}
+            // Delete on full keyboards) — but hand these keys back with the
+            // editor's other shortcuts when a host opts out via
+            // `keyboardShortcuts: false`. `onBeforeDelete` additionally blocks a
+            // delete whose focus is inside an overlay over the canvas.
+            deleteKeyCode={keyboardShortcuts ? ["Backspace", "Delete"] : []}
+            // Arrow-key node nudging + Enter/Escape selection a11y are React
+            // Flow's; disable them together with the rest when shortcuts are off.
+            disableKeyboardA11y={!keyboardShortcuts}
           >
             <CustomBackground />
-            <CustomMiniMap />
-            <CustomControls />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
-            {/* Host-injected canvas chrome (header, rails, controls). */}
+            {/* Renders every registered control (built-in + host-injected) into
+                its region: header, rails, corners, on-canvas. The chrome itself is
+                registered at construction (imperative) or by the React wrapper. */}
             <OverlayLayer />
           </ReactFlow>
           <ScrollOverlay />

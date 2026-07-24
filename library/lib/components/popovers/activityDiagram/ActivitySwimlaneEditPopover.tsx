@@ -2,6 +2,7 @@ import { ChangeEvent } from "react"
 import { IconButton, Select, TextField } from "@/components/ui"
 import { Button } from "@tumaet/ui/components/button"
 import { NodeStyleEditor } from "@/components/styleEditor"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout, PopoverSection } from "../PopoverLayout"
 import {
   flipSwimlaneChildPosition,
@@ -47,6 +48,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
   onRename,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -69,7 +71,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
       <div
         {...attributes}
         {...listeners}
-        aria-label="Reorder lane"
+        aria-label={t.reorderLane}
         className="apollon-swimlane-drag-handle"
         style={{
           cursor: "grab",
@@ -85,13 +87,13 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
         // `fullWidth` (100%) would push them out of the popover and clip them.
         style={{ flex: 1, minWidth: 0 }}
         value={lane.name}
-        placeholder="Lane name"
+        placeholder={t.laneName}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           onRename(lane.id, e.target.value)
         }
       />
       <IconButton
-        ariaLabel="Delete lane"
+        ariaLabel={t.deleteLane}
         disabled={!canDelete}
         onClick={() => onDelete(lane.id)}
         style={{ flexShrink: 0 }}
@@ -105,6 +107,7 @@ const SortableLaneRow: React.FC<LaneRowProps> = ({
 export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ nodes: state.nodes, setNodes: state.setNodes }))
   )
@@ -193,11 +196,14 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
   }
 
   const handleAddLane = () => {
-    // Name the new lane one past the highest existing "Lane N" so deleting a
-    // middle lane and re-adding doesn't reuse a name that's still in use.
+    // Name the new lane one past the highest existing default lane name so
+    // deleting a middle lane and re-adding doesn't reuse a visible name.
+    const defaultLanePrefix = t.defaultLaneName(0).replace(/\d+$/, "")
     const numbers = lanes
-      .map((lane) => /^Lane (\d+)$/.exec(lane.name)?.[1])
-      .filter((n): n is string => n != null)
+      .map((lane) => lane.name.match(/\d+$/)?.[0])
+      .filter((n, i): n is string =>
+        n != null ? lanes[i].name.startsWith(defaultLanePrefix) : false
+      )
       .map(Number)
     const nextNumber = numbers.length
       ? Math.max(...numbers) + 1
@@ -208,7 +214,11 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     setLanes(
       [
         ...materializeLaneSizes(lanes, primaryExtent),
-        { id: generateUUID(), name: `Lane ${nextNumber}`, size: average },
+        {
+          id: generateUUID(),
+          name: t.defaultLaneName(nextNumber),
+          size: average,
+        },
       ],
       primaryExtent + average
     )
@@ -255,7 +265,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
     patch((n) => ({ ...n, data: { ...n.data, [key]: value } }))
 
   return (
-    <PopoverLayout title="Swimlane">
+    <PopoverLayout title={t.swimlane}>
       <NodeStyleEditor
         nodeData={data}
         handleDataFieldUpdate={handleDataFieldUpdate}
@@ -265,20 +275,20 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
       <PopoverSection divider>
         <Select
           id="swimlane-orientation-select"
-          aria-label="Orientation"
-          label="Orientation"
+          aria-label={t.orientation}
+          label={t.orientation}
           value={orientation}
           onChange={(value) =>
             handleOrientationChange(value as "vertical" | "horizontal")
           }
           options={[
-            { value: "vertical", label: "Vertical (columns)" },
-            { value: "horizontal", label: "Horizontal (rows)" },
+            { value: "vertical", label: t.orientationVertical },
+            { value: "horizontal", label: t.orientationHorizontal },
           ]}
         />
       </PopoverSection>
 
-      <PopoverSection title="Lanes" divider>
+      <PopoverSection title={t.lanes} divider>
         <div
           style={{
             display: "flex",
@@ -312,7 +322,7 @@ export const ActivitySwimlaneEditPopover: React.FC<PopoverProps> = ({
 
         <Button variant="outline" onClick={handleAddLane}>
           <Plus />
-          Add lane
+          {t.addLane}
         </Button>
       </PopoverSection>
     </PopoverLayout>

@@ -1,7 +1,20 @@
-import { useState } from "react"
-import { MiniMap, MiniMapNodeProps, Panel } from "@xyflow/react"
-import { ArrowDownRight, Map } from "lucide-react"
+import { useMemo, useState, type CSSProperties } from "react"
+import {
+  MiniMap,
+  MiniMapNodeProps,
+  Panel,
+  useStore,
+  type PanelPosition,
+} from "@xyflow/react"
+import {
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowUpLeft,
+  ArrowUpRight,
+  Map,
+} from "lucide-react"
 import { useReactiveNode } from "@/hooks/useReactiveElement"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ClassSVG,
   PackageSVG,
@@ -72,52 +85,130 @@ import {
   SfcTransitionBranchNodeProps,
 } from "@/types/nodes/NodeProps"
 
-export const CustomMiniMap = () => {
-  const [minimapCollapsed, setMinimapCollapsed] = useState(true)
+export interface CustomMiniMapProps {
+  /** Corner the minimap and its toggle anchor to. Default `"bottom-right"`. */
+  position?: PanelPosition
+  /** Drag the minimap to pan the diagram. Default `true`. */
+  pannable?: boolean
+  /** Scroll over the minimap to zoom the diagram. Default `true`. */
+  zoomable?: boolean
+  /** Render inside Apollon's overlay grid instead of a React Flow Panel slot. */
+  managed?: boolean
+}
 
-  if (minimapCollapsed) {
-    return (
-      <Panel position="bottom-right">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          aria-label="Show minimap"
-          title="Show minimap (overview)"
-          onClick={() => setMinimapCollapsed(false)}
-        >
-          <Map width={18} height={18} aria-hidden="true" />
-        </button>
-      </Panel>
+// The collapse affordance points toward the corner the minimap tucks into, so it
+// stays intuitive at every position (a top-left minimap collapses up-left, not
+// down-right). Center positions bias to the nearest vertical edge's right.
+const COLLAPSE_ARROW: Partial<Record<PanelPosition, typeof ArrowDownRight>> = {
+  "top-left": ArrowUpLeft,
+  "top-center": ArrowUpRight,
+  "top-right": ArrowUpRight,
+  "bottom-left": ArrowDownLeft,
+  "bottom-center": ArrowDownRight,
+  "bottom-right": ArrowDownRight,
+}
+
+// Below this canvas width the expanded minimap can't share the bottom edge with
+// the zoom cluster without overlapping (a ~250px zoom + ~200px minimap don't fit),
+// so the minimap stays collapsed to its toggle — the standard small-screen
+// behaviour (tldraw/Figma hide or collapse the minimap on narrow viewports). The
+// collapsed toggle is tiny and never collides.
+const MINIMAP_EXPAND_MIN_WIDTH = 640
+
+export const CustomMiniMap = ({
+  position = "bottom-right",
+  pannable = true,
+  zoomable = true,
+  managed = false,
+}: CustomMiniMapProps = {}) => {
+  const [minimapCollapsed, setMinimapCollapsed] = useState(true)
+  const t = useLabels()
+  const CollapseArrow = COLLAPSE_ARROW[position] ?? ArrowDownRight
+  const canvasWidth = useStore((s) => s.width)
+  const tooNarrowToExpand =
+    canvasWidth > 0 && canvasWidth < MINIMAP_EXPAND_MIN_WIDTH
+
+  const panelPositionClasses = position.replace("-", " ")
+  const managedCollapseStyle = useMemo<CSSProperties>(() => {
+    const [vertical, horizontal] = position.split("-") as [
+      "top" | "bottom",
+      "left" | "center" | "right",
+    ]
+    return {
+      position: "absolute",
+      [vertical]: 0,
+      ...(horizontal === "left" ? { left: 0 } : { right: 0 }),
+    }
+  }, [position])
+
+  if (minimapCollapsed || tooNarrowToExpand) {
+    const content = (
+      <button
+        type="button"
+        className="apollon-chrome-iconbtn"
+        aria-label={t.showMinimap}
+        title={t.showMinimapHint}
+        onClick={() => setMinimapCollapsed(false)}
+      >
+        <Map width={18} height={18} aria-hidden="true" />
+      </button>
+    )
+
+    return managed ? (
+      <div
+        className={`react-flow__panel ${panelPositionClasses} apollon-mm-panel`}
+      >
+        {content}
+      </div>
+    ) : (
+      <Panel position={position}>{content}</Panel>
     )
   }
 
   // Expanded: the MiniMap renders as its own glass card (a React Flow Panel), and
-  // the collapse arrow is a SIBLING bottom-right Panel that is IDENTICAL to the
-  // collapsed open button (same glass panel + .apollon-chrome-iconbtn, same
-  // bottom-right corner) — so toggling reads as one control and the cursor never
-  // moves. Rendering the MiniMap normally (not nested) keeps its sizing intact;
-  // a tight offsetScale avoids a fat empty margin around the diagram.
-  return (
+  // the collapse arrow is a SIBLING Panel at the same corner that is IDENTICAL to
+  // the collapsed open button (same glass panel + .apollon-chrome-iconbtn) — so
+  // toggling reads as one control and the cursor never moves. Rendering the
+  // MiniMap normally (not nested) keeps its sizing intact; a tight offsetScale
+  // avoids a fat empty margin around the diagram.
+  const map = (
+    <MiniMap
+      zoomable={zoomable}
+      pannable={pannable}
+      position={position}
+      ariaLabel={t.miniMap}
+      nodeComponent={MiniMapNode}
+      offsetScale={6}
+      bgColor="transparent"
+      className={`apollon-minimap${managed ? " apollon-mm" : ""}`}
+    />
+  )
+  const collapse = (
+    <button
+      type="button"
+      className="apollon-chrome-iconbtn"
+      aria-label={t.hideMinimap}
+      title={t.hideMinimap}
+      onClick={() => setMinimapCollapsed(true)}
+    >
+      <CollapseArrow width={18} height={18} aria-hidden="true" />
+    </button>
+  )
+
+  return managed ? (
+    <div className="apollon-mm-shell">
+      {map}
+      <div
+        className={`react-flow__panel ${panelPositionClasses} apollon-mm-panel apollon-mm-collapse`}
+        style={managedCollapseStyle}
+      >
+        {collapse}
+      </div>
+    </div>
+  ) : (
     <>
-      <MiniMap
-        zoomable
-        pannable
-        nodeComponent={MiniMapNode}
-        offsetScale={6}
-        bgColor="transparent"
-        className="apollon-minimap"
-      />
-      <Panel position="bottom-right">
-        <button
-          type="button"
-          className="apollon-chrome-iconbtn"
-          aria-label="Hide minimap"
-          title="Hide minimap"
-          onClick={() => setMinimapCollapsed(true)}
-        >
-          <ArrowDownRight width={18} height={18} aria-hidden="true" />
-        </button>
-      </Panel>
+      {map}
+      <Panel position={position}>{collapse}</Panel>
     </>
   )
 }

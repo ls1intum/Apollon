@@ -1,11 +1,12 @@
-# Changelog
+# apollon-extension
 
-All notable changes to the Apollon VS Code extension are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this extension adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## 5.1.1
 
-GitHub Releases at <https://github.com/ls1intum/Apollon/releases> (tag prefix `apollon-vscode@*`) carry the full per-release notes; this file summarises user-visible changes.
+### Patch Changes
 
-## [Unreleased]
+- [#809](https://github.com/ls1intum/Apollon/pull/809) [`6c8f782`](https://github.com/ls1intum/Apollon/commit/6c8f782532dcbc096a36ee28ae3dde96c21117f1) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Apollon for VS Code now carries the same version as the rest of Apollon, so the extension you install and the library it renders with are one number.
 
-First Marketplace release pending. See the linked release workflow for the package state.
+  If you have used the extension before, version `0.0.17` wrote `"files.associations": { "*.apollon": "json" }` into your user settings every time it started. Nothing writes or needs it now. Diagrams open in the Apollon editor either way, but while that line remains, opening one as text shows it as plain JSON instead of an Apollon diagram. Deleting it restores the file icon and syntax highlighting.
 
-[Unreleased]: https://github.com/ls1intum/Apollon/compare/main...HEAD
+- Updated dependencies [[`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712), [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712), [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712), [`ecad49e`](https://github.com/ls1intum/Apollon/commit/ecad49ea7c88e0e4c90994bab37d9d80efef2712)]:
+  - @tumaet/apollon@5.1.1

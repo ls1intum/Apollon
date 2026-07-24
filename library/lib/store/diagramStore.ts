@@ -62,6 +62,13 @@ type InitialDiagramState = {
    * everything peers committed during the preview.
    */
   previewMode: boolean
+  /**
+   * Id of the node the last palette tap placed. A run of taps cascades off it
+   * (offset placement) while it stays the sole selection; any other selection
+   * change breaks the run and the next tap centres again. Transient UI state —
+   * never persisted to Yjs.
+   */
+  lastPlacedElementId: string | null
 }
 
 const initialDiagramState: InitialDiagramState = {
@@ -78,6 +85,7 @@ const initialDiagramState: InitialDiagramState = {
   undoManager: null,
   collaborationEnabled: false,
   previewMode: false,
+  lastPlacedElementId: null,
 }
 
 function stripComputedSegmentsFromEdge(edge: Edge): Edge {
@@ -124,6 +132,8 @@ export type DiagramStore = {
   undoManager: Y.UndoManager | null
   collaborationEnabled: boolean
   previewMode: boolean
+  lastPlacedElementId: string | null
+  setLastPlacedElementId: (id: string | null) => void
   setDiagramId: (diagramId: string) => void
   setCollaborationEnabled: (enabled: boolean) => void
   /**
@@ -358,6 +368,14 @@ export const createDiagramStore = (
                 : payload
 
             set({ selectedElementIds }, undefined, "setSelectedElementsId")
+          },
+
+          setLastPlacedElementId: (id) => {
+            set(
+              { lastPlacedElementId: id },
+              undefined,
+              "setLastPlacedElementId"
+            )
           },
 
           toggleInteractiveElement: (elementId) => {

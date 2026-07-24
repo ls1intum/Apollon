@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
@@ -24,7 +24,12 @@ export function BPMNAnnotation({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      isConnectableEnd={false}
+    >
       <NodeToolbar elementId={id} />
 
       <NodeResizer
@@ -32,7 +37,6 @@ export function BPMNAnnotation({
         onResize={onResize}
         minHeight={40}
         minWidth={80}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <BPMNAnnotationNodeSVG

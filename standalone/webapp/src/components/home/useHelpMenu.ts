@@ -27,7 +27,7 @@ export function useHelpMenu(variant: HelpMenuVariant = "home") {
   return {
     /** `state={legalLinkState}` for the Imprint/Privacy `<Link>`s. */
     legalLinkState,
-    openHowToUse: () => openModal("HowToUseModal"),
+    openHowToUse: () => openModal("HowToUseModal", { variant }),
     openAbout: () => openModal("AboutModal"),
   }
 }

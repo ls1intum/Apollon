@@ -60,7 +60,7 @@ export interface VersionRepository {
 
   list(
     diagramId: string,
-    opts?: { limit?: number; before?: string }
+    opts?: { limit?: number; before?: string; signal?: AbortSignal }
   ): Promise<ListVersionsResponse>
 
   create(
@@ -69,7 +69,11 @@ export interface VersionRepository {
     opts: { name?: string; description?: string; actor?: string }
   ): Promise<CreateVersionResult>
 
-  getBody(diagramId: string, versionId: string): Promise<Diagram>
+  getBody(
+    diagramId: string,
+    versionId: string,
+    opts?: { signal?: AbortSignal }
+  ): Promise<Diagram>
 
   restore(
     diagramId: string,

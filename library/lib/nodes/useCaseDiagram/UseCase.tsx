@@ -1,12 +1,6 @@
-import {
-  Handle,
-  NodeProps,
-  NodeResizer,
-  Position,
-  type Node,
-} from "@xyflow/react"
+import { Handle, NodeProps, Position, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, HandleId } from "../wrappers"
+import { DefaultNodeWrapper, HandleId, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -200,6 +194,13 @@ export function UseCase({
           }
           isConnectable={isDiagramModifiable}
           isConnectableStart={handle.isPrimaryHandle && isDiagramModifiable}
+          // Never end a connection on a fixed handle: React Flow only shows its
+          // snap circle at the 4 cardinal handles. Every drop instead routes
+          // through the freeform path, which attaches continuously along the
+          // curve and draws its own snap circle at the live attach point (see
+          // ReconnectConnectionLine), so the preview matches the landing at any
+          // angle.
+          isConnectableEnd={false}
         />
       ))}
 
@@ -208,7 +209,6 @@ export function UseCase({
         onResize={onResize}
         minHeight={50}
         minWidth={50}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <UseCaseNodeSVG

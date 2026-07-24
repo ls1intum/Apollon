@@ -34,6 +34,16 @@ export interface VersionSummary {
   seq?: number
 }
 
+/**
+ * A version row as the UI renders it: a server-committed summary, or an
+ * optimistic row from an in-flight create (`pending` while saving, `failed`
+ * when it errored).
+ */
+export interface PendingVersion extends VersionSummary {
+  pending?: true
+  failed?: boolean
+}
+
 export type ApiErrorCode =
   | "INVALID_PARAMS"
   | "NOT_FOUND"

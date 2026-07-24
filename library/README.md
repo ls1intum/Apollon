@@ -9,7 +9,17 @@
 
 **Embeddable UML modeling editor for the web.** Mounts into any DOM node and works inside Angular, Vue, Svelte, vanilla JS, or React.
 
-[**▶ Live demo**](https://apollon.aet.cit.tum.de) · [Docs](https://ls1intum.github.io/Apollon/library/) · [API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
+<!-- npm-safe header widgets: npmjs.com strips GitHub's <picture> theme swap
+     and width/height attributes, so these are plain markdown images at their
+     natural (1x) size, with absolute URLs (repo-relative paths do not resolve
+     on npmjs.com). All PNGs are generated from the live editor by the
+     readme-assets Playwright project. -->
+
+[![Try the live demo](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-btn-demo-light-1x.png)](https://apollon.aet.cit.tum.de) [![Documentation](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-btn-docs-light-1x.png)](https://ls1intum.github.io/Apollon/library/)
+
+[API reference](https://ls1intum.github.io/Apollon/library/api) · [Examples](https://ls1intum.github.io/Apollon/library/embedding/react) · [GitHub](https://github.com/ls1intum/Apollon)
+
+[![The Apollon editor showing a UML class diagram, with the element palette on the left](https://raw.githubusercontent.com/ls1intum/Apollon/main/docs/static/img/apollon-editor-light.png)](https://apollon.aet.cit.tum.de)
 
 </div>
 
@@ -23,17 +33,22 @@ Apollon is the modeling editor behind [Artemis](https://artemis.tum.de/), TUM's 
 - **Framework-agnostic**: one imperative API for Angular, Vue, Svelte, and vanilla JS, plus a React component, hooks, and provider.
 - **Real-time collaboration**: opt-in multi-user editing over [Yjs](https://yjs.dev/), with any transport you like (WebSocket, WebRTC, BroadcastChannel).
 - **Export**: SVG and JSON are built in. Generate PNG and PDF from the SVG (see [Export](#export)).
-- **Canvas overlays**: inject your own toolbars, banners, and rails into the editor canvas, collision-free with built-in chrome — `<ApollonControl>` (React) or `addControl` / `getRegionElement` (any framework). See [Overlay controls](https://ls1intum.github.io/Apollon/library/api/overlay-controls).
+- **Canvas overlays**: inject your own toolbars, banners, and rails into the editor canvas; Apollon measures reserving controls and places them with the built-in chrome — `<ApollonControl>` (React) or `addControl` / `getRegionElement` (any framework). See [Overlay controls](https://ls1intum.github.io/Apollon/library/api/overlay-controls).
+- **Internationalization**: override the editor UI strings exposed in `ApollonLabels` (tooltips, aria-labels, edit/assessment popovers) via `labels` / `setLabels` / `useLabels`. See [i18n](https://ls1intum.github.io/Apollon/library/api/overlay-controls#i18n).
 - **Assessment mode**: attach scores and feedback to elements. This is the grading workflow Artemis uses.
 - **TypeScript**: type definitions are included.
 
 ## Install
 
 ```sh
-npm install @tumaet/apollon \
-  react react-dom \
-  @xyflow/react \
-  yjs y-protocols
+npm install @tumaet/apollon
+```
+
+npm 7+, pnpm 8+, and Bun resolve the required peer dependencies automatically.
+Yarn never installs peers — list them explicitly there:
+
+```sh
+npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
 ```
 
 ```ts
@@ -43,7 +58,7 @@ import "@tumaet/apollon/style.css"
 
 Apollon ships **one** build with every runtime dependency left external — the React family (`react`, `react-dom`, `@xyflow/react`), the CRDT singletons (`yjs`, `y-protocols`), and Apollon's own UI deps (`@base-ui/react`, `lucide-react`, `@dnd-kit`, `zustand`, `@chenglou/pretext`), which arrive transitively when you install the package. Your bundler resolves and de-duplicates each one against your app's `node_modules`, and your bundle analyzer / SBOM tooling sees them as the real packages they are — never a copy inlined invisibly into one chunk. This works from any framework with a bundler (Angular, Vue, Svelte, React).
 
-These are the peers you install explicitly:
+The required peers, and what each powers:
 
 | Peer            | Range     | Powers                                                |
 | --------------- | --------- | ----------------------------------------------------- |
@@ -53,7 +68,7 @@ These are the peers you install explicitly:
 | `yjs`           | `^13.6.0` | the document model, undo/redo, and live collaboration |
 | `y-protocols`   | `^1.0.6`  | collaboration sync/awareness                          |
 
-Most package managers install missing peers automatically; the explicit command above is listed for clarity. Keeping these external means a host that already uses React or Yjs shares a single instance with the editor instead of loading a private, possibly mismatched copy — no duplicate payload, and no "Invalid hook call" or cross-instance-document errors.
+Keeping these external means a host that already uses React or Yjs shares a single instance with the editor instead of loading a private, possibly mismatched copy — no duplicate payload, and no "Invalid hook call" or cross-instance-document errors.
 
 ### Non-React hosts (Angular, Vue, Svelte, vanilla)
 
@@ -167,11 +182,11 @@ export class DiagramEditorComponent {
 `yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves and serves them from the import URL automatically — there is nothing extra to load. (With a bundler you install the peers yourself.)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.0.1/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.1.1/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.0.1"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.1.1"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -223,7 +238,7 @@ Any Yjs-compatible transport works: `y-websocket`, `y-webrtc`, BroadcastChannel,
 - **SVG**: `await editor.exportAsSVG(options)` resolves to `{ svg, clip }`. `svgMode: "web"` (the default) keeps CSS variables for theme-adaptive output; `"compat"` inlines them for PDF and Inkscape.
 - **JSON**: `editor.model` returns the `UMLModel`, and assigning it back is round-trip safe. Use `importDiagram(json)` to normalize older v2/v3 models first.
 - **Headless**: `ApollonEditor.exportModelAsSvg(model, options)` renders a model without a mounted editor.
-- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf`, installed as optional peers). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
+- **PNG / PDF**: not built in, but the library ships `svgToPng` / `svgToPdf` renderers under [`@tumaet/apollon/export`](https://ls1intum.github.io/Apollon/library/api/export) (PNG via `@resvg/resvg-wasm`, PDF via `svg2pdf.js` + `jspdf` — optional dependencies that install automatically with the package). The standalone server in this repo renders server-side instead, with `@napi-rs/canvas` (PNG) and `pdfmake` (PDF).
 
 See [Export](https://ls1intum.github.io/Apollon/library/api/export) for the full `ExportOptions`.
 
@@ -265,7 +280,7 @@ The server-side wire protocol is exposed through the `@tumaet/apollon/internals`
 
 - Source and issues: <https://github.com/ls1intum/Apollon>
 - Live editor: <https://apollon.aet.cit.tum.de>
-- The standalone web editor, collaboration server, and [VS Code extension](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) live in the same monorepo.
+- The standalone web editor, collaboration server, and [VS Code extension](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension) live in the same monorepo.
 
 ## License
 

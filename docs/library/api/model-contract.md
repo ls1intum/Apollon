@@ -71,6 +71,11 @@ union of all ~50 node types is planned follow-up work. For the concrete per-type
 fields today, read `lib/types/nodes/NodeProps.ts` and `lib/edges/EdgeProps.ts`
 in the source.
 
+One cross-cutting `data` field worth knowing: every node — and every class
+attribute/method — may carry an optional `tags: string[]` of host-defined
+grouping labels. See [Element tags & group coloring](./element-tags) for their
+normalization rules and the addressing API.
+
 ## Versioning policy
 
 `version` tracks the **wire-format major line (4.x)** — _not_ the npm package

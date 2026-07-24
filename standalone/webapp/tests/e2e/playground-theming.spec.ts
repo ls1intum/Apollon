@@ -38,6 +38,68 @@ function paletteLuminance(page: Page): Promise<number> {
   })
 }
 
+/**
+ * The palette drag ghost is portaled to `document.body` and pinned to the
+ * viewport. Found by what makes it the ghost rather than by a class, so a
+ * restyle cannot quietly turn these assertions into a no-op that always passes.
+ */
+function ghostAttribute(page: Page, name: string): Promise<string | null> {
+  return page.evaluate((attribute) => {
+    const ghost = [...document.body.children].find(
+      (el): el is HTMLElement =>
+        el instanceof HTMLElement &&
+        el.style.position === "fixed" &&
+        el.style.pointerEvents === "none"
+    )
+    return ghost?.getAttribute(attribute) ?? null
+  }, name)
+}
+
+/**
+ * Mean luminance (0..1) of the ghost's node BODY — the largest painted shape,
+ * the one filled from `--apollon-background`.
+ *
+ * Only real shape elements count. A `<g>` reports a bounding box but paints
+ * nothing, and its computed `fill` is the initial black, so sampling it (or the
+ * label, painted from `--apollon-foreground`) reads "dark" under the light theme
+ * and the assertion passes whether or not the ghost is themed. Throws rather
+ * than returning a sentinel, for the same reason: a miss must fail, not pass.
+ */
+const PAINTED = "rect, circle, ellipse, path, polygon, polyline"
+
+function ghostBodyLuminance(page: Page): Promise<number> {
+  return page.evaluate((painted) => {
+    const ghost = [...document.body.children].find(
+      (el): el is HTMLElement =>
+        el instanceof HTMLElement &&
+        el.style.position === "fixed" &&
+        el.style.pointerEvents === "none"
+    )
+    if (!ghost) throw new Error("no drag ghost in <body>")
+    const shapes = [...ghost.querySelectorAll<SVGGraphicsElement>(painted)]
+      .filter((element) => {
+        const fill = getComputedStyle(element).fill
+        return !!fill && fill !== "none" && !fill.startsWith("url(")
+      })
+      .map((element) => {
+        const { width, height } = element.getBBox()
+        return { element, area: width * height }
+      })
+      .sort((a, b) => b.area - a.area)
+    if (!shapes.length || shapes[0].area === 0) {
+      throw new Error("drag ghost paints no shape")
+    }
+    const nums = (
+      getComputedStyle(shapes[0].element).fill.match(/[\d.]+/g) ?? []
+    )
+      .map(Number)
+      .slice(0, 3)
+    if (nums.length < 3) throw new Error("unreadable ghost fill")
+    const scale = nums.some((n) => n > 1) ? 255 : 1
+    return (nums[0] + nums[1] + nums[2]) / 3 / scale
+  }, PAINTED)
+}
+
 /** Mean luminance (0..1) of a resolved `--apollon-*` color on the container. */
 function cssVarLuminance(page: Page, name: string): Promise<number> {
   return page.evaluate(
@@ -158,6 +220,37 @@ test.describe("playground theme configurator", () => {
     expect(await cssVarLuminance(page, "--apollon-foreground")).toBeGreaterThan(
       0.5
     )
+  })
+
+  test("a scoped data-theme reaches the palette drag ghost, which portals to <body>", async ({
+    page,
+  }) => {
+    // The ghost tracks the cursor in viewport coordinates, so it portals out to
+    // <body> — leaving the subtree that scopes the dark tokens. A document-root
+    // theme still covers it, which is why only a SCOPED mount catches this.
+    await page.evaluate((sel) => {
+      document.querySelector(sel)?.setAttribute("data-theme", "dark")
+    }, EDITOR)
+
+    const entry = page
+      .locator('[data-testid="apollon-palette"] [data-draggable-preview]')
+      .first()
+    const box = await entry.boundingBox()
+    if (!box) throw new Error("no palette entry to drag")
+
+    // Grab the rendered preview and actually move, so we measure the live ghost
+    // rather than the palette entry still sitting inside the themed subtree.
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 160, box.y + 140, { steps: 5 })
+
+    expect(await ghostAttribute(page, "data-theme")).toBe("dark")
+    // The shape must actually paint dark: the tokens have to re-resolve outside
+    // the subtree, not merely be inherited as light `:root` values. Guards a
+    // regression that forwards the attribute but stops honoring the selector.
+    expect(await ghostBodyLuminance(page)).toBeLessThan(0.5)
+
+    await page.mouse.up()
   })
 
   test("a scoped inline background override recolors the derived glass chrome", async ({

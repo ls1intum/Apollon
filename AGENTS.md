@@ -16,8 +16,8 @@ A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 - **`library/`** — `@tumaet/apollon`, the embeddable React editor, published to npm. Native HTML + Base UI primitives (`@base-ui/react`) styled via `--apollon-*` CSS variables; `lucide-react` icons; Yjs collaboration — the live-cursor/presence layer lives here ([`collaboration.md`](docs/library/api/collaboration.md)).
 - **`standalone/webapp/`** — `@tumaet/webapp` (private). React + Vite + Tailwind; Capacitor for iOS/Android.
 - **`standalone/server/`** — `@tumaet/server` (private). Express + Redis Stack (RedisJSON diagram storage + version history).
-- **`vscode-extension/`** — `apollon-vscode`, with nested `menu/` and `editor/` webview sub-packages.
-- **`docs/`** — `@tumaet/apollon-docs` (private), the Docusaurus site (`user/` · `library/` · `contributor/`).
+- **`vscode-extension/`** — `apollon-extension`, the extension host, with a nested `webview/` sub-package (`@tumaet/vscode-webview`). Unscoped because the VS Code Marketplace forbids a scope in an extension name.
+- **`docs/`** — `@tumaet/docs` (private), the Docusaurus site (`user/` · `library/` · `contributor/`).
 - **`ops/`** — runbooks and legal/DSMS material; not part of any release.
 
 `@tumaet/apollon` is consumed via `workspace:*` by every other workspace, so a library change can ripple everywhere. `standalone/webapp` + `standalone/server` are paired in `.changeset/config.json#fixed` and release together. The `library/` workspace targets an older Node floor than the repo (it ships to external consumers) — check `library/package.json` before using newer Node APIs.
@@ -42,7 +42,7 @@ A pnpm + Vite monorepo (the server compiles with `tsc`, not Vite).
 - The library is consumed by the standalone app, the VS Code extension, and external embedders — don't couple its APIs to standalone-only assumptions; gate behind options.
 - The server requires `OWNER_SECRET` ≥ 32 chars in production (`openssl rand -hex 32`); local dev accepts a placeholder.
 - Never commit build output (`library/dist/`, `standalone/webapp/dist/`, …).
-- Don't hand-edit the `.changeset/*.md` entries the changelog automation will consume — create them with `pnpm changeset`.
+- Create changesets with `pnpm changeset`. You may edit the generated `.changeset/*.md` body for release-note quality; don't hand-edit `CHANGELOG.md` or invent changeset frontmatter by hand.
 - Don't put co-authored-by / agent-attribution trailers in a changeset body — it lands in `CHANGELOG.md` verbatim.
 - `CLAUDE.md` is a checked-in symlink to this file (git mode `120000`); on Windows, enable symlinks (`git config --global core.symlinks true`) or it checks out as plain text.
 

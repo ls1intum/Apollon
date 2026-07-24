@@ -2,6 +2,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { AssessmentScore } from "./AssessmentScore"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+import { useLabels } from "@/i18n/useLabels"
 
 export const SeeFeedbackAssessmentBox = ({
   type,
@@ -18,6 +19,7 @@ export const SeeFeedbackAssessmentBox = ({
   /** Draw a separator above this box. Off for the first box in a popover. */
   divider?: boolean
 }) => {
+  const t = useLabels()
   const getAssessment = useDiagramStore(
     useShallow((state) => state.getAssessment)
   )
@@ -36,7 +38,7 @@ export const SeeFeedbackAssessmentBox = ({
           <p data-slot="assessment-feedback">{assessment.feedback}</p>
         ) : (
           <p data-slot="assessment-feedback" data-empty="">
-            No comment
+            {t.noComment}
           </p>
         ))}
     </PopoverSection>

@@ -5,10 +5,12 @@ import { Checkbox } from "@/components/ui"
 import { PopoverProps } from "../types"
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverSection } from "../PopoverLayout"
+import { useLabels } from "@/i18n/useLabels"
 
 export const ReachabilityGraphMarkingEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -46,7 +48,7 @@ export const ReachabilityGraphMarkingEditPopover: React.FC<PopoverProps> = ({
         <Checkbox
           checked={nodeData.isInitialMarking}
           onCheckedChange={toggle}
-          label="Is Initial Marking"
+          label={t.isInitialMarking}
         />
       </PopoverSection>
     </DefaultNodeEditPopover>

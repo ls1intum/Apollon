@@ -5,6 +5,12 @@ export type DefaultNodeProps = {
   fillColor?: string
   strokeColor?: string
   textColor?: string
+  /**
+   * Opaque, host-defined grouping labels; many elements may share one. Authored
+   * content — serialized, collaborated, undoable — unlike the *ephemeral*
+   * highlight overlay a host paints for transient state. Omitted when empty.
+   */
+  tags?: string[]
 }
 
 export type ClassNodeElement = {

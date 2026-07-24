@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { ApollonShared } from "@/pages/ApollonShared"
+import { VersionRepositoryProvider } from "@/contexts/VersionRepositoryContext"
 import type { DiagramView } from "@/types/ModalTypes"
 import { isDiagramView } from "@/utils/sharedDiagramLinks"
 
@@ -17,5 +18,11 @@ export const Route = createFileRoute("/shared/$diagramId")({
     view: isDiagramView(search.view) ? search.view : undefined,
     version: typeof search.version === "string" ? search.version : undefined,
   }),
-  component: ApollonShared,
+  // The route is what makes this the remote backend, so it declares the kind
+  // the version hooks resolve their adapter and cache keys from.
+  component: () => (
+    <VersionRepositoryProvider kind="remote">
+      <ApollonShared />
+    </VersionRepositoryProvider>
+  ),
 })

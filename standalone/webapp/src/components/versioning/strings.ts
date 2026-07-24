@@ -51,10 +51,12 @@ export const versioningStrings = {
   undoRestore: "Undo restore",
   collaboratorRestoredTitle: (actor: string) =>
     `${actor} restored an earlier version. Your view was updated.`,
+  noChangesToSave: "No changes to save since the last version.",
   failureToCreate: "Couldn't save version. Try again.",
   failureToEdit: "Couldn't update description. Try again.",
   failureRedis:
     "Version history is temporarily unavailable. Your edits are still being saved.",
+  failureToLoad: "Couldn't load version history. Reopen the panel to retry.",
   failureSchemaUnsupported:
     "This snapshot was created by an older version of the editor and can't be restored automatically.",
   unnamed: "Untitled snapshot",

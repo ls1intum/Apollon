@@ -1,5 +1,5 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
-import { DefaultNodeWrapper } from "@/nodes/wrappers"
+import { NodeProps, type Node } from "@xyflow/react"
+import { DefaultNodeWrapper, NodeResizer } from "@/nodes/wrappers"
 import { TitleAndDescriptionSVG } from "@/components"
 
 type Props = Node<{
@@ -18,18 +18,19 @@ export function TitleAndDesctiption({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      hiddenHandles={true}
+    >
       <TitleAndDescriptionSVG
         width={width}
         height={height}
         title={title}
         description={description || ""}
       />
-      <NodeResizer
-        isVisible
-        minHeight={200}
-        handleStyle={{ width: 8, height: 8 }}
-      />
+      <NodeResizer isVisible minHeight={200} />
     </DefaultNodeWrapper>
   )
 }

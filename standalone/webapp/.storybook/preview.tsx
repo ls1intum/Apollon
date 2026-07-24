@@ -5,6 +5,9 @@ import { DocsContainer } from "@storybook/addon-docs/blocks"
 import { themes } from "storybook/theming"
 import { addons } from "storybook/preview-api"
 import { withTanStackRouter } from "../src/stories/_support/webapp"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { storybookQueryClient } from "../src/stories/_support/queryClient"
+import { VersionRepositoryProvider } from "../src/contexts/VersionRepositoryContext"
 
 type DocsContainerCtx = ComponentProps<typeof DocsContainer>["context"]
 
@@ -213,7 +216,24 @@ const preview: Preview = {
     },
   },
   tags: ["autodocs"],
+  // One clean query cache per story: stories that share a query key but inject
+  // different data would otherwise read each other's cached results.
+  beforeEach: () => {
+    storybookQueryClient.clear()
+  },
   decorators: [
+    // TanStack Query context for components that read server state through
+    // the query hooks (versioning UI, share flow, legal pages). The shared
+    // client lives in _support/queryClient so beforeEach hooks can reset it.
+    // Query cache + the version backend the story's UI talks to (the editor
+    // routes supply the latter in production).
+    (Story) => (
+      <QueryClientProvider client={storybookQueryClient}>
+        <VersionRepositoryProvider kind="remote">
+          <Story />
+        </VersionRepositoryProvider>
+      </QueryClientProvider>
+    ),
     // TanStack router context so any component using <Link>/useNavigate/
     // useLocation renders without crashing. Per-story routes and the active
     // location are set via the `tanstackRouter` parameter.

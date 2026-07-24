@@ -1,5 +1,6 @@
 import React from "react"
 import { Tooltip } from "@/components/ui"
+import { useLabels } from "@/i18n/useLabels"
 
 interface Props {
   onClick: () => void
@@ -19,12 +20,14 @@ export const HeaderSwitchElement: React.FC<Props> = ({
   stereotypeLabel,
   stereotypeValue,
 }) => {
+  const t = useLabels()
   const displayLabel = stereotypeValue?.trim() || stereotypeLabel
   const buttonLabel = `\u00ab${displayLabel}\u00bb`
-  const accessibleLabel = `${displayLabel} stereotype`
-  const tooltipLabel = `${
-    isComponentHeaderShown ? "Hide" : "Show"
-  } ${displayLabel} stereotype`
+  const accessibleLabel = t.stereotypeToggleLabel(displayLabel)
+  const tooltipLabel = t.stereotypeToggleTooltip(
+    isComponentHeaderShown,
+    displayLabel
+  )
 
   return (
     <Tooltip title={tooltipLabel}>

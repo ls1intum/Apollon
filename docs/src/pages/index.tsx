@@ -71,14 +71,14 @@ export class DiagramComponent {
 
 const VANILLA_SNIPPET = `<link
   rel="stylesheet"
-  href="https://esm.sh/@tumaet/apollon@5.0.1/style.css"
+  href="https://esm.sh/@tumaet/apollon@5.1.1/style.css"
 />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
   // esm.sh resolves and serves Apollon's required peers (react, react-dom,
   // @xyflow/react, yjs, y-protocols) automatically.
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.0.1"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.1.1"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
@@ -114,11 +114,13 @@ function Hero() {
           </Link>
         </div>
         <div className={styles.install}>
-          <CodeBlock language="bash">
-            npm install @tumaet/apollon react react-dom @xyflow/react yjs
-            y-protocols
-          </CodeBlock>
+          <CodeBlock language="bash">npm install @tumaet/apollon</CodeBlock>
         </div>
+        <p className={styles.heroMeta}>
+          Open source (MIT), built at the Technical University of Munich — the
+          Angular editor in <Link href="https://artemis.tum.de">Artemis</Link>{" "}
+          runs on <code>@tumaet/apollon</code>.
+        </p>
       </div>
     </header>
   )
@@ -229,10 +231,9 @@ const WAYS: LinkCard[] = [
     title: "Embed it",
     body: (
       <>
-        <code>@tumaet/apollon</code> on npm. One build, every framework:{" "}
-        <code>react</code>, <code>react-dom</code>, <code>@xyflow/react</code>,{" "}
-        <code>yjs</code>, and <code>y-protocols</code> are required peers the
-        host shares with the editor.
+        One <code>@tumaet/apollon</code> package on npm, mounted in React,
+        Angular, or plain JavaScript. Your app shares a handful of peer
+        dependencies with the editor — the embedding guide lists them.
       </>
     ),
     to: "/library/",
@@ -299,7 +300,7 @@ const FEATURES = [
   {
     kicker: "Output",
     title: "Export anywhere",
-    body: "SVG, PNG, PDF, and JSON — from a mounted editor or a headless model. Round-trips through JSON without loss.",
+    body: "SVG, PNG, PDF, and JSON — from a mounted editor or a headless model; the web app adds PPTX slides. Round-trips through JSON without loss.",
   },
   {
     kicker: "Collaboration",

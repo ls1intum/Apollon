@@ -14,6 +14,7 @@ import {
   type CSSProperties,
   type FC,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react"
 import { Link } from "@tanstack/react-router"
@@ -21,8 +22,10 @@ import { toast } from "react-toastify"
 import { cn } from "@tumaet/ui/lib/utils"
 import { Textarea } from "@tumaet/ui/components/textarea"
 import { log } from "@/logger"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import type { PendingVersion } from "@/types"
+import { useEditVersionInfoMutation } from "@/queries/versionMutations"
 import { getVersionRepository } from "@/services/versionRepository"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { PREVIEW_VERSION_PARAM } from "@/hooks/useVersionPreviewUrlSync"
 import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
@@ -435,18 +438,22 @@ export const VersionListItem: FC<ContainerProps> = ({
   diagramId,
   ...props
 }) => {
-  const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
+  const kind = useVersionRepositoryKind()
+  const editVersionInfo = useEditVersionInfoMutation(kind, diagramId)
   // Single source of truth for permalink visibility: the active repository
   // decides via its `permalink()` return value. Local mode returns null;
   // remote returns a URL. No prop, no drift.
-  const permalinkUrl = getVersionRepository().permalink(
+  const permalinkUrl = getVersionRepository(kind).permalink(
     diagramId,
     props.version.id
   )
 
   const onEditDescription = async (versionId: string, description: string) => {
     try {
-      await editVersionInfo(diagramId, versionId, { description })
+      await editVersionInfo.mutateAsync({
+        versionId,
+        patch: { description },
+      })
     } catch (err) {
       log.error("Edit description failed", err)
       toast.error(t.failureToEdit)
@@ -482,7 +489,7 @@ export const VersionListItem: FC<ContainerProps> = ({
         [PREVIEW_VERSION_PARAM]: props.version.id,
       })}
       aria-label={accessibleName}
-      onClick={(e) => {
+      onClick={(e: ReactMouseEvent<HTMLAnchorElement>) => {
         // Let the browser handle modified clicks (open in a new tab/window).
         if (e.metaKey || e.ctrlKey || e.shiftKey) return
         e.preventDefault()

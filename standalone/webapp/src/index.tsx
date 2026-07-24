@@ -9,6 +9,7 @@ import {
   setLogLevel as setApollonLogLevel,
 } from "@tumaet/apollon"
 import { StatusBar } from "@capacitor/status-bar"
+import { Keyboard } from "@capacitor/keyboard"
 
 const rootElement = document.getElementById("root")
 
@@ -17,6 +18,14 @@ useThemeStore.getState().initializeTheme()
 // Hide status bar on mobile
 StatusBar.hide().catch(() => {
   // Silently fail if not on mobile
+})
+
+// iOS only. WKWebView scrolls a focused input into view by scrolling the whole
+// webview, which on this `position: fixed` document leaves it stranded off-origin
+// after the keyboard dismisses. The editor keeps its own chrome above the keyboard
+// via `visualViewport`, so the native scroll is pure interference.
+Keyboard.setScroll({ isDisabled: true }).catch(() => {
+  // Silently fail off-native and on Android, where setScroll is unimplemented.
 })
 
 // Safe-area preview seam. Browser device-emulators draw a notch / Dynamic

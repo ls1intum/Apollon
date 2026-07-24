@@ -1,97 +1,37 @@
 import * as vscode from "vscode"
-import * as fs from "fs"
-
-import MenuProvider from "./menu-provider"
+import { ApollonEditorProvider } from "./apollonEditorProvider"
+import { exportDiagram, newDiagram } from "./commands"
+import { DiagramTreeProvider } from "./diagramTree"
 
 export function activate(context: vscode.ExtensionContext) {
-  const provider = new MenuProvider(context.extensionUri)
-
-  const disposable = vscode.commands.registerCommand(
-    "apollonEditor.openDiagram",
-    async () => await openDiagram(provider)
-  )
+  const provider = new ApollonEditorProvider(context.extensionUri)
+  const tree = new DiagramTreeProvider()
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("menu", provider)
-  )
-  context.subscriptions.push(disposable)
-
-  associateApollonType()
-}
-
-/**
- * Opens the currently viewed .apollon diagram inside of the Apollon editor
- *
- * @param provider
- */
-async function openDiagram(provider: MenuProvider) {
-  const activeEditor = vscode.window.activeTextEditor
-  if (activeEditor) {
-    const diagramPath = activeEditor.document.uri.fsPath
-    const diagramName = diagramPath.substring(diagramPath.lastIndexOf("/") + 1)
-
-    if (fs.existsSync(diagramPath)) {
-      const content = await vscode.workspace.fs.readFile(
-        vscode.Uri.file(diagramPath)
-      )
-      const contentString = new TextDecoder("utf-8").decode(content)
-      let contentJson
-
-      try {
-        contentJson = JSON.parse(contentString)
-      } catch {
-        vscode.window.showErrorMessage(
-          "The diagram can not be loaded as it does not have a valid format"
-        )
-        return
+    tree,
+    vscode.window.registerCustomEditorProvider(
+      ApollonEditorProvider.viewType,
+      provider,
+      {
+        // The model is reconstructable from the document, but the viewport,
+        // selection and in-flight drag are not — losing them on a tab switch
+        // would make the editor feel broken.
+        webviewOptions: { retainContextWhenHidden: true },
+        // Two live canvases on one document would sync only through the text
+        // round-trip.
+        supportsMultipleEditorsPerDocument: false,
       }
-
-      provider.loadDiagram(
-        diagramName,
-        contentJson.model?.type,
-        contentJson.model
-      )
-      provider.setLoadedDiagramPath(diagramPath)
-    }
-  } else {
-    vscode.window.showErrorMessage("No active file!")
-  }
-}
-
-/**
- * Associates .apollon file type with the JSON file type for syntax highlighting and file icon
- */
-function associateApollonType() {
-  const fileExtension = "*.apollon"
-  const targetLanguage = "json"
-  const filesConfig = vscode.workspace.getConfiguration("files")
-
-  const currentAssociations: { [key: string]: string } =
-    filesConfig.get("associations") || {}
-  if (currentAssociations[fileExtension] !== targetLanguage) {
-    filesConfig
-      .update(
-        "associations",
-        {
-          ...currentAssociations,
-          [fileExtension]: targetLanguage,
-        },
-        vscode.ConfigurationTarget.Global
-      )
-      .then(
-        () => {
-          console.log(
-            `Associated ${fileExtension} with ${targetLanguage} syntax.`
-          )
-        },
-        (error) => {
-          console.error("Error updating file associations:", error)
-          vscode.window.showErrorMessage(
-            `Failed to associate ${fileExtension} with ${targetLanguage} syntax.`
-          )
-        }
-      )
-  }
+    ),
+    vscode.window.registerTreeDataProvider("apollon.diagrams", tree),
+    vscode.commands.registerCommand("apollon.newDiagram", newDiagram),
+    vscode.commands.registerCommand("apollon.refreshDiagrams", () =>
+      tree.refresh()
+    ),
+    vscode.commands.registerCommand(
+      "apollon.exportDiagram",
+      async () => await exportDiagram(provider)
+    )
+  )
 }
 
 export function deactivate() {}

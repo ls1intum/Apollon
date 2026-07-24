@@ -22,16 +22,20 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "react-toastify"
+import { useQueryClient } from "@tanstack/react-query"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import { useRegionHost } from "@/hooks/useRegionHost"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
+import { fetchVersionBody, useVersionsQuery } from "@/queries/versionQueries"
 import {
-  selectScopedPreview,
-  selectVersions,
-  useVersionStore,
-} from "@/stores/useVersionStore"
+  useCreateVersionMutation,
+  useRestoreVersionMutation,
+} from "@/queries/versionMutations"
 import { ApiError } from "@/services/DiagramApiClient"
 import { getVersionRepository } from "@/services/versionRepository"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
+import type { PendingVersion } from "@/types"
 import { NARROW_VIEW_QUERY } from "@/constants"
 import {
   MAX_DESCRIPTION_LENGTH,
@@ -48,6 +52,9 @@ import { groupUnnamedRuns } from "./utils"
 
 /** Panel width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
+
+/** Stable empty list while the version query has no data yet. */
+const EMPTY_VERSIONS: readonly PendingVersion[] = Object.freeze([])
 
 interface Props {
   diagramId: string
@@ -82,25 +89,74 @@ export const VersionSidebarBody: FC<Props> = ({
   onConfirmedRestore,
   onPreview,
 }) => {
-  const repo = getVersionRepository()
-  const isLocal = repo.kind === "local"
+  const kind = useVersionRepositoryKind()
+  const repo = getVersionRepository(kind)
+  const isLocal = kind === "local"
   const MAX_VERSIONS = repo.cap
-  const versions = useVersionStore((s) => selectVersions(s, diagramId))
-  const total = useVersionStore((s) => s.totals[diagramId])
-  const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
-  const loading = useVersionStore((s) => s.loading[diagramId] ?? false)
-  const errorCode = useVersionStore((s) => s.error[diagramId] ?? null)
-  const loadMoreVersions = useVersionStore((s) => s.loadMoreVersions)
-  const createVersion = useVersionStore((s) => s.createVersion)
+  const queryClient = useQueryClient()
+  const versionsQuery = useVersionsQuery(kind, diagramId, {
+    // This body is mounted only while the panel is open.
+    refetchOnFocus: true,
+  })
+  const serverVersions = versionsQuery.data?.versions ?? EMPTY_VERSIONS
+  const total = versionsQuery.data?.total
+  // Only an initial-load failure replaces the list with an error surface. A
+  // background refetch (focus, control event) that fails leaves the rows the
+  // user already has on screen — `isError` alone would wipe them.
+  const loadFailed = versionsQuery.isError && serverVersions.length === 0
+  const errorCode = !loadFailed
+    ? null
+    : versionsQuery.error instanceof ApiError
+      ? versionsQuery.error.code
+      : "INTERNAL"
+  const createMutation = useCreateVersionMutation(kind, diagramId, {
+    // Mutation-level, so a panel that unmounts mid-save (the user closes the
+    // rail or sheet) still hands the new headRev to the page's autosaver.
+    onCommitted: (summary) => {
+      lastLocalSaveIdRef.current = summary.id
+      onVersionSaved?.(summary.headRev)
+    },
+  })
+  const restoreMutation = useRestoreVersionMutation(kind, diagramId)
   const enterPreview = useVersionStore((s) => s.enterPreview)
-  const restoreVersion = useVersionStore((s) => s.restoreVersion)
   const previewState = useVersionStore((s) => selectScopedPreview(s, diagramId))
+
+  // In-flight / failed save, from mutation state — see `useCreateVersionMutation`.
+  const pendingRow = useMemo<PendingVersion | null>(() => {
+    const vars = createMutation.variables
+    if (!vars || (!createMutation.isPending && !createMutation.isError)) {
+      return null
+    }
+    return {
+      id: "pending-create",
+      diagramId,
+      name: vars.name ?? "",
+      description: vars.description ?? "",
+      createdAt: new Date(createMutation.submittedAt).toISOString(),
+      kind: "user",
+      librarySchemaVersion: vars.body.version,
+      ...(createMutation.isPending
+        ? { pending: true as const }
+        : { failed: true }),
+    }
+  }, [
+    createMutation.variables,
+    createMutation.isPending,
+    createMutation.isError,
+    createMutation.submittedAt,
+    diagramId,
+  ])
+  const versions = useMemo<readonly PendingVersion[]>(
+    () => (pendingRow ? [pendingRow, ...serverVersions] : serverVersions),
+    [pendingRow, serverVersions]
+  )
 
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
 
   const [draft, setDraft] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  // Spans the save AND the list refresh — see `useCreateVersionMutation`.
+  const submitting = createMutation.isPending
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   // Subscribe to model changes so the empty-diagram check (drives Save
   // disable) reacts as the user adds the first node.
@@ -122,13 +178,6 @@ export const VersionSidebarBody: FC<Props> = ({
    * instead of fetching the version body from the server.
    */
   const lastLocalSaveIdRef = useRef<string | null>(null)
-
-  // No fetch-on-mount here: the editor page (ApollonLocal / ApollonShared)
-  // binds the repository and fetches in one effect, and the bootstrap keeps the
-  // list fresh (cross-tab + visibility refetch, collab control events). A fetch
-  // here would race the page's repository binding on a reload with the drawer
-  // already open — it would run against the default adapter (child effects flush
-  // before the parent page effect).
 
   // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
   // autosave versions" toggle). Default ON so users see their full history
@@ -152,6 +201,18 @@ export const VersionSidebarBody: FC<Props> = ({
   const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
+  // The version id the fingerprint baseline is currently resolved for:
+  //   `undefined` — never resolved · `null` — resolved for "no version yet".
+  // The save shortcut compares this to the current latest version rather than
+  // reading a boolean that lags a render: on the frame the version list first
+  // arrives, a boolean would still read the earlier empty branch's `true` while
+  // the re-fetch is only queued, letting the shortcut snapshot with a stale
+  // fingerprint. An id mismatch closes that window with no stale state.
+  const [baselineVersionId, setBaselineVersionId] = useState<
+    string | null | undefined
+  >(undefined)
+  const baselineResolved =
+    baselineVersionId === (latestSavedVersion?.id ?? null)
 
   // Re-baseline the fingerprint on every new latest-saved version. Two cases:
   //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
@@ -165,30 +226,52 @@ export const VersionSidebarBody: FC<Props> = ({
     if (!latestSavedVersion) {
       setSavedFingerprint(null)
       setHasChanges(true)
+      setBaselineVersionId(null)
       return
     }
     if (lastLocalSaveIdRef.current === latestSavedVersion.id) {
       // Fast path: we just saved this version locally — editor model is authoritative.
       setSavedFingerprint(structuralFingerprint(editor.model))
       setHasChanges(false)
+      setBaselineVersionId(latestSavedVersion.id)
       return
     }
-    // Slow path: fetch the actual version body so the baseline is the
-    // canonical snapshot (server in collab mode, IDB in local mode), not
-    // the potentially-dirty editor state.
-    getVersionRepository()
-      .getBody(latestSavedVersion.diagramId, latestSavedVersion.id)
+    // Slow path: fetch the canonical snapshot (server in collab mode, IDB in
+    // local mode) so the baseline isn't the potentially-dirty editor state.
+    // Until it resolves, `baselineVersionId` still names the previous
+    // baseline, so `baselineResolved` is false.
+    //
+    // `stale` guards against out-of-order completion: if the latest version
+    // changes (a collaborator saves/restores) while this fetch is in flight,
+    // the effect re-runs and its cleanup marks this one stale, so a late
+    // resolution can't overwrite the newer baseline with an older body/id.
+    let stale = false
+    const resolvingVersionId = latestSavedVersion.id
+    fetchVersionBody(
+      queryClient,
+      kind,
+      latestSavedVersion.diagramId,
+      resolvingVersionId
+    )
       .then((body) => {
-        setSavedFingerprint(structuralFingerprint(body))
+        if (!stale) setSavedFingerprint(structuralFingerprint(body))
       })
       .catch(() => {
         // Fallback: if the fetch fails, assume unsaved changes exist rather
         // than hiding the Save button. False-positive is safe; false-negative
         // (hiding real changes) is not.
-        setSavedFingerprint(null)
-        setHasChanges(true)
+        if (!stale) {
+          setSavedFingerprint(null)
+          setHasChanges(true)
+        }
       })
-  }, [editor, latestSavedVersion?.id])
+      .finally(() => {
+        if (!stale) setBaselineVersionId(resolvingVersionId)
+      })
+    return () => {
+      stale = true
+    }
+  }, [editor, latestSavedVersion?.id, queryClient, kind])
 
   useEffect(() => {
     if (!editor) return
@@ -218,19 +301,18 @@ export const VersionSidebarBody: FC<Props> = ({
   // While previewing, `editor.model` reflects the previewed snapshot — saving
   // it would just duplicate that version (or produce a misleading "new"
   // version of old content). Block Save in that mode regardless of diff.
-  // Also block on empty diagrams (server skips them too — avoids the
-  // phantom-v1 confusion described in `services/autoVersion.ts:87`).
+  // Also block on empty diagrams (the server skips them too).
   const canSave =
     Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
 
-  const handleCreate = async () => {
-    if (!editor || submitting || !canSave) return
+  const handleCreate = (saveableOverride?: boolean) => {
+    const saveable = saveableOverride ?? canSave
+    if (!editor || submitting || !saveable) return
     // Request persistent storage from inside the click handler — running
     // it after the await chain below would leave the user-gesture window
     // (Firefox would silently deny). No-op for adapters that don't
     // implement the optional method.
     void repo.requestPersistence?.()
-    setSubmitting(true)
     const description = draft.trim()
     // `name` is an internal label — the description's first line (truncated) —
     // used in restored-from snackbars and the kebab "Restored from …" copy.
@@ -239,33 +321,92 @@ export const VersionSidebarBody: FC<Props> = ({
     const name = description
       ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
       : ""
-    try {
-      const summary = await createVersion(diagramId, editor.model, {
-        name,
-        description: description || undefined,
-      })
-      // Record the id before React re-renders so the baseline effect
-      // (latestSavedVersion?.id dep) sees it synchronously and takes the
-      // fast path (editor.model fingerprint) instead of fetching the body.
-      lastLocalSaveIdRef.current = summary.id
-      onVersionSaved?.(summary.headRev)
-      setDraft("")
-    } catch (err) {
-      if (err instanceof ApiError) {
-        // BODY_TOO_LARGE is the same code for the server's 5MB limit and
-        // the local IDB quota. The repository tailors `err.message` to
-        // its actual constraint — surface that directly so a local-mode
-        // user isn't told to "split into smaller diagrams" when the
-        // problem is whole-origin storage pressure.
-        if (err.code === "BODY_TOO_LARGE") toast.error(err.message)
-        else toast.error(t.failureToCreate)
-      } else {
-        toast.error(t.failureToCreate)
+    createMutation.mutate(
+      { body: editor.model, name, description: description || undefined },
+      {
+        // Panel-local only — meaningless if this panel is already gone. The
+        // headRev handoff lives on the mutation options above.
+        onSuccess: () => setDraft(""),
+        onError: (err) => {
+          if (err instanceof ApiError) {
+            // BODY_TOO_LARGE is the same code for the server's 5MB limit and
+            // the local IDB quota. The repository tailors `err.message` to
+            // its actual constraint — surface that directly so a local-mode
+            // user isn't told to "split into smaller diagrams" when the
+            // problem is whole-origin storage pressure.
+            if (err.code === "BODY_TOO_LARGE") toast.error(err.message)
+            else toast.error(t.failureToCreate)
+          } else {
+            toast.error(t.failureToCreate)
+          }
+        },
       }
-    } finally {
-      setSubmitting(false)
-    }
+    )
   }
+
+  // The "save a version" shortcut (Ctrl/Cmd+Shift+S) can't reach the editor
+  // model or the guards, so it bumps a per-diagram nonce and this panel — which
+  // owns both — runs the same save the Save button does. Waiting for both the
+  // initial list load and `baselineResolved` keeps a keystroke from writing a
+  // duplicate before we know whether a version already exists: the list is
+  // briefly empty while the first fetch is in flight, and an empty list must
+  // not be mistaken for "no history yet".
+  const saveRequest = useVersionStore(
+    (s) => s.saveRequestByDiagram[diagramId] ?? 0
+  )
+  // The query is pending only until the first fetch settles; an error also
+  // ends the load (and there the Save button is optimistic, so match it).
+  const initialListLoaded = !versionsQuery.isPending
+  const clearSaveRequest = useVersionStore((s) => s.clearSaveRequest)
+  const handledSaveRequestRef = useRef(0)
+  // A ref, refreshed each render, so the trigger effect can depend only on the
+  // request and readiness rather than on every guard value it reads.
+  const runSaveRequestRef = useRef<() => void>(() => {})
+  useEffect(() => {
+    runSaveRequestRef.current = () => {
+      // `hasChanges` is recomputed by its own effect, which can still be one
+      // render behind at the exact moment the baseline resolves and this
+      // request unblocks. Compare against the fingerprint directly so the
+      // shortcut can't write a duplicate in that window.
+      const dirty =
+        savedFingerprint === null ||
+        (editor !== undefined &&
+          structuralFingerprint(editor.model) !== savedFingerprint)
+      const saveable =
+        Boolean(editor) && dirty && previewState === null && !isEmptyDiagram
+      if (saveable) {
+        void handleCreate(saveable)
+      } else if (editor && !isEmptyDiagram && previewState === null) {
+        // Content, but identical to the last version — nothing to snapshot.
+        toast.info(t.noChangesToSave)
+      }
+      // Empty diagram or previewing: the open panel (its empty-state CTA or
+      // preview banner) is feedback enough.
+    }
+  })
+
+  useEffect(() => {
+    if (saveRequest === 0) {
+      handledSaveRequestRef.current = 0
+      return
+    }
+    if (
+      saveRequest <= handledSaveRequestRef.current ||
+      !initialListLoaded ||
+      !baselineResolved
+    ) {
+      return
+    }
+    handledSaveRequestRef.current = saveRequest
+    clearSaveRequest(diagramId)
+    runSaveRequestRef.current()
+  }, [
+    saveRequest,
+    initialListLoaded,
+    baselineResolved,
+    diagramId,
+    clearSaveRequest,
+  ])
 
   const handlePreview = useCallback(
     async (versionId: string) => {
@@ -277,12 +418,18 @@ export const VersionSidebarBody: FC<Props> = ({
         return
       }
       try {
-        await enterPreview(diagramId, versionId)
+        const body = await fetchVersionBody(
+          queryClient,
+          kind,
+          diagramId,
+          versionId
+        )
+        enterPreview(diagramId, versionId, body)
       } catch {
         toast.error(t.previewFailed)
       }
     },
-    [editor, onPreview, enterPreview, diagramId]
+    [editor, onPreview, enterPreview, diagramId, queryClient, kind]
   )
 
   const handleRestore = useCallback(
@@ -299,17 +446,16 @@ export const VersionSidebarBody: FC<Props> = ({
         return
       }
       try {
-        const { headRev } = await restoreVersion(
-          diagramId,
+        const { headRev } = await restoreMutation.mutateAsync({
           versionId,
-          editor.model
-        )
+          currentBody: editor.model,
+        })
         onVersionSaved?.(headRev)
       } catch {
         toast.error(t.restoreFailed)
       }
     },
-    [editor, restoreVersion, diagramId, onVersionSaved, onConfirmedRestore]
+    [editor, restoreMutation.mutateAsync, onVersionSaved, onConfirmedRestore]
   )
 
   const handleDelete = useCallback(
@@ -317,9 +463,9 @@ export const VersionSidebarBody: FC<Props> = ({
       // Resolve the target here (we already hold the list) and pass it down so
       // the modal doesn't re-read the store for data we have.
       const version = versions.find((v) => v.id === versionId) ?? null
-      openModal("DELETE_VERSION", { diagramId, versionId, version })
+      openModal("DELETE_VERSION", { diagramId, versionId, version, kind })
     },
-    [openModal, diagramId, versions]
+    [openModal, diagramId, versions, kind]
   )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
@@ -401,7 +547,7 @@ export const VersionSidebarBody: FC<Props> = ({
             <Button
               type="button"
               size="sm"
-              onClick={handleCreate}
+              onClick={() => handleCreate()}
               disabled={submitting || !canSave}
               title={
                 !canSave && previewState !== null
@@ -487,16 +633,18 @@ export const VersionSidebarBody: FC<Props> = ({
       />
 
       <div className="flex-1 overflow-auto">
-        {errorCode === "REDIS_UNAVAILABLE" ? (
+        {loadFailed ? (
           <div className="p-4">
             <p
               className="text-sm"
               style={{ color: "var(--apollon-alert-warning-yellow)" }}
             >
-              {t.failureRedis}
+              {errorCode === "REDIS_UNAVAILABLE"
+                ? t.failureRedis
+                : t.failureToLoad}
             </p>
           </div>
-        ) : loading && versions.length === 0 ? (
+        ) : versionsQuery.isPending && versions.length === 0 ? (
           <ul className="m-0 list-none p-0">
             {[0, 1, 2].map((i) => (
               <li key={i} className="flex list-none gap-3 p-4">
@@ -597,14 +745,21 @@ export const VersionSidebarBody: FC<Props> = ({
                 />
               )
             )}
-            {nextCursor && (
+            {versionsQuery.hasNextPage && (
               <li className="list-none px-4 py-3 text-center">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadMoreVersions(diagramId)}
-                  disabled={loading}
+                  onClick={() => {
+                    // Without `throwOnError` this promise never rejects.
+                    versionsQuery
+                      .fetchNextPage({ throwOnError: true })
+                      .catch(() => {
+                        toast.error("Failed to load more versions.")
+                      })
+                  }}
+                  disabled={versionsQuery.isFetchingNextPage}
                   className="hover:[background:var(--row-hover-bg)]"
                   style={
                     {

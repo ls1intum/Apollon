@@ -5,6 +5,7 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { useStore } from "@xyflow/react"
 import { useMemo } from "react"
+import { useLabels } from "@/i18n/useLabels"
 
 interface CustomEdgeToolbarProps {
   edgeId: string
@@ -24,6 +25,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
   onDeleteClick,
   anchorRef,
 }) => {
+  const t = useLabels()
   const isDiagramModifiable = useDiagramModifiable()
   const selected = useIsOnlyThisElementSelected(edgeId)
   // The toolbar lives inside the zoomed SVG viewport, so by default it grows
@@ -64,7 +66,12 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
         x={toolbarPosition.x + 20 - SHADOW_MARGIN}
         y={toolbarPosition.y + 20 - SHADOW_MARGIN}
         overflow="visible"
-        style={{ overflow: "visible" }}
+        // The foreignObject is ALWAYS present (it anchors the popover) and sits
+        // offset from the edge line, so if it captured the pointer it would select
+        // the edge from an empty region well away from the visible line. Keep the
+        // box transparent to the pointer; the toolbar buttons re-enable themselves
+        // (`.apollon-edge-toolbar > *`). Anchoring is geometric, so it's unaffected.
+        style={{ overflow: "visible", pointerEvents: "none" }}
       >
         {showToolbar && (
           // `.apollon-edge-toolbar` makes only the buttons (not the box body)
@@ -96,7 +103,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
           >
             <button
               type="button"
-              aria-label="Delete edge"
+              aria-label={t.deleteEdge}
               style={{
                 width: "16px",
                 height: "16px",
@@ -119,7 +126,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             </button>
             <button
               type="button"
-              aria-label="Edit edge"
+              aria-label={t.editEdge}
               style={{
                 width: "16px",
                 height: "16px",

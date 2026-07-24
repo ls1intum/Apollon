@@ -18,6 +18,7 @@ function serializeOptions(o: OverlayControlOptions): string {
   return JSON.stringify({
     region: o.region,
     order: o.order ?? null,
+    lane: o.lane ?? null,
     interactive: o.interactive ?? null,
     groupLabel: o.groupLabel ?? null,
     inset: o.inset ?? null,

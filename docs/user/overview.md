@@ -9,7 +9,8 @@ slug: /
 
 Apollon is an open-source UML and modeling editor for the web, iPhone, iPad,
 VS Code, and your own products. Draw locally, collaborate when you choose, and
-export to SVG, PNG, PDF, PPTX, or JSON.
+export to SVG, PNG, PDF, PPTX, or JSON. There is nothing to install to get
+started on the web.
 
 ## What you can draw
 
@@ -29,9 +30,8 @@ Apollon supports 13 diagram types:
 - BPMN
 - SFC
 
-Any diagram exports to SVG, PNG, PDF, PPTX, or JSON. JSON round-trips —
-re-import it to keep editing. Real-time collaboration is optional and runs over
-WebSockets.
+Any diagram exports to SVG, PNG, PDF, PPTX, or JSON. JSON round-trips — re-import
+it to keep editing. Real-time collaboration is optional and runs over WebSockets.
 
 ## Which way to use Apollon
 
@@ -61,7 +61,7 @@ versioned and reviewed like any other source.
 you need UML modeling inside an existing application.
 
 ```sh
-npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
+npm install @tumaet/apollon
 ```
 
 | You want to...                                  | Use this           |

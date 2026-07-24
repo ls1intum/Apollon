@@ -103,14 +103,17 @@ interface Props {
   height?: number
   elementId: string
   hiddenHandles?: HandleId[] | true
-  className?: string
+  // Keep the handles (so existing edges anchored to them still render) but stop
+  // this node from being a connection TARGET. Used by non-connectable shapes that
+  // can still be an edge SOURCE, e.g. a BPMN annotation.
+  isConnectableEnd?: boolean
 }
 
 export function DefaultNodeWrapper({
   elementId,
   children,
   hiddenHandles = [],
-  className,
+  isConnectableEnd = true,
 }: Props) {
   // Subscribe to only the fields this wrapper uses, with shallow equality, so a
   // node re-renders its handles on resize/type change but not on the position
@@ -566,7 +569,6 @@ export function DefaultNodeWrapper({
   return (
     <AssessmentSelectableWrapper elementId={elementId}>
       <FeedbackDropzone
-        className={className}
         elementId={elementId}
         asElement="div"
         elementType={nodeType}
@@ -609,6 +611,7 @@ export function DefaultNodeWrapper({
                   }
                   isConnectable={isDiagramModifiable}
                   isConnectableStart={isPrimaryHandle && isDiagramModifiable}
+                  isConnectableEnd={isConnectableEnd}
                 />
               )
             })}

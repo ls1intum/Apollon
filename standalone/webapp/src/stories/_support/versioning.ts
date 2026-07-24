@@ -1,23 +1,26 @@
 /* Shared fixtures + builders for the versioning component stories.
  *
- * The versioning stories (VersionDrawer / VersionListItem / AutoGroupRow /
- * CurrentVersionRow / VersionPreviewBanner / DeleteVersionModal) all re-declared
- * the same `PendingVersion` literals and the same `useVersionStore.setState`
- * seeding boilerplate. This module is the single source of those shapes:
- *
  *  - `makeVersion` / `makeAutoVersion` / `makePendingVersion` build one
  *    `PendingVersion` with sensible defaults; override any field per story.
  *  - `SAMPLE_VERSIONS` is a ready-made populated history (named + auto + named).
  *  - `makeAutoGroup` builds the `AutoGroupRow` group shape (a run of auto-saves).
- *  - `seedVersions` / `seedPreview` / `openDrawer` / `resetVersionStore` wrap the
- *    `useVersionStore` mutations the container stories use in `beforeEach`.
+ *  - `seedVersions` binds an in-memory `VersionRepository` — the same port the
+ *    app uses — so a story's components fetch through their real queries.
+ *  - `seedPreview` / `openDrawer` / `resetVersionStore` drive the client store.
  *
- * View stories should NOT need these store helpers — they drive everything via
- * `args`. The seed helpers exist only for the thin-container integration stories
- * that still read `useVersionStore`.
+ * View stories need none of this: they drive everything via `args`. The seed
+ * helpers exist for the thin-container stories that fetch and read state.
  */
 import type { UMLModel } from "@tumaet/apollon"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import { useVersionStore } from "@/stores/useVersionStore"
+import {
+  RemoteVersionRepository,
+  setVersionRepository,
+  type VersionRepository,
+} from "@/services/versionRepository"
+import type { Diagram, PendingVersion } from "@/types"
+import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
+import { storybookQueryClient } from "./queryClient"
 
 export type { PendingVersion }
 
@@ -134,33 +137,70 @@ export const EMPTY_BODY: UMLModel = {
   edges: [],
 } as unknown as UMLModel
 
-/** Clear every per-diagram slice of the version store. Use in meta `beforeEach`. */
+/**
+ * In-memory `VersionRepository` stub, bound under the "remote" kind so the
+ * stories' queries resolve it. Override individual methods (e.g. a `fn()` spy
+ * on `delete`) per story.
+ */
+function makeStoryRepository(
+  versions: PendingVersion[] = [],
+  {
+    total = versions.filter((v) => !v.pending).length,
+    overrides = {},
+  }: { total?: number; overrides?: Partial<VersionRepository> } = {}
+): VersionRepository {
+  const committed = versions.filter((v) => !v.pending)
+  return {
+    kind: "remote",
+    cap: MAX_VERSIONS_PER_DIAGRAM,
+    list: async () => ({ versions: committed, nextCursor: undefined, total }),
+    getBody: async () => EMPTY_BODY as Diagram,
+    create: async (_diagramId, body, opts) =>
+      makeVersion({
+        id: "created-in-story",
+        name: opts.name ?? "",
+        description: opts.description ?? "",
+        librarySchemaVersion: body.version,
+      }),
+    restore: async () => ({
+      updatedAt: "2026-06-16T10:00:00.000Z",
+      autoSnapshotVersionId: "auto-snapshot-story",
+      headRev: 1,
+    }),
+    editInfo: async (_diagramId, versionId, patch) =>
+      makeVersion({ id: versionId, ...patch }),
+    delete: async () => {},
+    permalink: (diagramId, versionId) =>
+      RemoteVersionRepository.permalink(diagramId, versionId),
+    ...overrides,
+  }
+}
+
+/** Reset the client store and bind an empty stub repository. */
 export function resetVersionStore(): void {
   useVersionStore.setState({
-    versions: {},
-    totals: {},
-    nextCursor: {},
-    loading: {},
-    error: {},
     preview: null,
     drawerOpenByDiagram: {},
     undoRestore: null,
     pendingRestoreFromId: null,
   })
+  seedVersions([])
 }
 
-/** Seed a list of versions (and optional total) for a diagram. */
+/** Serve a version list to every consumer; their queries fetch it on mount. */
 export function seedVersions(
   versions: PendingVersion[],
   {
-    diagramId = SAMPLE_DIAGRAM_ID,
-    total = versions.filter((v) => !v.pending).length,
-  }: { diagramId?: string; total?: number } = {}
+    total,
+    overrides,
+  }: { total?: number; overrides?: Partial<VersionRepository> } = {}
 ): void {
-  useVersionStore.setState((s) => ({
-    versions: { ...s.versions, [diagramId]: versions },
-    totals: { ...s.totals, [diagramId]: total },
-  }))
+  // Stories never need the real REST adapter back; the next seed overwrites.
+  setVersionRepository(
+    "remote",
+    makeStoryRepository(versions, { total, overrides })
+  )
+  storybookQueryClient.clear()
 }
 
 /** Open the inline version sidebar for a diagram. */

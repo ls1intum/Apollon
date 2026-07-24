@@ -6,6 +6,7 @@ import { CustomEdgeProps } from "@/edges/EdgeProps"
 import { useEdgePopOver, useReactiveEdge, useReactiveNodeName } from "@/hooks"
 import { PopoverProps } from "../types"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ConnectionInfo,
   hasDistinctEndpointNames,
@@ -13,21 +14,22 @@ import {
   PopoverSection,
 } from "../PopoverLayout"
 
-const USE_CASE_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
-  { value: "UseCaseAssociation", label: "Association" },
-  { value: "UseCaseInclude", label: "Include" },
-  { value: "UseCaseExtend", label: "Extend" },
-  { value: "UseCaseGeneralization", label: "Generalization" },
-]
-
 export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
+  const USE_CASE_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+    { value: "UseCaseAssociation", label: t.association },
+    { value: "UseCaseInclude", label: t.include },
+    { value: "UseCaseExtend", label: t.extend },
+    { value: "UseCaseGeneralization", label: t.generalization },
+  ]
+
   const edge = useReactiveEdge(elementId)
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
   const { handleEdgeTypeChange, handleLabelChange, handleSwap } =
     useEdgePopOver(elementId)
 
@@ -38,19 +40,19 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />
@@ -68,19 +70,19 @@ export const UseCaseEdgeEditPopover: React.FC<PopoverProps> = ({
       </PopoverSection>
 
       {hasDistinctEndpointNames(sourceName, targetName) && (
-        <PopoverSection title="Connection" divider>
+        <PopoverSection title={t.connection} divider>
           <ConnectionInfo source={sourceName} target={targetName} />
         </PopoverSection>
       )}
 
       {/* Show label input only for associations */}
       {edge.type === "UseCaseAssociation" && (
-        <PopoverSection title="Label" divider>
+        <PopoverSection title={t.label} divider>
           <TextField
             value={edgeData?.label ?? ""}
             onChange={(e) => handleLabelChange(e.target.value)}
             fullWidth
-            placeholder="Label"
+            placeholder={t.label}
           />
         </PopoverSection>
       )}

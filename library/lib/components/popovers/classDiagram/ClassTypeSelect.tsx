@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { Select, type SelectOption } from "@/components/ui"
 import { ClassStereotype } from "@/types"
+import { useLabels } from "@/i18n/useLabels"
 import { stereotypeLabel } from "@/utils"
 
 /**
@@ -12,7 +13,7 @@ export type ClassKind = "class" | "abstract" | "interface" | "enumeration"
 
 type KindDescriptor = {
   value: ClassKind
-  label: string
+  label: (t: ReturnType<typeof useLabels>) => string
   /** Metaclass keyword shown as a `«…»` line, mirroring the header. */
   keyword?: ClassStereotype
   /** Abstract classifiers render their name in italics (UML 2.5.1 §9.2.4). */
@@ -20,22 +21,26 @@ type KindDescriptor = {
 }
 
 const KINDS: readonly KindDescriptor[] = [
-  { value: "class", label: "Class" },
-  { value: "abstract", label: "Abstract Class", italic: true },
+  { value: "class", label: (t) => t.class },
+  { value: "abstract", label: (t) => t.abstractClass, italic: true },
   {
     value: "interface",
-    label: "Interface",
+    label: (t) => t.interface,
     keyword: ClassStereotype.Interface,
   },
   {
     value: "enumeration",
-    label: "Enumeration",
+    label: (t) => t.enumeration,
     keyword: ClassStereotype.Enumeration,
   },
 ]
 
 // Each row previews the notation: a `«keyword»` chip and/or an italic name.
-const KindRow = ({ label, keyword, italic }: KindDescriptor) => (
+const KindRow = ({
+  label,
+  keyword,
+  italic,
+}: Omit<KindDescriptor, "label"> & { label: string }) => (
   <span style={{ alignItems: "baseline", display: "flex", gap: 8 }}>
     {keyword && (
       <span style={{ fontSize: "0.85em", opacity: 0.6 }}>
@@ -57,21 +62,25 @@ interface ClassTypeSelectProps {
  * state.
  */
 export const ClassTypeSelect = ({ value, onChange }: ClassTypeSelectProps) => {
+  const t = useLabels()
   const options: SelectOption[] = useMemo(
     () =>
-      KINDS.map((kind) => ({
-        value: kind.value,
-        label: kind.label,
-        renderOption: () => <KindRow {...kind} />,
-        renderValue: () => <KindRow {...kind} />,
-      })),
-    []
+      KINDS.map((kind) => {
+        const label = kind.label(t)
+        return {
+          value: kind.value,
+          label,
+          renderOption: () => <KindRow {...kind} label={label} />,
+          renderValue: () => <KindRow {...kind} label={label} />,
+        }
+      }),
+    [t]
   )
 
   return (
     <Select
-      label="Class type"
-      aria-label="Class type"
+      label={t.classType}
+      aria-label={t.classType}
       value={value}
       options={options}
       onChange={(next) => onChange(next as ClassKind)}

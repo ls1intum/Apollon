@@ -715,7 +715,7 @@ export function DiagramCardView({
         {...nav}
         // Expired links keep `preventDefault` AND `tabIndex={-1}`: aria-disabled
         // is advisory only, so TanStack <Link> would still navigate on Enter.
-        onClick={(event) => {
+        onClick={(event: ReactMouseEvent<HTMLAnchorElement>) => {
           if (isExpired) {
             event.preventDefault()
             return

@@ -60,7 +60,7 @@ test("remote cursor maps to the same flow point across different viewports", asy
 
   // Give the receiver a different zoom/pan than the sender (the first controls
   // button is zoom-in), so this isn't an identical round trip.
-  const zoomIn = receiver.locator(".react-flow__controls-zoomin").first()
+  const zoomIn = receiver.getByRole("button", { name: "Zoom in" })
   await zoomIn.click()
   await zoomIn.click()
 

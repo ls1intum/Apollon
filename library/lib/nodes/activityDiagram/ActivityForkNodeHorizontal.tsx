@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper, HandleId } from "../wrappers"
+import { DefaultNodeWrapper, HandleId, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
@@ -34,7 +34,6 @@ export function ActivityForkNodeHorizontal({
         HandleId.RightTop,
         HandleId.RightBottom,
       ]}
-      className="horizontally-not-resizable"
     >
       <NodeToolbar elementId={id} />
       <NodeResizer
@@ -42,7 +41,6 @@ export function ActivityForkNodeHorizontal({
         onResize={onResize}
         minHeight={20}
         maxHeight={20}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef}>
         <ActivityForkNodeHorizontalSVG

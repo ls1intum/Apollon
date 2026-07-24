@@ -42,4 +42,5 @@ have. `react`, `react-dom`, and `@xyflow/react` are required peers (joining
 - **[Collaboration](/library/api/collaboration)** — Yjs-based real-time sync
 - **[Export](/library/api/export)** — SVG / PNG / PDF / JSON
 - **[Overlay controls](/library/api/overlay-controls)** — inject toolbars, banners, and rails into the canvas
+- **[Internationalization](/library/api/overlay-controls#i18n)** — override the editor's strings via `labels`
 - **[Troubleshooting](/library/troubleshooting)** — blank canvas, SSR, and other embedding gotchas

@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client"
+import type { CSSProperties } from "react"
 // Must be imported FIRST (before ./utils, the stores and overlay modules) so the
 // editor render tree — and the node/edge component registries it pulls in —
 // evaluates ahead of any utility/store/overlay module. Relocating it (e.g.
@@ -13,6 +14,9 @@ import {
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
+  getElementIdsByTag,
+  resolveTagConfig,
+  applyElementTags,
 } from "./utils"
 // Internal (not re-exported through the public `./utils` barrel): brings any
 // incoming model onto the current schema (e.g. legacy class stereotypes) at
@@ -39,9 +43,18 @@ import {
   OverlayStoreContext,
 } from "./store/context"
 import { createOverlayStore, type OverlayStore } from "./overlay/overlayStore"
+import {
+  assertBuiltInControlRegion,
+  preserveBuiltInControlKind,
+  defaultControls,
+} from "./chrome/builtins/controls"
+import { mergeLabels } from "./i18n/labels"
+import { insetAwareFitView } from "./overlay/fitView"
 import { RegionMount } from "./overlay/RegionMount"
 import {
+  type InsetContribution,
   type OverlayControlInput,
+  type OverlayControlSnapshot,
   type OverlayRegion,
   type OverlaySide,
   OVERLAY_REGIONS,
@@ -82,6 +95,19 @@ const disabledCollaboration = {
   showFollow: false,
 }
 
+function cloneInsetSnapshot(
+  inset: InsetContribution | undefined
+): InsetContribution | undefined {
+  if (inset === undefined || inset === "auto") return inset
+  return Object.freeze({ ...inset })
+}
+
+function cloneStyleSnapshot(
+  style: CSSProperties | undefined
+): CSSProperties | undefined {
+  return style ? Object.freeze({ ...style }) : undefined
+}
+
 const noopCollaborationAwareness = {
   setLocalAwarenessCursor: () => {},
   setLocalAwarenessSelectedElement: () => {},
@@ -104,6 +130,7 @@ export class ApollonEditor {
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
   private readonly overlayStore: StoreApi<OverlayStore>
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
+  private readonly controlGenerations = new Map<string, number>()
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -207,6 +234,24 @@ export class ApollonEditor {
     if (options?.scrollLock !== undefined) {
       this.metadataStore.getState().setScrollLock(options.scrollLock)
     }
+    if (options?.keyboardShortcuts !== undefined) {
+      this.metadataStore
+        .getState()
+        .setKeyboardShortcuts(options.keyboardShortcuts)
+    }
+    if (options?.labels !== undefined) {
+      this.metadataStore.getState().setLabels(mergeLabels(options.labels))
+    }
+    if (options?.tags !== undefined) {
+      this.metadataStore.getState().setTagConfig(resolveTagConfig(options.tags))
+    }
+    // Register the chrome: the given descriptors (even `[]`, an explicit bare
+    // canvas), or the palette + zoom + minimap defaults when omitted. The React
+    // `<Apollon>` wrapper always passes `[]` and instead composes its own defaults
+    // as fallback children, so composing-ness stays fully reactive (no mount-time
+    // snapshot, no default fighting a composed control over a reserved id).
+    for (const control of options?.controls ?? defaultControls())
+      this.addControl(control)
 
     this.diagramStore.getState().setCollaborationEnabled(collaboration.enabled)
 
@@ -306,7 +351,8 @@ export class ApollonEditor {
    *   that adds to a 16px gutter. A per-side object forces the inset-aware path.
    * @param options.duration - Animation duration in ms (default `200`).
    * @param options.respectInsets - Pad the fit by reserved overlay insets
-   *   (header, rails, …). Default `true`.
+   *   (header, rails, …). Default `true`. The device safe area (notch, home
+   *   indicator) is always cleared — it is a hardware constraint, not chrome.
    */
   public fitView(options?: {
     padding?: number | Partial<Record<OverlaySide, number>>
@@ -317,7 +363,6 @@ export class ApollonEditor {
     const duration = options?.duration ?? 200
     const respectInsets = options?.respectInsets ?? true
     const explicit = options?.padding
-    const explicitObject = typeof explicit === "object" && explicit !== null
     const maxAttempts = 10
     let attempts = 0
 
@@ -339,45 +384,24 @@ export class ApollonEditor {
             (n.measured?.height ?? n.height ?? 0) > 0
         )
       if (allMeasured || attempts >= maxAttempts) {
-        const insets = respectInsets
-          ? this.overlayStore.getState().insets
-          : ZERO_INSETS
-        const hasInsets =
-          insets.top || insets.right || insets.bottom || insets.left
-        // No reserved chrome and a scalar/absent padding -> fraction-based fit,
-        // byte-identical to an embedder that registers no overlays.
-        if (!hasInsets && !explicitObject) {
-          rf.fitView({
-            padding: typeof explicit === "number" ? explicit : 0.15,
-            duration,
-            maxZoom: 1.0,
-          })
-          return
-        }
-        // Reserve room MapLibre-style: per-side px = inset + a base gutter
-        // (or the host's explicit per-side override).
-        const obj = explicitObject
-          ? (explicit as Partial<Record<OverlaySide, number>>)
-          : {}
-        const GUTTER = 16
-        rf.fitView({
-          padding: {
-            top: `${insets.top + (obj.top ?? GUTTER)}px`,
-            right: `${insets.right + (obj.right ?? GUTTER)}px`,
-            bottom: `${insets.bottom + (obj.bottom ?? GUTTER)}px`,
-            left: `${insets.left + (obj.left ?? GUTTER)}px`,
-          },
+        const overlay = this.overlayStore.getState()
+        const insets = respectInsets ? overlay.insets : ZERO_INSETS
+        insetAwareFitView(rf, insets, overlay.safeArea, {
+          padding: explicit,
           duration,
-          maxZoom: 1.0,
         })
+        return
       }
+      // Nodes aren't measured yet — re-queue so the fit lands once React Flow
+      // has sized them, instead of framing an unmeasured (empty-bounds) graph.
+      requestAnimationFrame(attempt)
     }
     requestAnimationFrame(attempt)
   }
 
   // ---- Canvas overlay / control API -------------------------------------
   // A library-owned overlay engine: host chrome (header, rails, banners) and the
-  // editor's own overlays share one collision-free, inset-aware layout. Controls
+  // editor's own overlays share one measured, inset-aware layout. Controls
   // render INSIDE the React Flow context. `getRegionElement` is the escape hatch
   // for hosts that need their OWN React context (theme, router) via createPortal.
 
@@ -400,8 +424,14 @@ export class ApollonEditor {
       throw new Error(
         `[ApollonEditor] addControl: unknown region: ${control.region}`
       )
+    const generation = (this.controlGenerations.get(control.id) ?? 0) + 1
+    this.controlGenerations.set(control.id, generation)
     this.overlayStore.getState().register(control)
-    return () => this.overlayStore.getState().unregister(control.id)
+    return () => {
+      if (this.controlGenerations.get(control.id) !== generation) return
+      this.overlayStore.getState().unregister(control.id)
+      this.controlGenerations.delete(control.id)
+    }
   }
 
   /**
@@ -412,8 +442,31 @@ export class ApollonEditor {
   public updateControl(id: string, patch: Partial<OverlayControlInput>): void {
     const existing = this.overlayStore.getState().controls[id]
     if (!existing) return
+    if (patch.region !== undefined && !OVERLAY_REGIONS.includes(patch.region))
+      throw new Error(
+        `[ApollonEditor] updateControl: unknown region: ${patch.region}`
+      )
     // Pin id last so a stray `patch.id` can't fork the control under a new key.
-    this.overlayStore.getState().register({ ...existing, ...patch, id })
+    const next = { ...existing, ...patch, id }
+    // Built-in descriptors carry a private renderer-kind marker so their own
+    // runtime updates stay within the regions their renderers support. Replacing
+    // the renderer intentionally drops that marker: a host control at PALETTE_ID /
+    // MINIMAP_ID is a normal control and can move to any valid region.
+    if (patch.render === undefined) preserveBuiltInControlKind(existing, next)
+    if (patch.region !== undefined)
+      assertBuiltInControlRegion(next, patch.region)
+    this.overlayStore.getState().register(next)
+  }
+
+  /**
+   * Unregister a control by id (a no-op if absent). Hides a built-in imperatively
+   * — e.g. `editor.removeControl(ZOOM_ID)` — the parity for omitting it from a
+   * React composition. Equivalent to the disposer `addControl` returns.
+   * @param id - The control's id.
+   */
+  public removeControl(id: string): void {
+    this.controlGenerations.delete(id)
+    this.overlayStore.getState().unregister(id)
   }
 
   /**
@@ -422,6 +475,29 @@ export class ApollonEditor {
    */
   public hasControl(id: string): boolean {
     return id in this.overlayStore.getState().controls
+  }
+
+  /**
+   * @param id - A control id.
+   * @returns The registered control options, or `undefined` if absent — e.g. to
+   *   read a built-in's current `region` after `updateControl`. The renderer is
+   *   intentionally omitted; replace a renderer explicitly with `updateControl`.
+   */
+  public getControl(id: string): OverlayControlSnapshot | undefined {
+    const control = this.overlayStore.getState().controls[id]
+    if (!control) return undefined
+    return Object.freeze({
+      id: control.id,
+      region: control.region,
+      inset: cloneInsetSnapshot(control.inset),
+      order: control.order,
+      lane: control.lane,
+      interactive: control.interactive,
+      groupLabel: control.groupLabel,
+      visible: control.visible,
+      className: control.className,
+      style: cloneStyleSnapshot(control.style),
+    })
   }
 
   /**
@@ -490,6 +566,7 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.hostRegionEls.clear()
+      this.controlGenerations.clear()
       this.reactFlowInstance = null
     } catch (err) {
       // destroy() is best-effort — partial teardown is acceptable, but log
@@ -863,6 +940,47 @@ export class ApollonEditor {
   }
 
   /**
+   * Live-toggle whether the editor answers its keyboard shortcuts (see
+   * `APOLLON_SHORTCUTS`), React Flow's delete and arrow-key moving included.
+   */
+  public setKeyboardShortcuts(keyboardShortcuts: boolean): void {
+    this.metadataStore.getState().setKeyboardShortcuts(keyboardShortcuts)
+  }
+
+  /**
+   * Replace the editor's user-facing strings (i18n). Merged over the English
+   * defaults, so a partial map only changes the keys it provides. Reactive — the
+   * chrome re-renders, so a host can switch language without remounting.
+   * @param labels - A partial {@link ApollonLabels} in the host's language.
+   */
+  public setLabels(labels: Partial<Apollon.ApollonLabels>): void {
+    this.metadataStore.getState().setLabels(mergeLabels(labels))
+  }
+
+  /**
+   * Turn element-tag authoring on or off, and configure it. `true` enables
+   * free-form tagging; an object supplies a fixed `available` vocabulary and/or
+   * toggles `allowCreate`; `false`/`undefined` disables the authoring UI.
+   * Reactive. Tags already on the model stay queryable either way — this gates
+   * only the UI.
+   * @param options - `true`, a {@link TagOptions} object, or falsy to disable.
+   */
+  public setTags(options?: boolean | Apollon.TagOptions): void {
+    this.metadataStore.getState().setTagConfig(resolveTagConfig(options))
+  }
+
+  /**
+   * Set the tags on one element (a node, or a class attribute/method) by id, for
+   * hosts that assign tags programmatically instead of through the editor UI.
+   * Replaces the element's tag list; pass `[]` to clear. Unknown ids are ignored.
+   */
+  public setElementTags(elementId: string, tags: string[]): void {
+    const { nodes, setNodes } = this.diagramStore.getState()
+    const next = applyElementTags(nodes, elementId, tags)
+    if (next !== nodes) setNodes(next)
+  }
+
+  /**
    * Toggle preview-overlay mode. When `true`, subsequent `model = …`
    * assignments and other store mutators update the local Zustand caches
    * (so the canvas displays the overlay) WITHOUT writing to the Yjs
@@ -974,6 +1092,26 @@ export class ApollonEditor {
   /** Returns a copy of the current highlight record (id -> CSS color). */
   public getElementHighlights(): Record<string, string> {
     return { ...this.assessmentSelectionStore.getState().highlightedElements }
+  }
+
+  /**
+   * Ids of every element carrying the given host-defined tag — a node, or one
+   * of its members (a class attribute or method, an SFC action row). See the
+   * `tags` field on element data. Matching is
+   * exact and case-sensitive, apart from surrounding whitespace, which is
+   * trimmed from both the query and stored tags; an unknown or blank tag yields
+   * an empty array. Returns a snapshot in document order — re-query after a
+   * model change.
+   *
+   * Pair it with {@link ApollonEditor.setElementHighlights} to color a whole
+   * group by a host-computed status without touching the saved model.
+   *
+   * @example
+   * const ids = editor.getElementIdsByTag("testAttributes[Context]")
+   * editor.setElementHighlights(Object.fromEntries(ids.map((id) => [id, "red"])))
+   */
+  public getElementIdsByTag(tag: string): string[] {
+    return getElementIdsByTag(this.diagramStore.getState().nodes, tag)
   }
 
   public getSelectedElements(): string[] {

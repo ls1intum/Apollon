@@ -122,6 +122,49 @@ back. Do **not** feed `subscribeToModelChange` into `model` — that loops. For
 save-on-change, use `defaultModel` plus an `onMount` subscription (the first
 example above).
 
+## Composing editor controls
+
+Omitting `children` renders the default palette, zoom/history controls, and
+minimap. As soon as you pass children, the control composition is explicit: list
+the built-ins you want, or include `<ApollonDefaultControls />` to keep the
+default chrome next to your own controls.
+
+```tsx no-check
+import {
+  Apollon,
+  ApollonControl,
+  ApollonDefaultControls,
+} from "@tumaet/apollon"
+
+function Diagram() {
+  return (
+    <Apollon style={{ height: 600 }}>
+      <ApollonDefaultControls />
+      <ApollonControl id="my-app:export" region="top-right" groupLabel="Export">
+        <button type="button">Export</button>
+      </ApollonControl>
+    </Apollon>
+  )
+}
+```
+
+Passing `null` or an empty fragment means a bare canvas. To show only some
+built-ins, compose just those children:
+
+```tsx no-check
+function MinimalChromeDiagram() {
+  return (
+    <Apollon style={{ height: 600 }}>
+      <Apollon.Zoom region="bottom-center" history={false} />
+      <Apollon.MiniMap region="bottom-right" />
+    </Apollon>
+  )
+}
+```
+
+See [Overlay controls](/library/api/overlay-controls) for regions, built-in
+region limits, non-React host portals, and inset-aware `fitView()`.
+
 ## Hooks
 
 ```ts no-check

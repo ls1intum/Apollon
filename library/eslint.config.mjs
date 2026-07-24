@@ -40,11 +40,22 @@ export default [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      // The library styles with Base UI + raw CSS + --apollon-* tokens.
-      // It must never depend on MUI or a CSS-in-JS runtime (Emotion).
+      // `paths`: React Flow's NodeResizer renders controls on axes a node has
+      // pinned, so nodes must reach it through the wrapper that knows the
+      // difference. `patterns`: the library styles with Base UI + raw CSS +
+      // --apollon-* tokens, and must never depend on MUI or a CSS-in-JS
+      // runtime (Emotion).
       "no-restricted-imports": [
         "error",
         {
+          paths: [
+            {
+              name: "@xyflow/react",
+              importNames: ["NodeResizer"],
+              message:
+                "Import NodeResizer from @/nodes/wrappers. React Flow's renders resize controls on axes a node has pinned, which offers a cursor and a drag that do nothing.",
+            },
+          ],
           patterns: [
             {
               group: ["@mui/*", "@mui"],

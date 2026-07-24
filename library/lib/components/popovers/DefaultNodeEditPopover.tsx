@@ -3,11 +3,8 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "./types"
 import { NodeStyleEditor } from "@/components/styleEditor"
-import {
-  nodeTypeLabel,
-  rendersNameLabel,
-  supportsMultilineName,
-} from "@/utils/nodeUtils"
+import { rendersNameLabel, supportsMultilineName } from "@/utils/nodeUtils"
+import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout } from "./PopoverLayout"
 
 export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
@@ -16,6 +13,7 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
   sideElements = [],
   placeholder,
 }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -48,7 +46,7 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
   const nodeData = node.data as DefaultNodeProps
 
   return (
-    <PopoverLayout title={nodeTypeLabel(node.type)}>
+    <PopoverLayout title={t.nodeTypeLabel(node.type)}>
       <NodeStyleEditor
         nodeData={nodeData}
         handleDataFieldUpdate={handleDataFieldUpdate}

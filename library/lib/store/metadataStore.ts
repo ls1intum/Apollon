@@ -6,6 +6,8 @@ import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
+import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
+import { DISABLED_TAG_CONFIG, type TagConfig } from "@/utils/tagUtils"
 
 export type MetadataStore = {
   diagramTitle: string
@@ -16,6 +18,14 @@ export type MetadataStore = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  /** Tool toggle: clicks/taps add or remove elements — the touch path to a multi-selection. */
+  multiSelectionMode: boolean
+  /** Whether the editor answers `APOLLON_SHORTCUTS` at all. */
+  keyboardShortcuts: boolean
+  /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
+  labels: ApollonLabels
+  /** Element-tag authoring config; disabled until a host opts in. */
+  tagConfig: TagConfig
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -28,6 +38,10 @@ export type MetadataStore = {
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
+  setMultiSelectionMode: (multiSelectionMode: boolean) => void
+  setKeyboardShortcuts: (keyboardShortcuts: boolean) => void
+  setLabels: (labels: ApollonLabels) => void
+  setTagConfig: (tagConfig: TagConfig) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
     sourceNodeId: string | null,
@@ -57,6 +71,10 @@ type InitialMetadataState = {
   readonly: boolean
   debug: boolean
   scrollLock: boolean
+  multiSelectionMode: boolean
+  keyboardShortcuts: boolean
+  labels: ApollonLabels
+  tagConfig: TagConfig
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
   connectionGuidanceSourceNodeId: string | null
@@ -76,6 +94,10 @@ const initialMetadataState: InitialMetadataState = {
   readonly: false,
   debug: false,
   scrollLock: false,
+  multiSelectionMode: false,
+  keyboardShortcuts: true,
+  labels: DEFAULT_LABELS,
+  tagConfig: DISABLED_TAG_CONFIG,
   scrollEnabled: false,
   connectionGuidanceActive: false,
   connectionGuidanceSourceNodeId: null,
@@ -165,6 +187,50 @@ export const createMetadataStore = (
 
         setScrollLock: (scrollLock: boolean) => {
           set({ scrollLock }, undefined, "setScrollLock")
+        },
+
+        setMultiSelectionMode: (multiSelectionMode: boolean) => {
+          set({ multiSelectionMode }, undefined, "setMultiSelectionMode")
+        },
+        setKeyboardShortcuts: (keyboardShortcuts: boolean) => {
+          set({ keyboardShortcuts }, undefined, "setKeyboardShortcuts")
+        },
+
+        setLabels: (labels) => {
+          // Skip the write when the merged labels are value-equal to the current
+          // set. Hosts routinely pass an inline `labels={{…}}` literal (new object
+          // every render); without this guard every parent render would rewrite
+          // the store and re-render every `useLabels` subscriber (all chrome).
+          set(
+            (s) => {
+              const next = labels as unknown as Record<string, unknown>
+              const cur = s.labels as unknown as Record<string, unknown>
+              for (const key in next) {
+                if (next[key] !== cur[key]) return { labels }
+              }
+              return s
+            },
+            undefined,
+            "setLabels"
+          )
+        },
+
+        setTagConfig: (tagConfig) => {
+          // Skip the write when value-equal — a host passing an inline
+          // `tags={{…}}` literal produces a fresh object every render.
+          set(
+            (s) => {
+              const cur = s.tagConfig
+              const same =
+                cur.enabled === tagConfig.enabled &&
+                cur.allowCreate === tagConfig.allowCreate &&
+                cur.available.length === tagConfig.available.length &&
+                cur.available.every((v, i) => v === tagConfig.available[i])
+              return same ? s : { tagConfig }
+            },
+            undefined,
+            "setTagConfig"
+          )
         },
 
         setScrollEnabled: (scrollEnabled: boolean) => {

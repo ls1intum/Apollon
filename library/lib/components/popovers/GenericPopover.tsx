@@ -1,7 +1,7 @@
-import React, { ReactNode, useMemo } from "react"
+import React, { ReactNode } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
-import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
+import { usePortalThemeVars } from "@/components/ui/portalTheme"
 
 interface GenericPopoverProps {
   id: string
@@ -51,10 +51,8 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   minWidth = 200,
   style,
 }) => {
-  const popoverThemeVars = useMemo(
-    () =>
-      resolveApollonThemeVars(anchorEl instanceof Element ? anchorEl : null),
-    [anchorEl]
+  const popoverThemeVars = usePortalThemeVars(
+    anchorEl instanceof Element ? anchorEl : null
   )
 
   const { side, align } = toSideAlign(transformOrigin)

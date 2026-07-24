@@ -1,9 +1,9 @@
 import { type ReactNode, type CSSProperties } from "react"
 
 /**
- * Where a control is anchored. The six React Flow `<Panel>` corners are
- * screen-space and rendered through React Flow; `header`/`left-rail`/`right-rail`
- * are library-owned bands; `on-canvas` pans/zooms with the diagram.
+ * Where a control is anchored. The six corners and the `header`/`footer`/rail
+ * bands are screen-space cells of the overlay grid; `on-canvas` pans/zooms with
+ * the diagram.
  */
 export type OverlayRegion =
   | "top-left"
@@ -13,12 +13,14 @@ export type OverlayRegion =
   | "bottom-center"
   | "bottom-right"
   | "header" // full-width band pinned to the container top, above top-* regions
+  | "footer" // full-width band pinned to the container bottom, below bottom-* regions
   | "left-rail" // full-height left band (e.g. the element palette)
   | "right-rail" // full-height right band (e.g. version history)
   | "on-canvas" // viewport-transformed, pans + zooms with the diagram
 
-/** Regions that map directly onto a React Flow `<Panel position>`. */
-export const PANEL_REGIONS = [
+/** The six floating corner regions — grid cells of `.apollon-overlay-grid` that
+ *  sit between the bands and the canvas. */
+export const CORNER_REGIONS = [
   "top-left",
   "top-center",
   "top-right",
@@ -29,8 +31,9 @@ export const PANEL_REGIONS = [
 
 /** Every valid region — used to validate control registration at the API edge. */
 export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
-  ...PANEL_REGIONS,
+  ...CORNER_REGIONS,
   "header",
+  "footer",
   "left-rail",
   "right-rail",
   "on-canvas",
@@ -38,6 +41,21 @@ export const OVERLAY_REGIONS: readonly OverlayRegion[] = [
 
 /** One of the four edges a control can sit against / reserve room on. */
 export type OverlaySide = "top" | "right" | "bottom" | "left"
+
+/** The edge each region reserves room on / measures against; `on-canvas` has
+ *  none. Single source for the inset math and the measurement pipeline. */
+export const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
+  header: "top",
+  footer: "bottom",
+  "top-left": "top",
+  "top-center": "top",
+  "top-right": "top",
+  "bottom-left": "bottom",
+  "bottom-center": "bottom",
+  "bottom-right": "bottom",
+  "left-rail": "left",
+  "right-rail": "right",
+}
 /** Reserved room per side, in px. */
 export type Insets = Record<OverlaySide, number>
 export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -61,6 +79,16 @@ export interface OverlayControlOptions {
   inset?: InsetContribution
   /** Stacking within a region; lower renders toward the region's anchor edge. */
   order?: number
+  /**
+   * Band lane (bands only). Controls in the SAME lane sit along the band's axis
+   * (side by side on `header`/`footer`, top-to-bottom on the rails) and reserve
+   * the taller/wider of them. Controls in DIFFERENT lanes STACK across the band's
+   * cross-axis and their reservations SUM — so two independently-registered bars
+   * on one edge (e.g. an exam bar in lane 0 and a "problem statement changed"
+   * banner in lane 1) both get room instead of overlapping. Lane 0 (default) sits
+   * against the band's anchor edge; higher lanes stack toward the canvas. Ignored
+   * for slots and `on-canvas`. */
+  lane?: number
   /** When false the region frame stays pointer-transparent here too. Default true. */
   interactive?: boolean
   /** Wraps the control in a `role="group"` with this aria-label. No focus
@@ -74,9 +102,14 @@ export interface OverlayControlOptions {
   style?: CSSProperties
 }
 
+type InternalOverlayControlOptions = OverlayControlOptions & {
+  /** Internal escape hatch for React Flow primitives that position themselves. */
+  selfPositioned?: boolean
+}
+
 /** A control as stored in the registry: options plus the renderer.
  *  @internal Use {@link OverlayControlInput} as the public registration type. */
-export interface OverlayControl extends OverlayControlOptions {
+export interface OverlayControl extends InternalOverlayControlOptions {
   render: () => ReactNode
 }
 
@@ -84,3 +117,6 @@ export interface OverlayControl extends OverlayControlOptions {
 export type OverlayControlInput = OverlayControlOptions & {
   render: () => ReactNode
 }
+
+/** Immutable public view of a registered control. Renderer internals are omitted. */
+export type OverlayControlSnapshot = Readonly<OverlayControlOptions>

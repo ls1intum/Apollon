@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { Select, type SelectOption } from "@/components/ui"
+import { useLabels } from "@/i18n/useLabels"
 import { EdgeTypePreviewIcon } from "./EdgeTypePreviewIcon"
 
 // Label + preview-icon row shared by the option list and the collapsed value.
@@ -44,6 +45,7 @@ export const EdgeTypeSelect = ({
   options: ReadonlyArray<EdgeTypeOption>
   onChange: (value: string) => void
 }) => {
+  const t = useLabels()
   const selectOptions: SelectOption[] = useMemo(
     () =>
       options.map((option) => ({
@@ -66,8 +68,8 @@ export const EdgeTypeSelect = ({
 
   return (
     <Select
-      label="Edge Type"
-      aria-label="Edge Type"
+      label={t.edgeType}
+      aria-label={t.edgeType}
       value={value}
       options={selectOptions}
       onChange={onChange}

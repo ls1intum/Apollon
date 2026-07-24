@@ -1,8 +1,12 @@
 import { DefaultNodeEditPopover } from "../DefaultNodeEditPopover"
 import { PopoverProps } from "../types"
+import { useLabels } from "@/i18n/useLabels"
 
 export const SyntaxTreeTerminalEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
-  return <DefaultNodeEditPopover elementId={elementId} placeholder="Terminal" />
+  const t = useLabels()
+  return (
+    <DefaultNodeEditPopover elementId={elementId} placeholder={t.terminal} />
+  )
 }

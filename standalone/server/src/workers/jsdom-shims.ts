@@ -62,6 +62,21 @@ w.requestAnimationFrame ??= (cb: FrameRequestCallback) =>
   setTimeout(() => cb(Date.now()), 16) as unknown as number
 w.cancelAnimationFrame ??= (id: number) => clearTimeout(id)
 
+// JSDOM ships no matchMedia. The editor's palette queries it for its compact
+// (mobile) layout; headless there is no viewport, so every query is a
+// non-matching, inert MediaQueryList — enough for the render to proceed.
+w.matchMedia ??= ((query: string) =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  }) as unknown as MediaQueryList) as typeof window.matchMedia
+
 // JSDOM ships a constant (0,0,10,10) stub for SVGGraphicsElement.getBBox,
 // which collapses every node into a 10×10 box at origin and frames the
 // exported viewBox around empty space. Read the element's own `viewBox`

@@ -2,10 +2,12 @@ import React, { useState, KeyboardEvent, ChangeEvent } from "react"
 import { GripVertical, Plus, Trash2 } from "lucide-react"
 import { IconButton, TextField, Typography } from "@/components/ui"
 import { NodeStyleEditor } from "@/components/styleEditor"
-import { generateUUID } from "@/utils"
+import { useLabels } from "@/i18n/useLabels"
+import { generateUUID, withTags } from "@/utils"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { ClassNodeProps } from "@/types"
+import { ClassNodeElement, ClassNodeProps } from "@/types"
+import { TagChips, TagPicker } from "../TagPicker"
 import {
   DndContext,
   closestCenter,
@@ -31,8 +33,9 @@ interface Props {
 interface SortableAttributeRowProps {
   id: string
   nodeId: string
-  item: { id: string; name: string }
+  item: ClassNodeElement
   onAttributeChange: (id: string, key: string, value: string) => void
+  onTagsChange: (id: string, tags: string[]) => void
   onDelete: (id: string) => void
 }
 
@@ -40,8 +43,10 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
   id,
   item,
   onAttributeChange,
+  onTagsChange,
   onDelete,
 }) => {
+  const t = useLabels()
   const {
     attributes,
     listeners,
@@ -61,54 +66,69 @@ const SortableAttributeRow: React.FC<SortableAttributeRowProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{
-        ...style,
-        display: "flex",
-        gap: 4,
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
+      style={{ ...style, display: "flex", flexDirection: "column", gap: 4 }}
     >
       <div
-        {...attributes}
-        {...listeners}
-        // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
-        // but no name; the grip icon is aria-hidden, so name the handle
-        // explicitly (axe: aria-command-name).
-        aria-label="Reorder attribute"
-        className="apollon-drag-handle"
         style={{
           display: "flex",
+          gap: 4,
+          justifyContent: "space-between",
           alignItems: "center",
-          flexShrink: 0,
         }}
       >
-        <GripVertical width={16} height={16} aria-hidden="true" />
+        <div
+          {...attributes}
+          {...listeners}
+          // dnd-kit's `attributes` set `role="button"` + `aria-roledescription`
+          // but no name; the grip icon is aria-hidden, so name the handle
+          // explicitly (axe: aria-command-name).
+          aria-label={t.reorderAttribute}
+          className="apollon-drag-handle"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <GripVertical width={16} height={16} aria-hidden="true" />
+        </div>
+
+        <NodeStyleEditor
+          noStrokeUpdate
+          nodeData={item}
+          colorEditorLabel={t.attributeWord}
+          handleDataFieldUpdate={(key, value) =>
+            onAttributeChange(item.id, key, value)
+          }
+          sideElements={[
+            <TagPicker
+              key={`tags_${item.id}`}
+              tags={item.tags ?? []}
+              onChange={(tags) => onTagsChange(item.id, tags)}
+              subject={t.attributeWord}
+            />,
+            <IconButton
+              key={`delete_${item.id}`}
+              ariaLabel={t.deleteAttribute}
+              tooltip={t.deleteAttribute}
+              onClick={() => onDelete(item.id)}
+            >
+              <Trash2 width={16} height={16} aria-hidden="true" />
+            </IconButton>,
+          ]}
+        />
       </div>
 
-      <NodeStyleEditor
-        noStrokeUpdate
-        nodeData={item}
-        colorEditorLabel="attribute"
-        handleDataFieldUpdate={(key, value) =>
-          onAttributeChange(item.id, key, value)
-        }
-        sideElements={[
-          <IconButton
-            key={`delete_${item.id}`}
-            ariaLabel="Delete attribute"
-            tooltip="Delete attribute"
-            onClick={() => onDelete(item.id)}
-          >
-            <Trash2 width={16} height={16} aria-hidden="true" />
-          </IconButton>,
-        ]}
+      <TagChips
+        tags={item.tags ?? []}
+        onChange={(tags) => onTagsChange(item.id, tags)}
       />
     </div>
   )
 }
 
 export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
+  const t = useLabels()
   const { nodes, setNodes } = useDiagramStore(
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
@@ -129,11 +149,17 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
     )
   }
 
-  const handleAttributeChange = (id: string, key: string, newName: string) => {
+  const handleAttributeChange = (id: string, key: string, value: string) => {
     patchAttributes(
       attributes.map((item) =>
-        item.id === id ? { ...item, [key]: newName } : item
+        item.id === id ? { ...item, [key]: value } : item
       )
+    )
+  }
+
+  const handleTagsChange = (id: string, tags: string[]) => {
+    patchAttributes(
+      attributes.map((item) => (item.id === id ? withTags(item, tags) : item))
     )
   }
 
@@ -197,7 +223,7 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-        Attributes
+        {t.attributes}
       </Typography>
 
       <DndContext
@@ -216,6 +242,7 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
               nodeId={nodeId}
               item={item}
               onAttributeChange={handleAttributeChange}
+              onTagsChange={handleTagsChange}
               onDelete={handleItemDelete}
             />
           ))}
@@ -225,8 +252,8 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
       <div className="apollon-add-row">
         <TextField
           fullWidth
-          aria-label="New attribute"
-          placeholder="Add attribute"
+          aria-label={t.newAttribute}
+          placeholder={t.addAttribute}
           value={newItem}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setNewItem(e.target.value)
@@ -238,8 +265,8 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
           onKeyDown={handleKeyDown}
         />
         <IconButton
-          ariaLabel="Add attribute"
-          tooltip="Add attribute"
+          ariaLabel={t.addAttribute}
+          tooltip={t.addAttribute}
           onClick={handleAddItem}
         >
           <Plus width={16} height={16} aria-hidden="true" />

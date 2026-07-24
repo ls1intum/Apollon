@@ -77,8 +77,9 @@ const { blob, clamped } = await svgToPng(svg, clip, {
 const pdfBlob = await svgToPdf(svg, clip, { title: "diagram" })
 ```
 
-`@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies the
-consumer installs (`npm install @resvg/resvg-wasm jspdf svg2pdf.js`); they load
+`@resvg/resvg-wasm`, `jspdf` and `svg2pdf.js` are optional dependencies of
+`@tumaet/apollon`, so a normal install brings them in automatically (install
+them explicitly only under `--omit=optional`); they load
 lazily, so importing the editor never pulls them in. Over-budget diagrams come
 back with `clamped: true` and a reduced `appliedScale`; an over-budget PNG throws
 `RasterTooLargeError`. Inter ships Regular + Bold only, so italics render upright

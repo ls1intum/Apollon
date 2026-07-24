@@ -49,6 +49,7 @@ const meta = {
             toast follows the --home-* surface tokens (dark in dark) instead of
             react-toastify's white default. */}
         <ToastContainer
+          aria-label="Notifications"
           position="bottom-center"
           className="home-toast-container"
           toastClassName="home-toast"

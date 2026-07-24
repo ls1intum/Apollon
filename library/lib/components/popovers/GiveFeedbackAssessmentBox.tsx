@@ -4,6 +4,7 @@ import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
 import { IconButton, TextField } from "../ui"
+import { useLabels } from "@/i18n/useLabels"
 import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
 
 /** The coarse category stored on an Assessment's `elementType`. */
@@ -28,13 +29,6 @@ interface Props {
 /** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
 const FEEDBACK_MAX_LENGTH = 500
 
-const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
-  node: "Node",
-  attribute: "Attribute",
-  method: "Method",
-  edge: "Edge",
-}
-
 export const GiveFeedbackAssessmentBox = ({
   elementId,
   name,
@@ -42,6 +36,13 @@ export const GiveFeedbackAssessmentBox = ({
   typeLabel,
   divider = false,
 }: Props) => {
+  const t = useLabels()
+  const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
+    node: t.node,
+    attribute: t.attribute,
+    method: t.method,
+    edge: t.edge,
+  }
   const { assessments, setAssessments } = useDiagramStore(
     useShallow((state) => ({
       assessments: state.assessments,
@@ -87,8 +88,8 @@ export const GiveFeedbackAssessmentBox = ({
         name={name}
         action={
           <IconButton
-            ariaLabel={`Delete assessment for ${name}`}
-            tooltip="Delete assessment"
+            ariaLabel={t.deleteAssessmentFor(name)}
+            tooltip={t.deleteAssessment}
             onClick={handleDelete}
           >
             <Trash2 width={16} height={16} aria-hidden="true" />
@@ -97,8 +98,8 @@ export const GiveFeedbackAssessmentBox = ({
       />
       <TextField
         type="number"
-        label="Points"
-        helperText="Negative points are allowed."
+        label={t.points}
+        helperText={t.negativePointsAllowed}
         value={score}
         onChange={(e) => {
           const value = e.target.value
@@ -112,7 +113,7 @@ export const GiveFeedbackAssessmentBox = ({
         multiline
         minRows={3}
         maxLength={FEEDBACK_MAX_LENGTH}
-        label="Feedback"
+        label={t.feedback}
         helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
         value={feedback}
         onChange={(e) => {
@@ -120,7 +121,7 @@ export const GiveFeedbackAssessmentBox = ({
           setFeedback(value)
           updateAssessment(score, value)
         }}
-        placeholder="Add a comment…"
+        placeholder={t.addComment}
         fullWidth
       />
     </PopoverSection>

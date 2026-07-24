@@ -6,6 +6,7 @@ import { ArrowLeftRight } from "lucide-react"
 import { IconButton, TextField } from "@/components/ui"
 import { EdgeStyleEditor } from "@/components/styleEditor"
 import { EdgeTypeSelect, EdgeTypeOption } from "./EdgeTypeSelect"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ConnectionInfo,
   hasDistinctEndpointNames,
@@ -13,21 +14,22 @@ import {
   PopoverSection,
 } from "../PopoverLayout"
 
-const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
-  { value: "BPMNSequenceFlow", label: "Sequence Flow" },
-  { value: "BPMNMessageFlow", label: "Message Flow" },
-  { value: "BPMNAssociationFlow", label: "Association Flow" },
-  { value: "BPMNDataAssociationFlow", label: "Data Association Flow" },
-]
-
 export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   elementId,
 }) => {
+  const t = useLabels()
   const { updateEdgeData } = useReactFlow()
 
+  const BPMN_EDGE_TYPE_OPTIONS: ReadonlyArray<EdgeTypeOption> = [
+    { value: "BPMNSequenceFlow", label: t.sequenceFlow },
+    { value: "BPMNMessageFlow", label: t.messageFlow },
+    { value: "BPMNAssociationFlow", label: t.associationFlow },
+    { value: "BPMNDataAssociationFlow", label: t.dataAssociationFlow },
+  ]
+
   const edge = useReactiveEdge(elementId)
-  const sourceName = useReactiveNodeName(edge?.source, "Source")
-  const targetName = useReactiveNodeName(edge?.target, "Target")
+  const sourceName = useReactiveNodeName(edge?.source, t.source)
+  const targetName = useReactiveNodeName(edge?.target, t.target)
   const { handleEdgeTypeChange, handleSwap, handleLabelChange } =
     useEdgePopOver(elementId)
 
@@ -37,19 +39,19 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
   const edgeData = edge.data as CustomEdgeProps | undefined
 
   return (
-    <PopoverLayout title="Edge">
+    <PopoverLayout title={t.edge}>
       <EdgeStyleEditor
         edgeData={edgeData}
         handleDataFieldUpdate={(key, value) =>
           updateEdgeData(elementId, { ...edge.data, [key]: value })
         }
-        label="Style"
+        label={t.style}
         sideElements={[
           handleSwap && (
             <IconButton
               key="swap-source-target"
-              ariaLabel="Swap source and target"
-              tooltip="Swap source and target"
+              ariaLabel={t.swapSourceTarget}
+              tooltip={t.swapSourceTarget}
               onClick={handleSwap}
             >
               <ArrowLeftRight width={16} height={16} aria-hidden="true" />
@@ -67,16 +69,16 @@ export const BPMNDiagramEdgeEditPopover: React.FC<PopoverProps> = ({
       </PopoverSection>
 
       {hasDistinctEndpointNames(sourceName, targetName) && (
-        <PopoverSection title="Connection" divider>
+        <PopoverSection title={t.connection} divider>
           <ConnectionInfo source={sourceName} target={targetName} />
         </PopoverSection>
       )}
 
-      <PopoverSection title="Label" divider>
+      <PopoverSection title={t.label} divider>
         <TextField
           value={edgeData?.label ?? ""}
           onChange={(e) => handleLabelChange(e.target.value)}
-          placeholder="Label"
+          placeholder={t.label}
           fullWidth
         />
       </PopoverSection>

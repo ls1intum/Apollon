@@ -18,12 +18,13 @@ The `react` / `react-dom` peers are `^19`. On React 18 the install fails with an
 :::
 
 ```sh
-npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols
+npm install @tumaet/apollon
 ```
 
-Apollon externalizes its dependencies, so you install them as peers: `react`,
-`react-dom`, `@xyflow/react`, `yjs`, and `y-protocols`. Most package managers add
-them automatically — see [Install](/library/embedding/install).
+Apollon externalizes its dependencies as peers (`react`, `react-dom`,
+`@xyflow/react`, `yjs`, `y-protocols`). npm 7+, pnpm 8+, and Bun install them
+automatically; Yarn never installs peers, so list them explicitly there — see
+[Install](/library/embedding/install).
 
 :::danger The editor MUST have an explicit height
 Apollon renders onto a React Flow canvas, which sizes itself to its parent. If

@@ -1,7 +1,7 @@
-import { NodeProps, NodeResizer, useStore, type Node } from "@xyflow/react"
+import { NodeProps, useStore, type Node } from "@xyflow/react"
 import { useRef } from "react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { ActivitySwimlaneProps } from "@/types"
 import { useDiagramStore } from "@/store"
@@ -10,6 +10,7 @@ import { getLaneOffsets, resizeLaneDivider } from "@/utils"
 import { CANVAS } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { useLabels } from "@/i18n/useLabels"
 import {
   ActivitySwimlaneSVG,
   SWIMLANE_HEADER_SIZE,
@@ -35,6 +36,7 @@ function LaneResizeHandles({
   height: number
   data: ActivitySwimlaneProps
 }) {
+  const t = useLabels()
   const zoom = useStore((state) => state.transform[2])
   const setNodes = useDiagramStore(useShallow((state) => state.setNodes))
   const drag = useRef<{
@@ -113,7 +115,7 @@ function LaneResizeHandles({
             key={lane.id}
             className="nodrag nopan"
             role="separator"
-            aria-label="Resize lane"
+            aria-label={t.resizeLane}
             style={style}
             onPointerDown={(e) => onPointerDown(e, i)}
             onPointerMove={onPointerMove}
@@ -156,7 +158,6 @@ export function ActivitySwimlane({
         onResize={onResize}
         minHeight={120}
         minWidth={120}
-        handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={anchorRef} style={{ position: "relative", width, height }}>
         <ActivitySwimlaneSVG

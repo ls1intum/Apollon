@@ -7,9 +7,10 @@ description: Embed Apollon in an Angular host with the imperative ApollonEditor 
 # Angular
 
 Angular never imports React itself — the editor renders its own React tree
-inside the container — but React is a peer the editor uses internally, so you
-install it alongside Apollon:
-`npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols`.
+inside the container — but React is a peer the editor uses internally.
+`npm install @tumaet/apollon` brings the peers in automatically on npm 7+,
+pnpm 8+, and Bun; with Yarn list them explicitly
+(`npm install @tumaet/apollon react react-dom @xyflow/react yjs y-protocols`).
 
 ```ts no-check
 import {

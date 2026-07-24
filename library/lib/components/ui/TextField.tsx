@@ -65,6 +65,7 @@ export const TextField: React.FC<TextFieldProps> = ({
 }) => {
   const generatedId = useId()
   const inputId = id ?? generatedId
+  const helperId = helperText ? `${inputId}-helper` : undefined
 
   const wrapperStyle: React.CSSProperties = {
     display: "inline-flex",
@@ -88,6 +89,7 @@ export const TextField: React.FC<TextFieldProps> = ({
     onFocus: onFocus as React.FocusEventHandler<TextFieldElement>,
     className,
     "aria-invalid": error || undefined,
+    "aria-describedby": helperId,
     ...rest,
   }
 
@@ -117,7 +119,11 @@ export const TextField: React.FC<TextFieldProps> = ({
         <Input type={type ?? "text"} {...sharedProps} />
       )}
       {helperText && (
-        <span data-slot="textfield-helper" data-error={error || undefined}>
+        <span
+          id={helperId}
+          data-slot="textfield-helper"
+          data-error={error || undefined}
+        >
           {helperText}
         </span>
       )}

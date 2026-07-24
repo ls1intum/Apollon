@@ -24,7 +24,7 @@ const meta = {
     (Story) => (
       <div className="w-[28rem] rounded-md bg-[var(--apollon-background)] p-4">
         <Story />
-        <ToastContainer position="bottom-center" />
+        <ToastContainer aria-label="Notifications" position="bottom-center" />
       </div>
     ),
   ],

@@ -114,7 +114,7 @@ export function LegalPage({
       contentClassName="max-w-3xl"
       // Pad the long copy past the bottom safe-area inset so the final line
       // clears a home indicator and isn't flush against the viewport edge.
-      mainClassName="pb-[max(2.5rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]"
+      mainClassName="pb-[max(2.5rem,calc(var(--safe-area-inset-bottom,0px)+1.5rem))]"
     >
       {/* The page title is a real <h1> at the top of the content (not in the
           header band). mt-2 keeps the small gap the header band's pb-2 left

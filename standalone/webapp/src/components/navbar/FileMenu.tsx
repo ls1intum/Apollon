@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@tumaet/ui/components/dropdown-menu"
 import { Button } from "@tumaet/ui/components/button"
@@ -15,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@tumaet/ui/components/tooltip"
 import { ChevronDownIcon, FilesIcon } from "lucide-react"
-import { toast } from "react-toastify"
+import { toast, type ToastContentProps } from "react-toastify"
 import { useModalContext } from "@/contexts"
 import { useMediaQuery } from "@/hooks"
 import {
@@ -25,6 +26,8 @@ import {
   useExportAsSVG,
 } from "@/hooks"
 import { log } from "@/logger"
+import { EDITOR_SHORTCUTS } from "@/hooks/useEditorShortcuts"
+import { formatComboText } from "@/utils/shortcutCaps"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { navbarButtonStyle } from "./styleConstants"
 import { MOBILE_MENU_CONTENT_CLASS } from "./islandPrimitives"
@@ -62,6 +65,11 @@ function exportErrorMessage(format: ExportFormat, err: unknown): string {
   }
   return `${format} export failed. Please try again.`
 }
+
+/** The combo `useEditorShortcuts` binds, so the menu hint can't drift from it. */
+const saveCombo = EDITOR_SHORTCUTS.find(
+  (shortcut) => shortcut.id === "save-as-json"
+)!.combo
 
 /**
  * The shared File-menu LEAVES — New Diagram, Import, and the Export formats —
@@ -108,10 +116,12 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
         await toast.promise(action(), {
           pending: `Exporting ${format}…`,
           success: {
-            render: ({ data }) => exportSuccessMessage(format, data),
+            render: ({ data }: ToastContentProps<ExportRunResult | void>) =>
+              exportSuccessMessage(format, data),
           },
           error: {
-            render: ({ data }) => exportErrorMessage(format, data),
+            render: ({ data }: ToastContentProps<unknown>) =>
+              exportErrorMessage(format, data),
           },
         })
       } catch (err) {
@@ -163,6 +173,9 @@ export function FileMenuItems({ onSelect }: { onSelect: () => void }) {
           onClick={() => runExport("JSON", async () => exportAsJSON())}
         >
           As JSON
+          <DropdownMenuShortcut>
+            {formatComboText(saveCombo)}
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={busyFormat === "PDF"}

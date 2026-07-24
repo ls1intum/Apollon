@@ -2,6 +2,7 @@ import React from "react"
 import { Typography } from "@/components/ui"
 import { ColorField, StyleEditorPanel } from "./StyleEditorPanel"
 import { CustomEdgeProps } from "@/edges"
+import { useLabels } from "@/i18n/useLabels"
 
 type updateEdgeDataColorsKeys = "strokeColor" | "textColor"
 
@@ -12,17 +13,17 @@ interface EdgeStyleEditorProps {
   label: string
 }
 
-const colorFields: ColorField<updateEdgeDataColorsKeys>[] = [
-  { key: "strokeColor", label: "Line Color" },
-  { key: "textColor", label: "Text Color" },
-]
-
 export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
   edgeData,
   handleDataFieldUpdate,
   sideElements = [],
   label,
 }) => {
+  const t = useLabels()
+  const colorFields: ColorField<updateEdgeDataColorsKeys>[] = [
+    { key: "strokeColor", label: t.lineColor },
+    { key: "textColor", label: t.textColor },
+  ]
   return (
     <StyleEditorPanel
       fields={colorFields}

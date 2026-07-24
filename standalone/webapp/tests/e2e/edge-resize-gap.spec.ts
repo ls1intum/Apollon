@@ -63,7 +63,7 @@ test("resizing a node while zoomed out keeps the edge glued to the node", async 
   await waitForCanvasReady(page)
 
   // Zoom out to the minimum (the button disables once there).
-  const zoomOut = page.locator(".react-flow__controls-zoomout").first()
+  const zoomOut = page.getByRole("button", { name: "Zoom out" })
   for (let i = 0; i < 10; i++) {
     if (!(await zoomOut.isEnabled())) break
     await zoomOut.click()

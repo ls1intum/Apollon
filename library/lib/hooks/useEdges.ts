@@ -37,11 +37,17 @@ export function useEdgePopOver(id: string) {
 
   const handleSwap = () => {
     const edge = reactFlow.getEdge(id)
+    const data = { ...(edge?.data ?? {}) }
     reactFlow.updateEdge(id, {
       source: edge?.target,
       sourceHandle: edge?.targetHandle,
       target: edge?.source,
       targetHandle: edge?.sourceHandle,
+      data: {
+        ...data,
+        sourceAnchor: data.targetAnchor,
+        targetAnchor: data.sourceAnchor,
+      },
     })
   }
 

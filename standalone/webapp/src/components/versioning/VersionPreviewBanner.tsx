@@ -1,11 +1,9 @@
 import { TriangleAlertIcon } from "lucide-react"
 import { useState, type CSSProperties, type FC } from "react"
 import { cn } from "@tumaet/ui/lib/utils"
-import {
-  selectScopedPreview,
-  selectVersions,
-  useVersionStore,
-} from "@/stores/useVersionStore"
+import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
+import { useVersionsQuery } from "@/queries/versionQueries"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 
@@ -200,10 +198,11 @@ export const VersionPreviewBanner: FC<ContainerProps> = ({
   className,
 }) => {
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
-  const versions = useVersionStore((s) => selectVersions(s, diagramId))
+  const kind = useVersionRepositoryKind()
+  const { data } = useVersionsQuery(kind, diagramId)
   if (!preview) return null
 
-  const summary = versions.find((v) => v.id === preview.versionId)
+  const summary = data?.versions.find((v) => v.id === preview.versionId)
   // Description is the user-facing label everywhere else; fall back to
   // `name` (carries pre-restore copy like "Before restoring 'X'") then to
   // the catch-all string.

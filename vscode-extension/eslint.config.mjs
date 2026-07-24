@@ -4,6 +4,13 @@ import pluginJs from "@eslint/js"
 import tseslint from "typescript-eslint"
 import reactHooks from "eslint-plugin-react-hooks"
 
+/** @type {import('eslint').Linter.RulesRecord} */
+const shared = {
+  curly: "warn",
+  eqeqeq: "warn",
+  "no-throw-literal": "warn",
+}
+
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
@@ -15,22 +22,52 @@ export default [
   {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: { globals: { ...globals.node } },
-    rules: {
-      curly: "warn",
-      eqeqeq: "warn",
-      "no-throw-literal": "warn",
-    },
+    rules: shared,
   },
-  // Webviews (browser, React)
+  // Webview (browser, React)
   {
-    files: ["editor/src/**/*.{ts,tsx}", "menu/src/**/*.{ts,tsx}"],
+    files: ["webview/src/**/*.{ts,tsx}"],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { "react-hooks": reactHooks },
+    rules: { ...reactHooks.configs.flat.recommended.rules, ...shared },
+  },
+  // `@tumaet/apollon/export` also exports the PDF renderer, whose dependencies
+  // weigh ~860 kB. `pngRenderer.ts` narrows it to the one binding the webview
+  // needs so the rest can be tree-shaken; importing it anywhere else undoes that.
+  {
+    files: ["webview/src/**/*.{ts,tsx}"],
+    ignores: ["webview/src/pngRenderer.ts"],
     rules: {
-      ...reactHooks.configs.flat.recommended.rules,
-      curly: "warn",
-      eqeqeq: "warn",
-      "no-throw-literal": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@tumaet/apollon/export",
+              message: "Import the renderer you need from `./pngRenderer`.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The host↔webview contract. Both sides import it, and only one of them has
+  // a `vscode` module to import.
+  {
+    files: ["src/shared/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "vscode",
+              message:
+                "`src/shared` is bundled into the webview, where `vscode` does not resolve.",
+            },
+          ],
+        },
+      ],
     },
   },
 ]

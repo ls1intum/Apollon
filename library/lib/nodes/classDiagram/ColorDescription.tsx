@@ -1,6 +1,6 @@
-import { NodeProps, NodeResizer, type Node } from "@xyflow/react"
+import { NodeProps, type Node } from "@xyflow/react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
 import { ColorDescriptionSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 import { DefaultNodeProps } from "@/types"

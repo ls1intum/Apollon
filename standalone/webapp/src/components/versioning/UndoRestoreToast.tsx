@@ -3,6 +3,9 @@ import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useEditorContext } from "@/contexts"
 import { useVersionStore } from "@/stores/useVersionStore"
+import { useUndoRestoreMutation } from "@/queries/versionMutations"
+import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
+import type { RepositoryKind } from "@/services/versionRepository"
 import { versioningStrings as t } from "./strings"
 
 const UNDO_RESTORE_TOAST_ID = "undo-restore"
@@ -16,19 +19,44 @@ const UNDO_RESTORE_TOAST_ID = "undo-restore"
  * A component (mounted globally near the editor) rather than an imperative call,
  * so the wiring lives in one place in ApollonShared.
  */
-const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
-  restoredVersionName,
-}) => {
+const UndoRestoreToastBody: FC<{
+  restoredVersionName: string
+  /**
+   * Resolved by the driver below, not from context: react-toastify renders
+   * toast content at its `ToastContainer`, which is mounted at the app root —
+   * outside the editor route's `VersionRepositoryProvider`.
+   */
+  kind: RepositoryKind
+}> = ({ restoredVersionName, kind }) => {
   const undo = useVersionStore((s) => s.undoRestore)
-  const triggerUndoRestore = useVersionStore((s) => s.triggerUndoRestore)
+  const dismiss = useVersionStore((s) => s.dismissUndoRestore)
+  const undoRestore = useUndoRestoreMutation(kind)
   const { editor } = useEditorContext()
   const [submitting, setSubmitting] = useState(false)
 
   const onUndo = async () => {
     if (!editor || submitting || !undo) return
+    // Refuse past the undo window. The snackbar should auto-dismiss before
+    // this point, but guard defensively so a stale re-render can't restore
+    // to a 10+ second old snapshot.
+    if (Date.now() > undo.expiresAt) {
+      dismiss()
+      return
+    }
+    // Capture the canvas BEFORE leaving preview so the undo's own pre-restore
+    // auto-snapshot records what the user is looking at right now; then exit
+    // any active preview — restoring while previewing would leave the store
+    // claiming a preview the canvas no longer shows.
+    const currentBody = editor.model
+    const store = useVersionStore.getState()
+    if (store.preview !== null) store.exitPreview()
     setSubmitting(true)
     try {
-      await triggerUndoRestore(undo.diagramId, editor.model)
+      await undoRestore.mutateAsync({
+        diagramId: undo.diagramId,
+        autoSnapshotVersionId: undo.autoSnapshotVersionId,
+        currentBody,
+      })
       toast.dismiss(UNDO_RESTORE_TOAST_ID)
     } catch (err) {
       log.error("Undo restore failed", err)
@@ -58,6 +86,9 @@ const UndoRestoreToastBody: FC<{ restoredVersionName: string }> = ({
 export const UndoRestoreToast: FC = () => {
   const undo = useVersionStore((s) => s.undoRestore)
   const dismiss = useVersionStore((s) => s.dismissUndoRestore)
+  // Read here — this driver renders inside the editor route's provider, while
+  // the toast body it hands to react-toastify does not.
+  const kind = useVersionRepositoryKind()
   const shownIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -78,7 +109,10 @@ export const UndoRestoreToast: FC = () => {
     }
 
     const body = (
-      <UndoRestoreToastBody restoredVersionName={undo.restoredVersionName} />
+      <UndoRestoreToastBody
+        restoredVersionName={undo.restoredVersionName}
+        kind={kind}
+      />
     )
 
     if (shownIdRef.current === undo.autoSnapshotVersionId) {
@@ -100,7 +134,7 @@ export const UndoRestoreToast: FC = () => {
       })
       shownIdRef.current = undo.autoSnapshotVersionId
     }
-  }, [undo, dismiss])
+  }, [undo, dismiss, kind])
 
   return null
 }

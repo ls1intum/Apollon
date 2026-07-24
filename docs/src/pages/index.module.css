@@ -33,9 +33,15 @@
   color: var(--ifm-color-emphasis-700);
 }
 
+/* Bottom-light padding here and in `.demo` pulls the editor toward the fold.
+   Deliberate — don't re-symmetrize. */
 .hero {
-  padding-block: clamp(3.5rem, 7vw, 6rem);
+  padding-block: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
   text-align: center;
+}
+
+.demo {
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 /* Center the hero children as flex items. Margin-auto centering loses the
@@ -85,6 +91,16 @@
   max-width: 22rem;
   margin-top: 1.75rem;
   text-align: left;
+}
+
+.heroMeta {
+  margin-top: 1.25rem;
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-600);
+  max-width: 44ch;
+  text-wrap: pretty;
 }
 
 .demoRow {

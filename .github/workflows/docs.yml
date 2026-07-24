@@ -77,7 +77,7 @@ jobs:
             docusaurus-${{ steps.flag.outputs.is-production }}-${{ hashFiles('pnpm-lock.yaml') }}-
             docusaurus-${{ steps.flag.outputs.is-production }}-
 
-      - run: pnpm --filter @tumaet/apollon-docs run build
+      - run: pnpm --filter @tumaet/docs run build
         env:
           DOCUSAURUS_BASE_URL: ${{ steps.flag.outputs.is-production == 'true' && '/Apollon/' || '/' }}
 

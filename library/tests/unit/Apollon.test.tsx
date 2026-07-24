@@ -1,5 +1,5 @@
 import { createRef } from "react"
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
 // Lifecycle plumbing around the imperative `ApollonEditor`. We mock the
@@ -8,14 +8,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 // (`destroy()` is a no-op spy), so what we assert here is strictly the
 // wrapper's responsibility: which arguments reach the constructor, which
 // reactive setters fire on prop changes, and ref forwarding.
-const { ctorSpy, destroySpy, setReadonlySpy, setPreviewModeSpy } = vi.hoisted(
-  () => ({
-    ctorSpy: vi.fn(),
-    destroySpy: vi.fn(),
-    setReadonlySpy: vi.fn(),
-    setPreviewModeSpy: vi.fn(),
-  })
-)
+const {
+  ctorSpy,
+  destroySpy,
+  setReadonlySpy,
+  setPreviewModeSpy,
+  addControlSpy,
+} = vi.hoisted(() => ({
+  ctorSpy: vi.fn(),
+  destroySpy: vi.fn(),
+  setReadonlySpy: vi.fn(),
+  setPreviewModeSpy: vi.fn(),
+  addControlSpy: vi.fn(() => () => {}),
+}))
 
 vi.mock("@/apollon-editor", () => ({
   ApollonEditor: class {
@@ -27,6 +32,9 @@ vi.mock("@/apollon-editor", () => ({
     setMode = vi.fn()
     setScrollLock = vi.fn()
     setPreviewMode = setPreviewModeSpy
+    // The wrapper renders default `<Apollon.*>` chrome as fallback children, which
+    // register through `addControl`; return a no-op disposer.
+    addControl = addControlSpy
   },
 }))
 
@@ -38,6 +46,7 @@ describe("<Apollon>", () => {
     destroySpy.mockClear()
     setReadonlySpy.mockClear()
     setPreviewModeSpy.mockClear()
+    addControlSpy.mockClear()
   })
 
   it("constructs once with initial-only options; reactive props bypass the constructor", () => {
@@ -65,6 +74,20 @@ describe("<Apollon>", () => {
 
     unmount()
     expect(ref.current).toBeNull()
+  })
+
+  it("renders default chrome only when children are omitted", async () => {
+    const { unmount } = render(<Apollon />)
+
+    await waitFor(() => expect(addControlSpy).toHaveBeenCalledTimes(3))
+    unmount()
+    addControlSpy.mockClear()
+
+    render(<Apollon>{null}</Apollon>)
+    await waitFor(() => expect(ctorSpy).toHaveBeenCalledTimes(2))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(addControlSpy).not.toHaveBeenCalled()
   })
 
   it("re-applies reactive props via setters on change; never rebuilds", () => {

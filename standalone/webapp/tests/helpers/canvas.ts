@@ -40,16 +40,16 @@ export async function waitForCanvasReady(page: Page, expectNodes = true) {
 }
 
 /**
- * Click the built-in ReactFlow "fit view" button from the <Controls> panel.
- * This zooms/pans so ALL nodes fit within the viewport (respects the global
- * minZoom of 0.4, unlike the onInit fitView which is clamped to 1.0).
- * Useful for large diagrams (e.g. BPMN) that overflow at zoom 1.0.
+ * Click the "Fit view" button from the bottom-left zoom cluster. This zooms/pans
+ * so ALL nodes fit within the viewport (respects the global minZoom of 0.4,
+ * unlike the onInit fitView which is clamped to 1.0), reserving the overlay
+ * insets so content is framed clear of the chrome. Useful for large diagrams
+ * (e.g. BPMN) that overflow at zoom 1.0.
  */
 export async function clickFitView(page: Page) {
-  // React Flow's built-in <Controls> renders the fit-view button with this
-  // stable class (its default aria-label is the lowercase "fit view", so don't
-  // match on a label). CustomControls keeps these built-in buttons.
-  const fitViewBtn = page.locator(".react-flow__controls-fitview")
+  // The zoom cluster is a slotted overlay control (no longer React Flow's
+  // built-in <Controls> panel); its fit button carries this stable aria-label.
+  const fitViewBtn = page.getByRole("button", { name: "Fit view" })
   await fitViewBtn.click()
   // Let the zoom/pan animation settle
   await page.waitForTimeout(500)

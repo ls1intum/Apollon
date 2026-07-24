@@ -1,20 +1,23 @@
 import { describe, it, expect, vi } from "vitest"
 import {
-  calculateRelativePosition,
   getAllDescendants,
   getAllNodesToInclude,
   getRelevantEdges,
-  buildParentChildRelations,
   getEdgesToRemove,
   createClipboardData,
   createNewNodeDataWithNewIds,
+  materializeClipboardData,
+  type ClipboardData,
 } from "@/utils/copyPasteUtils"
+
 import type { Node, Edge } from "@xyflow/react"
 
-// Mock generateUUID to return predictable values
-vi.mock("@/utils", () => {
+// Mock generateUUID to return predictable values; keep the rest of the barrel real.
+vi.mock("@/utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/utils")>()
   let counter = 0
   return {
+    ...actual,
     generateUUID: () => `uuid-${++counter}`,
   }
 })
@@ -30,36 +33,6 @@ function makeNode(id: string, x = 0, y = 0, parentId?: string): Node {
 function makeEdge(id: string, source: string, target: string): Edge {
   return { id, source, target, data: {} } as Edge
 }
-
-// ---------------------------------------------------------------------------
-// calculateRelativePosition
-// ---------------------------------------------------------------------------
-
-describe("calculateRelativePosition", () => {
-  it("returns the difference between child and parent positions", () => {
-    const child = makeNode("c", 150, 200)
-    const parent = makeNode("p", 100, 50)
-    expect(calculateRelativePosition(child, parent)).toEqual({
-      x: 50,
-      y: 150,
-    })
-  })
-
-  it("returns negative values when child is above/left of parent", () => {
-    const child = makeNode("c", 10, 10)
-    const parent = makeNode("p", 100, 100)
-    expect(calculateRelativePosition(child, parent)).toEqual({
-      x: -90,
-      y: -90,
-    })
-  })
-
-  it("returns zero when same position", () => {
-    const child = makeNode("c", 50, 50)
-    const parent = makeNode("p", 50, 50)
-    expect(calculateRelativePosition(child, parent)).toEqual({ x: 0, y: 0 })
-  })
-})
 
 // ---------------------------------------------------------------------------
 // getAllDescendants
@@ -141,50 +114,22 @@ describe("getAllNodesToInclude", () => {
 describe("getRelevantEdges", () => {
   it("returns edges matching selectedElementIds", () => {
     const edges = [makeEdge("e1", "a", "b"), makeEdge("e2", "c", "d")]
-    const result = getRelevantEdges(["e1"], edges)
+    const result = getRelevantEdges(["e1"], [], edges)
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe("e1")
   })
 
+  it("carries an edge whose endpoints are both copied, even when unselected", () => {
+    // Ctrl/Cmd+click selects nodes only — without this, duplicating two clicked
+    // classes would drop the association between them.
+    const edges = [makeEdge("e1", "a", "b"), makeEdge("outgoing", "a", "far")]
+    const result = getRelevantEdges(["a", "b"], ["a", "b"], edges)
+    expect(result.map((e) => e.id)).toEqual(["e1"])
+  })
+
   it("returns empty array when no edges match", () => {
     const edges = [makeEdge("e1", "a", "b")]
-    expect(getRelevantEdges(["nope"], edges)).toEqual([])
-  })
-
-  it("returns empty array for empty selectedElementIds", () => {
-    const edges = [makeEdge("e1", "a", "b")]
-    expect(getRelevantEdges([], edges)).toEqual([])
-  })
-})
-
-// ---------------------------------------------------------------------------
-// buildParentChildRelations
-// ---------------------------------------------------------------------------
-
-describe("buildParentChildRelations", () => {
-  it("builds relations for child nodes whose parentId is in nodeIds", () => {
-    const parent = makeNode("p", 10, 20)
-    const child = makeNode("c", 30, 50, "p")
-    const result = buildParentChildRelations([parent, child], ["p", "c"])
-    expect(result).toEqual([
-      {
-        parentId: "p",
-        childId: "c",
-        relativePosition: { x: 20, y: 30 },
-      },
-    ])
-  })
-
-  it("skips nodes whose parentId is not in nodeIds", () => {
-    const child = makeNode("c", 0, 0, "external")
-    const result = buildParentChildRelations([child], ["c"])
-    expect(result).toEqual([])
-  })
-
-  it("returns empty for nodes with no parents", () => {
-    const a = makeNode("a")
-    const b = makeNode("b")
-    expect(buildParentChildRelations([a, b], ["a", "b"])).toEqual([])
+    expect(getRelevantEdges(["nope"], [], edges)).toEqual([])
   })
 })
 
@@ -231,22 +176,19 @@ describe("getEdgesToRemove", () => {
 // ---------------------------------------------------------------------------
 
 describe("createClipboardData", () => {
-  it("creates clipboard data with nodes, edges, and relations", () => {
+  it("carries a selected node's descendants, and the edges among them", () => {
     const nodes = [makeNode("p", 0, 0), makeNode("c", 10, 10, "p")]
     const edges = [makeEdge("e1", "p", "c")]
-    const result = createClipboardData(["p", "e1"], nodes, edges)
+    const result = createClipboardData(["p"], nodes, edges)
 
-    expect(result.nodes).toHaveLength(2) // p + descendant c
-    expect(result.edges).toHaveLength(1)
-    expect(result.parentChildRelations.length).toBeGreaterThanOrEqual(1)
-    expect(result.timestamp).toBeGreaterThan(0)
+    expect(result.nodes.map((n) => n.id)).toEqual(["p", "c"])
+    expect(result.edges.map((e) => e.id)).toEqual(["e1"])
   })
 
   it("creates clipboard with empty selections", () => {
     const result = createClipboardData([], [], [])
     expect(result.nodes).toEqual([])
     expect(result.edges).toEqual([])
-    expect(result.parentChildRelations).toEqual([])
   })
 })
 
@@ -306,5 +248,73 @@ describe("createNewNodeDataWithNewIds", () => {
     }
     createNewNodeDataWithNewIds(data)
     expect(data.attributes[0].id).toBe("original")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// materializeClipboardData
+// ---------------------------------------------------------------------------
+
+describe("materializeClipboardData", () => {
+  const makeClipboard = (nodes: Node[], edges: Edge[] = []): ClipboardData => ({
+    nodes,
+    edges,
+  })
+
+  it("produces a fresh, offset, selected copy with its edges remapped", () => {
+    const edge = {
+      ...makeEdge("e1", "a", "b"),
+      data: { points: [{ x: 5, y: 5 }] },
+    } as Edge
+    const clip = makeClipboard(
+      [
+        {
+          ...makeNode("a", 100, 100),
+          data: { attributes: [{ id: "attr", name: "x" }] },
+        } as Node,
+        makeNode("b", 300, 100),
+      ],
+      [edge, makeEdge("dangling", "a", "not-copied")]
+    )
+
+    const result = materializeClipboardData(clip, 2)
+
+    // Two pastes in: 100 + 2 × PASTE_OFFSET_PX. A zero offset would stack the
+    // copy invisibly on top of its original.
+    const [a, b] = result.nodes
+    expect(a.position).toEqual({ x: 140, y: 140 })
+    expect(b.position).toEqual({ x: 340, y: 140 })
+    expect(a.selected).toBe(true)
+    // Fresh ids throughout, nested attributes included — a collision would make
+    // the copy and its original edit as one.
+    expect(new Set([a.id, b.id, "a", "b"]).size).toBe(4)
+    expect(
+      (a.data as { attributes: { id: string }[] }).attributes[0].id
+    ).not.toBe("attr")
+    // An edge to a node that wasn't copied has no endpoint left to attach to.
+    expect(result.edges).toHaveLength(1)
+    expect(result.edges[0].source).toBe(a.id)
+    expect(result.edges[0].target).toBe(b.id)
+    // Waypoints are absolute, so they travel with the nodes — otherwise the
+    // copy's edge routes back through the original.
+    expect(result.edges[0].data?.points).toEqual([{ x: 45, y: 45 }])
+    expect(result.newElementIds).toEqual([a.id, b.id, result.edges[0].id])
+  })
+
+  it("keeps a child where it sits in its parent, which carries the offset", () => {
+    // Child positions are parent-relative: offsetting the child as well would
+    // drift it 20px further into its own parent on every paste.
+    const clip = makeClipboard([
+      makeNode("p", 50, 50),
+      makeNode("c", 10, 10, "p"),
+    ])
+
+    const result = materializeClipboardData(clip, 3)
+
+    const parent = result.nodes.find((n) => !n.parentId)!
+    const child = result.nodes.find((n) => n.parentId)!
+    expect(child.parentId).toBe(parent.id)
+    expect(parent.position).toEqual({ x: 110, y: 110 })
+    expect(child.position).toEqual({ x: 10, y: 10 })
   })
 })

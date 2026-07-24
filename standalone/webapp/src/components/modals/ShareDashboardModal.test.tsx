@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { ShareDashboardModal } from "./ShareDashboardModal"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { renderWithRouter } from "@/test/renderWithRouter"
+import { createTestQueryClient } from "@/test/queryTestUtils"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { DiagramView } from "@/types"
 
@@ -89,7 +91,14 @@ describe("ShareDashboardModal", () => {
 
     const { router } = renderWithRouter(
       <ShareDashboardModal modelId="diagram-1" />,
-      { routePaths: ["/", "/shared/$diagramId"] }
+      {
+        routePaths: ["/", "/shared/$diagramId"],
+        wrapper: (children) => (
+          <QueryClientProvider client={createTestQueryClient()}>
+            {children}
+          </QueryClientProvider>
+        ),
+      }
     )
 
     fireEvent.click(await screen.findByRole("button", { name: "Create" }))

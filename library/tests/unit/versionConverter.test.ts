@@ -11,6 +11,7 @@ import {
   isV4Format,
   importDiagram,
   normalizeClassStereotypes,
+  normalizeElementTags,
 } from "@/utils/versionConverter"
 import { ClassStereotype } from "@/types/nodes/enums"
 
@@ -1442,5 +1443,91 @@ describe("normalizeClassStereotypes (legacy 4.x class nodes)", () => {
     }
     expect(data.isAbstract).toBe(true)
     expect(data.stereotype).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// v4 tag normalizer — the sibling pass to the stereotype one. Tags arrive from
+// hosts as untrusted JSON, and an emptied list must vanish rather than persist
+// as `[]` (which the store's deepEqual treats as a change).
+// ---------------------------------------------------------------------------
+
+type TaggedClassData = {
+  tags?: string[]
+  attributes: { id: string; name: string; tags?: string[] }[]
+  methods: { id: string; name: string; tags?: string[] }[]
+}
+
+function makeTaggedClassModel(data: Record<string, unknown>) {
+  return makeV4ClassModel([
+    {
+      id: "c1",
+      type: "class",
+      position: { x: 0, y: 0 },
+      width: 200,
+      height: 110,
+      measured: { width: 200, height: 110 },
+      data,
+    },
+  ])
+}
+
+describe("normalizeElementTags", () => {
+  it("canonicalizes tags on the node and on its attributes and methods", () => {
+    const model = makeTaggedClassModel({
+      name: "C",
+      tags: ["  design ", "design"],
+      attributes: [{ id: "a", name: "x", tags: ["testAttr", "testAttr"] }],
+      methods: [{ id: "m", name: "y()", tags: [" testMethod "] }],
+    })
+    normalizeElementTags(model)
+    const data = (model as { nodes: { data: TaggedClassData }[] }).nodes[0].data
+    expect(data.tags).toEqual(["design"])
+    expect(data.attributes[0].tags).toEqual(["testAttr"])
+    expect(data.methods[0].tags).toEqual(["testMethod"])
+  })
+
+  it("deletes a tag key that normalizes to empty", () => {
+    const model = makeTaggedClassModel({
+      name: "C",
+      tags: ["   ", ""],
+      attributes: [{ id: "a", name: "x", tags: [] }],
+      methods: [],
+    })
+    normalizeElementTags(model)
+    const data = (model as { nodes: { data: TaggedClassData }[] }).nodes[0].data
+    expect("tags" in data).toBe(false)
+    expect("tags" in data.attributes[0]).toBe(false)
+  })
+
+  it("leaves a model saved before tags existed byte-identical", () => {
+    const model = makeTaggedClassModel({
+      name: "C",
+      fillColor: "#fff",
+      attributes: [{ id: "a", name: "x" }],
+      methods: [{ id: "m", name: "y()" }],
+    })
+    const snapshot = JSON.stringify(model)
+    normalizeElementTags(model)
+    expect(JSON.stringify(model)).toEqual(snapshot)
+  })
+
+  it("tolerates a node whose data is missing", () => {
+    // normalizeModel exists to repair sloppy hosts and walks every node, so it
+    // must not be the thing that throws on them.
+    const model = makeV4ClassModel([{ id: "c1", type: "class" }])
+    expect(() => normalizeElementTags(model)).not.toThrow()
+  })
+
+  it("runs as part of importDiagram", () => {
+    const imported = importDiagram(
+      makeTaggedClassModel({
+        name: "C",
+        attributes: [{ id: "a", name: "x", tags: ["  T  ", "T"] }],
+        methods: [],
+      })
+    )
+    const data = imported.nodes[0].data as unknown as TaggedClassData
+    expect(data.attributes[0].tags).toEqual(["T"])
   })
 })
