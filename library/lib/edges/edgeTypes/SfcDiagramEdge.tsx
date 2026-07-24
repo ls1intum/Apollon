@@ -55,7 +55,6 @@ export const SfcDiagramEdge = ({
   const { handleDelete } = useToolbar({ id })
 
   const allowMidpointDragging = true
-  const enableStraightPath = true
 
   const { assessments } = useDiagramStore(
     useShallow((state) => ({
@@ -76,7 +75,6 @@ export const SfcDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -103,7 +101,6 @@ export const SfcDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath,
   })
 
   const { isNegated, displayName, showBar } = getParsedEdgeData(data)
@@ -177,7 +174,6 @@ export const SfcDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
@@ -227,6 +223,7 @@ export const SfcDiagramEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}

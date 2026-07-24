@@ -58,7 +58,6 @@ export const BPMNDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -85,7 +84,6 @@ export const BPMNDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath: false,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -103,7 +101,6 @@ export const BPMNDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
@@ -131,6 +128,7 @@ export const BPMNDiagramEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}

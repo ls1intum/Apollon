@@ -31,8 +31,12 @@ import { cn } from "@tumaet/ui/lib/utils"
  * height) keeps the header pinned the whole way down — give the header its own
  * short wrapper and it un-sticks the moment you scroll past it. That wrapper
  * carries the SHARED rhythm — the `home-content-x` gutter, the 1536px max width
- * and the `pt-5/md:pt-6` resting offset — so the brand island lands at the
- * identical baseline and sticks identically on home and sub-pages.
+ * and the safe-area-aware resting offset (`safe-area-inset-top + 1.25/1.5rem`) —
+ * so the brand island lands at the identical baseline and sticks identically on
+ * home and sub-pages. That resting offset MUST stay ≥ the sticky header's `top`
+ * (`safe-area-inset-top + 0.75/1rem`): if it drops below — e.g. a fixed value on
+ * a notched device — sticky lifts the header above its reserved flow box and the
+ * first cards render underneath it.
  *
  * Content chooses its own measure via `contentClassName` (the home gallery fills
  * the 1536px column; legal prose re-centers in a readable `max-w-3xl`) — the
@@ -80,16 +84,9 @@ export function PageShell({
           mainClassName
         )}
       >
-        {/* ONE containing block for the header + body. This matters: a `sticky`
-            element pins only within its containing block, so the header and the
-            content MUST share this wrapper — it spans the full scroll height, so
-            the header stays pinned the whole way down. (Giving the header its own
-            short wrapper shrinks its containing block to its own height and it
-            un-sticks the moment you scroll past it.) Shared rhythm: the
-            `home-content-x` gutter, the 1536px max width, and the `pt-5/md:pt-6`
-            resting offset the sticky header scrolls through before it pins —
-            identical for home + legal + 404. */}
-        <div className="home-content-x mx-auto w-full max-w-[1536px] pt-5 md:pt-6">
+        {/* ONE containing block for the sticky header + body (gutter, 1536px
+            max width, safe-area resting offset) — see the file docblock. */}
+        <div className="home-content-x mx-auto w-full max-w-[1536px] pt-[calc(var(--safe-area-inset-top,0px)_+_1.25rem)] md:pt-[calc(var(--safe-area-inset-top,0px)_+_1.5rem)]">
           {/* `{header}` (the sticky banner row) and `<main>` are SIBLINGS so the
               banner landmark stays top-level, not nested in `main`. Both still
               share this gutter wrapper, so the header keeps pinning the whole way

@@ -2,6 +2,7 @@ import type { UMLModel } from "@tumaet/apollon"
 import { renderThumbnailSvgFromModel } from "@/utils/thumbnailSvg"
 import { waitForIdle } from "@/utils/idle"
 import { log } from "@/logger"
+import { prepareTemplateModel } from "@/utils/templateModels"
 
 /**
  * Renders the bundled design-pattern templates to preview SVGs for the New
@@ -33,9 +34,7 @@ const importTemplateModel = async (name: string): Promise<UMLModel> => {
   if (!jsonData) {
     throw new Error(`Template "${name}" not found`)
   }
-  return typeof structuredClone === "function"
-    ? structuredClone(jsonData)
-    : (JSON.parse(JSON.stringify(jsonData)) as UMLModel)
+  return prepareTemplateModel(jsonData as UMLModel)
 }
 
 const notify = (name: string, lightSvg: string | null) => {

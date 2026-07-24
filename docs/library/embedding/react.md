@@ -244,9 +244,16 @@ export default function Page() {
 
 Remix and Nuxt have equivalent client-only loading.
 
-`@tumaet/apollon` is a client module in its entirety (`"use client"`), so its
-pure helpers (`importDiagram`, `createApollonTheme`, …) are client-only too —
-import them from client components, not Server Components.
+`@tumaet/apollon` is a client module in its entirety (`"use client"`), so
+import the editor and theme helpers from client components, not Server
+Components. Model migration is the exception: server code can import the
+DOM-free entry directly.
+
+```ts
+import { importDiagram } from "@tumaet/apollon/model"
+
+export const normalizeDiagram = (data: unknown) => importDiagram(data)
+```
 
 Non-React hosts that want imperative control mount `ApollonEditor` directly —
 see [Vanilla JS / CDN](/library/embedding/vanilla).

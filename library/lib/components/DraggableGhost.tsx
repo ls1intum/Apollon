@@ -93,7 +93,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // True once a press has turned into a drag, so the trailing click is ignored.
   const draggedRef = useRef(false)
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     event.preventDefault()
     disableScroll()
 
@@ -238,14 +238,6 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     placeAtViewportCenter()
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.repeat) return // native buttons don't activate on auto-repeat
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault()
-      placeAtViewportCenter()
-    }
-  }
-
   // `fixed`, not `absolute`: the ghost portals into document.body and is
   // positioned with viewport coordinates (clientX/clientY). `absolute` resolves
   // against the document, so any page scroll would shift the ghost off the
@@ -279,18 +271,16 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
 
   return (
     <>
-      <div
+      <button
+        type="button"
         className="apollon-palette__cell"
-        role="button"
-        tabIndex={0}
         aria-label={`${addElementLabel}: ${elementName}`}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
-        onKeyDown={handleKeyDown}
         style={{ touchAction: "none" }}
       >
         {children}
-      </div>
+      </button>
       {isDragging && createPortal(ghostElement, document.body)}
     </>
   )

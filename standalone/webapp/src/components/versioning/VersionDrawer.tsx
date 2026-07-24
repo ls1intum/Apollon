@@ -213,6 +213,7 @@ export const VersionSidebarBody: FC<Props> = ({
   >(undefined)
   const baselineResolved =
     baselineVersionId === (latestSavedVersion?.id ?? null)
+  const initialListLoaded = !versionsQuery.isPending
 
   // Re-baseline the fingerprint on every new latest-saved version. Two cases:
   //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current` matches
@@ -303,7 +304,12 @@ export const VersionSidebarBody: FC<Props> = ({
   // version of old content). Block Save in that mode regardless of diff.
   // Also block on empty diagrams (the server skips them too).
   const canSave =
-    Boolean(editor) && hasChanges && previewState === null && !isEmptyDiagram
+    Boolean(editor) &&
+    initialListLoaded &&
+    baselineResolved &&
+    hasChanges &&
+    previewState === null &&
+    !isEmptyDiagram
 
   const handleCreate = (saveableOverride?: boolean) => {
     const saveable = saveableOverride ?? canSave
@@ -356,7 +362,6 @@ export const VersionSidebarBody: FC<Props> = ({
   )
   // The query is pending only until the first fetch settles; an error also
   // ends the load (and there the Save button is optimistic, so match it).
-  const initialListLoaded = !versionsQuery.isPending
   const clearSaveRequest = useVersionStore((s) => s.clearSaveRequest)
   const handledSaveRequestRef = useRef(0)
   // A ref, refreshed each render, so the trigger effect can depend only on the
@@ -410,13 +415,13 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const handlePreview = useCallback(
     async (versionId: string) => {
-      if (!editor) return
       if (onPreview) {
         // URL-driven: write `?version=<id>`; the page's URL↔store effect
-        // enters preview. One source of truth, so reload/Back/deep-link work.
+        // waits for the editor before entering preview.
         onPreview(versionId)
         return
       }
+      if (!editor) return
       try {
         const body = await fetchVersionBody(
           queryClient,

@@ -30,6 +30,7 @@ describe("getConnectionMode", () => {
     expect(getConnectionMode("bpmnGateway")).toBe("four-center")
     expect(getConnectionMode("componentInterface")).toBe("four-center")
     expect(getConnectionMode("deploymentInterface")).toBe("four-center")
+    expect(getConnectionMode("package")).toBe("package")
     expect(getConnectionMode("activitySwimlane")).toBe("none")
     expect(getConnectionMode("bpmnAnnotation")).toBe("none")
   })
@@ -46,6 +47,44 @@ describe("getConnectionMode", () => {
     ]) {
       expect(getConnectionMode(t)).toBe("four-center")
     }
+  })
+})
+
+describe("package mode", () => {
+  it("connects to the main body below the raised notation tab", () => {
+    const top = getEdgeAnchorPoint("package", rect, {
+      side: Position.Top,
+      ratio: 0.5,
+    })
+    const rightTop = getEdgeAnchorPoint("package", rect, {
+      side: Position.Right,
+      ratio: 0,
+    })
+    const rightBottom = getEdgeAnchorPoint("package", rect, {
+      side: Position.Right,
+      ratio: 1,
+    })
+
+    expect(top).toEqual({
+      point: { x: cx, y: rect.y + 10 },
+      position: Position.Top,
+    })
+    expect(rightTop.point.y).toBe(rect.y + 10)
+    expect(rightBottom.point.y).toBe(rect.y + rect.height)
+  })
+
+  it("stores freeform ratios against the main body, not the tab bounds", () => {
+    const anchor = getEdgeAnchorFromPoint(
+      "package",
+      { x: cx, y: rect.y },
+      rect
+    )!
+
+    expect(anchor).toEqual({ side: Position.Top, ratio: 0.5 })
+    expect(getEdgeAnchorPoint("package", rect, anchor).point).toEqual({
+      x: cx,
+      y: rect.y + 10,
+    })
   })
 })
 

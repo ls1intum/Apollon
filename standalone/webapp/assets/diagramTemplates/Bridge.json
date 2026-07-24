@@ -1,15 +1,15 @@
 {
   "id": "d4fd3979-d1bb-451b-b3a4-e4dea94a90c4",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "title": "Bridge Diagram",
   "type": "ClassDiagram",
   "nodes": [
     {
-      "width": 190,
+      "width": 180,
       "height": 70,
       "id": "2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "class",
-      "position": { "x": 270, "y": 120 },
+      "position": { "x": 150, "y": 175 },
       "data": {
         "name": "Abstraction",
         "methods": [
@@ -21,25 +21,25 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 190, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true,
       "resizing": false
     },
     {
-      "width": 160,
+      "width": 180,
       "height": 70,
       "id": "7052e703-263f-4df5-95e0-3558793849af",
       "type": "class",
-      "position": { "x": 120, "y": 330 },
+      "position": { "x": 25, "y": 305 },
       "data": {
-        "name": "Adaptee1",
+        "name": "RefinedAbstraction1",
         "methods": [
           { "id": "964c1c16-441b-4d1e-99c3-406f3a37f50b", "name": "+ method()" }
         ],
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 160, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true,
       "resizing": false
     },
@@ -48,35 +48,35 @@
       "height": 40,
       "id": "286257b1-ebd3-424f-b3e4-c1c2a722531b",
       "type": "class",
-      "position": { "x": -90, "y": 135 },
+      "position": { "x": -140, "y": 190 },
       "data": { "name": "Client", "methods": [], "attributes": [] },
       "selected": false,
       "measured": { "width": 167, "height": 40 },
       "dragging": true
     },
     {
-      "width": 160,
+      "width": 180,
       "height": 70,
       "id": "2fecb039-1b0d-4de9-8820-fa120c51f4f6",
       "type": "class",
-      "position": { "x": 435, "y": 330 },
+      "position": { "x": 270, "y": 305 },
       "data": {
-        "name": "Adaptee2",
+        "name": "RefinedAbstraction2",
         "methods": [
           { "id": "964c1c16-441b-4d1e-99c3-406f3a37f50b", "name": "+ method()" }
         ],
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 160, "height": 70 },
+      "measured": { "width": 180, "height": 70 },
       "dragging": true
     },
     {
-      "width": 160,
+      "width": 200,
       "height": 70,
       "id": "889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "class",
-      "position": { "x": 765, "y": 120 },
+      "position": { "x": 635, "y": 175 },
       "data": {
         "name": "Implementor",
         "methods": [
@@ -88,15 +88,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 160, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true
     },
     {
-      "width": 198.02259826660156,
+      "width": 200,
       "height": 70,
       "id": "2e018906-a3db-4308-977b-175ace3c3185",
       "type": "class",
-      "position": { "x": 630, "y": 330 },
+      "position": { "x": 505, "y": 305 },
       "data": {
         "name": "ConcreteImplementor1",
         "methods": [
@@ -108,15 +108,15 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true
     },
     {
-      "width": 198.02259826660156,
+      "width": 200,
       "height": 70,
       "id": "1bb3eed4-bcc2-45af-9b6e-62020b9c439d",
       "type": "class",
-      "position": { "x": 900, "y": 330 },
+      "position": { "x": 765, "y": 305 },
       "data": {
         "name": "ConcreteImplementor2",
         "methods": [
@@ -128,7 +128,7 @@
         "attributes": []
       },
       "selected": false,
-      "measured": { "width": 198, "height": 70 },
+      "measured": { "width": 200, "height": 70 },
       "dragging": true,
       "resizing": false
     }
@@ -141,6 +141,7 @@
       "targetHandle": "left",
       "type": "ClassBidirectional",
       "selected": false,
+      "data": { "points": [] },
       "id": "xy-edge__286257b1-ebd3-424f-b3e4-c1c2a722531bright-2eb1ceb2-266e-4669-89f1-c61e246cb10cleft"
     },
     {
@@ -150,7 +151,12 @@
       "targetHandle": "bottom",
       "id": "1737993042486-7052e703-263f-4df5-95e0-3558793849af-2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "2fecb039-1b0d-4de9-8820-fa120c51f4f6",
@@ -159,7 +165,12 @@
       "targetHandle": "bottom",
       "id": "1737993045593-2fecb039-1b0d-4de9-8820-fa120c51f4f6-2eb1ceb2-266e-4669-89f1-c61e246cb10c",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "2e018906-a3db-4308-977b-175ace3c3185",
@@ -168,7 +179,12 @@
       "targetHandle": "bottom",
       "id": "1737993203512-2e018906-a3db-4308-977b-175ace3c3185-889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "1bb3eed4-bcc2-45af-9b6e-62020b9c439d",
@@ -177,7 +193,12 @@
       "targetHandle": "bottom",
       "id": "1737993210921-1bb3eed4-bcc2-45af-9b6e-62020b9c439d-889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "ClassInheritance",
-      "selected": false
+      "selected": false,
+      "data": {
+        "points": [],
+        "sourceAnchor": { "side": "top", "ratio": 0.5 },
+        "targetAnchor": { "side": "bottom", "ratio": 0.5 }
+      }
     },
     {
       "source": "2eb1ceb2-266e-4669-89f1-c61e246cb10c",
@@ -186,7 +207,8 @@
       "targetHandle": "left",
       "id": "1737993220311-2eb1ceb2-266e-4669-89f1-c61e246cb10c-889cb1f6-175a-45c0-ae06-d1acab5dcbdc",
       "type": "ClassBidirectional",
-      "selected": false
+      "selected": false,
+      "data": { "points": [] }
     }
   ],
   "assessments": {}

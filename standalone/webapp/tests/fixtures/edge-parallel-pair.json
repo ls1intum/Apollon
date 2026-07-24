@@ -1,0 +1,55 @@
+{
+  "id": "c4e2a1b8-9d33-4f27-8b6a-2e1f0d9c7a51",
+  "version": "4.0.0",
+  "title": "Parallel Edge Pair",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "aaaaaaaa-1111-1111-1111-111111111111",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 100, "y": 400 },
+      "data": {
+        "name": "Left",
+        "methods": [],
+        "attributes": [{ "id": "la1", "name": "+ attribute: Type" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    },
+    {
+      "id": "bbbbbbbb-2222-2222-2222-222222222222",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": { "x": 600, "y": 400 },
+      "data": {
+        "name": "Right",
+        "methods": [],
+        "attributes": [{ "id": "ra1", "name": "+ attribute: Type" }]
+      },
+      "measured": { "width": 160, "height": 100 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1-first",
+      "source": "aaaaaaaa-1111-1111-1111-111111111111",
+      "target": "bbbbbbbb-2222-2222-2222-222222222222",
+      "type": "ClassBidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    },
+    {
+      "id": "edge-2-second",
+      "source": "aaaaaaaa-1111-1111-1111-111111111111",
+      "target": "bbbbbbbb-2222-2222-2222-222222222222",
+      "type": "ClassBidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": { "points": [] }
+    }
+  ],
+  "assessments": {}
+}

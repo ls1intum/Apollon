@@ -1,14 +1,172 @@
+require "fileutils"
+
 default_platform(:ios)
+opt_out_usage
 
 XCODE_PROJECT = "./ios/App/App.xcodeproj"
 XCODE_WORKSPACE = "./ios/App/App.xcworkspace"
 SCHEME = "App"
+METADATA_PATH = File.expand_path("metadata", __dir__)
+SCREENSHOTS_PATH = File.expand_path("screenshots", __dir__)
+FRAMED_SCREENSHOTS_PATH = File.expand_path("screenshots-framed", __dir__)
+DEVICE_FRAMES_PATH = File.expand_path("device-frames", __dir__)
+SCREENSHOT_NORMALIZER = File.expand_path(
+  "../app-store-screenshots/normalize-png.swift",
+  __dir__
+)
+SCREENSHOT_COMPOSITOR = File.expand_path(
+  "../app-store-screenshots/compose-framed.swift",
+  __dir__
+)
+SCREENSHOT_GALLERY_GENERATOR = File.expand_path(
+  "../app-store-screenshots/generate-review-gallery.mjs",
+  __dir__
+)
+SCREENSHOT_VALIDATOR = File.expand_path(
+  "../app-store-screenshots/validate-screenshot-set.swift",
+  __dir__
+)
+SCREENSHOT_FONT = File.expand_path("../tests/fonts/Inter-Bold.ttf", __dir__)
+SCREENSHOT_STYLE = ENV.fetch("APP_STORE_SCREENSHOT_STYLE", "framed").downcase
+UI.user_error!(
+  "APP_STORE_SCREENSHOT_STYLE must be either 'raw' or 'framed'"
+) unless %w[raw framed].include?(SCREENSHOT_STYLE)
+APP_STORE_SCREENSHOTS_PATH =
+  SCREENSHOT_STYLE == "framed" ? FRAMED_SCREENSHOTS_PATH : SCREENSHOTS_PATH
+SCREENSHOT_HEADLINES = {
+  "01-Class-Diagram" => "Turn ideas into clear diagrams",
+  "02-Your-Diagrams" => "Model across every workspace",
+  "03-Diagram-Types" => "Choose from 13 diagram types",
+  "04-Dark-Appearance" => "Comfortable in light or dark",
+  "05-Export-Formats" => "Export for every workflow"
+}.freeze
+OFFICIAL_DEVICE_FRAMES = {
+  "iPhone 17 Pro Max" => File.join(
+    DEVICE_FRAMES_PATH,
+    "iphone-17-pro-max-deep-blue.png"
+  ),
+  "iPad Pro 13-inch (M4)" => File.join(
+    DEVICE_FRAMES_PATH,
+    "ipad-pro-m5-space-black-landscape.png"
+  )
+}.freeze
+
+# App Store Connect app-level settings that `deliver` CAN set code-first, so
+# they need not be clicked into App Store Connect. Category identifiers are the
+# modern ASC enum values (not display names). The age-rating JSON follows the
+# current questionnaire schema and resolves to a 4+ rating.
+PRIMARY_CATEGORY = "DEVELOPER_TOOLS"
+SECONDARY_CATEGORY = "EDUCATION"
+AGE_RATING_CONFIG = File.expand_path("metadata/rating_config.json", __dir__)
+# Non-personal reviewer guidance is committed; personal contact fields come from
+# CI secrets at submit time (see review_information) so no PII lands in git.
+REVIEW_NOTES = File.expand_path(
+  "metadata/review_information/notes.txt",
+  __dir__
+)
+# Optional, version-controlled App Privacy ("nutrition label") declaration. It
+# is uploaded by the separate `privacy` lane, not by deliver — see that lane.
+APP_PRIVACY_DETAILS = File.expand_path("app_privacy_details.json", __dir__)
 
 platform :ios do
+  # App-level metadata deliver applies during any metadata upload: categories and
+  # the age-rating questionnaire. These are the same on every version.
+  def app_store_connect_options
+    options = {
+      primary_category: PRIMARY_CATEGORY,
+      secondary_category: SECONDARY_CATEGORY
+    }
+    options[:app_rating_config_path] = AGE_RATING_CONFIG if File.exist?(AGE_RATING_CONFIG)
+    review = review_information
+    options[:app_review_information] = review unless review.empty?
+    options
+  end
+
+  # App Review contact: notes are committed (non-personal); the reviewer's name,
+  # email, and phone come from CI secrets so no PII is committed. Any field whose
+  # env var is unset is omitted, leaving the existing App Store Connect value.
+  def review_information
+    info = {}
+    info[:notes] = File.read(REVIEW_NOTES).strip if File.exist?(REVIEW_NOTES)
+    {
+      first_name: "APP_REVIEW_FIRST_NAME",
+      last_name: "APP_REVIEW_LAST_NAME",
+      email_address: "APP_REVIEW_EMAIL",
+      phone_number: "APP_REVIEW_PHONE"
+    }.each do |key, env|
+      value = ENV[env]
+      info[key] = value if value && !value.empty?
+    end
+    info
+  end
+
+  desc "Build the web app, sync Capacitor, and capture App Store screenshots in real simulators"
+  lane :screenshots do
+    sh("pnpm --filter @tumaet/apollon run build")
+    sh("pnpm --filter @tumaet/webapp run build")
+    sh("node ../app-store-screenshots/seed-native-build.mjs")
+    sh("pnpm --dir .. exec cap sync ios")
+    capture_screenshots
+
+    # App Store Connect rejects images with an alpha channel. XCUITest emits
+    # opaque-alpha PNGs for some iPad runtimes, so normalize every capture to
+    # a lossless, broadly compatible RGB PNG after Fastlane has collected it.
+    Dir[File.join(SCREENSHOTS_PATH, "*", "*.png")].each do |source|
+      normalized = "#{source}.rgb.png"
+      File.delete(normalized) if File.exist?(normalized)
+      sh("xcrun", "swift", SCREENSHOT_NORMALIZER, source, normalized)
+      File.rename(normalized, source)
+    end
+    sh("xcrun", "swift", SCREENSHOT_VALIDATOR, SCREENSHOTS_PATH)
+
+    if official_device_frames_available?
+      compose_framed_screenshots
+    else
+      UI.important(
+        "Raw screenshots are ready. Official Apple product bezels are not " \
+        "installed, so the framed candidate set was not generated."
+      )
+    end
+  end
+
+  desc "Compose an App Store-sized framed candidate set from the Simulator masters"
+  lane :framed_screenshots do
+    compose_framed_screenshots
+  end
+
+  desc "[CI] Upload App Store metadata and screenshots without uploading a binary"
+  lane :store_assets do
+    ensure_selected_screenshots_available
+    upload_to_app_store(
+      {
+        api_key: api_key,
+        metadata_path: METADATA_PATH,
+        screenshots_path: APP_STORE_SCREENSHOTS_PATH,
+        skip_binary_upload: true,
+        skip_metadata: false,
+        skip_screenshots: false,
+        overwrite_screenshots: true,
+        submit_for_review: false,
+        run_precheck_before_submit: false,
+        force: true
+      }.merge(app_store_connect_options)
+    )
+  end
+
   desc "[CI] Build the Apollon iOS app and produce an .ipa signed for the App Store"
   lane :build do
     app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
     team_id = CredentialsManager::AppfileConfig.try_fetch_value(:team_id)
+
+    # Rebuild the web bundle and re-sync immediately before archiving so the IPA
+    # can never inherit another lane's artifacts. The `screenshots` lane injects
+    # fixture localStorage into dist/index.html and re-syncs, so an App Store run
+    # that captures screenshots first would otherwise archive seeded assets — and,
+    # because that sync runs without CAPGO_PUBLIC_KEY, a binary that accepts
+    # UNSIGNED live updates. This sync inherits the signing env of this lane.
+    sh("pnpm --filter @tumaet/apollon run build")
+    sh("pnpm --filter @tumaet/webapp run build")
+    sh("pnpm --dir .. exec cap sync ios")
 
     setup_ci(force: true)
 
@@ -71,6 +229,50 @@ platform :ios do
     )
   end
 
+  desc "[CI] Upload the build and public App Store assets; submission is opt-in"
+  lane :release_app_store do
+    ensure_selected_screenshots_available
+    upload_to_app_store(
+      {
+        api_key: api_key,
+        ipa: "./build/App.ipa",
+        metadata_path: METADATA_PATH,
+        screenshots_path: APP_STORE_SCREENSHOTS_PATH,
+        skip_metadata: false,
+        skip_screenshots: false,
+        overwrite_screenshots: true,
+        submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "true",
+        automatic_release: false,
+        # Answered code-first so submission never stalls on the review questions.
+        # Encryption is also declared in Info.plist (ITSAppUsesNonExemptEncryption).
+        submission_information: {
+          export_compliance_uses_encryption: false,
+          content_rights_contains_third_party_content: false
+        },
+        run_precheck_before_submit: false,
+        force: true
+      }.merge(app_store_connect_options)
+    )
+  end
+
+  desc "[CI] Upload the App Privacy (\"nutrition label\") declaration. Requires an " \
+       "Apple ID session (FASTLANE_SESSION / FASTLANE_USER) — the App Store " \
+       "Connect API key cannot set privacy details."
+  lane :privacy do
+    UI.user_error!(
+      "Missing #{APP_PRIVACY_DETAILS}. Generate it once with:\n" \
+      "  bundle exec fastlane run upload_app_privacy_details_to_app_store " \
+      "skip_upload:true\n" \
+      "then verify it against the answers in fastlane/APP_STORE_READINESS.md."
+    ) unless File.exist?(APP_PRIVACY_DETAILS)
+
+    upload_app_privacy_details_to_app_store(
+      username: ENV["FASTLANE_USER"],
+      team_name: ENV["FASTLANE_ITC_TEAM_NAME"],
+      json_path: APP_PRIVACY_DETAILS
+    )
+  end
+
   lane :api_key do
     app_store_connect_api_key(
       duration: 300,
@@ -79,5 +281,72 @@ platform :ios do
       key_content: ENV["API_KEY_PASSWORD"],
       is_key_content_base64: true
     )
+  end
+
+  private_lane :compose_framed_screenshots do
+    missing_frames = OFFICIAL_DEVICE_FRAMES.values.reject { |path| File.exist?(path) }
+    unless missing_frames.empty?
+      UI.user_error!(
+        "Missing authorized Apple product bezels:\n#{missing_frames.join("\n")}\n" \
+        "Download them from https://developer.apple.com/design/resources/ " \
+        "after an authorized representative accepts Apple's license."
+      )
+    end
+
+    FileUtils.mkdir_p(File.join(FRAMED_SCREENSHOTS_PATH, "en-US"))
+    Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].each do |file|
+      File.delete(file)
+    end
+
+    Dir[File.join(SCREENSHOTS_PATH, "en-US", "*.png")].each do |source|
+      headline = SCREENSHOT_HEADLINES.find do |filter, _text|
+        File.basename(source).include?(filter)
+      end&.last
+      UI.user_error!("No headline configured for #{source}") unless headline
+      frame = OFFICIAL_DEVICE_FRAMES.find do |device, _path|
+        File.basename(source).start_with?(device)
+      end&.last
+      UI.user_error!("No official product bezel configured for #{source}") unless frame
+
+      output = File.join(
+        FRAMED_SCREENSHOTS_PATH,
+        "en-US",
+        File.basename(source)
+      )
+      sh(
+        "xcrun",
+        "swift",
+        SCREENSHOT_COMPOSITOR,
+        source,
+        output,
+        headline,
+        SCREENSHOT_FONT,
+        frame
+      )
+    end
+
+    sh("xcrun", "swift", SCREENSHOT_VALIDATOR, FRAMED_SCREENSHOTS_PATH)
+    sh("node", SCREENSHOT_GALLERY_GENERATOR)
+  end
+
+  private_lane :official_device_frames_available? do
+    OFFICIAL_DEVICE_FRAMES.values.all? { |path| File.exist?(path) }
+  end
+
+  private_lane :ensure_selected_screenshots_available do
+    # Both branches guard against uploading with `overwrite_screenshots: true`
+    # against an empty directory, which would DELETE the live App Store
+    # screenshots. CI always captures first; this protects local invocations.
+    if SCREENSHOT_STYLE == "framed"
+      UI.user_error!(
+        "The framed screenshot set has not been generated with authorized " \
+        "Apple product bezels."
+      ) unless official_device_frames_available? &&
+               Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].any?
+    else
+      UI.user_error!(
+        "No raw screenshots in #{SCREENSHOTS_PATH}; run the `screenshots` lane first."
+      ) unless Dir[File.join(SCREENSHOTS_PATH, "en-US", "*.png")].any?
+    end
   end
 end

@@ -1,0 +1,105 @@
+name: ios-live-update
+
+# Publishes an over-the-air web-bundle update for the mobile app. The bundle is
+# the SAME dist the webapp deploy ships, signed with the Capgo private key, and
+# copied to the directory the webapp nginx serves at /live-updates/. Reuses the
+# EXISTING deployment identity and gateway (VM_* + DEPLOYMENT_GATEWAY_*), so no
+# new key or user is introduced. Runs on manual dispatch and is callable from
+# the production deploy so a normal deploy also publishes the matching bundle.
+#
+# Uses (already configured for deploys):
+#   secrets: CAPGO_PRIVATE_KEY, VM_SSH_PRIVATE_KEY, DEPLOYMENT_GATEWAY_SSH_KEY
+#   vars:    CAPGO_PUBLIC_KEY, CAPGO_MIN_NATIVE_VERSION, VM_HOST, VM_USERNAME,
+#            DEPLOYMENT_GATEWAY_HOST, DEPLOYMENT_GATEWAY_USER, DEPLOYMENT_GATEWAY_PORT
+
+on:
+  workflow_dispatch:
+    inputs:
+      source-ref:
+        description: >
+          Commit to package, as the deployed image tag (`sha-<commit>`) or a raw
+          commit SHA. Empty uses the dispatched ref.
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      source-ref:
+        description: "Deployed image tag (`sha-<commit>`) or commit SHA to package."
+        required: false
+        type: string
+
+concurrency:
+  group: ios-live-update-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      # `sha-<commit>` is the tag convention build-and-push publishes images under,
+      # so stripping the prefix yields the commit the deployed image was built from.
+      - name: Resolve the commit to package
+        id: source
+        run: |
+          REF="${{ inputs.source-ref }}"
+          echo "ref=${REF#sha-}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ steps.source.outputs.ref }}
+
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web bundle
+        run: |
+          pnpm --filter @tumaet/apollon run build
+          pnpm --filter @tumaet/webapp run build
+
+      - name: Build + sign the live-update bundle
+        working-directory: standalone/webapp
+        env:
+          CAPGO_PRIVATE_KEY: ${{ secrets.CAPGO_PRIVATE_KEY }}
+          CAPGO_PUBLIC_KEY: ${{ vars.CAPGO_PUBLIC_KEY }}
+          CAPGO_MIN_NATIVE_VERSION: ${{ vars.CAPGO_MIN_NATIVE_VERSION }}
+        run: pnpm run live-update:build
+
+      # Upload the immutable bundle zip(s) FIRST so the manifest never points at
+      # a file that is not yet on the host.
+      - name: Copy bundle zips to the VM
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: "standalone/webapp/live-updates-dist/*.zip"
+          target: "/opt/apollon/app/live-updates/"
+          strip_components: 3
+
+      - name: Copy manifest to the VM
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: "standalone/webapp/live-updates-dist/manifest.json"
+          target: "/opt/apollon/app/live-updates/"
+          strip_components: 3

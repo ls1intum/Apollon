@@ -15,7 +15,7 @@ export type FreeformDropTarget = { id: string; type?: string; rect: Rect }
  * Resolve which node a freeform connection drop lands on, and its rectangle.
  *
  * Shared by the connection commit (`useConnect.onConnectEnd`) and the
- * connection ghost preview (`ReconnectConnectionLine`) so the preview never
+ * connection ghost preview (`ConnectionPreviewLine`) so the preview never
  * promises a target the drop won't honour. Returns the nearest intersecting
  * node to the drop (distance to its box, 0 when inside it), skipping the drag's
  * own source, ties broken by z order, so a drop that merely grazes a

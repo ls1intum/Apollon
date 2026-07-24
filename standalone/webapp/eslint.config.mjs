@@ -16,6 +16,8 @@ export default [
       "test-results/**",
       "coverage/**",
       "storybook-static/**",
+      // Xcode output created by Fastlane screenshot and release builds.
+      ".DerivedData*/**",
       // Capacitor native projects (contain generated/bundled web assets)
       "ios/**",
       "android/**",

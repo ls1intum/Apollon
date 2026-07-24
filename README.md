@@ -116,6 +116,7 @@ The docs are a [Docusaurus](https://docusaurus.io/) site published at <https://l
 - [Library](https://ls1intum.github.io/Apollon/library/): embedding the `@tumaet/apollon` editor.
 - [User Guide](https://ls1intum.github.io/Apollon/user/): getting started, requirements, and self-hosting.
 - [Contributor](https://ls1intum.github.io/Apollon/contributor/): project structure, scripts, deployment, and troubleshooting.
+- [Support](https://ls1intum.github.io/Apollon/user/support): getting help, and updating from the previous iPhone/iPad app.
 
 Operations, legal pages, and TUM DSMS material live in [`ops/`](./ops) in this repo.
 

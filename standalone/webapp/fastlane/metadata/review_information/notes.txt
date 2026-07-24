@@ -1,0 +1,10 @@
+No account or login is required to use Apollon — open the app and start drawing immediately.
+
+To review the core experience:
+1. Launch the app. Tap "New diagram" and choose any diagram type, or open one of the starter templates.
+2. Add and connect elements on the touch canvas; edit labels by tapping an element.
+3. Tap Export to save or share a diagram as SVG, PNG, PDF, PPTX, or JSON via the iOS share sheet.
+
+Optional sharing/collaboration: from a diagram, "Share" uploads a copy to TUM university infrastructure and returns a link so others can view or co-edit it. This is the only feature that transmits diagram content off the device; diagrams you do not share stay on the device. Shared diagrams are deleted automatically 120 days after the last edit. There is no advertising, no third-party analytics, and no tracking.
+
+This release replaces the previous native Apollon app on the same listing. Installing it as an in-place update preserves the prior app's local storage so compatible diagrams are imported automatically.

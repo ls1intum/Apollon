@@ -66,11 +66,14 @@ to React 19 before upgrading Apollon — on React 18 the install fails with an
 
 ## `"use client"` / RSC
 
-The main entry is now a client module (`"use client"`) in its entirety, so its
-pure helpers (`importDiagram`, `createApollonTheme`, …) are client-only too.
-React Server Components must treat `@tumaet/apollon` as client-only: import it
-from client components, not Server Components. See
-[SSR](/library/embedding/react#ssr-nextjs-remix-nuxt-sveltekit).
+The main entry is now a client module (`"use client"`) in its entirety. React
+Server Components must therefore treat `@tumaet/apollon` as client-only and
+import it from client components, not Server Components.
+
+Model migration is also available from the DOM-free
+`@tumaet/apollon/model` entry. Server code that only needs to normalize a
+diagram can import `importDiagram` from that subpath without loading the
+editor. See [SSR](/library/embedding/react#ssr-nextjs-remix-nuxt-sveltekit).
 
 ## Removed deep imports (CDN caveat)
 

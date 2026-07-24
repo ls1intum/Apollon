@@ -75,4 +75,16 @@ test.describe("Palette tap-to-place", () => {
     expect(placed.filter((n) => n.selected)).toHaveLength(1)
     expect(placed[0].transform).not.toBe(placed[1].transform)
   })
+
+  test("focusing a palette cell and pressing Enter places a node", async ({
+    page,
+  }) => {
+    // The palette cell is a native <button>, so keyboard activation is the
+    // browser's Enter/Space -> click; no hand-rolled key handler.
+    const cell = page.locator(".apollon-palette__cell").first()
+    await cell.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.locator(".react-flow__node")).toHaveCount(1)
+    await expect(page.locator(".react-flow__node.selected")).toHaveCount(1)
+  })
 })

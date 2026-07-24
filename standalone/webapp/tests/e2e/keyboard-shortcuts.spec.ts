@@ -241,10 +241,16 @@ test.describe("View", () => {
   })
 
   test("zoom to fit frames the whole diagram", async ({ page }) => {
-    await openWith(page, SPREAD)
+    await openFixtureInLocalEditor(page, SPREAD)
+    // At the initial 100% camera both far-apart nodes can legitimately be
+    // outside the viewport and therefore culled from the DOM. The fit shortcut
+    // is what must bring them into view, so canvas readiness cannot require a
+    // rendered node before the shortcut runs.
+    await waitForCanvasReady(page, false)
     // SPREAD overflows at 100%, so a real fit reads below it — a fit that fell
     // through to reset-zoom would stay at 100%.
     await page.keyboard.press("ControlOrMeta+Shift+Digit1")
+    await expect(nodes(page).first()).toBeVisible()
     await expect(zoomReadout(page)).not.toHaveText("100%")
   })
 

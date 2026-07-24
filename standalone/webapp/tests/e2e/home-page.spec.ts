@@ -682,6 +682,15 @@ test.describe("Legal pages", () => {
     })
     expect(parseFloat(stickyTop ?? "0")).toBeGreaterThanOrEqual(INSET)
 
+    // The shared wrapper's resting padding-top must clear the inset (> it, since
+    // it also adds the edge gap); otherwise the sticky-lifted band floats over
+    // the first content row on a notched device.
+    const wrapperPaddingTop = await page.evaluate(() => {
+      const wrapper = document.querySelector(".home-content-x")
+      return wrapper ? getComputedStyle(wrapper).paddingTop : null
+    })
+    expect(parseFloat(wrapperPaddingTop ?? "0")).toBeGreaterThan(INSET)
+
     await page.setViewportSize({ width: LANDSCAPE_WIDTH, height: 390 })
     await page.evaluate((inset) => {
       document.documentElement.style.setProperty("--safe-area-inset-top", "0px")

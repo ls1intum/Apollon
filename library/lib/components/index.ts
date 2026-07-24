@@ -9,7 +9,10 @@ export * from "./ui"
 export * from "./styleEditor"
 export * from "./CustomMiniMap"
 export * from "./CustomBackground"
-export * from "./ReconnectConnectionLine"
+// NOT re-exported here on purpose: it imports the edge-geometry solver (to preview
+// the committed auto route), and this barrel is imported by `constants.ts`, so
+// re-exporting it would form a `constants → components → solver → edgeAnchoring`
+// import cycle. Import it directly from "./ConnectionPreviewLine" (see App.tsx).
 export * from "./wrapper/AssessmentSelectableWrapper"
 export * from "./AssessmentSelectionDebug"
 export * from "./ScrollOverlay"

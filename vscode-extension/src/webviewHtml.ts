@@ -23,6 +23,9 @@ export function renderWebviewHtml(
     // `wasm-unsafe-eval` instantiates the resvg module the PNG export renders
     // with. It permits WebAssembly compilation only, not `eval`.
     `script-src 'nonce-${scriptNonce}' ${webview.cspSource} 'wasm-unsafe-eval'`,
+    // Large edge-layout solves run in a real emitted module Worker. Restrict it
+    // to this extension's own webview assets; blob/data workers stay forbidden.
+    `worker-src ${webview.cspSource}`,
     // The PNG export fetches the resvg binary (a webview asset) and the
     // library's `data:`-embedded fonts.
     `connect-src ${webview.cspSource} data:`,

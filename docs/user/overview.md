@@ -1,15 +1,16 @@
 ---
 id: overview
 title: Overview
-description: What Apollon is, what you can draw with it, and which of the three ways to use it fits you.
+description: What Apollon is, what you can draw with it, and which way to use it fits you.
 slug: /
 ---
 
 # Overview
 
-Apollon is an open-source UML and modeling editor for the web. You draw diagrams
-in the browser, collaborate in real time, and export to SVG, PNG, PDF, PPTX, or JSON.
-There is nothing to install to get started.
+Apollon is an open-source UML and modeling editor for the web, iPhone, iPad,
+VS Code, and your own products. Draw locally, collaborate when you choose, and
+export to SVG, PNG, PDF, PPTX, or JSON. There is nothing to install to get
+started on the web.
 
 ## What you can draw
 
@@ -34,13 +35,19 @@ it to keep editing. Real-time collaboration is optional and runs over WebSockets
 
 ## Which way to use Apollon
 
-Apollon ships in three forms. Pick the one that matches your context.
+Apollon ships in several forms. Pick the one that matches your context.
 
 ### Hosted web app
 
 Open [apollon.aet.cit.tum.de](https://apollon.aet.cit.tum.de) and start drawing.
 No install, no account. Diagrams persist in your browser and can be shared by
 URL. Use this when you want to draw and share a diagram with no install.
+
+### iPhone and iPad
+
+Install [Apollon from the App Store](https://apps.apple.com/app/id6474762031)
+when you want the full editor on an iOS or iPadOS device. Local diagrams stay on
+the device, work offline, and can be shared only when you choose.
 
 ### VS Code extension
 
@@ -60,12 +67,15 @@ npm install @tumaet/apollon
 | You want to...                                  | Use this           |
 | ----------------------------------------------- | ------------------ |
 | Draw a diagram right now, share it by URL       | Hosted web app     |
+| Model on iPhone or iPad, including offline      | iOS app            |
 | Keep diagrams in version control with your code | VS Code extension  |
 | Add a UML editor to your own application        | Embeddable library |
 
 ## Next steps
 
 - [Get Apollon](/user/getting-started/setup) — set up the hosted app, the VS
-  Code extension, or a self-hosted instance.
+  Code extension, iOS app, or a self-hosted instance.
+- [Support](/user/support) — get help or prepare an update from the previous iOS
+  app.
 - [Library docs](/library/) — the embedding API for `@tumaet/apollon`.
 - [Contributor docs](/contributor/) — build Apollon from source and contribute.

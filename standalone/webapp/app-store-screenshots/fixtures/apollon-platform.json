@@ -1,0 +1,258 @@
+{
+  "id": "app-store-platform",
+  "version": "4.0.0",
+  "title": "Apollon Platform",
+  "type": "ComponentDiagram",
+  "nodes": [
+    {
+      "id": "platform",
+      "width": 1200,
+      "height": 650,
+      "type": "componentSubsystem",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Apollon Modeling Platform",
+        "isComponentSubsystemHeaderShown": true
+      },
+      "measured": {
+        "width": 1200,
+        "height": 650
+      }
+    },
+    {
+      "id": "web-editor",
+      "width": 220,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 30,
+        "y": 80
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Web Editor",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 220,
+        "height": 110
+      }
+    },
+    {
+      "id": "ios-app",
+      "width": 220,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 330,
+        "y": 80
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "iPhone & iPad",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 220,
+        "height": 110
+      }
+    },
+    {
+      "id": "vscode",
+      "width": 220,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 650,
+        "y": 80
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "VS Code",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 220,
+        "height": 110
+      }
+    },
+    {
+      "id": "embedded",
+      "width": 220,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 950,
+        "y": 80
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Embedded Products",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 220,
+        "height": 110
+      }
+    },
+    {
+      "id": "diagram-core",
+      "width": 280,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 460,
+        "y": 270
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Diagram Core",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 280,
+        "height": 120
+      }
+    },
+    {
+      "id": "collaboration",
+      "width": 240,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 180,
+        "y": 480
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Live Collaboration",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 240,
+        "height": 110
+      }
+    },
+    {
+      "id": "export-engine",
+      "width": 240,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 480,
+        "y": 480
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Export Engine",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 240,
+        "height": 110
+      }
+    },
+    {
+      "id": "diagram-storage",
+      "width": 240,
+      "height": 110,
+      "type": "component",
+      "position": {
+        "x": 780,
+        "y": 480
+      },
+      "parentId": "platform",
+      "data": {
+        "name": "Diagram Storage",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 240,
+        "height": 110
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "web-to-core",
+      "source": "web-editor",
+      "target": "diagram-core",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "left-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "ios-to-core",
+      "source": "ios-app",
+      "target": "diagram-core",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "vscode-to-core",
+      "source": "vscode",
+      "target": "diagram-core",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "embedded-to-core",
+      "source": "embedded",
+      "target": "diagram-core",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "core-to-collaboration",
+      "source": "diagram-core",
+      "target": "collaboration",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom-left",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "core-to-export",
+      "source": "diagram-core",
+      "target": "export-engine",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "core-to-storage",
+      "source": "diagram-core",
+      "target": "diagram-storage",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

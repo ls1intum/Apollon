@@ -39,10 +39,6 @@ export const ClassDiagramEdge = ({
 
   const allowMidpointDragging =
     "allowMidpointDragging" in config ? config.allowMidpointDragging : true
-  const enableStraightPath =
-    "enableStraightPath" in config
-      ? (config.enableStraightPath as boolean)
-      : true
 
   const { assessments } = useDiagramStore(
     useShallow((state) => ({
@@ -63,7 +59,6 @@ export const ClassDiagramEdge = ({
     isBendDragging,
     draggingHandleSegmentIndex,
     hasInitialCalculation,
-    isReconnecting,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -90,7 +85,6 @@ export const ClassDiagramEdge = ({
     targetHandleId,
     data,
     allowMidpointDragging,
-    enableStraightPath,
   })
 
   const { strokeColor, textColor } = getCustomColorsFromDataForEdge(data)
@@ -108,7 +102,6 @@ export const ClassDiagramEdge = ({
           strokeColor={strokeColor}
           strokeDashArray={strokeDashArray}
           hasInitialCalculation={hasInitialCalculation}
-          isReconnecting={isReconnecting}
           isBendDragging={isBendDragging}
           draggingHandleSegmentIndex={draggingHandleSegmentIndex}
           markerStart={markerStart}
@@ -139,6 +132,7 @@ export const ClassDiagramEdge = ({
 
         <CommonEdgeElements
           id={id}
+          data={data}
           pathMiddlePosition={edgeData.pathMiddlePosition}
           toolbarPosition={edgeData.toolbarPosition}
           isDiagramModifiable={isDiagramModifiable}
