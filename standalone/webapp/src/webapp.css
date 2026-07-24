@@ -11,14 +11,12 @@
    resolver reliably inlines the precompiled dist file. */
 @import "../../../packages/ui/dist/components.css";
 
-/* Single source of truth for the app font. Defining `--font-sans` in @theme
-   makes BOTH the `font-sans` utility and Tailwind Preflight's default document
-   font resolve to Poppins, so the whole UI inherits one font. A font stack is
-   static, so this is @theme (not @theme inline). The diagram MODEL text (Inter,
-   applied on SVG nodes via library/lib/fontStack.ts) is out of scope. */
+/* Single source of truth for the app font. The editor self-hosts Inter in its
+   bundled stylesheet, so the app shell and diagram canvas can share one
+   deterministic family without contacting a third-party font service. */
 @theme {
   --font-sans:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    "Inter", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
     sans-serif;
 }
 
@@ -187,7 +185,7 @@ body,
     var(--home-surface-base);
   color: var(--home-text-primary);
   font-family:
-    "Poppins", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
+    "Inter", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial,
     sans-serif;
   transition:
     background-color 220ms ease,
@@ -568,7 +566,7 @@ body,
 
 /* ───────────────────────── Notifications ─────────────────────────
    Unified look for all notification surfaces: react-toastify toasts share the
-   same surface, text, Poppins font, radius and the --home-toast-* semantic
+   same surface, text, Inter font, radius and the --home-toast-* semantic
    accents. Theme-aware via --home-* tokens. */
 
 .home-toast-container {

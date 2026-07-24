@@ -1,0 +1,1 @@
+class,activity,use case,BPMN,flowchart,architecture,software design,system design,workflow,offline

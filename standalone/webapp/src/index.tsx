@@ -8,17 +8,17 @@ import {
   setLogger as setApollonLogger,
   setLogLevel as setApollonLogLevel,
 } from "@tumaet/apollon"
-import { StatusBar } from "@capacitor/status-bar"
 import { Keyboard } from "@capacitor/keyboard"
+import {
+  notifyLiveUpdateReady,
+  checkForLiveUpdate,
+} from "./services/liveUpdate"
 
 const rootElement = document.getElementById("root")
 
+// Initializes the theme AND, on iOS, the native status-bar style to match it
+// (the bar stays visible — see useThemeStore's syncNativeStatusBar).
 useThemeStore.getState().initializeTheme()
-
-// Hide status bar on mobile
-StatusBar.hide().catch(() => {
-  // Silently fail if not on mobile
-})
 
 // iOS only. WKWebView scrolls a focused input into view by scrolling the whole
 // webview, which on this `position: fixed` document leaves it stranded off-origin
@@ -99,6 +99,11 @@ startLegacyMigration()
 
 if (rootElement) {
   createRoot(rootElement).render(<App />)
+  // Confirm this bundle booted so the OTA plugin won't roll it back, then check
+  // for a newer web bundle (staged for the next cold start). Both no-op off
+  // native and never block first paint.
+  void notifyLiveUpdateReady()
+  void checkForLiveUpdate()
 } else {
   log.error("Root element not found")
 }

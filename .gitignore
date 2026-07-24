@@ -63,6 +63,11 @@ android/
 **/fastlane/README.md
 **/fastlane/test_output
 **/fastlane/screenshots
+**/fastlane/screenshots-framed
+**/fastlane/screenshots-preview
+**/fastlane/screenshots-review.html
+**/fastlane/device-frames
+**/.DerivedData*/
 
 # Capacitor generated icons
 icons/
@@ -79,3 +84,6 @@ docs/build/
 
 # Temp dir used by scripts/check-doc-snippets.mjs (removed on each run)
 docs/.snippet-typecheck/
+
+# Live-update publish artifacts (built by scripts/build-live-update.mjs)
+**/live-updates-dist/

@@ -1,0 +1,14 @@
+Create UML and software-design diagrams with Apollon, the open-source editor for the web—now ready for iPhone and iPad.
+
+Apollon helps students, educators, software engineers, and architects turn ideas into clear, structured models. Start without an account, keep local diagrams on your device, and work offline. When you are ready, export your diagram or share it for feedback and live collaboration.
+
+What you can do:
+
+• Choose from 13 notations: Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri Net, Reachability Graph, Syntax Tree, Flowchart, BPMN, and SFC.
+• Start with a blank canvas or a software-design pattern template.
+• Edit with a touch-friendly interface designed for iPhone and iPad.
+• Export to SVG, PNG, PDF, PPTX, or JSON.
+• Use light or dark appearance in portrait or landscape.
+• Create an optional share link; diagrams you keep local remain local.
+
+Apollon uses the same open diagram format across the web app, iPhone and iPad, VS Code, and embedded products. The project is open source and developed by TUM Applied Education Technologies.

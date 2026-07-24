@@ -1,6 +1,10 @@
 PODS:
+  - Alamofire (5.10.2)
+  - BigInt (5.2.0)
   - Capacitor (8.4.1):
     - CapacitorCordova
+  - CapacitorApp (8.1.1):
+    - Capacitor
   - CapacitorClipboard (8.0.1):
     - Capacitor
   - CapacitorCordova (8.4.1)
@@ -18,11 +22,20 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (8.0.2):
     - Capacitor
+  - CapgoCapacitorUpdater (8.51.2):
+    - Alamofire (= 5.10.2)
+    - BigInt (= 5.2.0)
+    - Capacitor
+    - Version (= 0.8.0)
+    - ZIPFoundation (~> 0.9)
   - IONFilesystemLib (1.1.2)
   - IONFileTransferLib (1.0.3)
+  - Version (0.8.0)
+  - ZIPFoundation (0.9.20)
 
 DEPENDENCIES:
   - "Capacitor (from `../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../../../node_modules/.pnpm/@capacitor+app@8.1.1_@capacitor+core@8.4.1/node_modules/@capacitor/app`)"
   - "CapacitorClipboard (from `../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/clipboard`)"
   - "CapacitorCordova (from `../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../../../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.4.1/node_modules/@capacitor/filesystem`)"
@@ -31,15 +44,22 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.4.1/node_modules/@capacitor/status-bar`)"
+  - "CapgoCapacitorUpdater (from `../../../../node_modules/.pnpm/@capgo+capacitor-updater@8.51.2_@capacitor+core@8.4.1/node_modules/@capgo/capacitor-updater`)"
 
 SPEC REPOS:
   trunk:
+    - Alamofire
+    - BigInt
     - IONFilesystemLib
     - IONFileTransferLib
+    - Version
+    - ZIPFoundation
 
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../../../node_modules/.pnpm/@capacitor+ios@8.4.1_@capacitor+core@8.4.1/node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../../../node_modules/.pnpm/@capacitor+app@8.1.1_@capacitor+core@8.4.1/node_modules/@capacitor/app"
   CapacitorClipboard:
     :path: "../../../../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/clipboard"
   CapacitorCordova:
@@ -56,9 +76,14 @@ EXTERNAL SOURCES:
     :path: "../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.4.1/node_modules/@capacitor/status-bar"
+  CapgoCapacitorUpdater:
+    :path: "../../../../node_modules/.pnpm/@capgo+capacitor-updater@8.51.2_@capacitor+core@8.4.1/node_modules/@capgo/capacitor-updater"
 
 SPEC CHECKSUMS:
+  Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
+  BigInt: f668a80089607f521586bbe29513d708491ef2f7
   Capacitor: 35242afe195b1e53c58ca1b827d1b444c5e6602b
+  CapacitorApp: 305bd13c44f6f9d164e2ee66a4faa956ed8c0e06
   CapacitorClipboard: c75fdaa6e622111119f35e7914ecfc67b05efecb
   CapacitorCordova: eebe6bcf807b1b06f3f48237650f96bbcd0eef09
   CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
@@ -67,9 +92,12 @@ SPEC CHECKSUMS:
   CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
   CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
   CapacitorStatusBar: 01d5763b4ed720de5ce2edbc938de6a98f4c8f32
+  CapgoCapacitorUpdater: a820667b6970b4b0a74590cade4483525ec2a28e
   IONFilesystemLib: 21a63377696b2d8fab5632ecfb7d2ac67bddb68a
   IONFileTransferLib: addbbf50405c163dcd74a7b1bd8c6f9302342be2
+  Version: de5907f2c5d0f3cf21708db7801d1d5401139486
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
 
-PODFILE CHECKSUM: de0a877902ce87328492a048160c869d1f6a7a35
+PODFILE CHECKSUM: 59d84fb795eff5b1260b18d805db0429ce0601b7
 
 COCOAPODS: 1.16.2

@@ -1,0 +1,9 @@
+# Codacy configuration.
+#
+# `exclude_paths` is additive to Codacy's default ignores and does not change
+# which analysis tools are enabled — it only tells Codacy to skip these files.
+exclude_paths:
+  # Vendored verbatim from the fastlane project
+  # (https://github.com/fastlane/fastlane) and updated by re-copying, not by
+  # hand. We do not restyle it to local lint rules.
+  - "standalone/webapp/ios/App/AppStoreScreenshots/SnapshotHelper.swift"

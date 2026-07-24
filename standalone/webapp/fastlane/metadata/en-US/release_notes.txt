@@ -1,0 +1,8 @@
+Apollon has been rebuilt around the redesigned editor used on the web.
+
+• Create 13 diagram types, including Class, Activity, BPMN, Flowchart, and more
+• Start from software design pattern templates
+• Export as SVG, PNG, PDF, PPTX, or JSON
+• Work locally without an account and share only when you choose
+• Use a refreshed, touch-friendly interface in light or dark appearance
+• Keep compatible diagrams from the previous Apollon iOS app when you update

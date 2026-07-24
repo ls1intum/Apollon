@@ -1,0 +1,19 @@
+devices([
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M4)"
+])
+
+languages(["en-US"])
+
+workspace("./ios/App/App.xcworkspace")
+scheme("AppStoreScreenshots")
+output_directory("./fastlane/screenshots")
+
+clear_previous_screenshots(true)
+erase_simulator(true)
+dark_mode(false)
+override_status_bar(true)
+number_of_retries(1)
+concurrent_simulators(false)
+skip_open_summary(true)
+stop_after_first_error(true)
