@@ -169,15 +169,52 @@ describe("straight-hook edge routing", () => {
     }
   })
 
-  it("keeps a syntax-tree link straight through a blocker (tidy layout, not routing)", () => {
-    // A dense hand-drawn tree must not sprout obstacle-avoidance bends; overlaps
-    // are the tidy-tree layout's job.
+  it("bends a syntax-tree link around a blocker without grazing either node", () => {
     const blocker = makeNode("c", 210, -20, 100, 120)
     const nodes = [makeNode("a", 0, 0, 120, 80), makeNode("b", 520, 0), blocker]
     const { routeById } = computeAllEdgeGeometry(
       solverInput(nodes, [straightHookEdge()])
     )
-    expect(routeById["e1"]).toHaveLength(2)
+    const route = routeById["e1"]
+    expect(route.length).toBeGreaterThan(2)
+    const blockerRect = { x: 210, y: -20, width: 100, height: 120 }
+    for (let i = 0; i < route.length - 1; i++) {
+      expect(segIntersectsRect(route[i], route[i + 1], blockerRect)).toBe(false)
+    }
+    // The detour stays economical: one corner, not a staircase of kinks.
+    expect(route.length).toBeLessThanOrEqual(4)
+  })
+
+  it("leaves a node squarely rather than grazing along its side", () => {
+    // A blocker directly under the source used to make the route slide out
+    // sideways along the node's own edge (a 90-degree "exit angle") before
+    // turning. The endpoint-angle term prices that above spending a corner.
+    const blocker = makeNode("c", 150, 140, 120, 80)
+    const nodes = [
+      makeNode("a", 150, 0, 120, 80),
+      makeNode("b", 420, 320, 120, 80),
+      blocker,
+    ]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput(nodes, [straightHookEdge()])
+    )
+    const route = routeById["e1"]
+    const source = { ...makeNode("a", 150, 0, 120, 80).node.position }
+    const rect = { x: source.x, y: source.y, width: 120, height: 80 }
+    // Outward normal of whichever side the route departs from.
+    const p = route[0]
+    const distances = [
+      { n: { x: -1, y: 0 }, d: Math.abs(p.x - rect.x) },
+      { n: { x: 1, y: 0 }, d: Math.abs(p.x - (rect.x + rect.width)) },
+      { n: { x: 0, y: -1 }, d: Math.abs(p.y - rect.y) },
+      { n: { x: 0, y: 1 }, d: Math.abs(p.y - (rect.y + rect.height)) },
+    ].sort((a, b) => a.d - b.d)
+    const normal = distances[0].n
+    const dir = { x: route[1].x - p.x, y: route[1].y - p.y }
+    const len = Math.hypot(dir.x, dir.y)
+    const cos = (dir.x * normal.x + dir.y * normal.y) / len
+    const degrees = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI
+    expect(degrees).toBeLessThan(75)
   })
 
   it("attaches at the facing side with a centred port (not the drawn handle)", () => {

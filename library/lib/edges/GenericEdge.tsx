@@ -21,6 +21,7 @@ import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
 import { getSegmentGhostHandles } from "@/utils/geometry/freeWaypoints"
+import { isqrt } from "@/utils/geometry/integerGeometry"
 import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
 
@@ -39,6 +40,8 @@ export const getHandleScreenScale = (zoom: number): number => {
   )
   return 1 / Math.min(safeZoom, 1)
 }
+
+const isqrtLength = (dx: number, dy: number): number => isqrt(dx * dx + dy * dy)
 
 const useHandleScreenScale = (): number =>
   getHandleScreenScale(useStore((state) => state.transform[2]))
@@ -511,12 +514,12 @@ export const EdgeBendHandle = ({
 }
 
 /**
- * Draggable free-2D waypoint editing for straight (diagonal) edges. Renders a faint
- * "ghost" handle at every route segment midpoint (dragging one past a threshold
- * materialises a bend) and a solid handle on every existing interior waypoint
- * (drag to move, double-click to remove). Every handle carries a generous invisible
- * hit target so it stays grabbable when zoomed out and on touch. This is the
- * straight-edge analogue of `EdgeBendHandle`, which is orthogonal-only.
+ * Bend editing for straight (diagonal) edges — the counterpart to `EdgeBendHandle`,
+ * and deliberately the SAME affordance: an identically styled `edge-bend-handle`
+ * pill that lies along the segment, hidden until the edge is hovered or selected.
+ * A step edge drags a segment along its one free axis; a straight edge has two, so
+ * these handles carry a `move` cursor and drop a waypoint where they are released.
+ * Existing waypoints get the same pill so the whole row reads as one control set.
  */
 export const EdgeWaypointHandles = ({
   route,
@@ -542,58 +545,80 @@ export const EdgeWaypointHandles = ({
   ) => void
 }) => {
   const screenScale = useHandleScreenScale()
-  const ghosts = getSegmentGhostHandles(route)
+  const segments = getSegmentGhostHandles(route)
   const hit = EDGES.WAYPOINT_HIT_TARGET_PX * screenScale
-  const waypointRadius = EDGES.WAYPOINT_HANDLE_RADIUS_PX * screenScale
-  const ghostRadius = EDGES.WAYPOINT_GHOST_RADIUS_PX * screenScale
+  const shortAxis = 10 * screenScale
+  const radius = 6 * screenScale
+
+  /** A step-edge bend pill, rotated to lie along an arbitrary segment. */
+  const pill = (
+    center: IPoint,
+    longAxis: number,
+    angleDeg: number,
+    className: string
+  ) => (
+    <rect
+      className={className}
+      x={center.x - longAxis / 2}
+      y={center.y - shortAxis / 2}
+      width={longAxis}
+      height={shortAxis}
+      rx={radius}
+      ry={radius}
+      transform={`rotate(${angleDeg} ${center.x} ${center.y})`}
+      pointerEvents="none"
+    />
+  )
 
   return (
     <>
-      {ghosts.map((ghost) => (
-        <g
-          key={`ghost-${ghost.segmentIndex}`}
-          className="edge-waypoint-ghost-group"
-        >
-          <circle
-            className="edge-circle edge-waypoint-ghost"
-            cx={ghost.position.x}
-            cy={ghost.position.y}
-            r={ghostRadius}
-            pointerEvents="none"
-          />
-          <rect
-            className="edge-waypoint-ghost-hit"
-            x={ghost.position.x - hit / 2}
-            y={ghost.position.y - hit / 2}
-            width={hit}
-            height={hit}
-            rx={hit / 2}
-            ry={hit / 2}
-            pointerEvents="all"
-            style={{ cursor: "crosshair", fill: "transparent" }}
-            onPointerDown={(event) =>
-              onGhostPointerDown(event, ghost.segmentIndex)
-            }
-          />
-        </g>
-      ))}
+      {segments.map((segment) => {
+        const a = route[segment.segmentIndex]
+        const b = route[segment.segmentIndex + 1]
+        // Degrees are presentation only — never a routing decision — so the
+        // trigonometry here cannot affect committed geometry.
+        const angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI
+        const room = isqrtLength(b.x - a.x, b.y - a.y) - 2 * radius
+        const longAxis = Math.min(
+          Math.max(room, EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX * screenScale),
+          EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
+        )
+        return (
+          <g key={`segment-${segment.segmentIndex}`}>
+            {pill(
+              segment.position,
+              longAxis,
+              angle,
+              "edge-circle edge-bend-handle"
+            )}
+            <rect
+              x={segment.position.x - hit / 2}
+              y={segment.position.y - hit / 2}
+              width={hit}
+              height={hit}
+              rx={hit / 2}
+              ry={hit / 2}
+              pointerEvents="all"
+              style={{ cursor: "move", fill: "transparent", zIndex: 9999 }}
+              onPointerDown={(event) =>
+                onGhostPointerDown(event, segment.segmentIndex)
+              }
+            />
+          </g>
+        )
+      })}
       {interior.map((point, index) => (
-        <g key={`waypoint-${index}`} className="edge-waypoint-group">
-          <circle
-            className={
-              "edge-circle edge-waypoint-handle" +
+        <g key={`waypoint-${index}`}>
+          {pill(
+            point,
+            shortAxis,
+            0,
+            "edge-circle edge-bend-handle" +
               (selectedWaypointIndex === index
-                ? " edge-waypoint-handle--selected"
+                ? " edge-bend-handle--active"
                 : "")
-            }
-            cx={point.x}
-            cy={point.y}
-            r={waypointRadius}
-            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
-            pointerEvents="none"
-          />
+          )}
           <rect
-            className="edge-waypoint-hit"
             x={point.x - hit / 2}
             y={point.y - hit / 2}
             width={hit}
@@ -601,7 +626,7 @@ export const EdgeWaypointHandles = ({
             rx={hit / 2}
             ry={hit / 2}
             pointerEvents="all"
-            style={{ cursor: "move", fill: "transparent" }}
+            style={{ cursor: "move", fill: "transparent", zIndex: 9999 }}
             onPointerDown={(event) => onWaypointPointerDown(event, index)}
             onDoubleClick={() => onWaypointDoubleClick(index)}
           />

@@ -988,61 +988,13 @@
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
 }
 
-/* Straight-edge waypoint editing. A materialised waypoint reads as a hollow pill
-   (like an endpoint grip); a ghost midpoint is a faint solid dot that materialises
-   a bend on drag. Both stay hidden until the edge is hovered/selected, matching the
-   bend-handle affordance, so an idle diagram is not littered with dots. */
-.edge-waypoint-handle {
-  opacity: 0;
-  fill: var(--apollon-background, #fff);
-  stroke: var(--apollon-primary, #3e8acc);
-  paint-order: stroke;
-  transition:
-    fill 120ms ease,
-    opacity 120ms ease,
-    stroke 120ms ease;
-}
-
-.edge-waypoint-ghost {
-  opacity: 0;
-  stroke: none;
-  fill: color-mix(
-    in srgb,
-    var(--apollon-primary, #3e8acc) 34%,
-    var(--apollon-background, #fff)
-  );
-  transition:
-    fill 120ms ease,
-    opacity 120ms ease;
-}
-
-.react-flow__edge:hover .edge-waypoint-handle,
-.react-flow__edge.selected .edge-waypoint-handle,
-.edge-waypoint-handle--selected {
+/* Straight-edge bend handles reuse `.edge-bend-handle` above, so they are the same
+   affordance as a step edge's: invisible until the edge is hovered or selected, then
+   a primary-coloured pill that darkens under the pointer. Only the active (selected)
+   waypoint gets an extra emphasis. */
+.edge-bend-handle--active {
   opacity: 1;
-}
-
-.react-flow__edge:hover .edge-waypoint-handle--selected {
-  fill: color-mix(
-    in srgb,
-    var(--apollon-primary, #3e8acc) 18%,
-    var(--apollon-background, #fff)
-  );
-}
-
-.react-flow__edge:hover .edge-waypoint-ghost,
-.react-flow__edge.selected .edge-waypoint-ghost {
-  opacity: 0.4;
-}
-
-.edge-waypoint-ghost-group:hover .edge-waypoint-ghost {
-  opacity: 1;
-  fill: var(--apollon-primary, #3e8acc);
-}
-
-.edge-waypoint-group:hover .edge-waypoint-handle {
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
-  stroke: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
 }
 
 .react-flow__edge:hover .edge-overlay {

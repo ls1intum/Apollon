@@ -308,6 +308,23 @@ function getStraightHookInterior(edge: {
   return Array.isArray(points) ? (points as IPoint[]) : []
 }
 
+/** Outward unit normal of a node side, so the straight router can price a route
+ * that leaves (or meets) a node at a grazing angle instead of squarely. */
+function outwardNormal(side: Position | undefined): IPoint | undefined {
+  switch (side) {
+    case Position.Top:
+      return { x: 0, y: -1 }
+    case Position.Right:
+      return { x: 1, y: 0 }
+    case Position.Bottom:
+      return { x: 0, y: 1 }
+    case Position.Left:
+      return { x: -1, y: 0 }
+    default:
+      return undefined
+  }
+}
+
 function indexRoutePolyline(
   grid: NeighborGrid,
   edgeId: string,
@@ -1366,11 +1383,9 @@ function computeAllEdgeGeometryPass(
     // neighbour map so step edges route around it.
     if (straightHookTypes.has(edge.type ?? "")) {
       const interior = getStraightHookInterior(edge)
-      // Syntax trees are drawn as straight parent→child lines; node overlaps are
-      // resolved by the tidy-tree layout, NOT by per-edge obstacle routing (which
-      // produces backtracking spaghetti on a dense tree). Use-case / petri edges
-      // form general graphs and keep automatic obstacle avoidance.
-      const avoidsObstacles = edge.type !== "SyntaxTreeLink"
+      // Every straight edge avoids intervening node bodies; the routing cost keeps
+      // the detour readable (see `straightPolylineRouter`).
+      const avoidsObstacles = true
       const straightObstacles = getEdgeObstacles(
         nodes,
         edge.source,
@@ -1382,6 +1397,9 @@ function computeAllEdgeGeometryPass(
       )
       let straightSource = endpoints.adjustedSource
       let straightTarget = endpoints.adjustedTarget
+      let straightSourceSide = endpoints.sourcePosition
+      let straightTargetSide = endpoints.targetPosition
+      let straightNeighbors: IPoint[][] = []
       if (interior.length === 0) {
         const sourceType = nodeById.get(edge.source)?.type
         const targetType = nodeById.get(edge.target)?.type
@@ -1432,9 +1450,28 @@ function computeAllEdgeGeometryPass(
           neighborEdges,
           enableStraightPath: true,
         })
+        // Sibling carve-out (the same one the orthogonal neighbour scan makes):
+        // connectors that share a node with this edge are MEANT to fan out from it
+        // side by side. Pricing that as crowding makes the search shove the
+        // departure sideways into exactly the grazing exit we are trying to remove.
+        // Unrelated edges still contribute crossing/overlap/crowding cost.
+        const shares = (other: Edge): boolean =>
+          other.source === edge.source ||
+          other.source === edge.target ||
+          other.target === edge.source ||
+          other.target === edge.target
+        straightNeighbors = []
+        for (const [otherId, route] of Object.entries(routeById)) {
+          if (otherId === edge.id || route.length < 2) continue
+          const other = edgeById.get(otherId)
+          if (other && shares(other)) continue
+          straightNeighbors.push(route)
+        }
         if (selected) {
           straightSource = selected.endpoints.adjustedSource
           straightTarget = selected.endpoints.adjustedTarget
+          straightSourceSide = selected.endpoints.sourcePosition
+          straightTargetSide = selected.endpoints.targetPosition
         }
       }
       const line = avoidsObstacles
@@ -1447,8 +1484,10 @@ function computeAllEdgeGeometryPass(
             obstacles: straightObstacles.filter(
               (o) => o.id !== edge.source && o.id !== edge.target
             ),
-            neighborRoutes: [],
+            neighborRoutes: straightNeighbors,
             clearancePx: EDGES.NODE_CLEARANCE_PX,
+            sourceNormal: outwardNormal(straightSourceSide),
+            targetNormal: outwardNormal(straightTargetSide),
           })
         : [straightSource, ...interior, straightTarget]
       routeById[edge.id] = line

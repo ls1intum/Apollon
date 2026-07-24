@@ -82,10 +82,6 @@ export const EDGES = Object.freeze({
   /** A straight-edge interior waypoint within this perpendicular distance of the
    * line through its neighbours is treated as collinear and pruned. */
   WAYPOINT_COLLINEAR_TOLERANCE_PX: 4,
-  /** Preferred on-screen radius of a materialised straight-edge waypoint handle. */
-  WAYPOINT_HANDLE_RADIUS_PX: 6,
-  /** On-screen radius of a faint ghost midpoint handle. */
-  WAYPOINT_GHOST_RADIUS_PX: 5,
   /** Invisible hit target around a waypoint/ghost handle (touch-friendly). */
   WAYPOINT_HIT_TARGET_PX: 24,
   /** Shortest segment (flow px) that still shows a ghost midpoint handle, so two
