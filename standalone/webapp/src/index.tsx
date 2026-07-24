@@ -9,6 +9,10 @@ import {
   setLogLevel as setApollonLogLevel,
 } from "@tumaet/apollon"
 import { Keyboard } from "@capacitor/keyboard"
+import {
+  notifyLiveUpdateReady,
+  checkForLiveUpdate,
+} from "./services/liveUpdate"
 
 const rootElement = document.getElementById("root")
 
@@ -95,6 +99,11 @@ startLegacyMigration()
 
 if (rootElement) {
   createRoot(rootElement).render(<App />)
+  // Confirm this bundle booted so the OTA plugin won't roll it back, then check
+  // for a newer web bundle (staged for the next cold start). Both no-op off
+  // native and never block first paint.
+  void notifyLiveUpdateReady()
+  void checkForLiveUpdate()
 } else {
   log.error("Root element not found")
 }

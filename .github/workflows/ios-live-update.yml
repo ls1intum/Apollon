@@ -1,0 +1,84 @@
+name: ios-live-update
+
+# Publishes an over-the-air web-bundle update for the mobile app. The bundle is
+# the SAME `dist/` the webapp deploy ships, signed with the Capgo private key,
+# and copied to the prod VM directory the webapp nginx serves at /live-updates/.
+# Runs on manual dispatch and is callable from the production deploy so a normal
+# deploy also publishes the matching OTA bundle ("deploy == OTA publish").
+#
+# Required secrets (Production environment):
+#   CAPGO_PRIVATE_KEY         PEM of the RSA signing key (public half is CAPGO_PUBLIC_KEY, baked into the app).
+#   LIVE_UPDATE_SSH_KEY       SSH private key authorized for LIVE_UPDATE_USER@LIVE_UPDATE_HOST.
+#   LIVE_UPDATE_HOST          e.g. apollon-prod.aet.cit.tum.de
+#   LIVE_UPDATE_USER          deploy user with write access to /opt/apollon/app/live-updates
+# Required variable:
+#   CAPGO_MIN_NATIVE_VERSION  Minimum native app version this web bundle supports
+#                             (bump only when a matching App Store build ships).
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      CAPGO_PRIVATE_KEY:
+        required: true
+      LIVE_UPDATE_SSH_KEY:
+        required: true
+      LIVE_UPDATE_HOST:
+        required: true
+      LIVE_UPDATE_USER:
+        required: true
+
+concurrency:
+  group: ios-live-update-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: Production
+    defaults:
+      run:
+        working-directory: standalone/webapp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web bundle
+        working-directory: .
+        run: |
+          pnpm --filter @tumaet/apollon run build
+          pnpm --filter @tumaet/webapp run build
+
+      - name: Build + sign the live-update bundle
+        env:
+          CAPGO_PRIVATE_KEY: ${{ secrets.CAPGO_PRIVATE_KEY }}
+          CAPGO_MIN_NATIVE_VERSION: ${{ vars.CAPGO_MIN_NATIVE_VERSION }}
+        run: pnpm run live-update:build
+
+      - name: Publish to the prod VM
+        env:
+          SSH_KEY: ${{ secrets.LIVE_UPDATE_SSH_KEY }}
+          HOST: ${{ secrets.LIVE_UPDATE_HOST }}
+          USER: ${{ secrets.LIVE_UPDATE_USER }}
+        run: |
+          install -m 600 /dev/stdin "$RUNNER_TEMP/id" <<< "$SSH_KEY"
+          mkdir -p ~/.ssh && ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Upload the immutable zip(s) FIRST, then the manifest, so the manifest
+          # never points at a bundle that isn't yet on the host.
+          rsync -az -e "ssh -i $RUNNER_TEMP/id" \
+            --include='*.zip' --exclude='manifest.json' \
+            dist/live-updates/ "$USER@$HOST:/opt/apollon/app/live-updates/"
+          rsync -az -e "ssh -i $RUNNER_TEMP/id" \
+            dist/live-updates/manifest.json "$USER@$HOST:/opt/apollon/app/live-updates/manifest.json"

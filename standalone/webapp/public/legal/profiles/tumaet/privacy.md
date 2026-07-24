@@ -46,6 +46,15 @@ the duration of the request, so the response can be routed back to your client.
 Not persistently stored, never used for tracking, profiling, or correlating
 individuals.
 
+**App update check (mobile app only).** On launch, the iPhone/iPad app asks a
+TUM-operated endpoint (`apollon.aet.cit.tum.de/live-updates`) whether a newer
+version of the app's own interface is available, and if so downloads it. This is
+a first-party request to TUM infrastructure only — no third party, no app store,
+no advertising or analytics network is involved — and, like every other request,
+the connecting IP address is used only to route the response and is not retained.
+The downloaded update contains only Apollon's own interface code; it carries no
+personal data and no diagram content.
+
 **Operational events about the service itself.** Certificate renewals, critical errors from the reverse proxy or database engine, and unhandled-exception stack traces from the application server. Captured on TUM-operated servers in Germany. These events concern the service, not end users, and contain no personal data by design.
 
 _Legal basis — server-side processing (database, WebSocket, operational events, request metadata): Art. 6(1)(e) GDPR, read with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them._

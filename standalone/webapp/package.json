@@ -32,6 +32,7 @@
     "appstore:screenshots:prepare-frames": "app-store-screenshots/prepare-official-device-frames.sh",
     "appstore:screenshots:preview": "pnpm --filter @tumaet/apollon run build && playwright test --config playwright.app-store.config.ts",
     "appstore:metadata:validate": "node app-store-screenshots/validate-metadata.mjs",
+    "live-update:build": "node scripts/build-live-update.mjs",
     "capacitor:add:android": "cap add android",
     "capacitor:add:ios": "cap add ios --packagemanager CocoaPods",
     "capacitor:sync": "cap sync",
@@ -42,6 +43,7 @@
   },
   "dependencies": {
     "@capacitor/android": "8.4.1",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/clipboard": "8.0.1",
     "@capacitor/core": "8.4.1",
     "@capacitor/file-transfer": "2.0.4",
@@ -51,6 +53,7 @@
     "@capacitor/share": "8.0.1",
     "@capacitor/splash-screen": "8.0.1",
     "@capacitor/status-bar": "8.0.2",
+    "@capgo/capacitor-updater": "^8.51.2",
     "@resvg/resvg-wasm": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/history": "1.162.0",
@@ -76,6 +79,7 @@
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.4.1",
+    "@capgo/cli": "^8.29.1",
     "@eslint-react/eslint-plugin": "catalog:",
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
