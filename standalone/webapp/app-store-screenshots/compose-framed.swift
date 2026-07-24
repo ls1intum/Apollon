@@ -104,108 +104,81 @@ func grayscaleMask(from visited: [UInt8], width: Int, height: Int) -> CGImage? {
   )
 }
 
-func transparentScreenAperture(in image: CGImage) -> ScreenAperture? {
-  let width = image.width
-  let height = image.height
-  let bytesPerRow = width * 4
+// Flood-fill the connected transparent region from the image center; returns the
+// visited mask + its bounding box, or nil if the center isn't transparent or the
+// region is too small to be a screen. `pixels` is RGBA and outlives this call.
+func floodFillTransparentRegion(
+  pixels: UnsafePointer<UInt8>, width: Int, height: Int
+) -> (visited: [UInt8], bounds: CGRect)? {
+  let center = (height / 2) * width + width / 2
+  guard pixels[center * 4 + 3] < 16 else { return nil }
 
-  guard
-    let alphaContext = CGContext(
-      data: nil,
-      width: width,
-      height: height,
-      bitsPerComponent: 8,
-      bytesPerRow: bytesPerRow,
-      space: colorSpace,
-      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-    )
-  else {
-    return nil
-  }
-
-  alphaContext.clear(CGRect(x: 0, y: 0, width: width, height: height))
-  alphaContext.draw(
-    image,
-    in: CGRect(x: 0, y: 0, width: width, height: height)
-  )
-
-  guard let rawData = alphaContext.data else {
-    return nil
-  }
-
-  let pixels = rawData.assumingMemoryBound(to: UInt8.self)
   let pixelCount = width * height
   var visited = [UInt8](repeating: 0, count: pixelCount)
   var queue = [Int](repeating: 0, count: pixelCount)
-  let center = (height / 2) * width + width / 2
-
-  guard pixels[center * 4 + 3] < 16 else {
-    return nil
-  }
-
   var head = 0
   var tail = 1
   queue[0] = center
   visited[center] = 1
-
-  var minimumX = width
-  var minimumY = height
-  var maximumX = 0
-  var maximumY = 0
+  var minX = width, minY = height, maxX = 0, maxY = 0
 
   while head < tail {
     let index = queue[head]
     head += 1
-
-    let column = index % width
-    let row = index / width
-    minimumX = min(minimumX, column)
-    minimumY = min(minimumY, row)
-    maximumX = max(maximumX, column)
-    maximumY = max(maximumY, row)
-
+    let column = index % width, row = index / width
+    minX = min(minX, column)
+    minY = min(minY, row)
+    maxX = max(maxX, column)
+    maxY = max(maxY, row)
     let neighbors = [
       column > 0 ? index - 1 : -1,
       column + 1 < width ? index + 1 : -1,
       row > 0 ? index - width : -1,
-      row + 1 < height ? index + width : -1
+      row + 1 < height ? index + width : -1,
     ]
-
     for neighbor in neighbors where neighbor >= 0 {
-      guard
-        visited[neighbor] == 0,
-        pixels[neighbor * 4 + 3] < 16
-      else {
-        continue
-      }
-
+      guard visited[neighbor] == 0, pixels[neighbor * 4 + 3] < 16 else { continue }
       visited[neighbor] = 1
       queue[tail] = neighbor
       tail += 1
     }
   }
 
+  guard maxX - minX > width / 2, maxY - minY > height / 2 else { return nil }
+  let bounds = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+  return (visited, bounds)
+}
+
+func transparentScreenAperture(in image: CGImage) -> ScreenAperture? {
+  let width = image.width
+  let height = image.height
   guard
-    maximumX - minimumX > width / 2,
-    maximumY - minimumY > height / 2
+    let alphaContext = CGContext(
+      data: nil,
+      width: width,
+      height: height,
+      bitsPerComponent: 8,
+      bytesPerRow: width * 4,
+      space: colorSpace,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )
   else {
     return nil
   }
+  alphaContext.clear(CGRect(x: 0, y: 0, width: width, height: height))
+  alphaContext.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-  let bounds = CGRect(
-    x: minimumX,
-    y: minimumY,
-    width: maximumX - minimumX + 1,
-    height: maximumY - minimumY + 1
-  )
+  guard let rawData = alphaContext.data else { return nil }
+  let pixels = rawData.assumingMemoryBound(to: UInt8.self)
 
   guard
-    let mask = grayscaleMask(from: visited, width: width, height: height)
+    let region = floodFillTransparentRegion(
+      pixels: pixels, width: width, height: height),
+    let mask = grayscaleMask(from: region.visited, width: width, height: height)
   else {
     return nil
   }
-
-  return ScreenAperture(bounds: bounds, mask: mask)
+  return ScreenAperture(bounds: region.bounds, mask: mask)
 }
 
 guard let frameScreenAperture = transparentScreenAperture(in: frame) else {
