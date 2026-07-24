@@ -145,6 +145,12 @@ jobs:
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
+          # Optional: App Review contact. Unset secrets are skipped, leaving the
+          # existing App Store Connect values untouched.
+          APP_REVIEW_FIRST_NAME: ${{ secrets.IOS_APP_REVIEW_FIRST_NAME }}
+          APP_REVIEW_LAST_NAME: ${{ secrets.IOS_APP_REVIEW_LAST_NAME }}
+          APP_REVIEW_EMAIL: ${{ secrets.IOS_APP_REVIEW_EMAIL }}
+          APP_REVIEW_PHONE: ${{ secrets.IOS_APP_REVIEW_PHONE }}
         run: bundle exec fastlane store_assets
 
       - name: Upload App Store build, metadata, and screenshots (Fastlane)
@@ -156,6 +162,12 @@ jobs:
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
           SUBMIT_FOR_REVIEW: ${{ inputs.submit_for_review }}
+          # Optional: App Review contact. Unset secrets are skipped, leaving the
+          # existing App Store Connect values untouched.
+          APP_REVIEW_FIRST_NAME: ${{ secrets.IOS_APP_REVIEW_FIRST_NAME }}
+          APP_REVIEW_LAST_NAME: ${{ secrets.IOS_APP_REVIEW_LAST_NAME }}
+          APP_REVIEW_EMAIL: ${{ secrets.IOS_APP_REVIEW_EMAIL }}
+          APP_REVIEW_PHONE: ${{ secrets.IOS_APP_REVIEW_PHONE }}
         run: bundle exec fastlane release_app_store
 
       - name: Upload IPA artifact

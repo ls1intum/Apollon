@@ -31,19 +31,24 @@ The repository contains the repeatable parts of an App Store release:
 - Verify the version and build number, signing certificate, provisioning profile,
   distribution agreements, tax and banking status, and DSA trader status in App
   Store Connect.
-- Provide the App Review contact name, email address, and phone number in App
-  Store Connect. These personal fields are intentionally not committed.
+- The App Review contact is uploaded from the `IOS_APP_REVIEW_*` CI secrets (see
+  **App Review Information**); populate them once so no personal data is committed.
 
 ## App Store Connect answers
 
-These are the recommended answers for the App Store Connect fields that Fastlane
-cannot submit (Apple has no public API for them). They are set **once on the app
-record and persist across versions** unless the app's behavior changes. Enter
-them as written after confirming they still match production behavior. The
-answers below reflect the shipped app: exports write to the app's own cache and
-hand off through the iOS share sheet; only the Share/Collaborate features
-transmit anything off device; there are no accounts, cookies, analytics, or
-tracking, and the IP address/user-agent are not retained.
+Almost every App Store Connect field is now set **code-first by the release
+lanes** — categories, the age-rating questionnaire, export compliance, content
+rights, and (from CI secrets) the App Review contact. The single exception is
+the App Privacy "nutrition label," which Apple exposes only through a
+session-authenticated action, not the API key (see below). Each answer reflects
+the shipped app: exports write to the app's own cache and hand off through the
+iOS share sheet; only the Share/Collaborate features transmit anything off
+device; there are no accounts, cookies, analytics, or tracking, and the IP
+address/user-agent are not retained. Confirm each still matches production
+behavior before the first submission.
+
+The values below document what the lanes submit (and, for App Privacy, what to
+enter):
 
 ### App Privacy ("nutrition label")
 
@@ -63,28 +68,48 @@ tracking, and the IP address/user-agent are not retained.
 Shared diagram content is stored server-side only when the user shares it, and is
 auto-deleted 120 days after the last edit (stated in the privacy policy).
 
+**Automation:** the nutrition label is the one field the App Store Connect API
+(and therefore `deliver`) cannot set. Automate it with the separate `privacy`
+lane, which runs `upload_app_privacy_details_to_app_store` from a
+version-controlled `fastlane/app_privacy_details.json`. That action needs an
+**Apple ID session** (`FASTLANE_USER` + `FASTLANE_SESSION` / app-specific
+password), not the API key. Generate the JSON once and commit it:
+
+```
+bundle exec fastlane run upload_app_privacy_details_to_app_store skip_upload:true
+```
+
+then confirm it matches the declaration above and run `bundle exec fastlane privacy`.
+
 ### Age rating
 
-Answer **No / None** to every content question → **4+**. No objectionable
-content, no gambling or contests, no unrestricted web access (the app loads its
-own bundled editor, not a browser). On the user-generated-content question:
-diagrams are shared only by explicit link or invite, not published to a public,
-discoverable feed, so this is a document tool, not a social UGC platform.
+**Automated** — `fastlane/metadata/rating_config.json` encodes every answer as
+**No / None**, which the release lanes submit via `app_rating_config_path`,
+resolving to **4+**. No objectionable content, no gambling or contests, no
+unrestricted web access (the app loads its own bundled editor, not a browser).
+On user-generated content the config answers `false`: diagrams are shared only
+by explicit link or invite, not published to a public, discoverable feed, so
+this is a document tool, not a social UGC platform.
 
 ### Category
 
-- Primary: **Developer Tools**
-- Secondary: **Education**
+**Automated** — the release lanes set these via `primary_category` /
+`secondary_category`:
+
+- Primary: **Developer Tools** (`DEVELOPER_TOOLS`)
+- Secondary: **Education** (`EDUCATION`)
 
 A UML / software-design modeling tool whose audience is engineers, students, and
-educators. The category is set on the app record (independent of the keyword
-field) and carries across versions.
+educators. Independent of the keyword field.
 
-### Export compliance
+### Export compliance and content rights
 
-Handled in code — `ITSAppUsesNonExemptEncryption` is `false` in `Info.plist`
-because the app uses only standard OS-provided HTTPS/TLS. No encryption question
-appears on upload, and no annual self-classification report is required.
+**Automated.** `ITSAppUsesNonExemptEncryption` is `false` in `Info.plist` (the
+app uses only standard OS-provided HTTPS/TLS), so no encryption question appears
+on upload and no annual self-classification report is required. At submit time
+the `release_app_store` lane also answers the review questions via
+`submission_information` (`export_compliance_uses_encryption: false`,
+`content_rights_contains_third_party_content: false`) so submission never stalls.
 
 ### Permissions / usage strings
 
@@ -110,8 +135,10 @@ with Apple is not required.
 - **Sign-in required: No** — no demo account is needed.
 - **Reviewer notes** are committed at `fastlane/metadata/review_information/notes.txt`
   and uploaded by the release lanes.
-- **Contact name, email, and phone** are personal and set directly in App Store
-  Connect (intentionally not committed).
+- **Contact name, email, and phone** are **automated from CI secrets** (no PII in
+  git): set `IOS_APP_REVIEW_FIRST_NAME`, `IOS_APP_REVIEW_LAST_NAME`,
+  `IOS_APP_REVIEW_EMAIL`, `IOS_APP_REVIEW_PHONE`. Any unset secret is skipped,
+  leaving the existing App Store Connect value.
 
 ## Upload paths
 
@@ -138,19 +165,22 @@ Automated / already in the repo:
 - [x] Localized metadata in `fastlane/metadata` (name, subtitle, keywords,
       promo, description, release notes, copyright, marketing/support/privacy
       URLs), validated by `pnpm appstore:metadata:validate`.
-- [x] Reviewer notes in `fastlane/metadata/review_information/notes.txt`.
-- [x] Export-compliance key (`ITSAppUsesNonExemptEncryption=false`) in
-      `Info.plist`.
+- [x] Primary/secondary category (Developer Tools / Education) — set by the lanes.
+- [x] Age rating → 4+ from `fastlane/metadata/rating_config.json` — set by the lanes.
+- [x] Reviewer notes in `fastlane/metadata/review_information/notes.txt`; contact
+      from CI secrets (`IOS_APP_REVIEW_*`).
+- [x] Export compliance (`ITSAppUsesNonExemptEncryption=false` in `Info.plist`)
+      and content-rights answers (`submission_information`).
 - [x] iPhone + iPad screenshots generated and validated (no alpha, sRGB, exact
       dimensions) by the release lane.
 - [x] 1024×1024 marketing icon present in the asset catalog.
 
-One-time, in App Store Connect (persist across versions):
+One-time setup that can't ride on the API key:
 
-- [ ] App Privacy answers entered as in **App Store Connect answers** above.
-- [ ] Age rating completed → 4+.
-- [ ] Primary/secondary category set (Developer Tools / Education).
-- [ ] App Review contact name, email, and phone entered.
+- [ ] App Privacy label: generate `fastlane/app_privacy_details.json` once,
+      confirm it matches the declaration above, and run `bundle exec fastlane
+  privacy` with an Apple ID session (`FASTLANE_USER` / `FASTLANE_SESSION`).
+- [ ] Populate the `IOS_APP_REVIEW_*` CI secrets with the review contact.
 
 Per-release, before enabling **Submit for review**:
 
