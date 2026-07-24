@@ -43,7 +43,8 @@ the App Privacy "nutrition label," which Apple exposes only through a
 session-authenticated action, not the API key (see below). Each answer reflects
 the shipped app: exports write to the app's own cache and hand off through the
 iOS share sheet; only the Share/Collaborate features transmit anything off
-device; there are no accounts, cookies, analytics, or tracking, and the IP
+device; there are no accounts, analytics, or tracking (the only cookie is the
+strictly-necessary diagram-owner token set when sharing), and the IP
 address/user-agent are not retained. Confirm each still matches production
 behavior before the first submission.
 

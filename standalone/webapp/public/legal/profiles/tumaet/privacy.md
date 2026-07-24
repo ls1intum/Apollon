@@ -6,8 +6,9 @@ _Last updated: 2026-07-23._
 ## In plain language
 
 Apollon is a free UML modelling editor for the web and mobile devices.
-**No accounts, no cookies, no tracking, no advertising, no third-party
-analytics.** Local diagrams stay in your browser or app storage. Diagrams you
+**No accounts, no tracking, no advertising, no third-party analytics** — and the
+only cookie is a strictly-necessary owner token set when you share a diagram
+(see §3). Local diagrams stay in your browser or app storage. Diagrams you
 choose to share live on TUM servers and are deleted automatically 120 days after
 your last edit. If you choose to collaborate live, you pick a display name that
 your collaborators see while you are connected; it is discarded when you close
@@ -30,7 +31,7 @@ the database record.
 
 If you open the _Collaborate_ dialog and enter a display name, the server holds a small per-diagram record in memory. The record contains each connected collaborator's display name, cursor position, and current selection. The server uses it to forward live updates to the other participants. Your entry is removed the moment your connection closes. The whole record is destroyed when the last collaborator disconnects. Nothing in it is written to disk.
 
-Apollon has **no user accounts, no login, no cookies, and no analytics**. You are not asked to identify yourself. By design, per-request access logs (client IP, user-agent, URL) are not recorded in the reverse proxy or the application server. Your IP address is visible to TUM's servers while a request is being processed but is not persistently stored.
+Apollon has **no user accounts, no login, and no analytics**, and sets no cookies beyond the strictly-necessary owner token described in §3. You are not asked to identify yourself. By design, per-request access logs (client IP, user-agent, URL) are not recorded in the reverse proxy or the application server. Your IP address is visible to TUM's servers while a request is being processed but is not persistently stored.
 
 ## 2. What personal data is processed
 
@@ -70,11 +71,18 @@ for a service you have explicitly requested, so no consent is required._
 
 ## 3. Cookies and local storage
 
-Apollon sets **no cookies**. The data Apollon keeps in your browser or the app's
-private on-device storage is strictly necessary to deliver the interface you
-asked for:
+Apollon sets **one strictly-necessary cookie, and only when you share a
+diagram**. Everything else it keeps is browser/app on-device storage, never a
+cookie:
 
-- **Your theme preference** (`localStorage["theme-storage"]`) — light or dark
+- **Diagram-owner cookie** (`apollon_owner_<diagram-id>`) — set when you create
+  or share a diagram, so the server recognises you as its owner and lets you
+  edit or delete it. It holds a signed token for that diagram, no personal data,
+  and is never used for tracking. `HttpOnly`, `SameSite=Lax`, sent only to TUM,
+  and expires after 180 days. It is not set while you work locally without
+  sharing. Legal basis: § 25(2) no. 2 TDDDG (strictly necessary; no consent
+  required).
+- **Your theme preference** (`localStorage["apollon-theme"]`) — light or dark
   mode. Never transmitted to TUM. Persists until you clear browser or app
   storage.
 - **Your locally drafted diagrams**
