@@ -353,21 +353,15 @@ export const useStraightPathEdge = ({
     () => [sourceEndpoint, ...interiorPoints, targetEndpoint],
     [sourceEndpoint, interiorPoints, targetEndpoint]
   )
-  // Prefer the solver's committed route (which also carries any automatic
-  // obstacle-avoidance bends) whenever its endpoints still match the current
-  // adjusted endpoints; otherwise fall back to the analytic base polyline.
-  const centralRouteMatchesEndpoints =
-    centralRoute !== undefined &&
-    centralRoute.length >= 2 &&
-    centralRoute[0].x === sourceEndpoint.x &&
-    centralRoute[0].y === sourceEndpoint.y &&
-    centralRoute[centralRoute.length - 1].x === targetEndpoint.x &&
-    centralRoute[centralRoute.length - 1].y === targetEndpoint.y
+  // The solver's committed route is the source of truth: its endpoints are the
+  // facing-side attachment sites the port assignment chose (not the drawn handle),
+  // and it carries any automatic obstacle-avoidance bends. Fall back to the analytic
+  // base polyline only before the first solve lands (never painted after that).
   const renderPoints = useMemo<IPoint[]>(
     () =>
       dragPreviewPoints ??
-      (centralRouteMatchesEndpoints ? centralRoute! : basePoints),
-    [basePoints, centralRoute, centralRouteMatchesEndpoints, dragPreviewPoints]
+      (centralRoute && centralRoute.length >= 2 ? centralRoute : basePoints),
+    [basePoints, centralRoute, dragPreviewPoints]
   )
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
@@ -474,8 +468,8 @@ export const useStraightPathEdge = ({
       setEndpointPreviewCommit(null)
 
       const ownerDocument = event.currentTarget.ownerDocument
-      const currentSourceEndpoint = sourceEndpoint
-      const currentTargetEndpoint = targetEndpoint
+      const currentSourceEndpoint = sourcePoint
+      const currentTargetEndpoint = targetPoint
 
       const resolveDragCommit = (
         clientX: number,
@@ -678,8 +672,8 @@ export const useStraightPathEdge = ({
       ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
     [
-      sourceEndpoint,
-      targetEndpoint,
+      sourcePoint,
+      targetPoint,
       interiorPoints,
       data,
       findFreeformEndpointNode,
@@ -699,17 +693,52 @@ export const useStraightPathEdge = ({
     ]
   )
 
-  const persistInterior = useCallback(
-    (nextInterior: IPoint[]) => {
+  // Persist the interior waypoints. A bend customises the whole visible route,
+  // including the facing-side attachment sites the port assignment chose, so on the
+  // first bend the endpoints are pinned to `pinSource`/`pinTarget` (when still
+  // automatic) — otherwise a newly-bent edge would snap its endpoints back to the
+  // drawn handle. Mirrors the step-edge bend-commit behaviour.
+  const commitWaypoints = useCallback(
+    (nextInterior: IPoint[], pinSource: IPoint, pinTarget: IPoint) => {
       setEdges((edges) =>
-        edges.map((edge) =>
-          edge.id === id
-            ? { ...edge, data: { ...edge.data, points: nextInterior } }
-            : edge
-        )
+        edges.map((edge) => {
+          if (edge.id !== id) return edge
+          const nextData: Record<string, unknown> = {
+            ...((edge.data ?? {}) as Record<string, unknown>),
+            points: nextInterior,
+          }
+          if (nextInterior.length > 0) {
+            if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+              const anchor = getEdgeAnchorFromPoint(
+                sourceNode?.type,
+                pinSource,
+                sourceRect
+              )
+              if (anchor) nextData.sourceAnchor = anchor
+            }
+            if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+              const anchor = getEdgeAnchorFromPoint(
+                targetNode?.type,
+                pinTarget,
+                targetRect
+              )
+              if (anchor) nextData.targetAnchor = anchor
+            }
+          }
+          return { ...edge, data: nextData }
+        })
       )
     },
-    [id, setEdges]
+    [
+      id,
+      setEdges,
+      sourceAnchor,
+      targetAnchor,
+      sourceRect,
+      targetRect,
+      sourceNode?.type,
+      targetNode?.type,
+    ]
   )
 
   // Shared drag routine for both an existing waypoint and a freshly materialised
@@ -728,12 +757,18 @@ export const useStraightPathEdge = ({
       const ownerDocument = pointerTarget.ownerDocument
       dragInteriorRef.current = startInterior
       dragMovedRef.current = false
+      // The endpoints the drag pivots around are the CURRENTLY RENDERED attachment
+      // sites (the solver's facing-side ports), captured at gesture start — not the
+      // drawn handle — so the route and the pinned commit keep the edge attached
+      // exactly where it is on screen.
+      const routeSource = sourcePoint
+      const routeTarget = targetPoint
 
       // Drive the preview through state; the existing layout effect republishes it
       // as an authoritative live override so neighbouring step edges reflow around
       // the dragged diagonal, and clears it when the drag ends.
       const publish = (interior: IPoint[]) => {
-        setDragPreviewPoints([sourceEndpoint, ...interior, targetEndpoint])
+        setDragPreviewPoints([routeSource, ...interior, routeTarget])
       }
       // Seed the preview so the edge does not flicker to its committed shape on the
       // first frame (the inserted point starts on the segment).
@@ -774,14 +809,14 @@ export const useStraightPathEdge = ({
         setDragPreviewPoints(null)
         // Drag-to-collinear removes redundant bends (incl. the dragged one).
         const pruned = pruneCollinearWaypoints([
-          sourceEndpoint,
+          routeSource,
           ...dragInteriorRef.current,
-          targetEndpoint,
+          routeTarget,
         ])
         // Only persist when the geometry actually changed (a click that never
         // moved must not freeze a fresh point into the model).
         if (dragMovedRef.current || pruned.length !== interiorPoints.length) {
-          persistInterior(pruned)
+          commitWaypoints(pruned, routeSource, routeTarget)
         }
         setSelectedWaypointIndex(null)
         teardown()
@@ -795,10 +830,10 @@ export const useStraightPathEdge = ({
     },
     [
       interiorPoints.length,
-      persistInterior,
+      commitWaypoints,
       screenToFlowPosition,
-      sourceEndpoint,
-      targetEndpoint,
+      sourcePoint,
+      targetPoint,
     ]
   )
 
@@ -880,16 +915,18 @@ export const useStraightPathEdge = ({
 
   const handleWaypointDoubleClick = useCallback(
     (index: number) => {
-      persistInterior(
+      commitWaypoints(
         pruneCollinearWaypoints([
-          sourceEndpoint,
+          sourcePoint,
           ...removeWaypoint(interiorPoints, index),
-          targetEndpoint,
-        ])
+          targetPoint,
+        ]),
+        sourcePoint,
+        targetPoint
       )
       setSelectedWaypointIndex(null)
     },
-    [interiorPoints, persistInterior, sourceEndpoint, targetEndpoint]
+    [interiorPoints, commitWaypoints, sourcePoint, targetPoint]
   )
 
   return {

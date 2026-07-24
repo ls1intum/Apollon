@@ -838,7 +838,6 @@ function collectFixedPorts(
   nodeById: Map<string, Node>,
   nodeLookup: Map<string, InternalNode>,
   connectionMode: ConnectionMode,
-  straightHookTypes: ReadonlySet<string>,
   liveOverride: LiveEdgeOverride | null | undefined,
   fixedRoutes: Readonly<Record<string, IPoint[]>>,
   nodeIndex: NodeIndex
@@ -850,9 +849,13 @@ function collectFixedPorts(
     if (sourcePinned) result.set(endKey(edge.id, "source"), sourcePinned)
     if (targetPinned) result.set(endKey(edge.id, "target"), targetPinned)
 
+    // A straight-hook edge is NO LONGER pinned to its drawn handle. Unbent,
+    // unpinned ones become free ends so they get the same facing-side selection
+    // and balanced port band as step edges (their route is drawn straight, not
+    // orthogonal). Only an authored bend (points) or an explicit pin fixes a
+    // straight-hook endpoint — handled by the clauses below.
     const topologyFixed =
       edge.id === liveOverride?.edgeId ||
-      straightHookTypes.has(edge.type ?? "") ||
       edge.source === edge.target ||
       (Array.isArray(edge.data?.points) && edge.data.points.length > 0) ||
       fixedRoutes[edge.id] !== undefined
@@ -1220,7 +1223,6 @@ function computeAllEdgeGeometryPass(
     nodeById,
     nodeLookup,
     connectionMode,
-    straightHookTypes,
     liveOverride,
     fixedRoutes,
     nodeIndex
@@ -1233,26 +1235,32 @@ function computeAllEdgeGeometryPass(
       reservedRouteById.set(edge.id, liveOverride.points)
       continue
     }
-    // Straight-hook edges are checked FIRST so their interior waypoints reserve a
-    // diagonal passthrough and never fall into the orthogonal reprojection below
-    // (their `data.points` are interior-only, not a step edge's full route).
+    // Straight-hook edges are checked FIRST. A BENT one (authored interior
+    // waypoints) reserves a diagonal passthrough and must never fall into the
+    // orthogonal reprojection below (its `data.points` are interior-only). An
+    // UNBENT one is a free end — its facing side and balanced port are assigned
+    // like a step edge and its straight route is computed in the main pass, so it
+    // reserves nothing here.
     if (straightHookTypes.has(edge.type ?? "")) {
-      const endpoints = resolveEdgeEndpoints(
-        edge,
-        nodes,
-        nodeById,
-        nodeLookup,
-        connectionMode,
-        undefined,
-        undefined,
-        nodeIndex
-      )
-      if (endpoints)
-        reservedRouteById.set(edge.id, [
-          endpoints.adjustedSource,
-          ...getStraightHookInterior(edge),
-          endpoints.adjustedTarget,
-        ])
+      const interior = getStraightHookInterior(edge)
+      if (interior.length > 0) {
+        const endpoints = resolveEdgeEndpoints(
+          edge,
+          nodes,
+          nodeById,
+          nodeLookup,
+          connectionMode,
+          undefined,
+          undefined,
+          nodeIndex
+        )
+        if (endpoints)
+          reservedRouteById.set(edge.id, [
+            endpoints.adjustedSource,
+            ...interior,
+            endpoints.adjustedTarget,
+          ])
+      }
       continue
     }
     const manual = edge.data?.points
@@ -1348,25 +1356,83 @@ function computeAllEdgeGeometryPass(
         ),
     }
 
-    // Straight-hook edges (use-case, syntax-tree, petri-net) stay diagonal lines
-    // through their authored interior waypoints. They auto-bend ONLY to clear an
-    // intervening node body (Track D); an unobstructed chord stays straight. The
-    // waypoints are honoured as mandatory checkpoints. The resulting polyline enters
-    // the neighbour map so step edges route around it.
+    // Straight-hook edges (use-case, syntax-tree, petri-net) render as diagonal
+    // lines, but they get the SAME sophistication as step edges up to the routing
+    // primitive: an unbent, unpinned edge picks its facing sides and a balanced
+    // centred port (via `selectEdgeAnchors` + the shared `assignPorts` band), while
+    // a bent edge keeps its authored waypoints. The chosen endpoints are then joined
+    // by a straight, obstacle-avoiding polyline (Track D) instead of an orthogonal
+    // route — waypoints ride along as mandatory checkpoints. The result enters the
+    // neighbour map so step edges route around it.
     if (straightHookTypes.has(edge.type ?? "")) {
-      const line = routeStraightPolyline({
-        source: endpoints.adjustedSource,
-        target: endpoints.adjustedTarget,
-        checkpoints: getStraightHookInterior(edge),
-        obstacles: getEdgeObstacles(
+      const interior = getStraightHookInterior(edge)
+      const straightObstacles = getEdgeObstacles(
+        nodes,
+        edge.source,
+        edge.target,
+        endpoints.adjustedSource,
+        endpoints.adjustedTarget,
+        nodeIndex,
+        candidateBounds
+      )
+      let straightSource = endpoints.adjustedSource
+      let straightTarget = endpoints.adjustedTarget
+      if (interior.length === 0) {
+        const sourceType = nodeById.get(edge.source)?.type
+        const targetType = nodeById.get(edge.target)?.type
+        const { edgeRoutes: neighborEdges } = collectNeighbors(
+          edge,
+          endpoints,
           nodes,
-          edge.source,
-          edge.target,
-          endpoints.adjustedSource,
-          endpoints.adjustedTarget,
           nodeIndex,
-          candidateBounds
-        ),
+          straightObstacles,
+          routeById,
+          neighborGrid,
+          edgeById
+        )
+        const selected = selectEdgeAnchors({
+          sourceRect: rectFromEndpoint(
+            endpoints.sourceAbsolutePosition,
+            endpoints.sourceSize
+          ),
+          targetRect: rectFromEndpoint(
+            endpoints.targetAbsolutePosition,
+            endpoints.targetSize
+          ),
+          sourceType,
+          targetType,
+          sourceCustom: asFreeformAnchor(edge.data?.sourceAnchor),
+          targetCustom: asFreeformAnchor(edge.data?.targetAnchor),
+          sourcePreferred: bandPorts.get(endKey(edge.id, "source")),
+          targetPreferred: bandPorts.get(endKey(edge.id, "target")),
+          resolve: (overrides) =>
+            resolveEdgeEndpoints(
+              edge,
+              nodes,
+              nodeById,
+              nodeLookup,
+              connectionMode,
+              overrides,
+              true,
+              nodeIndex
+            ),
+          obstacles: straightObstacles,
+          thirdPartyObstacles: straightObstacles.filter(
+            (o) => !o.soft && o.id !== edge.source && o.id !== edge.target
+          ),
+          neighborEdges,
+          enableStraightPath: true,
+        })
+        if (selected) {
+          straightSource = selected.endpoints.adjustedSource
+          straightTarget = selected.endpoints.adjustedTarget
+        }
+      }
+      const line = routeStraightPolyline({
+        source: straightSource,
+        target: straightTarget,
+        checkpoints: interior,
+        obstacles: straightObstacles,
         neighborRoutes: [],
         clearancePx: EDGES.NODE_CLEARANCE_PX,
       })

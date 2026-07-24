@@ -152,6 +152,54 @@ describe("straight-hook edge routing", () => {
     }
   })
 
+  it("attaches at the facing side with a centred port (not the drawn handle)", () => {
+    // Parent directly above child. The facing sides are parent-bottom / child-top,
+    // even though the edge was drawn on the right/left handles.
+    const nodes = [makeNode("a", 0, 0, 100, 60), makeNode("b", 0, 300, 100, 60)]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput(nodes, [straightHookEdge()])
+    )
+    const route = routeById["e1"]
+    const source = route[0]
+    const target = route[route.length - 1]
+    // Source sits on the parent's BOTTOM edge (y≈60), centred (x≈50) — not on a
+    // left/right handle (x≈0 or 100).
+    expect(Math.abs(source.y - 60)).toBeLessThanOrEqual(6)
+    expect(source.x).toBeGreaterThan(35)
+    expect(source.x).toBeLessThan(65)
+    // Target sits on the child's TOP edge (y≈300), centred.
+    expect(Math.abs(target.y - 300)).toBeLessThanOrEqual(6)
+    expect(target.x).toBeGreaterThan(35)
+    expect(target.x).toBeLessThan(65)
+  })
+
+  it("balances multiple children across a parent's facing side", () => {
+    // A parent with three children below it: their source ports should spread
+    // across the parent's bottom side rather than stacking on one point.
+    const parent = makeNode("p", 200, 0, 120, 60)
+    const c1 = makeNode("c1", 0, 300, 100, 60)
+    const c2 = makeNode("c2", 200, 300, 100, 60)
+    const c3 = makeNode("c3", 400, 300, 100, 60)
+    const edges: Edge[] = [
+      { id: "e1", source: "p", target: "c1", type: "SyntaxTreeLink", data: {} },
+      { id: "e2", source: "p", target: "c2", type: "SyntaxTreeLink", data: {} },
+      { id: "e3", source: "p", target: "c3", type: "SyntaxTreeLink", data: {} },
+    ]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput([parent, c1, c2, c3], edges)
+    )
+    const sourceXs = ["e1", "e2", "e3"]
+      .map((id) => routeById[id][0].x)
+      .sort((a, b) => a - b)
+    // Three distinct ports spread across the parent's bottom side (x in [200,320]).
+    expect(new Set(sourceXs).size).toBe(3)
+    expect(sourceXs[2] - sourceXs[0]).toBeGreaterThan(20)
+    for (const x of sourceXs) {
+      expect(x).toBeGreaterThanOrEqual(200)
+      expect(x).toBeLessThanOrEqual(320)
+    }
+  })
+
   it("is deterministic: a cold re-solve yields byte-identical routes", () => {
     const blocker = makeNode("c", 210, -20, 100, 120)
     const nodes = [makeNode("a", 0, 0), makeNode("b", 520, 0), blocker]
