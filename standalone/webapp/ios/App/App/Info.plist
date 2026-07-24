@@ -41,5 +41,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Export compliance: Apollon uses only standard, OS-provided encryption
+	     (HTTPS/TLS for optional diagram sharing and collaboration) and no custom
+	     or non-exempt cryptography, so it qualifies for the App Store export
+	     exemption. Declaring this here suppresses the encryption question on
+	     every TestFlight/App Store upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -34,25 +34,84 @@ The repository contains the repeatable parts of an App Store release:
 - Provide the App Review contact name, email address, and phone number in App
   Store Connect. These personal fields are intentionally not committed.
 
-## App Privacy
+## App Store Connect answers
 
-The previous listing says that no data is collected. That answer needs a manual
-review because the redesigned app can optionally upload diagram content when a
-user creates a share link. The privacy policy says shared diagrams are stored
-for up to 120 days and that the service has no account system, advertising, or
-third-party analytics.
+These are the recommended answers for the App Store Connect fields that Fastlane
+cannot submit (Apple has no public API for them). They are set **once on the app
+record and persist across versions** unless the app's behavior changes. Enter
+them as written after confirming they still match production behavior. The
+answers below reflect the shipped app: exports write to the app's own cache and
+hand off through the iOS share sheet; only the Share/Collaborate features
+transmit anything off device; there are no accounts, cookies, analytics, or
+tracking, and the IP address/user-agent are not retained.
 
-Based on that behavior, the likely App Privacy declaration is:
+### App Privacy ("nutrition label")
 
-- **User Content → Other User Content**
-- collected only when the user chooses the sharing feature
-- used for **App Functionality**
-- not used for tracking
-- not linked to an identity
+- **Data is collected — Yes**, and only through the optional Share/Collaborate
+  feature. Declare exactly one data type:
+  - **User Content → Other User Content** — the diagram the user chooses to
+    share, plus the display name they type if they open the Collaborate dialog.
+    - Linked to the user's identity? **No** (no accounts, no identifiers).
+    - Used for tracking? **No.**
+    - Purpose: **App Functionality** only.
+- **Everything else: Data Not Collected.** Explicitly NOT collected: Contact
+  Info, Health & Fitness, Financial Info, Location, Sensitive Info, Contacts,
+  Browsing/Search History, Identifiers, Purchases, Usage Data, Diagnostics. The
+  IP address and user-agent are visible only transiently to route each response
+  and are never retained, so under Apple's definition they are not "collected."
 
-This is a release-owner decision, not a value Fastlane can safely infer or
-submit. Reconfirm it against the production server and Apple’s current
-questionnaire before release.
+Shared diagram content is stored server-side only when the user shares it, and is
+auto-deleted 120 days after the last edit (stated in the privacy policy).
+
+### Age rating
+
+Answer **No / None** to every content question → **4+**. No objectionable
+content, no gambling or contests, no unrestricted web access (the app loads its
+own bundled editor, not a browser). On the user-generated-content question:
+diagrams are shared only by explicit link or invite, not published to a public,
+discoverable feed, so this is a document tool, not a social UGC platform.
+
+### Category
+
+- Primary: **Developer Tools**
+- Secondary: **Education**
+
+A UML / software-design modeling tool whose audience is engineers, students, and
+educators. The category is set on the app record (independent of the keyword
+field) and carries across versions.
+
+### Export compliance
+
+Handled in code — `ITSAppUsesNonExemptEncryption` is `false` in `Info.plist`
+because the app uses only standard OS-provided HTTPS/TLS. No encryption question
+appears on upload, and no annual self-classification report is required.
+
+### Permissions / usage strings
+
+**None required.** The app requests no camera, photo library, location,
+contacts, or microphone access. Exports write to the app's own cache directory
+and share via the iOS share sheet, so no `NS*UsageDescription` keys are needed.
+
+### Account deletion
+
+**Not applicable / exempt** — Apollon has no account system, so App Store
+Guideline 5.1.1(v) (in-app account deletion) does not apply. To delete a shared
+diagram, users email the support address with the share link (documented in the
+privacy statement and the Support page); shared diagrams also auto-delete after
+120 days.
+
+### Sign in with Apple
+
+**Not applicable** — the app offers no third-party or social login, so Sign in
+with Apple is not required.
+
+### App Review Information
+
+- **Sign-in required: No** — no demo account is needed.
+- **Reviewer notes** are committed at `fastlane/metadata/review_information/notes.txt`
+  and uploaded by the release lanes.
+- **Contact name, email, and phone** are personal and set directly in App Store
+  Connect (intentionally not committed).
 
 ## Upload paths
 
@@ -70,3 +129,36 @@ masters.
 
 Keep **Submit for review** disabled until the upgrade/migration test, privacy
 answers, review contact, agreements, and screenshots have all been approved.
+
+## Submission checklist
+
+Automated / already in the repo:
+
+- [x] Bundle id `de.tum.cit.ase.apollon` unchanged (in-place replacement).
+- [x] Localized metadata in `fastlane/metadata` (name, subtitle, keywords,
+      promo, description, release notes, copyright, marketing/support/privacy
+      URLs), validated by `pnpm appstore:metadata:validate`.
+- [x] Reviewer notes in `fastlane/metadata/review_information/notes.txt`.
+- [x] Export-compliance key (`ITSAppUsesNonExemptEncryption=false`) in
+      `Info.plist`.
+- [x] iPhone + iPad screenshots generated and validated (no alpha, sRGB, exact
+      dimensions) by the release lane.
+- [x] 1024×1024 marketing icon present in the asset catalog.
+
+One-time, in App Store Connect (persist across versions):
+
+- [ ] App Privacy answers entered as in **App Store Connect answers** above.
+- [ ] Age rating completed → 4+.
+- [ ] Primary/secondary category set (Developer Tools / Education).
+- [ ] App Review contact name, email, and phone entered.
+
+Per-release, before enabling **Submit for review**:
+
+- [ ] Docs merged and deployed so the marketing, support, and privacy URLs
+      return 200 (the release workflow validates this and stops otherwise).
+- [ ] Legacy in-place upgrade/migration verified on a real iPhone and iPad, with
+      a diagram backup exported first.
+- [ ] Screenshot review artifact inspected at full size.
+- [ ] Version and build number, signing certificate, provisioning profile,
+      paid-apps/distribution agreements, and tax/banking status confirmed.
+- [ ] DSA trader status set (required for EU distribution).
