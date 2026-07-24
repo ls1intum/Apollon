@@ -123,6 +123,12 @@ export async function checkForLiveUpdate(): Promise<void> {
       ...(manifest.checksum ? { checksum: manifest.checksum } : {}),
       ...(manifest.sessionKey ? { sessionKey: manifest.sessionKey } : {}),
     })
+    // `next()` alone would activate the bundle the first time the app is
+    // backgrounded, reloading the editor when the user switches back mid-task.
+    // Require an actual app kill so an update never interrupts a live session.
+    await CapacitorUpdater.setMultiDelay({
+      delayConditions: [{ kind: "kill" }],
+    })
     await CapacitorUpdater.next({ id: bundle.id })
     log.debug(`live-update: staged ${manifest.version} for next launch`)
   } catch (error) {

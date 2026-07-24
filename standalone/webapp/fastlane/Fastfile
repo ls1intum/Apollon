@@ -158,6 +158,16 @@ platform :ios do
     app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
     team_id = CredentialsManager::AppfileConfig.try_fetch_value(:team_id)
 
+    # Rebuild the web bundle and re-sync immediately before archiving so the IPA
+    # can never inherit another lane's artifacts. The `screenshots` lane injects
+    # fixture localStorage into dist/index.html and re-syncs, so an App Store run
+    # that captures screenshots first would otherwise archive seeded assets — and,
+    # because that sync runs without CAPGO_PUBLIC_KEY, a binary that accepts
+    # UNSIGNED live updates. This sync inherits the signing env of this lane.
+    sh("pnpm --filter @tumaet/apollon run build")
+    sh("pnpm --filter @tumaet/webapp run build")
+    sh("pnpm --dir .. exec cap sync ios")
+
     setup_ci(force: true)
 
     match(

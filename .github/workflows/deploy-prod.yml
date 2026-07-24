@@ -91,4 +91,10 @@ jobs:
     needs: deploy-app
     if: ${{ inputs.deploy-app && vars.ENABLE_LIVE_UPDATE == 'true' }}
     uses: ./.github/workflows/ios-live-update.yml
+    with:
+      # Build the OTA bundle from the SAME commit as the deployed image, not from
+      # whatever ref this workflow was dispatched on — otherwise a rollback or a
+      # redeploy of an older `sha-<commit>` tag would ship a web bundle that does
+      # not match the web app that just went live.
+      source-ref: ${{ inputs.image-tag }}
     secrets: inherit

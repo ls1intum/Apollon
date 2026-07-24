@@ -14,7 +14,19 @@ name: ios-live-update
 
 on:
   workflow_dispatch:
+    inputs:
+      source-ref:
+        description: >
+          Commit to package, as the deployed image tag (`sha-<commit>`) or a raw
+          commit SHA. Empty uses the dispatched ref.
+        required: false
+        type: string
   workflow_call:
+    inputs:
+      source-ref:
+        description: "Deployed image tag (`sha-<commit>`) or commit SHA to package."
+        required: false
+        type: string
 
 concurrency:
   group: ios-live-update-${{ github.ref }}
@@ -28,7 +40,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production
     steps:
+      # `sha-<commit>` is the tag convention build-and-push publishes images under,
+      # so stripping the prefix yields the commit the deployed image was built from.
+      - name: Resolve the commit to package
+        id: source
+        run: |
+          REF="${{ inputs.source-ref }}"
+          echo "ref=${REF#sha-}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ steps.source.outputs.ref }}
 
       - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6

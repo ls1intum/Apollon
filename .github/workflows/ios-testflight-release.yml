@@ -134,6 +134,11 @@ jobs:
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
+          # The lane rebuilds and re-syncs the web bundle before archiving, so the
+          # signing key must be present here too — otherwise the archived binary
+          # would accept unsigned live updates.
+          CAPGO_PUBLIC_KEY: ${{ vars.CAPGO_PUBLIC_KEY }}
+          CAPGO_REQUIRE_SIGNING: "true"
         run: bundle exec fastlane build
 
       - name: Upload to TestFlight (Fastlane)
