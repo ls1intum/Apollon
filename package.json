@@ -45,6 +45,8 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.+(js|mjs|cjs|ts|tsx|json|md|mdx|yml|yaml)\"",
     "test": "pnpm --filter @tumaet/apollon run test",
     "test:e2e": "pnpm --filter @tumaet/webapp run test:e2e",
+    "appstore:screenshots": "pnpm --filter @tumaet/webapp run appstore:screenshots",
+    "appstore:screenshots:framed": "pnpm --filter @tumaet/webapp run appstore:screenshots:framed",
     "knip": "knip",
     "sync:version": "node scripts/sync-library-version.mjs",
     "sync:version:check": "node scripts/sync-library-version.mjs --check",

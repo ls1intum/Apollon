@@ -63,6 +63,11 @@ android/
 **/fastlane/README.md
 **/fastlane/test_output
 **/fastlane/screenshots
+**/fastlane/screenshots-framed
+**/fastlane/screenshots-preview
+**/fastlane/screenshots-review.html
+**/fastlane/device-frames
+**/.DerivedData*/
 
 # Capacitor generated icons
 icons/

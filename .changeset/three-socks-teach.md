@@ -2,4 +2,4 @@
 "@tumaet/webapp": patch
 ---
 
-Use the Apollon icon for the iOS app
+Recognize the redesigned iPhone and iPad app by its familiar Apollon branding.
