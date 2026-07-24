@@ -3,6 +3,7 @@ import {
   BaseEdgeProps,
   CommonEdgeElements,
   EdgeEndpointMarkers,
+  EdgeWaypointHandles,
 } from "../GenericEdge"
 import { EdgeMiddleLabels } from "../labelTypes/EdgeMiddleLabels"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
@@ -59,11 +60,19 @@ export const PetriNetEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourceNeighbor,
+    targetNeighbor,
+    route,
+    interior,
+    selectedWaypointIndex,
     sourcePosition: renderSourcePosition,
     targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
     handleEndpointPointerDown,
+    handleWaypointPointerDown,
+    handleGhostPointerDown,
+    handleWaypointDoubleClick,
   } = useStraightPathEdge({
     id,
     type,
@@ -118,11 +127,24 @@ export const PetriNetEdge = ({
             style={{ opacity: 0.4 }}
           />
 
+          {isDiagramModifiable && (
+            <EdgeWaypointHandles
+              route={route}
+              interior={interior}
+              selectedWaypointIndex={selectedWaypointIndex}
+              onWaypointPointerDown={handleWaypointPointerDown}
+              onWaypointDoubleClick={handleWaypointDoubleClick}
+              onGhostPointerDown={handleGhostPointerDown}
+            />
+          )}
+
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
             sourcePosition={renderSourcePosition}
             targetPosition={renderTargetPosition}
+            sourceNeighbor={sourceNeighbor}
+            targetNeighbor={targetNeighbor}
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={handleEndpointPointerDown}

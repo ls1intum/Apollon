@@ -5,6 +5,7 @@
  * isn't in scope here. */
 import type { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
+import { STRAIGHT_HOOK_EDGE_TYPES } from "../edges/edgeRoutingBehavior"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassStereotype } from "../types/nodes/enums"
 import type { IPoint } from "../edges/Connection"
@@ -744,6 +745,13 @@ function convertV3RelationshipToV4Edge(
       x: point.x + relationship.bounds.x,
       y: point.y + relationship.bounds.y,
     }))
+  }
+  // Straight-hook edges (use-case, syntax-tree, petri-net) render as diagonal lines
+  // through INTERIOR waypoints only. The legacy v3 `path` is the full rendered
+  // polyline including endpoints and was inert for these types, so importing it as
+  // waypoints would sprout spurious (double-endpoint) bends. Clear it.
+  if (STRAIGHT_HOOK_EDGE_TYPES.has(edgeType as string)) {
+    points = []
   }
 
   const edge: ApollonEdge = {

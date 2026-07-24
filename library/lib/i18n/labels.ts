@@ -21,6 +21,10 @@ export interface ApollonLabels {
   redoHint: string
   multiSelection: string
   multiSelectionHint: string
+  /** Syntax-tree tidy-layout button (accessible name). */
+  tidyLayout: string
+  /** Syntax-tree tidy-layout tooltip. */
+  tidyLayoutHint: string
 
   // Minimap
   miniMap: string
@@ -307,6 +311,8 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  tidyLayout: "Tidy tree layout",
+  tidyLayoutHint: "Arrange the syntax tree so links no longer overlap nodes",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",

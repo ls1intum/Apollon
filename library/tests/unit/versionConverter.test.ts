@@ -649,6 +649,27 @@ describe("convertV3ToV4", () => {
     expect((edge.data.points as unknown[])[1]).toEqual({ x: 15, y: 25 })
   })
 
+  it("clears legacy path points on straight-hook edges", () => {
+    // v3 stored the full rendered polyline (endpoints included) in `path`. Under
+    // the interior-waypoint model these were inert, so importing them as waypoints
+    // would sprout spurious bends — the converter must drop them.
+    const rel = makeV3Relationship({
+      id: "r2",
+      type: "SyntaxTreeLink",
+      source: { element: "n1", direction: "Down" },
+      target: { element: "n2", direction: "Up" },
+      path: [
+        { x: 0, y: 0 },
+        { x: 10, y: 20 },
+        { x: 30, y: 40 },
+      ],
+      bounds: { x: 5, y: 5, width: 0, height: 0 },
+    })
+    const result = convertV3ToV4(makeV3Wrapped({ relationships: { r2: rel } }))
+    expect(result.edges[0].type).toBe("SyntaxTreeLink")
+    expect(result.edges[0].data.points).toEqual([])
+  })
+
   it("defaults missing relationship fields gracefully", () => {
     const rel = makeV3Relationship({
       name: "",

@@ -76,4 +76,19 @@ export const EDGES = Object.freeze({
   LABEL_LINE_HEIGHT: 14,
   /** Nominal label half-width used by placement scoring. */
   LABEL_NOMINAL_HALF_EXTENT: 40,
+  /** Flow-space distance a straight-edge ghost midpoint must travel before it
+   * materialises a real waypoint (Excalidraw DRAGGING_THRESHOLD analogue). */
+  WAYPOINT_DRAG_THRESHOLD_PX: 6,
+  /** A straight-edge interior waypoint within this perpendicular distance of the
+   * line through its neighbours is treated as collinear and pruned. */
+  WAYPOINT_COLLINEAR_TOLERANCE_PX: 4,
+  /** Preferred on-screen radius of a materialised straight-edge waypoint handle. */
+  WAYPOINT_HANDLE_RADIUS_PX: 6,
+  /** On-screen radius of a faint ghost midpoint handle. */
+  WAYPOINT_GHOST_RADIUS_PX: 5,
+  /** Invisible hit target around a waypoint/ghost handle (touch-friendly). */
+  WAYPOINT_HIT_TARGET_PX: 24,
+  /** Shortest segment (flow px) that still shows a ghost midpoint handle, so two
+   * handles never fuse on a tiny segment. */
+  WAYPOINT_GHOST_MIN_SEGMENT_PX: 24,
 } as const)

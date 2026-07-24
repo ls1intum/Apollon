@@ -34,6 +34,7 @@ import {
   type ObstacleRect,
 } from "@/utils/geometry/obstacles"
 import { routeStepEdge } from "@/utils/geometry/edgeRoute"
+import { routeStraightPolyline } from "@/utils/geometry/straightPolylineRouter"
 import {
   routeChosenAnchors,
   selectEdgeAnchors,
@@ -293,6 +294,20 @@ const NEIGHBOR_CELL_PX = 256
 const cellKey = (cx: number, cy: number): string => `${cx},${cy}`
 
 /** Bucket `edgeId` under every cell its polyline's segments pass through. */
+/**
+ * Interior waypoints authored on a straight-hook edge. Following the JointJS
+ * "vertices" model, a straight-hook edge's `data.points` holds ONLY the interior
+ * bends; its route is `[adjustedSource, ...interior, adjustedTarget]` connected by
+ * plain diagonal segments — never re-projected onto an orthogonal staircase (that
+ * would silently diverge preview from commit). Returns `[]` for an unbent edge.
+ */
+function getStraightHookInterior(edge: {
+  data?: { points?: unknown }
+}): IPoint[] {
+  const points = edge.data?.points
+  return Array.isArray(points) ? (points as IPoint[]) : []
+}
+
 function indexRoutePolyline(
   grid: NeighborGrid,
   edgeId: string,
@@ -1218,6 +1233,28 @@ function computeAllEdgeGeometryPass(
       reservedRouteById.set(edge.id, liveOverride.points)
       continue
     }
+    // Straight-hook edges are checked FIRST so their interior waypoints reserve a
+    // diagonal passthrough and never fall into the orthogonal reprojection below
+    // (their `data.points` are interior-only, not a step edge's full route).
+    if (straightHookTypes.has(edge.type ?? "")) {
+      const endpoints = resolveEdgeEndpoints(
+        edge,
+        nodes,
+        nodeById,
+        nodeLookup,
+        connectionMode,
+        undefined,
+        undefined,
+        nodeIndex
+      )
+      if (endpoints)
+        reservedRouteById.set(edge.id, [
+          endpoints.adjustedSource,
+          ...getStraightHookInterior(edge),
+          endpoints.adjustedTarget,
+        ])
+      continue
+    }
     const manual = edge.data?.points
     if (Array.isArray(manual) && manual.length >= 2) {
       const endpoints = resolveEdgeEndpoints(
@@ -1243,23 +1280,6 @@ function computeAllEdgeGeometryPass(
           : (manual as IPoint[])
       )
       continue
-    }
-    if (straightHookTypes.has(edge.type ?? "")) {
-      const endpoints = resolveEdgeEndpoints(
-        edge,
-        nodes,
-        nodeById,
-        nodeLookup,
-        connectionMode,
-        undefined,
-        undefined,
-        nodeIndex
-      )
-      if (endpoints)
-        reservedRouteById.set(edge.id, [
-          endpoints.adjustedSource,
-          endpoints.adjustedTarget,
-        ])
     }
   }
   const bandPorts = assignPorts(
@@ -1299,16 +1319,6 @@ function computeAllEdgeGeometryPass(
       continue
     }
 
-    // Straight-hook edges (use-case, syntax-tree, petri-net) are a plain line
-    // between the adjusted endpoints — no obstacle or neighbour routing — but
-    // their polyline still enters the map so step edges route around them.
-    if (straightHookTypes.has(edge.type ?? "")) {
-      const line = [endpoints.adjustedSource, endpoints.adjustedTarget]
-      routeById[edge.id] = line
-      indexRoutePolyline(neighborGrid, edge.id, line)
-      continue
-    }
-
     const candidateBounds: Rect = {
       x: Math.min(
         endpoints.sourceAbsolutePosition.x,
@@ -1336,6 +1346,33 @@ function computeAllEdgeGeometryPass(
           endpoints.sourceAbsolutePosition.y,
           endpoints.targetAbsolutePosition.y
         ),
+    }
+
+    // Straight-hook edges (use-case, syntax-tree, petri-net) stay diagonal lines
+    // through their authored interior waypoints. They auto-bend ONLY to clear an
+    // intervening node body (Track D); an unobstructed chord stays straight. The
+    // waypoints are honoured as mandatory checkpoints. The resulting polyline enters
+    // the neighbour map so step edges route around it.
+    if (straightHookTypes.has(edge.type ?? "")) {
+      const line = routeStraightPolyline({
+        source: endpoints.adjustedSource,
+        target: endpoints.adjustedTarget,
+        checkpoints: getStraightHookInterior(edge),
+        obstacles: getEdgeObstacles(
+          nodes,
+          edge.source,
+          edge.target,
+          endpoints.adjustedSource,
+          endpoints.adjustedTarget,
+          nodeIndex,
+          candidateBounds
+        ),
+        neighborRoutes: [],
+        clearancePx: EDGES.NODE_CLEARANCE_PX,
+      })
+      routeById[edge.id] = line
+      indexRoutePolyline(neighborGrid, edge.id, line)
+      continue
     }
     const obstacles: ObstacleRect[] = getEdgeObstacles(
       nodes,

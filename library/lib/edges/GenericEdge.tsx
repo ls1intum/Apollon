@@ -20,6 +20,7 @@ import {
 import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
+import { getSegmentGhostHandles } from "@/utils/geometry/freeWaypoints"
 import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
 
@@ -278,6 +279,8 @@ export const EdgeEndpointMarkers = ({
   onEndpointPointerDown,
   straight = false,
   bendHandles,
+  sourceNeighbor,
+  targetNeighbor,
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
@@ -295,6 +298,12 @@ export const EdgeEndpointMarkers = ({
   // The edge's bend handles, so a reconnect target can cap its outward reach at
   // this end's terminal bend handle instead of painting over it.
   bendHandles?: BendHandle[]
+  // The adjacent route vertex just inside each endpoint (route[1] / route[len-2]).
+  // A bent straight edge orients its grip/marker along the TERMINAL segment toward
+  // this point rather than the endpoint-to-endpoint chord. Defaults to the opposite
+  // endpoint, so an unbent 2-point edge is byte-identical to before.
+  sourceNeighbor?: IPoint
+  targetNeighbor?: IPoint
 }) => {
   const screenScale = useHandleScreenScale()
 
@@ -306,11 +315,19 @@ export const EdgeEndpointMarkers = ({
   // rotated to the edge angle — the same "along the edge, away from the node"
   // placement the orthogonal side gives a step edge. Step edges pass no
   // direction and fall back to the side.
+  const sourceAnchorNeighbor = sourceNeighbor ?? targetPoint
+  const targetAnchorNeighbor = targetNeighbor ?? sourcePoint
   const sourceOutward = straight
-    ? { x: targetPoint.x - sourcePoint.x, y: targetPoint.y - sourcePoint.y }
+    ? {
+        x: sourceAnchorNeighbor.x - sourcePoint.x,
+        y: sourceAnchorNeighbor.y - sourcePoint.y,
+      }
     : undefined
   const targetOutward = straight
-    ? { x: sourcePoint.x - targetPoint.x, y: sourcePoint.y - targetPoint.y }
+    ? {
+        x: targetAnchorNeighbor.x - targetPoint.x,
+        y: targetAnchorNeighbor.y - targetPoint.y,
+      }
     : undefined
   const sourceDir = sourceOutward
     ? normalizeDir(sourceOutward)
@@ -490,6 +507,107 @@ export const EdgeBendHandle = ({
       }}
       onPointerDown={onPointerDown}
     />
+  )
+}
+
+/**
+ * Draggable free-2D waypoint editing for straight (diagonal) edges. Renders a faint
+ * "ghost" handle at every route segment midpoint (dragging one past a threshold
+ * materialises a bend) and a solid handle on every existing interior waypoint
+ * (drag to move, double-click to remove). Every handle carries a generous invisible
+ * hit target so it stays grabbable when zoomed out and on touch. This is the
+ * straight-edge analogue of `EdgeBendHandle`, which is orthogonal-only.
+ */
+export const EdgeWaypointHandles = ({
+  route,
+  interior,
+  selectedWaypointIndex,
+  onWaypointPointerDown,
+  onWaypointDoubleClick,
+  onGhostPointerDown,
+}: {
+  /** Full route `[source, ...interior, target]`. */
+  route: IPoint[]
+  /** Interior waypoints only (== `data.points`). */
+  interior: IPoint[]
+  selectedWaypointIndex: number | null
+  onWaypointPointerDown: (
+    event: ReactPointerEvent<SVGRectElement>,
+    index: number
+  ) => void
+  onWaypointDoubleClick: (index: number) => void
+  onGhostPointerDown: (
+    event: ReactPointerEvent<SVGRectElement>,
+    segmentIndex: number
+  ) => void
+}) => {
+  const screenScale = useHandleScreenScale()
+  const ghosts = getSegmentGhostHandles(route)
+  const hit = EDGES.WAYPOINT_HIT_TARGET_PX * screenScale
+  const waypointRadius = EDGES.WAYPOINT_HANDLE_RADIUS_PX * screenScale
+  const ghostRadius = EDGES.WAYPOINT_GHOST_RADIUS_PX * screenScale
+
+  return (
+    <>
+      {ghosts.map((ghost) => (
+        <g
+          key={`ghost-${ghost.segmentIndex}`}
+          className="edge-waypoint-ghost-group"
+        >
+          <circle
+            className="edge-circle edge-waypoint-ghost"
+            cx={ghost.position.x}
+            cy={ghost.position.y}
+            r={ghostRadius}
+            pointerEvents="none"
+          />
+          <rect
+            className="edge-waypoint-ghost-hit"
+            x={ghost.position.x - hit / 2}
+            y={ghost.position.y - hit / 2}
+            width={hit}
+            height={hit}
+            rx={hit / 2}
+            ry={hit / 2}
+            pointerEvents="all"
+            style={{ cursor: "crosshair", fill: "transparent" }}
+            onPointerDown={(event) =>
+              onGhostPointerDown(event, ghost.segmentIndex)
+            }
+          />
+        </g>
+      ))}
+      {interior.map((point, index) => (
+        <g key={`waypoint-${index}`} className="edge-waypoint-group">
+          <circle
+            className={
+              "edge-circle edge-waypoint-handle" +
+              (selectedWaypointIndex === index
+                ? " edge-waypoint-handle--selected"
+                : "")
+            }
+            cx={point.x}
+            cy={point.y}
+            r={waypointRadius}
+            style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
+            pointerEvents="none"
+          />
+          <rect
+            className="edge-waypoint-hit"
+            x={point.x - hit / 2}
+            y={point.y - hit / 2}
+            width={hit}
+            height={hit}
+            rx={hit / 2}
+            ry={hit / 2}
+            pointerEvents="all"
+            style={{ cursor: "move", fill: "transparent" }}
+            onPointerDown={(event) => onWaypointPointerDown(event, index)}
+            onDoubleClick={() => onWaypointDoubleClick(index)}
+          />
+        </g>
+      ))}
+    </>
   )
 }
 
