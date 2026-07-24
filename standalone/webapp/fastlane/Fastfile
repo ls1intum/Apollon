@@ -324,12 +324,19 @@ platform :ios do
   end
 
   private_lane :ensure_selected_screenshots_available do
-    next unless SCREENSHOT_STYLE == "framed"
-
-    UI.user_error!(
-      "The framed screenshot set has not been generated with authorized " \
-      "Apple product bezels."
-    ) unless official_device_frames_available? &&
-             Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].any?
+    # Both branches guard against uploading with `overwrite_screenshots: true`
+    # against an empty directory, which would DELETE the live App Store
+    # screenshots. CI always captures first; this protects local invocations.
+    if SCREENSHOT_STYLE == "framed"
+      UI.user_error!(
+        "The framed screenshot set has not been generated with authorized " \
+        "Apple product bezels."
+      ) unless official_device_frames_available? &&
+               Dir[File.join(FRAMED_SCREENSHOTS_PATH, "en-US", "*.png")].any?
+    else
+      UI.user_error!(
+        "No raw screenshots in #{SCREENSHOTS_PATH}; run the `screenshots` lane first."
+      ) unless Dir[File.join(SCREENSHOTS_PATH, "en-US", "*.png")].any?
+    end
   end
 end

@@ -28,8 +28,18 @@ describe("isLiveUpdateManifest", () => {
 })
 
 describe("shouldApplyUpdate", () => {
-  it("applies any real version over the shipped-in 'builtin' bundle", () => {
-    expect(shouldApplyUpdate(manifest(), "5.1.1", "builtin")).toBe(true)
+  it("treats the shipped-in 'builtin' bundle as the native version (no downgrade)", () => {
+    // Newer web bundle than the native shell → apply.
+    expect(
+      shouldApplyUpdate(manifest({ version: "5.2.0" }), "5.1.1", "builtin")
+    ).toBe(true)
+    // Older/equal web bundle than the freshly-installed native shell → never.
+    expect(
+      shouldApplyUpdate(manifest({ version: "5.2.0" }), "5.3.0", "builtin")
+    ).toBe(false)
+    expect(
+      shouldApplyUpdate(manifest({ version: "5.3.0" }), "5.3.0", "builtin")
+    ).toBe(false)
   })
 
   it("only moves forward: rejects equal or older manifests", () => {
@@ -45,9 +55,10 @@ describe("shouldApplyUpdate", () => {
   })
 
   it("never applies past the native shell (minNativeVersion boundary)", () => {
-    const m = manifest({ minNativeVersion: "5.2.0" })
-    expect(shouldApplyUpdate(m, "5.1.9", "builtin")).toBe(false) // native below
-    expect(shouldApplyUpdate(m, "5.2.0", "builtin")).toBe(true) // native equal
-    expect(shouldApplyUpdate(m, "5.3.0", "builtin")).toBe(true) // native above
+    // Manifest version clears the floor in every case, so only the native gate decides.
+    const m = manifest({ version: "9.0.0", minNativeVersion: "5.2.0" })
+    expect(shouldApplyUpdate(m, "5.1.9", "builtin")).toBe(false) // native below min
+    expect(shouldApplyUpdate(m, "5.2.0", "builtin")).toBe(true) // native at min
+    expect(shouldApplyUpdate(m, "5.3.0", "builtin")).toBe(true) // native above min
   })
 })

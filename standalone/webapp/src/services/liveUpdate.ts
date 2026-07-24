@@ -47,7 +47,11 @@ export function isLiveUpdateManifest(
 /**
  * Pure gate: whether `manifest` should be applied to a device on native version
  * `nativeVersion` currently running bundle `currentVersion` ("builtin" for the
- * shipped-in bundle). Only moves forward and never past the native shell.
+ * shipped-in bundle). Only moves strictly forward, and never below the native
+ * shell — the builtin bundle IS the native version, so it's the floor after
+ * every App Store update / fresh install (when `resetWhenUpdate` clears OTA
+ * bundles), which prevents both a redundant re-download of the shipped bundle
+ * and a downgrade when a native release lands ahead of the web deploy.
  */
 export function shouldApplyUpdate(
   manifest: LiveUpdateManifest,
@@ -60,9 +64,8 @@ export function shouldApplyUpdate(
   ) {
     return false
   }
-  return (
-    currentVersion === "builtin" || semver.gt(manifest.version, currentVersion)
-  )
+  const floor = currentVersion === "builtin" ? nativeVersion : currentVersion
+  return semver.gt(manifest.version, floor)
 }
 
 /**
@@ -91,10 +94,19 @@ export async function checkForLiveUpdate(): Promise<void> {
       CapacitorUpdater.current(),
     ])
 
-    const response = await fetch(MANIFEST_URL, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(MANIFEST_TIMEOUT_MS),
-    })
+    // AbortController rather than AbortSignal.timeout (WebKit 16.4+) so the
+    // check still runs on the app's iOS 15 deployment target.
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), MANIFEST_TIMEOUT_MS)
+    let response: Response
+    try {
+      response = await fetch(MANIFEST_URL, {
+        cache: "no-store",
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
     if (!response.ok) return
 
     const manifest: unknown = await response.json()
