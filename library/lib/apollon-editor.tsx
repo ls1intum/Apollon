@@ -756,6 +756,13 @@ export class ApollonEditor {
             )
           }),
         ])
+        // waitForSettled resolves when the store accepts the routes, but React
+        // Flow paints the edge paths into the DOM one commit later (edges sync
+        // through a passive effect). Flush a frame before measuring bounds, or a
+        // route that bows outside the node-rect union gets clipped on export.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        })
       }
 
       filterRenderedElements(container, options)
