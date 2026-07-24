@@ -282,6 +282,11 @@ test.describe("Line-jump geometry integrity", () => {
   test("bridges stay attached during Worker preview and at settlement handoff", async ({
     page,
   }) => {
+    // This exercises the Worker preview + release-exact settlement path on a
+    // 30-node fixture; the Worker round-trip can exceed the default budget on a
+    // loaded CI runner, so give it room (the integrity assertions below are what
+    // matter, not how fast the Worker returns).
+    test.setTimeout(60_000)
     const fixture = load("perf-routing-30-nodes.json")
     await openLocalWithPerf(page, fixture)
     await page.waitForFunction(
@@ -330,7 +335,9 @@ test.describe("Line-jump geometry integrity", () => {
             perf.routingPreviewCount > 0
           )
         },
-        { intervals: [5], timeout: 5_000 }
+        // Poll gently: a 5ms interval re-ran the full DOM integrity scan ~200×/s
+        // and starved the very Worker message-handling it was waiting on.
+        { intervals: [100, 250, 500], timeout: 15_000 }
       )
       .toBe(true)
     // The perf write happens in the solver's layout effect. Inspect painted
@@ -372,7 +379,9 @@ test.describe("Line-jump geometry integrity", () => {
           }
           return false
         },
-        { intervals: [5], timeout: 5_000 }
+        // Poll gently: a 5ms interval re-ran the full DOM integrity scan ~200×/s
+        // and starved the very Worker message-handling it was waiting on.
+        { intervals: [100, 250, 500], timeout: 15_000 }
       )
       .toBe(true)
 
