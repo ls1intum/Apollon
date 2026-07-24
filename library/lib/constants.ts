@@ -97,6 +97,19 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-collaboration-color-8": "#1098ad",
     "--apollon-guide-vertical": "#d63031",
     "--apollon-guide-horizontal": "#0984e3",
+    // Color-picker swatches are stored as a fallback-less `var(--apollon-swatch-*)`,
+    // so without a value here a swatched element resolves to "" and vanishes from
+    // headless/compat export (issue #828). Light-theme primitives, like the rest of
+    // this map; kept in sync with tokens.css by cssVariableContract.test.ts.
+    "--apollon-swatch-slate": "#64748b",
+    "--apollon-swatch-red": "#dc2626",
+    "--apollon-swatch-orange": "#ea580c",
+    "--apollon-swatch-amber": "#d97706",
+    "--apollon-swatch-green": "#16a34a",
+    "--apollon-swatch-teal": "#0d9488",
+    "--apollon-swatch-blue": "#2563eb",
+    "--apollon-swatch-violet": "#7c3aed",
+    "--apollon-swatch-pink": "#db2777",
     "--apollon-background": "#ffffff",
     "--apollon-background-variant": "#f8f9fa",
     "--apollon-hover-neutral":
