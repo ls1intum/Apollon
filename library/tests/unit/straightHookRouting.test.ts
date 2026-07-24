@@ -342,6 +342,53 @@ describe("straight-hook edge routing", () => {
     expect(shared).toEqual([])
   })
 
+  it("nests both flanks of a symmetric fan identically", () => {
+    // Regression: the corner-ring choice compared each seat's distance from its
+    // side's centre against the largest on that side. Mirror-paired seats are the
+    // same distance out in exact arithmetic but NOT in binary floating point — for a
+    // seven-way band, 0.5 - 1/7 and 6/7 - 0.5 differ in the final bit. One flank
+    // therefore took the roomy corner ring and the other the tight one, and the
+    // drawing was visibly lopsided even though every input was symmetric.
+    const AXIS = 190
+    const parent = makeNode("stmt", 155, 215, 70, 50)
+    const columns = [
+      makeNode("colL", 55, 385, 70, 50),
+      makeNode("colR", 255, 385, 70, 50),
+    ]
+    const kids = [
+      makeNode("outerL", -35, 550, 50, 50),
+      makeNode("innerL", 15, 550, 50, 50),
+      makeNode("mid", 155, 310, 70, 50),
+      makeNode("innerR", 315, 550, 50, 50),
+      makeNode("outerR", 365, 550, 50, 50),
+    ]
+    const edges: Edge[] = kids.map((k, i) => ({
+      id: `e${i}`,
+      source: "stmt",
+      target: k.node.id,
+      type: "SyntaxTreeLink",
+      data: {},
+    }))
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput([parent, ...columns, ...kids], edges)
+    )
+    // e0/e4 are the outer pair, e1/e3 the inner pair.
+    for (const [left, right] of [
+      ["e0", "e4"],
+      ["e1", "e3"],
+    ]) {
+      const l = routeById[left]
+      const r = routeById[right]
+      expect(l.length).toBe(r.length)
+      for (let i = 0; i < l.length; i++) {
+        expect(Math.abs(2 * AXIS - l[i].x - r[i].x)).toBeLessThanOrEqual(1)
+        expect(l[i].y).toBe(r[i].y)
+      }
+    }
+    // And the two members of one flank still turn at different points.
+    expect(routeById["e0"][1]).not.toEqual(routeById["e1"][1])
+  })
+
   it("routes a mirror-symmetric diagram symmetrically", () => {
     // Everything below is an exact reflection about x = AXIS, including the
     // obstacles, so every route must be the reflection of its partner. Asymmetry

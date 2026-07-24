@@ -1353,8 +1353,15 @@ function computeAllEdgeGeometryPass(
 
   // How far off its side's centre each seat sits, and the largest such offset on
   // every occupied (node, side). Used to nest a fan — see `straightCornerRing`.
+  // QUANTISED, and that is the whole point. A seat and its mirror image are the same
+  // distance from their side's centre in exact arithmetic, but not in binary
+  // floating point: for a seven-way band, 0.5 - 1/7 and 6/7 - 0.5 differ in the last
+  // bit. Comparing raw distances therefore made one flank of a symmetric diagram
+  // take the roomy corner ring and the other the tight one — a visible asymmetry
+  // from a rounding artefact. Rounding to whole permille is far finer than any seat
+  // spacing yet coarse enough that reflection is exact.
   const seatOffset = (anchor: FreeformEdgeAnchor): number =>
-    Math.abs(anchor.ratio - 0.5)
+    Math.round(Math.abs(anchor.ratio - 0.5) * 1000)
   const outermostSeatOffset = new Map<string, number>()
   for (const edge of coordinationEdges) {
     for (const [end, nodeId] of [
