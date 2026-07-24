@@ -928,6 +928,7 @@ function collectFixedPorts(
  * capacity model as immutable reservations. Ends of single-edge nodes are omitted:
  * there is no sibling capacity to coordinate there. */
 function collectPortEnds(
+  straightHookTypes: ReadonlySet<string>,
   ordered: readonly Edge[],
   nodes: readonly Node[],
   nodeById: Map<string, Node>,
@@ -1057,6 +1058,7 @@ function collectPortEnds(
         nodeId: edge.source,
         rect: sourceRect,
         side: sourceSide,
+        straight: straightHookTypes.has(edge.type ?? ""),
         partnerCenter: centerOf(targetRect),
         partnerNodeId: edge.target,
         partnerRect: targetRect,
@@ -1071,6 +1073,7 @@ function collectPortEnds(
         nodeId: edge.target,
         rect: targetRect,
         side: targetSide,
+        straight: straightHookTypes.has(edge.type ?? ""),
         partnerCenter: centerOf(sourceRect),
         partnerNodeId: edge.source,
         partnerRect: sourceRect,
@@ -1342,6 +1345,7 @@ function computeAllEdgeGeometryPass(
   }
   const bandPorts = assignPorts(
     collectPortEnds(
+      straightHookTypes,
       coordinationEdges,
       nodes,
       nodeById,

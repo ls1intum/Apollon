@@ -21,7 +21,6 @@ import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
 import { getSegmentGhostHandles } from "@/utils/geometry/freeWaypoints"
-import { isqrt } from "@/utils/geometry/integerGeometry"
 import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
 
@@ -40,8 +39,6 @@ export const getHandleScreenScale = (zoom: number): number => {
   )
   return 1 / Math.min(safeZoom, 1)
 }
-
-const isqrtLength = (dx: number, dy: number): number => isqrt(dx * dx + dy * dy)
 
 const useHandleScreenScale = (): number =>
   getHandleScreenScale(useStore((state) => state.transform[2]))
@@ -514,12 +511,18 @@ export const EdgeBendHandle = ({
 }
 
 /**
- * Bend editing for straight (diagonal) edges — the counterpart to `EdgeBendHandle`,
- * and deliberately the SAME affordance: an identically styled `edge-bend-handle`
- * pill that lies along the segment, hidden until the edge is hovered or selected.
- * A step edge drags a segment along its one free axis; a straight edge has two, so
- * these handles carry a `move` cursor and drop a waypoint where they are released.
- * Existing waypoints get the same pill so the whole row reads as one control set.
+ * Waypoint editing for straight (diagonal) edges.
+ *
+ * A straight edge is not "bent" the way a step edge is — there is no segment to
+ * slide along a fixed axis. It is a polyline through POINTS, and editing it means
+ * picking a point up and putting it somewhere else. So the affordance is a round
+ * handle on the point itself, not the step edge's elongated segment pill, and it
+ * carries a `move` cursor because it travels in two dimensions rather than one.
+ *
+ * Every interior vertex of the rendered route gets one, whether the user placed it
+ * or the router did: dragging an automatic bend is how you take ownership of a route
+ * the solver chose. Segment midpoints additionally carry a faint HALF handle — the
+ * same point affordance, just not real yet — which becomes a waypoint when dragged.
  */
 export const EdgeWaypointHandles = ({
   route,
@@ -531,7 +534,7 @@ export const EdgeWaypointHandles = ({
 }: {
   /** Full route `[source, ...interior, target]`. */
   route: IPoint[]
-  /** Interior waypoints only (== `data.points`). */
+  /** The editable interior vertices — every bend on the rendered route. */
   interior: IPoint[]
   selectedWaypointIndex: number | null
   onWaypointPointerDown: (
@@ -545,93 +548,63 @@ export const EdgeWaypointHandles = ({
   ) => void
 }) => {
   const screenScale = useHandleScreenScale()
-  const segments = getSegmentGhostHandles(route)
+  const midpoints = getSegmentGhostHandles(route)
   const hit = EDGES.WAYPOINT_HIT_TARGET_PX * screenScale
-  const shortAxis = 10 * screenScale
-  const radius = 6 * screenScale
+  const radius = EDGES.WAYPOINT_HANDLE_RADIUS_PX * screenScale
 
-  /** A step-edge bend pill, rotated to lie along an arbitrary segment. */
-  const pill = (
-    center: IPoint,
-    longAxis: number,
-    angleDeg: number,
-    className: string
+  const point = (
+    centre: IPoint,
+    className: string,
+    key: string,
+    onPointerDown: (event: ReactPointerEvent<SVGRectElement>) => void,
+    onDoubleClick?: () => void
   ) => (
-    <rect
-      className={className}
-      x={center.x - longAxis / 2}
-      y={center.y - shortAxis / 2}
-      width={longAxis}
-      height={shortAxis}
-      rx={radius}
-      ry={radius}
-      transform={`rotate(${angleDeg} ${center.x} ${center.y})`}
-      pointerEvents="none"
-    />
+    <g key={key}>
+      <circle
+        className={className}
+        cx={centre.x}
+        cy={centre.y}
+        r={radius}
+        style={{ strokeWidth: FREEFORM_ENDPOINT_GRIP_STROKE * screenScale }}
+        pointerEvents="none"
+      />
+      <rect
+        x={centre.x - hit / 2}
+        y={centre.y - hit / 2}
+        width={hit}
+        height={hit}
+        rx={hit / 2}
+        ry={hit / 2}
+        pointerEvents="all"
+        style={{ cursor: "move", fill: "transparent", zIndex: 9999 }}
+        onPointerDown={onPointerDown}
+        onDoubleClick={onDoubleClick}
+      />
+    </g>
   )
 
   return (
     <>
-      {segments.map((segment) => {
-        const a = route[segment.segmentIndex]
-        const b = route[segment.segmentIndex + 1]
-        // Degrees are presentation only — never a routing decision — so the
-        // trigonometry here cannot affect committed geometry.
-        const angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI
-        const room = isqrtLength(b.x - a.x, b.y - a.y) - 2 * radius
-        const longAxis = Math.min(
-          Math.max(room, EDGES.BEND_HANDLE_MIN_SCREEN_LENGTH_PX * screenScale),
-          EDGES.BEND_HANDLE_SCREEN_LENGTH_PX * screenScale
+      {midpoints.map((midpoint) =>
+        point(
+          midpoint.position,
+          "edge-circle edge-waypoint-handle edge-waypoint-handle--proposed",
+          `midpoint-${midpoint.segmentIndex}`,
+          (event) => onGhostPointerDown(event, midpoint.segmentIndex)
         )
-        return (
-          <g key={`segment-${segment.segmentIndex}`}>
-            {pill(
-              segment.position,
-              longAxis,
-              angle,
-              "edge-circle edge-bend-handle"
-            )}
-            <rect
-              x={segment.position.x - hit / 2}
-              y={segment.position.y - hit / 2}
-              width={hit}
-              height={hit}
-              rx={hit / 2}
-              ry={hit / 2}
-              pointerEvents="all"
-              style={{ cursor: "move", fill: "transparent", zIndex: 9999 }}
-              onPointerDown={(event) =>
-                onGhostPointerDown(event, segment.segmentIndex)
-              }
-            />
-          </g>
+      )}
+      {interior.map((waypoint, index) =>
+        point(
+          waypoint,
+          "edge-circle edge-waypoint-handle" +
+            (selectedWaypointIndex === index
+              ? " edge-waypoint-handle--active"
+              : ""),
+          `waypoint-${index}`,
+          (event) => onWaypointPointerDown(event, index),
+          () => onWaypointDoubleClick(index)
         )
-      })}
-      {interior.map((point, index) => (
-        <g key={`waypoint-${index}`}>
-          {pill(
-            point,
-            shortAxis,
-            0,
-            "edge-circle edge-bend-handle" +
-              (selectedWaypointIndex === index
-                ? " edge-bend-handle--active"
-                : "")
-          )}
-          <rect
-            x={point.x - hit / 2}
-            y={point.y - hit / 2}
-            width={hit}
-            height={hit}
-            rx={hit / 2}
-            ry={hit / 2}
-            pointerEvents="all"
-            style={{ cursor: "move", fill: "transparent", zIndex: 9999 }}
-            onPointerDown={(event) => onWaypointPointerDown(event, index)}
-            onDoubleClick={() => onWaypointDoubleClick(index)}
-          />
-        </g>
-      ))}
+      )}
     </>
   )
 }

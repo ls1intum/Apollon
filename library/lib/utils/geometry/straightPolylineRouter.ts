@@ -127,12 +127,27 @@ const turnCostPx = (from: IPoint, via: IPoint, to: IPoint): number => {
 }
 
 /**
+ * How much dearer a conflict is between STRAIGHT edges than between orthogonal ones.
+ *
+ * The orthogonal engine's weights are calibrated for right-angle meetings, and a
+ * 90-degree crossing is the least harmful there is — the eye follows both lines
+ * straight through it (Huang et al., cited in geometry/README.md). Two straight
+ * edges meet at whatever angle their endpoints dictate, and a shallow crossing or a
+ * near-tangential touch is genuinely hard to trace: the two strokes merge into one
+ * for a stretch and the reader loses which is which. Straight routes are also free
+ * to sit anywhere, so avoiding a conflict rarely costs them much. Both facts point
+ * the same way — price contact far above the orthogonal baseline.
+ */
+const CONFLICT_SEVERITY = 1
+
+/**
  * Cost of one candidate segment against every neighbouring edge, delegated to the
  * SHARED `polylineConflictCost` so a crossing, a collinear overlap and a too-close
- * parallel run are priced on exactly the objective the orthogonal engine uses
- * (`edgeCrossing` 400, `overlapPerPx` 25, `crowdingPerPx` 3). Re-deriving these
- * weights locally is how the two regimes would drift apart. Summed over
- * neighbours, so the result never depends on their order.
+ * parallel run keep the orthogonal engine's RELATIVE ordering (`edgeCrossing` 400,
+ * `overlapPerPx` 25, `crowdingPerPx` 3) — re-deriving those weights locally is how
+ * the two regimes would drift apart — and then scaled as a whole by
+ * `CONFLICT_SEVERITY`. Summed over neighbours, so the result never depends on their
+ * order.
  */
 const neighborCostPx = (
   a: IPoint,
@@ -140,6 +155,7 @@ const neighborCostPx = (
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number
 ): number =>
+  CONFLICT_SEVERITY *
   polylineConflictCost([a, b], neighborRoutes, crowdingClearancePx).cost
 
 /** The MINIMUM clearance the returned route guarantees from every hard obstacle.

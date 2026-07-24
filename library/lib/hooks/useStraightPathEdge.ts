@@ -435,6 +435,14 @@ export const useStraightPathEdge = ({
 
   const sourcePoint = renderPoints[0]
   const targetPoint = renderPoints[renderPoints.length - 1]
+  // Every bend on the RENDERED route is editable, not only the authored ones. An
+  // automatic detour is a perfectly good starting point for a hand-placed route:
+  // dragging one of its bends is how the user takes ownership of it, exactly as
+  // dragging a computed step edge freezes its path into manual points.
+  const editableWaypoints = useMemo<IPoint[]>(
+    () => renderPoints.slice(1, -1),
+    [renderPoints]
+  )
   const sourceNeighbor = renderPoints[1]
   const targetNeighbor = renderPoints[renderPoints.length - 2]
   // Always: a straight edge has no bend handles, so a minimum-length gate would
@@ -815,7 +823,7 @@ export const useStraightPathEdge = ({
         ])
         // Only persist when the geometry actually changed (a click that never
         // moved must not freeze a fresh point into the model).
-        if (dragMovedRef.current || pruned.length !== interiorPoints.length) {
+        if (dragMovedRef.current || pruned.length !== startInterior.length) {
           commitWaypoints(pruned, routeSource, routeTarget)
         }
         setSelectedWaypointIndex(null)
@@ -828,13 +836,7 @@ export const useStraightPathEdge = ({
       ownerDocument.addEventListener("pointerup", handlePointerUp)
       ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
-    [
-      interiorPoints.length,
-      commitWaypoints,
-      screenToFlowPosition,
-      sourcePoint,
-      targetPoint,
-    ]
+    [commitWaypoints, screenToFlowPosition, sourcePoint, targetPoint]
   )
 
   const handleWaypointPointerDown = useCallback(
@@ -848,10 +850,10 @@ export const useStraightPathEdge = ({
         event.pointerId,
         event.currentTarget,
         index,
-        interiorPoints
+        editableWaypoints
       )
     },
-    [beginWaypointDrag, interiorPoints]
+    [beginWaypointDrag, editableWaypoints]
   )
 
   // A ghost midpoint materialises a new waypoint only once the pointer has moved
@@ -890,7 +892,7 @@ export const useStraightPathEdge = ({
         if (!exceedsDragThreshold(origin, flowPoint)) return
         cleanup()
         const seeded = insertWaypoint(
-          interiorPoints,
+          editableWaypoints,
           segmentIndex,
           snapPoint(flowPoint)
         )
@@ -910,7 +912,7 @@ export const useStraightPathEdge = ({
       ownerDocument.addEventListener("pointerup", handleEnd)
       ownerDocument.addEventListener("pointercancel", handleEnd)
     },
-    [beginWaypointDrag, interiorPoints, screenToFlowPosition]
+    [beginWaypointDrag, editableWaypoints, screenToFlowPosition]
   )
 
   const handleWaypointDoubleClick = useCallback(
@@ -918,7 +920,7 @@ export const useStraightPathEdge = ({
       commitWaypoints(
         pruneCollinearWaypoints([
           sourcePoint,
-          ...removeWaypoint(interiorPoints, index),
+          ...removeWaypoint(editableWaypoints, index),
           targetPoint,
         ]),
         sourcePoint,
@@ -926,7 +928,7 @@ export const useStraightPathEdge = ({
       )
       setSelectedWaypointIndex(null)
     },
-    [interiorPoints, commitWaypoints, sourcePoint, targetPoint]
+    [editableWaypoints, commitWaypoints, sourcePoint, targetPoint]
   )
 
   return {
@@ -942,7 +944,7 @@ export const useStraightPathEdge = ({
     sourceNeighbor,
     targetNeighbor,
     route: renderPoints,
-    interior: interiorPoints,
+    interior: editableWaypoints,
     selectedWaypointIndex,
     isDiagramModifiable,
     canEditEndpoint,

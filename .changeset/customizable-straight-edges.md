@@ -4,9 +4,10 @@
 
 Shape and tidy diagonal-line diagrams the same way you already can with orthogonal
 edges. Use-case, syntax-tree and petri-net connections now have draggable waypoints —
-grab a segment's midpoint to add a bend, drag a bend to move it, and double-click or
-drag it back onto the line to remove it — so you can route a link cleanly around a
-node by hand. These connections now also attach at the side of each element that faces its
+drag any bend to move it, drag the faint point on a segment to add one, and
+double-click or drag a bend back onto the line to remove it — so you can route a link
+cleanly around a node by hand. Bends the editor placed itself are draggable too, so
+you can start from its route and adjust it rather than redrawing it. These connections now also attach at the side of each element that faces its
 partner and spread evenly across a shared side when several connect to the same element —
 so they read cleanly instead of stacking on one point or leaving from an arbitrary corner.
 They also bend around any node that sits directly in their path — leaving each element

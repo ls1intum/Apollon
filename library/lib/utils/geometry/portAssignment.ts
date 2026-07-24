@@ -748,6 +748,9 @@ export type EndRef = {
   nodeId: string
   rect: Rect
   side: Position
+  /** This end belongs to a STRAIGHT edge, which reaches its partner directly rather
+   * than along axes — see `rotOf` for why that changes the non-crossing order. */
+  straight?: boolean
   partnerCenter: IPoint
   /** The partner node's id and rect — used to detect and align PARALLEL SIBLINGS
    * (several edges between the same node pair), which must share one straight lane
@@ -1009,12 +1012,19 @@ export const assignPorts = (
     const tangentialHalfExtent = sideAxisLength(side, rect) / 2
     const rotOf = (e: EndRef): number => {
       const c = centerOf(e.rect)
-      return crossingOrderKey(
-        side,
-        e.partnerCenter.x - c.x,
-        e.partnerCenter.y - c.y,
-        tangentialHalfExtent
-      )
+      const dx = e.partnerCenter.x - c.x
+      const dy = e.partnerCenter.y - c.y
+      // A STRAIGHT edge runs directly at its partner, so the order that avoids a
+      // fan crossing itself is simply the angular one. `crossingOrderKey` exists
+      // for orthogonal routes, which leave along an axis and turn far away: for a
+      // partner beyond the node's own band it deliberately INVERTS the angular
+      // order so the farther-reaching route nests outside the nearer one. Applied
+      // to a straight line that inversion manufactures exactly the crossing it is
+      // meant to prevent — a near partner gets seated past a far one, and the two
+      // rays must cross.
+      return e.straight
+        ? alongSideKey(side, dx, dy)
+        : crossingOrderKey(side, dx, dy, tangentialHalfExtent)
     }
     const byPartner = new Map<string, EndRef[]>()
     for (const e of group) {
