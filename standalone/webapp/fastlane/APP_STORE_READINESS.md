@@ -143,7 +143,9 @@ with Apple is not required.
 
 ## Upload paths
 
-Run the manual `ios-release` workflow with:
+TestFlight uploads run automatically after the matching standalone release.
+Manually run the `ios-release` workflow only to recover an interrupted upload,
+or to use one of these explicit destinations:
 
 - `testflight` for internal testing;
 - `app-store-assets` to update metadata and screenshots without a binary; or

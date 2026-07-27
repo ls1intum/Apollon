@@ -112,9 +112,16 @@ The version metadata committed under
 `standalone/webapp/fastlane/metadata/` includes the App Store name, subtitle,
 description, keywords, release notes, and support, marketing, and privacy URLs.
 
-The manual `ios-release` GitHub Actions workflow provides three destinations:
+Every new standalone `vX.Y.Z` release automatically builds the matching native
+app and uploads it to TestFlight. A successful upload creates the
+`ios-testflight@X.Y.Z` marker tag, so release retries cannot upload the same
+native version twice.
 
-- `testflight` uploads only the signed build to TestFlight.
+The `ios-release` GitHub Actions workflow remains manually dispatchable with
+three destinations:
+
+- `testflight` uploads only the signed build to TestFlight (normally automatic;
+  manual dispatch is the recovery path).
 - `app-store-assets` regenerates and uploads metadata and screenshots without a
   binary.
 - `app-store` uploads the build, metadata, and screenshots. Submission for
