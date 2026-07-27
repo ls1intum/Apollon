@@ -12,13 +12,20 @@ Deployments are fully automatic on merge to `main`; production promotion is one 
 
 | Stage          | Trigger                                     | Workflow                                                                        | Result                                                                                      |
 | -------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Staging (auto) | push to `main`                              | `build-and-push.yml` → `deploy-staging.yml`                                     | Docker images built + tagged `sha-<commit>`, staging deploy fires                           |
+| Staging (auto) | successful Docker build on `main`           | `deploy-staging-after-build.yml` → `deploy-staging.yml`                         | The matching `sha-<commit>` images deploy to staging                                        |
 | Docs (auto)    | push to `main`                              | `docs.yml`                                                                      | Docusaurus site rebuilt and published to GitHub Pages                                       |
 | Release        | version change merged to `main`             | `release-library.yml`, `release-standalone.yml`, `release-vscode-extension.yml` | npm / VS Code Marketplace publish + Docker retag to `vX.Y.Z` + cosign sign + GitHub Release |
 | Production     | Actions → **Deploy to Production** (manual) | `deploy-prod.yml`                                                               | prod runs the selected `image-tag`                                                          |
 
 `version-monotonicity.yml` guards every PR by failing if a workspace
 `package.json` version moves backwards.
+
+Docker image publication, staging deployment, and standalone release are separate
+downstream workflows. A staging infrastructure outage therefore remains visible as
+a failed deployment without turning a successful image build red or suppressing a
+release. If a standalone release is interrupted after its images were built, run
+**Release Standalone** manually with that build's commit SHA; its retag, signing,
+tagging, and GitHub Release steps are safe to resume.
 
 `pr-health-checks.yml` runs the full per-PR matrix, including the visual-regression
 guard (pinned Playwright container) feeding the required **PR Health Gate** check.

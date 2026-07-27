@@ -97,13 +97,3 @@ jobs:
             exit 1
           fi
           echo "Docker build passed or was skipped"
-
-  deploy-staging:
-    name: Deploy to Staging
-    needs: [docker-build-gate, build-and-push-workflow]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.docker-build-gate.result == 'success' && needs.build-and-push-workflow.result == 'success'
-    uses: ./.github/workflows/deploy-staging.yml
-    with:
-      image-tag: sha-${{ github.sha }}
-      deploy-app: true
-    secrets: inherit

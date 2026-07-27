@@ -25,7 +25,9 @@ jobs:
           - apollon/server
     steps:
       - name: Delete stale sha-tagged versions
-        uses: snok/container-retention-policy@4f22ef80902ad409ed55a99dc5133cc1250a0d03 # v3.0.0
+        # v3.1.0 accepts GitHub's current installation-token format and
+        # automatically protects the child manifests of retained multi-arch images.
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: ls1intum
           token: ${{ secrets.GITHUB_TOKEN }}
