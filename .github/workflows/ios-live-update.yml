@@ -88,6 +88,17 @@ jobs:
           CAPGO_MIN_NATIVE_VERSION: ${{ vars.CAPGO_MIN_NATIVE_VERSION }}
         run: pnpm run live-update:build
 
+      # Preserve the public, signed artifacts before entering the deployment
+      # transport. If the gateway is unavailable, an operator can download this
+      # artifact and copy it to the VM without handling the private signing key.
+      - name: Upload signed live-update recovery artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ios-live-update
+          path: standalone/webapp/live-updates-dist/
+          if-no-files-found: error
+          retention-days: 7
+
       # Upload the immutable bundle zip(s) FIRST so the manifest never points at
       # a file that is not yet on the host.
       - name: Copy bundle zips to the VM
