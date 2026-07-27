@@ -18,13 +18,14 @@ on:
       source-ref:
         description: >
           Commit to package, as the deployed image tag (`sha-<commit>`) or a raw
-          commit SHA. Empty uses the dispatched ref.
+          commit SHA. Semantic image tags such as `5.2.0` resolve to the matching
+          `v5.2.0` Git tag. Empty uses the dispatched ref.
         required: false
         type: string
   workflow_call:
     inputs:
       source-ref:
-        description: "Deployed image tag (`sha-<commit>`) or commit SHA to package."
+        description: "Deployed image tag (`sha-<commit>` or `X.Y.Z`) or commit SHA to package."
         required: false
         type: string
 
@@ -40,13 +41,26 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production
     steps:
-      # `sha-<commit>` is the tag convention build-and-push publishes images under,
-      # so stripping the prefix yields the commit the deployed image was built from.
+      # SHA image tags map directly to commits. Standalone release image tags omit
+      # the Git tag's leading `v`, so add it back before checkout.
       - name: Resolve the commit to package
         id: source
         run: |
+          set -euo pipefail
+
           REF="${{ inputs.source-ref }}"
-          echo "ref=${REF#sha-}" >> "$GITHUB_OUTPUT"
+          if [ -z "$REF" ]; then
+            RESOLVED_REF="$GITHUB_SHA"
+          elif [[ "$REF" == sha-* ]]; then
+            RESOLVED_REF="${REF#sha-}"
+          elif [[ "$REF" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            RESOLVED_REF="v$REF"
+          else
+            RESOLVED_REF="$REF"
+          fi
+
+          echo "Packaging deployed image tag $REF from $RESOLVED_REF."
+          echo "ref=$RESOLVED_REF" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
