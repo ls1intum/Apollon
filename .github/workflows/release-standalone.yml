@@ -1,6 +1,12 @@
 name: Release Standalone
 
 on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        type: string
+        required: true
+        description: "Commit SHA whose successfully built images should be released"
   workflow_run:
     workflows: [Build and Push Docker Image]
     types: [completed]
@@ -15,7 +21,7 @@ permissions: {}
 jobs:
   check:
     name: Check for new version
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -23,11 +29,15 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
       release: ${{ steps.v.outputs.release }}
-      sha: ${{ github.event.workflow_run.head_sha }}
+      sha: ${{ steps.source.outputs.sha }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.event.workflow_run.head_sha }}
+
+      - id: source
+        name: Resolve source commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - id: v
         env:
@@ -51,7 +61,7 @@ jobs:
           echo "version=$WEBAPP" >> "$GITHUB_OUTPUT"
 
   release:
-    name: Retag, sign, release, deploy
+    name: Retag, sign, and release
     needs: [check]
     if: needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
