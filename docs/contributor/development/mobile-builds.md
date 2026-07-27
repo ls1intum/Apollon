@@ -193,7 +193,10 @@ byproduct of it. Nothing new is hosted and the collaboration server is untouched
 - The `ios-live-update` workflow builds `dist/`, packages it into a versioned,
   **signed** `apollon-<version>.zip` plus a `manifest.json`
   (`standalone/webapp/scripts/build-live-update.mjs`), and copies both to
-  `/opt/apollon/app/live-updates` on the prod VM.
+  `/opt/apollon/app/live-updates` on the prod VM. It uploads the same public,
+  signed files as a seven-day recovery artifact before using the deployment
+  transport, so a gateway outage can be recovered over direct SSH without
+  exposing or moving the private signing key.
 - The **webapp container's nginx** serves that directory at
   `https://apollon.aet.cit.tum.de/live-updates/` (manifest `no-cache`, zips
   immutable, CORS). Traefik already routes the host to it — no proxy change.
