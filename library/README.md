@@ -182,11 +182,11 @@ export class DiagramEditorComponent {
 `yjs` and `y-protocols` are required peers, but on the CDN path esm.sh resolves and serves them from the import URL automatically — there is nothing extra to load. (With a bundler you install the peers yourself.)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.1.1/style.css" />
+<link rel="stylesheet" href="https://esm.sh/@tumaet/apollon@5.2.0/style.css" />
 <div id="apollon" style="width: 100%; height: 600px"></div>
 
 <script type="module">
-  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.1.1"
+  import { ApollonEditor } from "https://esm.sh/@tumaet/apollon@5.2.0"
 
   const saved = localStorage.getItem("diagram")
   const editor = new ApollonEditor(document.getElementById("apollon"), {
