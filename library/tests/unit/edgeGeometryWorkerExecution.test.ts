@@ -228,6 +228,27 @@ describe("EdgeGeometryWorkerController", () => {
     expect(decision(true, 200, true)).toBe(false)
   })
 
+  it("moves an initialized small straight-edge interaction off the main thread", () => {
+    expect(
+      shouldUseEdgeGeometryWorker({
+        hasRunInitialSolve: true,
+        edgeCount: 1,
+        threshold: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
+        disabled: false,
+        force: true,
+      })
+    ).toBe(true)
+    expect(
+      shouldUseEdgeGeometryWorker({
+        hasRunInitialSolve: false,
+        edgeCount: 1,
+        threshold: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
+        disabled: false,
+        force: true,
+      })
+    ).toBe(false)
+  })
+
   it("defers only large actively changing scenes", () => {
     expect(
       shouldSampleEdgeGeometryWorker({
@@ -245,6 +266,13 @@ describe("EdgeGeometryWorkerController", () => {
       shouldSampleEdgeGeometryWorker({
         edgeCount: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
         interacting: true,
+      })
+    ).toBe(true)
+    expect(
+      shouldSampleEdgeGeometryWorker({
+        edgeCount: 1,
+        interacting: true,
+        force: true,
       })
     ).toBe(true)
   })

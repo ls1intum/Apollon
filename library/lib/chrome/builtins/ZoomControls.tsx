@@ -1,6 +1,7 @@
 import { useReactFlow, useStore } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import {
+  ListTree,
   Maximize,
   Redo2,
   SquareMousePointer,
@@ -13,6 +14,8 @@ import {
   useMetadataStore,
   useOverlayStore,
 } from "@/store/context"
+import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { UMLDiagramType } from "@/types"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { ariaKeyshortcuts } from "@/keyboard"
 import { Tooltip } from "@/components/ui"
@@ -22,6 +25,21 @@ import { useRovingToolbar } from "../useRovingToolbar"
 export interface ZoomControlsProps {
   /** Show the undo / redo island (when an undo manager exists). Default `true`. */
   history?: boolean
+}
+
+/**
+ * Apply controlled node positions, then wait two paint boundaries before fitting.
+ * The first lets React publish the new node array; the second lets React Flow
+ * measure and index it. Kept injectable for a deterministic toolbar regression
+ * test.
+ */
+export const runTidyLayoutAndFit = (
+  layout: () => void,
+  fit: () => void,
+  schedule: (callback: FrameRequestCallback) => number = requestAnimationFrame
+): void => {
+  layout()
+  schedule(() => schedule(() => fit()))
 }
 
 /**
@@ -48,12 +66,17 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
     }))
   )
 
-  const { multiSelectionMode, setMultiSelectionMode } = useMetadataStore(
-    useShallow((state) => ({
-      multiSelectionMode: state.multiSelectionMode,
-      setMultiSelectionMode: state.setMultiSelectionMode,
-    }))
-  )
+  const { multiSelectionMode, setMultiSelectionMode, isSyntaxTree } =
+    useMetadataStore(
+      useShallow((state) => ({
+        multiSelectionMode: state.multiSelectionMode,
+        setMultiSelectionMode: state.setMultiSelectionMode,
+        isSyntaxTree: state.diagramType === UMLDiagramType.SyntaxTree,
+      }))
+    )
+  const layoutSyntaxTree = useDiagramStore((state) => state.layoutSyntaxTree)
+  const isModifiable = useDiagramModifiable()
+  const showTidyLayout = isSyntaxTree && isModifiable
 
   const { ref: toolbarRef, onKeyDown: onToolbarKeyDown } =
     useRovingToolbar<HTMLDivElement>()
@@ -124,6 +147,22 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             <SquareMousePointer width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
+        {showTidyLayout && (
+          <Tooltip title={t.tidyLayoutHint}>
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={() =>
+                runTidyLayoutAndFit(layoutSyntaxTree, () =>
+                  insetAwareFitView(rf, insets, safeArea, { duration: 200 })
+                )
+              }
+              aria-label={t.tidyLayout}
+            >
+              <ListTree width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
       {history && undoManagerExist && (

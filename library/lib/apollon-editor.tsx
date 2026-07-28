@@ -405,6 +405,23 @@ export class ApollonEditor {
     requestAnimationFrame(attempt)
   }
 
+  /**
+   * Arrange a syntax-tree diagram into a tidy hierarchical layout, so straight
+   * parent→child links no longer overlap sibling nodes (issue #282). Derives the
+   * hierarchy from `SyntaxTreeLink` edges; malformed graphs (forests, cycles,
+   * multi-parent) are laid out where clean and left untouched elsewhere. It is a
+   * single undo step and a no-op on non-syntax-tree diagrams.
+   */
+  public layoutSyntaxTree(): void {
+    if (
+      this.metadataStore.getState().diagramType !== UMLDiagramType.SyntaxTree
+    ) {
+      return
+    }
+    this.diagramStore.getState().layoutSyntaxTree()
+    this.fitView()
+  }
+
   // ---- Canvas overlay / control API -------------------------------------
   // A library-owned overlay engine: host chrome (header, rails, banners) and the
   // editor's own overlays share one measured, inset-aware layout. Controls

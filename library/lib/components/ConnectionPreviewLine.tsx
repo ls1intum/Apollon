@@ -28,6 +28,8 @@ import {
   getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  getNativeConnectionAnchor,
+  getNativeConnectionRect,
 } from "@/utils/connectionModes"
 import { computeConnectionPreviewRoute } from "@/utils/geometry/edgeGeometrySolver"
 import { STRAIGHT_PATH_STEP_EDGE_TYPES } from "@/edges/edgeRoutingBehavior"
@@ -86,6 +88,7 @@ export const ConnectionPreviewLine = ({
   connectionStatus,
   toNode,
   toHandle,
+  pointer: panePointer,
 }: ConnectionLineComponentProps) => {
   const fromNodeId = fromNode?.id
   const nativeTargetId = toNode?.id
@@ -94,6 +97,7 @@ export const ConnectionPreviewLine = ({
   const resolveDropTarget = useFreeformDropTarget()
   const allNodes = useDiagramStore((state) => state.nodes)
   const nodeLookup = useStore((state) => state.nodeLookup)
+  const transform = useStore((state) => state.transform)
   const connectionMode = useStore((state) => state.connectionMode)
   const diagramType = useMetadataStore((state) => state.diagramType)
   const previewEdgeType = getDefaultEdgeType(diagramType)
@@ -114,21 +118,62 @@ export const ConnectionPreviewLine = ({
   const newConnection = useMemo(() => {
     const snap = (v: number) =>
       Math.round(v / CANVAS.SNAP_TO_GRID_PX) * CANVAS.SNAP_TO_GRID_PX
-    const pointer: XYPosition = { x: snap(toX), y: snap(toY) }
+    // Unlike `toX`/`toY`, React Flow exposes `pointer` in pane-relative
+    // screen pixels. Apply only the viewport transform here: screenToFlowPosition
+    // would subtract the pane's page offset a second time.
+    const livePointer = {
+      x: (panePointer.x - transform[0]) / transform[2],
+      y: (panePointer.y - transform[1]) / transform[2],
+    }
+    const pointer: XYPosition = {
+      x: snap(livePointer.x),
+      y: snap(livePointer.y),
+    }
 
     // React Flow still reports the nearest handle for an invalid drop. Only a
     // valid handle is committed through onConnect; invalid drops use the same
     // shape-aware freeform path as onConnectEnd.
-    const hasNativeTarget =
+    // Continuous outlines are the exception even when React Flow happens to
+    // validate a nearby hidden handle: their visible snap circle follows the
+    // actual pointer angle, so treating that handle centre as authoritative
+    // would make the ghost jump away from the aimed curve.
+    const hasValidNativeTarget =
       connectionStatus === "valid" &&
       nativeTargetId !== undefined &&
       nativeTargetId !== fromNodeId &&
       nativeTargetPosition !== undefined
-    const target = hasNativeTarget
+    const targetIsAimedOutline =
+      hasValidNativeTarget && dropAnchorIsAimed(toNode?.type)
+    const hasNativeTarget = hasValidNativeTarget && !targetIsAimedOutline
+    // A valid native handle is an exact attachment point, not merely a side hint.
+    // Resolve that point into the pending edge too, so the central solver cannot
+    // replace the native ghost endpoint with an automatic facing-side anchor.
+    const nativeAnchor = hasNativeTarget
+      ? getNativeConnectionAnchor({
+          to: { x: toX, y: toY },
+          toNode,
+        })
+      : null
+    // Validation owns target identity. In particular, a use case nested inside
+    // a system overlaps its container, so re-running a scene-wide hit test can
+    // silently replace the oval with that container. Only the anchor remains
+    // continuous for an aimed outline.
+    const aimedTargetRect =
+      targetIsAimedOutline && toNode ? getNativeConnectionRect(toNode) : null
+    const aimedTarget =
+      aimedTargetRect && toNode
+        ? {
+            id: toNode.id,
+            type: toNode.type,
+            rect: aimedTargetRect,
+          }
+        : null
+    const target = hasValidNativeTarget
       ? null
       : resolveDropTarget(pointer, fromNodeId)
     // Empty space resolves to the source node, which is not a preview target.
-    const hit = target && target.id !== fromNodeId ? target : null
+    const hit =
+      aimedTarget ?? (target && target.id !== fromNodeId ? target : null)
     const anchor = hit
       ? getEdgeAnchorFromPoint(hit.type, pointer, hit.rect)
       : null
@@ -143,7 +188,8 @@ export const ConnectionPreviewLine = ({
         : null
 
     const draggedFar =
-      Math.hypot(toX - fromX, toY - fromY) >= GHOST_MIN_DRAG_DISTANCE_PX
+      Math.hypot(pointer.x - fromX, pointer.y - fromY) >=
+      GHOST_MIN_DRAG_DISTANCE_PX
 
     return {
       from: { x: fromX, y: fromY },
@@ -159,7 +205,8 @@ export const ConnectionPreviewLine = ({
         : freeformTarget
           ? getSideHandleIdForPosition(freeformTarget.position)
           : undefined,
-      targetAnchor: hit && dropAnchorIsAimed(hit.type) ? anchor : null,
+      targetAnchor:
+        nativeAnchor ?? (hit && dropAnchorIsAimed(hit.type) ? anchor : null),
       snapPoint: freeformTarget?.showSnapCircle ? freeformTarget.point : null,
       visible: draggedFar || hasNativeTarget || freeformTarget !== null,
     }
@@ -175,6 +222,9 @@ export const ConnectionPreviewLine = ({
     nativeTargetId,
     nativeTargetHandleId,
     nativeTargetPosition,
+    panePointer,
+    transform,
+    toNode,
   ])
 
   const pinnedTargetAnchor = newConnection.targetId
@@ -225,27 +275,47 @@ export const ConnectionPreviewLine = ({
     if (!newConnection.visible) return { d: "", snapPoint: null }
 
     if (fromNodeId && newConnection.targetId) {
-      if (pendingSolvedRoute && pendingSolvedRoute.length >= 2) {
+      const pendingTarget =
+        pendingSolvedRoute?.[pendingSolvedRoute.length - 1] ?? null
+      // The worker may still hold the route for a target crossed earlier in
+      // the same gesture. A pinned endpoint must never display that stale route:
+      // use the immediate pointer route until the worker catches up. Automatic
+      // targets are allowed to choose their own seat, so endpoint equality is
+      // intentionally required only when an anchor is pinned.
+      const pendingRouteMatchesPinnedTarget =
+        !pinnedTargetAnchor ||
+        (pendingTarget !== null &&
+          Math.hypot(
+            pendingTarget.x - newConnection.to.x,
+            pendingTarget.y - newConnection.to.y
+          ) <= 0.5)
+      if (
+        pendingSolvedRoute &&
+        pendingSolvedRoute.length >= 2 &&
+        pendingRouteMatchesPinnedTarget
+      ) {
         return {
           d: pointsToSvgPath(pendingSolvedRoute),
           snapPoint: pendingSolvedRoute[pendingSolvedRoute.length - 1],
         }
       }
-      const previewRoute = computeConnectionPreviewRoute({
-        sourceId: fromNodeId,
-        targetId: newConnection.targetId,
-        edgeType: previewEdgeType,
-        enableStraightPath: previewEnableStraightPath,
-        nodes: allNodes,
-        nodeLookup,
-        connectionMode,
-        obstacles,
-        neighborEdges,
-      })
-      if (previewRoute && previewRoute.length >= 2) {
-        return {
-          d: pointsToSvgPath(previewRoute),
-          snapPoint: previewRoute[previewRoute.length - 1],
+      if (!pinnedTargetAnchor) {
+        const previewRoute = computeConnectionPreviewRoute({
+          sourceId: fromNodeId,
+          targetId: newConnection.targetId,
+          edgeType: previewEdgeType,
+          enableStraightPath: previewEnableStraightPath,
+          nodes: allNodes,
+          nodeLookup,
+          connectionMode,
+          obstacles,
+          neighborEdges,
+        })
+        if (previewRoute && previewRoute.length >= 2) {
+          return {
+            d: pointsToSvgPath(previewRoute),
+            snapPoint: previewRoute[previewRoute.length - 1],
+          }
         }
       }
     }
@@ -260,7 +330,7 @@ export const ConnectionPreviewLine = ({
         obstacles,
         neighborEdges
       ),
-      snapPoint: null,
+      snapPoint: newConnection.snapPoint,
     }
   }, [
     connectionLineType,

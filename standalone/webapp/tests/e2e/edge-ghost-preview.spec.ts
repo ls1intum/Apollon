@@ -219,18 +219,29 @@ test("a straight-edge ghost preserves the exact native target handle", async ({
     x: sourceBox.x + sourceBox.width / 2,
     y: sourceBox.y + sourceBox.height / 2,
   }
-  const drop = {
+  const targetCenter = {
     x: targetBox.x + targetBox.width / 2,
     y: targetBox.y + targetBox.height / 2,
   }
+  // Release well off-centre but still inside the native handle. React Flow's
+  // validated target is the handle centre; the raw pointer must not shift the
+  // persisted anchor away from what the ghost previews.
+  const releaseInsideHandle = {
+    x: targetBox.x + targetBox.width * 0.2,
+    y: targetBox.y + targetBox.height * 0.8,
+  }
   await page.mouse.move(start.x, start.y)
   await page.mouse.down()
-  await page.mouse.move(drop.x, drop.y, { steps: 16 })
+  await page.mouse.move(releaseInsideHandle.x, releaseInsideHandle.y, {
+    steps: 16,
+  })
 
   await expect
     .poll(async () => {
       const end = (await ghost(page)).end
-      return end ? Math.hypot(end.x - drop.x, end.y - drop.y) : Infinity
+      return end
+        ? Math.hypot(end.x - targetCenter.x, end.y - targetCenter.y)
+        : Infinity
     })
     .toBeLessThanOrEqual(2)
   const previewEnd = (await ghost(page)).end!
@@ -246,7 +257,6 @@ test("a straight-edge ghost preserves the exact native target handle", async ({
     const model = parsed.state.models[parsed.state.currentModelId]?.model
     return model?.edges?.[0]?.targetHandle
   })
-
   expect(storedTargetHandle).toBe("left-top")
   expect(
     Math.hypot(previewEnd.x - committedEnd.x, previewEnd.y - committedEnd.y)

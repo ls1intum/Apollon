@@ -386,41 +386,23 @@ export const useStraightPathEdge = ({
     }),
     [adjustedTargetCoordinates.targetX, adjustedTargetCoordinates.targetY]
   )
-  // The authored route is source → interior waypoints → target. Automatic
-  // straight-edge routing is deliberately a separate concern: this branch
-  // renders only user intent and the endpoint preview already present on main.
+  // The synchronous truth: source → interior waypoints → target. Used as the
+  // fallback before the solver's route lands and whenever the solver route is
+  // stale (its endpoints no longer match, e.g. mid node-move) so the edge never
+  // detaches from its nodes.
   const basePoints = useMemo<IPoint[]>(
     () => [sourceEndpoint, ...interiorPoints, targetEndpoint],
     [sourceEndpoint, interiorPoints, targetEndpoint]
   )
-  const centralPreviewMatchesCommit =
-    dragPreviewPoints !== null &&
-    endpointPreviewCommit !== null &&
-    centralRoute !== undefined &&
-    centralRoute.length >= 2 &&
-    (endpointPreviewCommit.endpoint === "source"
-      ? centralRoute[0].x === endpointPreviewCommit.sourceEndpoint.x &&
-        centralRoute[0].y === endpointPreviewCommit.sourceEndpoint.y
-      : centralRoute[centralRoute.length - 1].x ===
-          endpointPreviewCommit.targetEndpoint.x &&
-        centralRoute[centralRoute.length - 1].y ===
-          endpointPreviewCommit.targetEndpoint.y)
+  // The solver's committed route is the source of truth: its endpoints are the
+  // facing-side attachment sites the port assignment chose (not the drawn handle),
+  // and it carries any automatic obstacle-avoidance bends. Fall back to the analytic
+  // base polyline only before the first solve lands (never painted after that).
   const renderPoints = useMemo<IPoint[]>(
     () =>
-      centralPreviewMatchesCommit
-        ? [
-            centralRoute[0],
-            ...interiorPoints,
-            centralRoute[centralRoute.length - 1],
-          ]
-        : (dragPreviewPoints ?? basePoints),
-    [
-      basePoints,
-      centralPreviewMatchesCommit,
-      centralRoute,
-      dragPreviewPoints,
-      interiorPoints,
-    ]
+      dragPreviewPoints ??
+      (centralRoute && centralRoute.length >= 2 ? centralRoute : basePoints),
+    [basePoints, centralRoute, dragPreviewPoints]
   )
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
@@ -505,8 +487,10 @@ export const useStraightPathEdge = ({
 
   const sourcePoint = renderPoints[0]
   const targetPoint = renderPoints[renderPoints.length - 1]
-  // Every authored bend is editable. Automatic detours are introduced by the
-  // separate auto-layout/routing change and can later reuse the same controls.
+  // Every bend on the RENDERED route is editable, not only the authored ones. An
+  // automatic detour is a perfectly good starting point for a hand-placed route:
+  // dragging one of its bends is how the user takes ownership of it, exactly as
+  // dragging a computed step edge freezes its path into manual points.
   const editableWaypoints = useMemo<IPoint[]>(
     () => (dragHandleRoute ?? renderPoints).slice(1, -1),
     [dragHandleRoute, renderPoints]
@@ -777,9 +761,11 @@ export const useStraightPathEdge = ({
     ]
   )
 
-  // Persist the interior waypoints and pin their visible endpoints when the first
-  // bend is authored. This mirrors the step-edge bend-commit behaviour and keeps
-  // later geometry updates from moving a hand-shaped route at its ends.
+  // Persist the interior waypoints. A bend customises the whole visible route,
+  // including the facing-side attachment sites the port assignment chose, so on the
+  // first bend the endpoints are pinned to `pinSource`/`pinTarget` (when still
+  // automatic) — otherwise a newly-bent edge would snap its endpoints back to the
+  // drawn handle. Mirrors the step-edge bend-commit behaviour.
   const commitWaypoints = useCallback(
     (nextInterior: IPoint[], pinSource: IPoint, pinTarget: IPoint) => {
       setEdges((edges) =>
@@ -825,7 +811,8 @@ export const useStraightPathEdge = ({
 
   // Shared drag routine for both an existing waypoint and a freshly materialised
   // one. `startInterior` is the interior array the drag operates on; `index` is the
-  // waypoint being moved. Only pointer-up commits `data.points`.
+  // waypoint being moved. The live route is published so neighbouring step edges
+  // reflow around the dragged diagonal, and only pointer-up commits `data.points`.
   const beginWaypointDrag = useCallback(
     (
       pointerId: number,
@@ -840,8 +827,10 @@ export const useStraightPathEdge = ({
       dragInteriorRef.current = startInterior
       dragMovedRef.current = movedAtStart
       dragCollapseRef.current = false
-      // Capture the endpoints at gesture start so the preview and eventual commit
-      // pivot around stable attachment sites.
+      // The endpoints the drag pivots around are the CURRENTLY RENDERED attachment
+      // sites (the solver's facing-side ports), captured at gesture start — not the
+      // drawn handle — so the route and the pinned commit keep the edge attached
+      // exactly where it is on screen.
       const routeSource = sourcePoint
       const routeTarget = targetPoint
       const collapseTolerance =
@@ -852,7 +841,8 @@ export const useStraightPathEdge = ({
       const angleReference = routeAtStart[index + 2] ?? routeAtStart[index]
 
       // Drive the preview through state; the existing layout effect republishes it
-      // to shared edge geometry and clears it when the drag ends.
+      // as an authoritative live override so neighbouring step edges reflow around
+      // the dragged diagonal, and clears it when the drag ends.
       const publish = (
         pathInterior: IPoint[],
         handleInterior: IPoint[] = pathInterior

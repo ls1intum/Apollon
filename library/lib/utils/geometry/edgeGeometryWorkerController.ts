@@ -39,12 +39,17 @@ export const shouldUseEdgeGeometryWorker = ({
   edgeCount,
   threshold,
   disabled,
+  force = false,
 }: {
   hasRunInitialSolve: boolean
   edgeCount: number
   threshold: number
   disabled: boolean
-}): boolean => hasRunInitialSolve && edgeCount >= threshold && !disabled
+  /** Use the Worker below the size crossover for an interaction whose main-thread
+   * solver would otherwise compete with pointer rendering. */
+  force?: boolean
+}): boolean =>
+  hasRunInitialSolve && (force || edgeCount >= threshold) && !disabled
 
 export const EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD = 32
 export const EDGE_GEOMETRY_WORKER_DEFAULT_CADENCE_MS = 80
@@ -97,10 +102,13 @@ export const updateEdgeGeometryWorkerRoundTrip = (
 export const shouldSampleEdgeGeometryWorker = ({
   edgeCount,
   interacting,
+  force = false,
 }: {
   edgeCount: number
   interacting: boolean
-}): boolean => interacting && edgeCount >= EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD
+  force?: boolean
+}): boolean =>
+  interacting && (force || edgeCount >= EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD)
 
 /**
  * A Worker cannot interrupt a CPU-bound solve already running. The controller

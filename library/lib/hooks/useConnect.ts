@@ -17,6 +17,7 @@ import {
 import {
   dropAnchorIsAimed,
   getEdgeAnchorFromPoint,
+  getNativeConnectionAnchor,
 } from "@/utils/connectionModes"
 import { HandleId } from "@/nodes/wrappers"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
@@ -219,7 +220,42 @@ export const useConnect = () => {
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
       try {
-        if (!connectionState.isValid) {
+        if (connectionState.isValid) {
+          // A valid native handle is an exact attachment point, not merely a side
+          // hint. Persist the preview's resolved anchor on commit; otherwise the
+          // central solver can immediately move the endpoint to an automatic seat.
+          const edgeId = pendingConnectionId.current
+          if (edgeId && connectionState.toNode) {
+            // Continuous outlines intentionally follow the aimed drop point that
+            // their snap circle previews. Other native targets use the validated
+            // handle centre, so an off-centre release inside a handle cannot shift
+            // the committed endpoint. In both cases `toNode` remains authoritative:
+            // overlapping scene nodes never replace React Flow's validated target.
+            const targetPoint = dropAnchorIsAimed(connectionState.toNode.type)
+              ? getDropPosition(event)
+              : screenToFlowPosition(connectionState.to)
+            const anchor = getNativeConnectionAnchor({
+              to: targetPoint,
+              toNode: connectionState.toNode,
+            })
+            if (anchor) {
+              const endpoint =
+                connectionStartParams.current?.handleType === "target"
+                  ? "source"
+                  : "target"
+              setEdges((eds) =>
+                eds.map((edge) =>
+                  edge.id === edgeId
+                    ? {
+                        ...edge,
+                        data: withEndpointAnchor(edge.data, endpoint, anchor),
+                      }
+                    : edge
+                )
+              )
+            }
+          }
+        } else {
           const dropPosition = getDropPosition(event)
           const nodeOnTop = resolveDropTarget(
             dropPosition,
@@ -339,6 +375,7 @@ export const useConnect = () => {
       edges,
       getDropPosition,
       resolveDropTarget,
+      screenToFlowPosition,
       setEdges,
       stopConnectionGuidance,
       setPendingConnectionEdge,
