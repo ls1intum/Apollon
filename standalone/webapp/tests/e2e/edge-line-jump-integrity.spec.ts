@@ -363,7 +363,7 @@ test.describe("Line-jump geometry integrity", () => {
 
     const beforeRelease = await readPerf(page, true)
     await page.mouse.up()
-    let duringSettlement: Awaited<ReturnType<typeof checkIntegrity>> | undefined
+    let afterRelease: Awaited<ReturnType<typeof checkIntegrity>> | undefined
     await expect
       .poll(
         async () => {
@@ -371,29 +371,30 @@ test.describe("Line-jump geometry integrity", () => {
           if (
             snapshot.perf &&
             snapshot.perf.workerReleaseExactMaxMs >
-              beforeRelease.workerReleaseExactMaxMs &&
-            snapshot.perf.routingPreviewCount > 0
+              beforeRelease.workerReleaseExactMaxMs
           ) {
-            duringSettlement = snapshot
+            afterRelease = snapshot
             return true
           }
           return false
         },
         // Poll gently: a 5ms interval re-ran the full DOM integrity scan ~200×/s
-        // and starved the very Worker message-handling it was waiting on.
+        // and starved the very Worker message-handling it was waiting on. The
+        // release-exact result and preview teardown may commit atomically, so do
+        // not require a painted frame where both telemetry states overlap.
         { intervals: [100, 250, 500], timeout: 15_000 }
       )
       .toBe(true)
 
-    expect(duringSettlement).toBeDefined()
+    expect(afterRelease).toBeDefined()
     expect(
-      duringSettlement!.crossings.length,
-      "fixture no longer produces crossings during settlement"
+      afterRelease!.crossings.length,
+      "fixture no longer produces crossings after settlement"
     ).toBeGreaterThan(0)
     expect(
-      duringSettlement!.floating,
-      `bridges floating during settlement: ${JSON.stringify(
-        duringSettlement!.floatingDiagnostics
+      afterRelease!.floating,
+      `bridges floating after settlement: ${JSON.stringify(
+        afterRelease!.floatingDiagnostics
       )}`
     ).toEqual([])
   })
