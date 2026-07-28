@@ -226,11 +226,16 @@ export const useConnect = () => {
           // central solver can immediately move the endpoint to an automatic seat.
           const edgeId = pendingConnectionId.current
           if (edgeId && connectionState.toNode) {
-            // `FinalConnectionState.to` is the exact validated handle centre in
-            // screen coordinates; convert that point, rather than the release
-            // event's potentially offset pointer, into the node's flow-space rect.
+            // Continuous outlines intentionally follow the aimed drop point that
+            // their snap circle previews. Other native targets use the validated
+            // handle centre, so an off-centre release inside a handle cannot shift
+            // the committed endpoint. In both cases `toNode` remains authoritative:
+            // overlapping scene nodes never replace React Flow's validated target.
+            const targetPoint = dropAnchorIsAimed(connectionState.toNode.type)
+              ? getDropPosition(event)
+              : screenToFlowPosition(connectionState.to)
             const anchor = getNativeConnectionAnchor({
-              to: screenToFlowPosition(connectionState.to),
+              to: targetPoint,
               toNode: connectionState.toNode,
             })
             if (anchor) {

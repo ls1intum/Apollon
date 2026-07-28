@@ -286,16 +286,24 @@ export function getNativeConnectionAnchor({
   to: XYPosition
   toNode: InternalNodeBase | null
 }): FreeformEdgeAnchor | null {
+  const rect = getNativeConnectionRect(toNode)
+  return rect ? getEdgeAnchorFromPoint(toNode?.type, to, rect) : null
+}
+
+/** Flow-space bounds for the node React Flow validated during a connection. */
+export function getNativeConnectionRect(
+  toNode: InternalNodeBase | null
+): Rect | null {
   if (!toNode) return null
   const width = toNode.measured.width ?? toNode.width
   const height = toNode.measured.height ?? toNode.height
   if (width === undefined || height === undefined || width <= 0 || height <= 0)
     return null
-  return getEdgeAnchorFromPoint(toNode.type, to, {
+  return {
     ...toNode.internals.positionAbsolute,
     width,
     height,
-  })
+  }
 }
 
 /**
