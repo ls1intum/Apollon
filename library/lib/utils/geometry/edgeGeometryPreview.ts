@@ -34,6 +34,7 @@ export type EdgeGeometrySettlementTransition = Readonly<
 >
 
 export type ProvisionalRouteDecisionState = Map<string, string>
+const NO_EDGE_TYPES: ReadonlySet<string> = new Set()
 
 /**
  * Keep the just-authored display route across pointer-up until the release solve
@@ -260,12 +261,17 @@ export const stabilizeProvisionalRoutes = ({
   edges,
   nodes,
   pendingDecisionById,
+  holdDecisionEdgeTypes,
 }: {
   displayedById: Readonly<Record<string, IPoint[]>>
   candidateById: Readonly<Record<string, IPoint[]>>
   edges: readonly Edge[]
   nodes: EdgeGeometryNodeSnapshot
   pendingDecisionById: ProvisionalRouteDecisionState
+  /** During direct node manipulation, keep a valid displayed topology for these
+   * edge types until release. Coordinate refinements still flow immediately and
+   * an old route that enters another node is still replaced without delay. */
+  holdDecisionEdgeTypes?: ReadonlySet<string>
 }): {
   routeById: Record<string, IPoint[]>
   heldDecisionCount: number
@@ -314,7 +320,11 @@ export const stabilizeProvisionalRoutes = ({
       if (displayedInvalid) invalidatedDecisionCount++
       continue
     }
-    if (pendingDecisionById.get(edgeId) === candidateDecision) {
+    const holdForGesture = holdDecisionEdgeTypes?.has(edge.type ?? "") ?? false
+    if (
+      !holdForGesture &&
+      pendingDecisionById.get(edgeId) === candidateDecision
+    ) {
       stabilized[edgeId] = candidate
       pendingDecisionById.delete(edgeId)
       confirmedDecisionCount++
@@ -515,7 +525,8 @@ export const projectRoutesWhileSolving = (
   routeById: Readonly<Record<string, IPoint[]>>,
   edges: readonly Edge[],
   settledNodes: EdgeGeometryNodeSnapshot,
-  currentNodes: EdgeGeometryNodeSnapshot
+  currentNodes: EdgeGeometryNodeSnapshot,
+  straightEdgeTypes: ReadonlySet<string> = NO_EDGE_TYPES
 ): Record<string, IPoint[]> => {
   const edgeById = new Map(edges.map((edge) => [edge.id, edge]))
   const projected: Record<string, IPoint[]> = {}
@@ -551,6 +562,15 @@ export const projectRoutesWhileSolving = (
         fromTarget,
         toTarget
       )
+
+    // Straight-hook routes deliberately contain arbitrary-angle segments. Keep
+    // their settled bends fixed and attach only the terminals to the moving node.
+    // Running them through the orthogonal projection below turns a two-point
+    // diagonal into a four-segment step route until the Worker responds.
+    if (straightEdgeTypes.has(edge.type ?? "")) {
+      projected[edgeId] = simplify(desired)
+      continue
+    }
 
     if (desired.length === 2) {
       const source = desired[0]

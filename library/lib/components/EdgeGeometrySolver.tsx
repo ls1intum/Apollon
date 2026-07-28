@@ -144,6 +144,7 @@ export const EdgeGeometrySolver = () => {
     >()
   )
   const interactionActiveRef = useRef(false)
+  const nodeInteractionActiveRef = useRef(false)
   const interactionStartedAtRef = useRef<number | null>(null)
   const lastHolisticPreviewAtRef = useRef<number | null>(null)
   const releaseStartedAtRef = useRef<number | null>(null)
@@ -295,6 +296,8 @@ export const EdgeGeometrySolver = () => {
       nodeInteractionActive ||
       liveEdgeOverride !== null ||
       pendingConnectionEdge !== null
+    const nodeInteractionJustReleased =
+      nodeInteractionActiveRef.current && !nodeInteractionActive
     const interactionChangedAt = performance.now()
     if (!interactionActiveRef.current && interacting) {
       interactionStartedAtRef.current = interactionChangedAt
@@ -303,6 +306,7 @@ export const EdgeGeometrySolver = () => {
     } else if (interactionActiveRef.current && !interacting)
       releaseStartedAtRef.current = interactionChangedAt
     interactionActiveRef.current = interacting
+    nodeInteractionActiveRef.current = nodeInteractionActive
 
     const solveSynchronously = (solveInput: SolverInput) => {
       const startedAt =
@@ -362,11 +366,18 @@ export const EdgeGeometrySolver = () => {
       geometryStore?.getState().setSolving(false)
     }
 
+    const hasStraightHookEdges = solverEdges.some((edge) =>
+      STRAIGHT_HOOK_EDGE_TYPES.has(edge.type ?? "")
+    )
+    const forceStraightInteractionWorker =
+      hasStraightHookEdges &&
+      (nodeInteractionActive || nodeInteractionJustReleased)
     const useWorker = shouldUseEdgeGeometryWorker({
       hasRunInitialSolve: hasRunInitialSolveRef.current,
       edgeCount: solverEdges.length,
       threshold: EDGE_GEOMETRY_WORKER_EDGE_THRESHOLD,
       disabled: workerDisabledRef.current,
+      force: forceStraightInteractionWorker,
     })
 
     if (!useWorker) {
@@ -394,7 +405,8 @@ export const EdgeGeometrySolver = () => {
 
     // Keep every settled route attached to its moving/resizing endpoints while
     // the Worker proves the new optimum. This projection is display-only and
-    // orthogonal; the accepted exact generation replaces it atomically.
+    // preserves each edge family's path geometry; the accepted exact generation
+    // replaces it atomically.
     const publishProjectedPreview = (
       baseRoutes: Readonly<Record<string, IPoint[]>>,
       baseNodes: EdgeGeometryNodeSnapshot | null
@@ -407,7 +419,8 @@ export const EdgeGeometrySolver = () => {
             baseRoutes,
             latestInput.edges,
             baseNodes,
-            latestNodes
+            latestNodes,
+            STRAIGHT_HOOK_EDGE_TYPES
           )
         : baseRoutes
       const currentOverride = latestInput.liveOverride
@@ -492,6 +505,43 @@ export const EdgeGeometrySolver = () => {
       lastHolisticPreviewAtRef.current = now
     }
 
+    const publishWorkerInteractionResult = (
+      result: EdgeGeometrySolveResult
+    ) => {
+      const submittedNodeGeometry = submittedNodeGeometryRef.current.get(
+        result.revision
+      )
+      submittedNodeGeometryRef.current.delete(result.revision)
+      if (!submittedNodeGeometry) return
+      const latestInput = latestSolverInputRef.current
+      const latestNodes = latestNodeGeometryRef.current
+      if (!latestInput || !latestNodes) return
+      const candidateAtPointer = projectRoutesWhileSolving(
+        result.routeById,
+        latestInput.edges,
+        submittedNodeGeometry,
+        latestNodes,
+        STRAIGHT_HOOK_EDGE_TYPES
+      )
+      const stabilization = stabilizeProvisionalRoutes({
+        displayedById:
+          geometryStore?.getState().previewById ?? settledRoutesRef.current,
+        candidateById: candidateAtPointer,
+        edges: latestInput.edges,
+        nodes: latestNodes,
+        pendingDecisionById: provisionalDecisionRef.current,
+        holdDecisionEdgeTypes: nodeInteractionActiveRef.current
+          ? STRAIGHT_HOOK_EDGE_TYPES
+          : undefined,
+      })
+      if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
+        recordPreviewDecisionStabilization(stabilization)
+      provisionalRoutesRef.current = stabilization.routeById
+      provisionalNodeGeometryRef.current = latestNodes
+      publishProjectedPreview(stabilization.routeById, latestNodes)
+      observeHolisticPreview(performance.now())
+    }
+
     let controller = workerControllerRef.current
     if (!controller) {
       if (typeof Worker === "undefined") {
@@ -518,6 +568,14 @@ export const EdgeGeometrySolver = () => {
               if (snapshotRevision !== undefined)
                 recordWorkerRevision("accepted", snapshotRevision)
               recordWorkerSolve()
+            }
+            // A current Worker response may arrive while the pointer merely
+            // pauses. Treat it as a display refinement, not as permission to
+            // reorganize valid straight routes mid-gesture. Pointer-up submits
+            // one final exact generation which settles normally below.
+            if (nodeInteractionActiveRef.current) {
+              publishWorkerInteractionResult(result)
+              return
             }
             const releaseStartedAt = releaseStartedAtRef.current
             if (releaseStartedAt !== null)
@@ -601,39 +659,10 @@ export const EdgeGeometrySolver = () => {
           },
           onProvisionalResult: (result) => {
             observeWorkerResult(result)
-            const submittedNodeGeometry = submittedNodeGeometryRef.current.get(
-              result.revision
-            )
-            submittedNodeGeometryRef.current.delete(result.revision)
-            if (!submittedNodeGeometry) return
-            const latestInput = latestSolverInputRef.current
-            const latestNodes = latestNodeGeometryRef.current
-            if (!latestInput || !latestNodes) return
-            const candidateAtPointer = projectRoutesWhileSolving(
-              result.routeById,
-              latestInput.edges,
-              submittedNodeGeometry,
-              latestNodes
-            )
-            const stabilization = stabilizeProvisionalRoutes({
-              displayedById:
-                geometryStore?.getState().previewById ??
-                settledRoutesRef.current,
-              candidateById: candidateAtPointer,
-              edges: latestInput.edges,
-              nodes: latestNodes,
-              pendingDecisionById: provisionalDecisionRef.current,
-            })
-            if (import.meta.env.DEV || import.meta.env.VITE_E2E === "true")
-              recordPreviewDecisionStabilization(stabilization)
             // The version gate still prevents this sampled generation from
             // settling. Its coordinate refinements can flow immediately, while
-            // a changed side/port/route decision must survive the next exact
-            // sample before it replaces the display baseline.
-            provisionalRoutesRef.current = stabilization.routeById
-            provisionalNodeGeometryRef.current = latestNodes
-            publishProjectedPreview(stabilization.routeById, latestNodes)
-            observeHolisticPreview(performance.now())
+            // straight routes keep valid topology for the complete node gesture.
+            publishWorkerInteractionResult(result)
           },
           onFailure: fallbackToLatestSnapshot,
           onIdle: () => submitLatestWorkerSnapshotRef.current?.(),
@@ -741,6 +770,7 @@ export const EdgeGeometrySolver = () => {
       shouldSampleEdgeGeometryWorker({
         edgeCount: solverEdges.length,
         interacting,
+        force: forceStraightInteractionWorker,
       })
     ) {
       // Keep the earliest timer instead of restarting it on every pointer frame.
@@ -789,6 +819,7 @@ export const EdgeGeometrySolver = () => {
       latestSnapshotDirtyRef.current = false
       workerRequestTimingRef.current.clear()
       interactionActiveRef.current = false
+      nodeInteractionActiveRef.current = false
       interactionStartedAtRef.current = null
       lastHolisticPreviewAtRef.current = null
       releaseStartedAtRef.current = null

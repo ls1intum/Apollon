@@ -56,24 +56,6 @@ const expectRouteClears = (
 const isInteger = (route: IPoint[]): boolean =>
   route.every((p) => Number.isInteger(p.x) && Number.isInteger(p.y))
 
-const routesCrossOpen = (left: IPoint[], right: IPoint[]): boolean => {
-  const orient = (a: IPoint, b: IPoint, c: IPoint) =>
-    (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
-  for (let i = 1; i < left.length; i++)
-    for (let j = 1; j < right.length; j++) {
-      const a = left[i - 1]
-      const b = left[i]
-      const c = right[j - 1]
-      const d = right[j]
-      if (
-        orient(a, b, c) * orient(a, b, d) < 0 &&
-        orient(c, d, a) * orient(c, d, b) < 0
-      )
-        return true
-    }
-  return false
-}
-
 const baseReq = (
   over: Partial<StraightRouteRequest>
 ): StraightRouteRequest => ({
@@ -81,7 +63,6 @@ const baseReq = (
   target: { x: 100, y: 0 },
   checkpoints: [],
   obstacles: [],
-  neighborRoutes: [],
   clearancePx: CLEAR,
   ...over,
 })
@@ -249,74 +230,6 @@ describe("routeStraightPolyline — obstacle avoidance", () => {
   })
 })
 
-describe("routeStraightPolyline — edge conflicts", () => {
-  const crossingNeighbor: IPoint[] = [
-    { x: 100, y: -80 },
-    { x: 100, y: 80 },
-  ]
-
-  it("opens the visibility graph for a clear chord that crosses another edge", () => {
-    const route = routeStraightPolyline(
-      baseReq({
-        target: { x: 200, y: 0 },
-        neighborRoutes: [crossingNeighbor],
-      })
-    )
-    expect(route.length).toBeGreaterThan(2)
-    expect(routesCrossOpen(route, crossingNeighbor)).toBe(false)
-  })
-
-  it("also avoids structural conflicts with sibling routes", () => {
-    const route = routeStraightPolyline(
-      baseReq({
-        target: { x: 200, y: 0 },
-        siblingRoutes: [crossingNeighbor],
-      })
-    )
-    expect(route.length).toBeGreaterThan(2)
-    expect(routesCrossOpen(route, crossingNeighbor)).toBe(false)
-  })
-
-  it("accepts a readable crossing when avoiding it would require a large excursion", () => {
-    // Apollon renders crossings with a line jump. Crossing should still be costly
-    // enough to avoid cheaply, but not so costly that a 200 px edge travels around
-    // the end of a 240 px neighbour.
-    const longNeighbor: IPoint[] = [
-      { x: 100, y: -120 },
-      { x: 100, y: 120 },
-    ]
-    const route = routeStraightPolyline(
-      baseReq({
-        target: { x: 200, y: 0 },
-        neighborRoutes: [longNeighbor],
-      })
-    )
-    expect(route).toEqual([
-      { x: 0, y: 0 },
-      { x: 200, y: 0 },
-    ])
-  })
-
-  it("is independent of the order of conflicting neighbor routes", () => {
-    const diagonal: IPoint[] = [
-      { x: 40, y: 90 },
-      { x: 160, y: -90 },
-    ]
-    const request = {
-      target: { x: 200, y: 0 },
-      neighborRoutes: [crossingNeighbor, diagonal],
-    }
-    const forward = routeStraightPolyline(baseReq(request))
-    const reverse = routeStraightPolyline(
-      baseReq({
-        ...request,
-        neighborRoutes: [...request.neighborRoutes].reverse(),
-      })
-    )
-    expect(reverse).toEqual(forward)
-  })
-})
-
 describe("routeStraightPolyline — checkpoints", () => {
   it("passes through a checkpoint in order with no obstacles", () => {
     const route = routeStraightPolyline(
@@ -440,24 +353,12 @@ describe("routeStraightPolyline — determinism under shuffled input", () => {
     { id: "far", x: 500, y: 500, width: 30, height: 30, soft: false },
     { id: "soft", x: 40, y: -200, width: 20, height: 100, soft: true },
   ]
-  const neighbors: IPoint[][] = [
-    [
-      { x: 0, y: -100 },
-      { x: 300, y: 100 },
-    ],
-    [
-      { x: 150, y: -200 },
-      { x: 150, y: 200 },
-    ],
-  ]
-
-  it("produces byte-identical output regardless of obstacle & neighbour order", () => {
+  it("produces byte-identical output regardless of obstacle order", () => {
     const reference = routeStraightPolyline(
       baseReq({
         source: { x: 0, y: 0 },
         target: { x: 300, y: 0 },
         obstacles,
-        neighborRoutes: neighbors,
       })
     )
     for (let seed = 1; seed <= 8; seed++) {
@@ -466,7 +367,6 @@ describe("routeStraightPolyline — determinism under shuffled input", () => {
           source: { x: 0, y: 0 },
           target: { x: 300, y: 0 },
           obstacles: shuffle(obstacles, seed),
-          neighborRoutes: shuffle(neighbors, seed * 7 + 1),
         })
       )
       expect(shuffled).toEqual(reference)

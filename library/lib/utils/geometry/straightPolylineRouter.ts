@@ -13,22 +13,22 @@
  *  - The A* frontier is a 4-ary min-heap keyed on `(gPlusH, vertexIndex, seq)`,
  *    whose final tie-break — the monotonic insertion counter `seq` — is a unique
  *    discriminator, so the search result cannot depend on engine scheduling or on
- *    the input order of obstacles/neighbours.
+ *    the input order of obstacles.
  *
  * Design:
  *  1. Gate: if every checkpoint sub-chord avoids hard obstacles by the direct-route
- *     guard AND has no crossing/overlap with another edge, return the straight
- *     polyline unchanged (the common case).
+ *     guard, return the straight polyline unchanged (the common case). Crossings
+ *     and overlaps do not manufacture bends: Apollon renders crossings explicitly,
+ *     and direct-line editors conventionally reserve auto-detours for node bodies.
  *  2. Otherwise build a reduced/tangent visibility graph over the endpoints, the
- *     checkpoints, two rings of inflated corners per HARD obstacle, and clearance
- *     corners around neighbouring segments that conflict with the direct route.
+ *     checkpoints, and two rings of inflated corners per HARD obstacle.
  *     Soft obstacles never block visibility.
  *  3. Route each checkpoint sub-chord with A* over DIRECTED EDGES, so the objective
  *     can price the things that decide whether a detour looks deliberate or
  *     accidental: travel, a flat per-bend charge plus a sharpness-graduated turn
- *     cost, the departure/arrival angle against each node side, and the shared
- *     crossing / overlap / crowding cost against neighbouring edges. Checkpoints
- *     are mandatory via-points (the libavoid model).
+ *     cost and the departure/arrival angle against each node side. Checkpoints are
+ *     mandatory via-points (the libavoid model). Other connectors do not reshape
+ *     the path; crossings stay predictable and use Apollon's line jumps.
  *  4. Collapse collinear points, then string-pull away any bend the route does not
  *     need — accepted only when it strictly improves that same objective.
  *
@@ -38,10 +38,7 @@
  */
 import type { IPoint } from "@/edges/Connection"
 import { CANVAS, EDGES } from "@/utils/geometry/routingConstants"
-import {
-  polylineConflictCost,
-  ROUTING_COST,
-} from "@/utils/geometry/routingCost"
+import { ROUTING_COST } from "@/utils/geometry/routingCost"
 import { distSqInt, isqrt, segLenInt } from "@/utils/geometry/integerGeometry"
 
 export interface StraightRouteObstacle {
@@ -62,11 +59,8 @@ export interface StraightRouteRequest {
   checkpoints: IPoint[]
   /** Corridor obstacle rects (bboxes). */
   obstacles: StraightRouteObstacle[]
-  /** Other edges' polylines, for crossing/overlap/crowding pricing. */
-  neighborRoutes: IPoint[][]
   /** Preferred breathing room around a node (EDGES.NODE_CLEARANCE_PX). It sets the
-   * roomier of the two corner rings; the guaranteed margin is MIN_NODE_CLEARANCE_PX.
-   * Edge-to-edge crowding is measured separately (EDGE_CROWDING_CLEARANCE_PX). */
+   * roomier of the two corner rings; the guaranteed margin is MIN_NODE_CLEARANCE_PX. */
   clearancePx: number
   /**
    * Which ring of obstacle corners this route should prefer to turn on: 0 hugs the
@@ -77,11 +71,6 @@ export interface StraightRouteRequest {
    * mirror-symmetric diagram still resolves symmetrically.
    */
   preferredCornerRing?: number
-  /** Routes of edges that SHARE a node with this one. They are meant to fan out
-   * side by side, so they are exempt from the crowding term — but never from
-   * crossing or from lying exactly on top of one another, which is always a defect.
-   * Pricing them at zero crowding clearance expresses precisely that. */
-  siblingRoutes?: IPoint[][]
   /** Outward unit normal of the node side the route leaves from, when known. The
    * search then prices a grazing departure (see `ENDPOINT_ANGLE_PENALTY_PX`). */
   sourceNormal?: IPoint
@@ -132,25 +121,6 @@ const turnCostPx = (from: IPoint, via: IPoint, to: IPoint): number => {
     BEND_PENALTY_PX +
     Math.trunc((TURN_PENALTY_PX * (SCALE - cosScaled)) / SCALE)
   )
-}
-
-/**
- * Cost of one candidate segment against every neighbouring edge, delegated to the
- * SHARED `polylineConflictCost` so a crossing, a collinear overlap and a too-close
- * parallel run keep the orthogonal engine's shared scale (`edgeCrossing` 400,
- * `overlapPerPx` 25, `crowdingPerPx` 3). A crossing is intentionally charged once:
- * axis-aligned crossings can use line-jump bridges, and even an unavoidable
- * diagonal crossing is easier to trace than a disproportionate excursion around a
- * long neighbouring line. Summed over neighbours, so input order cannot change
- * the cost.
- */
-const neighborCostPx = (
-  a: IPoint,
-  b: IPoint,
-  neighborRoutes: readonly (readonly IPoint[])[],
-  crowdingClearancePx: number
-): number => {
-  return polylineConflictCost([a, b], neighborRoutes, crowdingClearancePx).cost
 }
 
 /** The MINIMUM clearance a generated detour guarantees from every hard obstacle. */
@@ -205,35 +175,9 @@ const TURN_PENALTY_PX = 90
  */
 const ENDPOINT_ANGLE_PENALTY_PX = 150
 
-/**
- * The separation at which two edges stop reading as one thick line. Below it the
- * crowding term charges, in proportion to how far short the run falls; at or above
- * it the charge is exactly zero. That is what makes a pair of neatly parallel
- * connectors the CHEAPEST arrangement available rather than merely a tolerated one —
- * expressed as a penalty that vanishes, because a literal bonus would be a negative
- * edge weight and A* may not have those.
- *
- * Deliberately the node clearance rather than the engine's tighter edge-to-edge
- * band: a straight route is free to sit anywhere, so it can afford real daylight,
- * and the reported drawings read as cramped at the tighter value.
- */
-const EDGE_CROWDING_CLEARANCE_PX = EDGES.NODE_CLEARANCE_PX
-
-/**
- * Charged for turning at a point another route already turns at, so connectors that
- * must clear the same obstacle do not all pile onto one shared elbow.
- *
- * Deliberately SMALL. A larger value unties the knot but is order-dependent — the
- * first route to claim a corner keeps it and the next is pushed out — which makes a
- * mirror-symmetric diagram resolve differently on its two halves. Symmetry is worth
- * more than an untied elbow, so this only breaks ties between otherwise equal
- * corners; genuinely separating a fan needs deterministic port-rank nudging.
- */
-const SHARED_BEND_PENALTY_PX = 12
-
 /** Charged for turning on a corner ring other than the edge's preferred one. Enough
- * to outweigh the extra travel of standing further off an obstacle, far below a
- * crossing, so it nests a fan without ever buying a conflict. */
+ * to outweigh the extra travel of standing further off an obstacle, while still
+ * far below another bend, so it nests a fan without creating an excursion. */
 const RING_MISMATCH_PENALTY_PX = 70
 
 /** Beyond this many graph vertices the directed-edge search is skipped in favour of
@@ -241,12 +185,11 @@ const RING_MISMATCH_PENALTY_PX = 70
  * still uses the same visibility graph and therefore never gives up obstacle safety. */
 const MAX_DIRECTED_SEARCH_VERTICES = 176
 
-type Kind = 0 | 1 | 2 | 3 | 4
+type Kind = 0 | 1 | 2 | 3
 const KIND_SOURCE: Kind = 0
 const KIND_TARGET: Kind = 1
 const KIND_CHECKPOINT: Kind = 2
 const KIND_CORNER: Kind = 3
-const KIND_NEIGHBOR_CORNER: Kind = 4
 
 type Vertex = {
   x: number
@@ -474,8 +417,7 @@ const buildVertices = (
   target: IPoint,
   checkpoints: readonly IPoint[],
   hardObstacles: readonly StraightRouteObstacle[],
-  cornerPads: readonly number[],
-  conflictingRoutes: readonly (readonly IPoint[])[]
+  cornerPads: readonly number[]
 ): { vertices: Vertex[]; indexAt: (p: IPoint) => number } => {
   const raw: Vertex[] = [
     {
@@ -505,9 +447,8 @@ const buildVertices = (
   // Two rings of corner vertices per obstacle. The TIGHT ring (the blocking margin)
   // keeps a narrow gap between two nodes usable — a single wide ring welds their
   // padded corners together and closes it. The ROOMY ring gives a second, more
-  // generous turning point where there is space, so two sibling routes bending past
-  // the same node are not forced through one shared pinch point: the crowding term
-  // then separates them instead of stacking them.
+  // generous turning point where there is space. A geometry-derived fan rank picks
+  // the ring, so sibling detours nest without depending on route order.
   const blocked = hardObstacles.map((o) => inflate(rectOf(o), MIN_CLEARANCE_PX))
   for (const o of hardObstacles) {
     if (o.soft) continue
@@ -530,47 +471,6 @@ const buildVertices = (
           kind: KIND_CORNER,
           ownerId: o.id,
           cornerIndex: ring * 4 + ci,
-        })
-      })
-    }
-  }
-
-  // An edge is a priced constraint, not a hard obstacle: these are candidate
-  // detour points, while visibility may still cross it when every detour is worse.
-  // Axis-aligned bounding corners give the search points beyond BOTH endpoints of
-  // a crossing segment; a single normal offset would cross it again on the way out.
-  //
-  // Owner ids derive only from canonical geometry. Neighbor arrays have no stable
-  // ids here and may arrive in any order, so their indices cannot enter a tie-break.
-  for (const route of conflictingRoutes) {
-    for (let i = 1; i < route.length; i++) {
-      const first = route[i - 1]
-      const second = route[i]
-      if (samePoint(first, second)) continue
-      const a =
-        first.x < second.x || (first.x === second.x && first.y <= second.y)
-          ? first
-          : second
-      const b = a === first ? second : first
-      const ownerId = `${a.x},${a.y}:${b.x},${b.y}`
-      const loX = Math.min(a.x, b.x) - EDGE_CROWDING_CLEARANCE_PX
-      const hiX = Math.max(a.x, b.x) + EDGE_CROWDING_CLEARANCE_PX
-      const loY = Math.min(a.y, b.y) - EDGE_CROWDING_CLEARANCE_PX
-      const hiY = Math.max(a.y, b.y) + EDGE_CROWDING_CLEARANCE_PX
-      const corners: IPoint[] = [
-        { x: loX, y: loY },
-        { x: hiX, y: loY },
-        { x: hiX, y: hiY },
-        { x: loX, y: hiY },
-      ]
-      corners.forEach((p, cornerIndex) => {
-        if (blocked.some((rect) => strictlyInside(rect, p))) return
-        raw.push({
-          x: p.x,
-          y: p.y,
-          kind: KIND_NEIGHBOR_CORNER,
-          ownerId,
-          cornerIndex,
         })
       })
     }
@@ -639,18 +539,13 @@ const buildAdjacency = (
 /**
  * Linear-state fallback for an unusually large visibility graph. Exact turn
  * sharpness needs a directed-edge state, but hard-obstacle safety does not. This
- * search still prices a flat bend, edge conflicts, endpoint angles, occupied
- * elbows, and the preferred obstacle ring.
+ * search still prices a flat bend, endpoint angles, and the preferred obstacle ring.
  */
 const routeSubPathByVertex = (
   vertices: readonly Vertex[],
   startIndex: number,
   goalIndex: number,
   blockRects: readonly IntRect[],
-  neighborRoutes: readonly (readonly IPoint[])[],
-  crowdingClearancePx: number,
-  siblingRoutes: readonly (readonly IPoint[])[],
-  occupiedBends: ReadonlySet<string>,
   preferredCornerRing: number,
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
@@ -679,10 +574,7 @@ const routeSubPathByVertex = (
       const from = vertices[current]
       const to = vertices[next]
       const dir = { x: to.x - from.x, y: to.y - from.y }
-      let step =
-        segLenInt(from, to) +
-        neighborCostPx(from, to, neighborRoutes, crowdingClearancePx) +
-        neighborCostPx(from, to, siblingRoutes, 0)
+      let step = segLenInt(from, to)
       if (current === startIndex && sourceNormal)
         step += angleCostPx(dir, sourceNormal, ENDPOINT_ANGLE_PENALTY_PX)
       if (next === goalIndex && targetNormal)
@@ -693,8 +585,6 @@ const routeSubPathByVertex = (
         )
       if (current !== startIndex) {
         step += BEND_PENALTY_PX
-        if (occupiedBends.has(`${from.x},${from.y}`))
-          step += SHARED_BEND_PENALTY_PX
         if (
           from.kind === KIND_CORNER &&
           Math.floor(from.cornerIndex / 4) !== preferredCornerRing
@@ -735,10 +625,6 @@ const routeSubPath = (
   startIndex: number,
   goalIndex: number,
   blockRects: readonly IntRect[],
-  neighborRoutes: readonly (readonly IPoint[])[],
-  crowdingClearancePx: number,
-  siblingRoutes: readonly (readonly IPoint[])[],
-  occupiedBends: ReadonlySet<string>,
   preferredCornerRing: number,
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
@@ -769,9 +655,7 @@ const routeSubPath = (
 
   const bendCostAt = (i: number): number => {
     if (i === goalIndex) return 0
-    let cost = occupiedBends.has(`${vertices[i].x},${vertices[i].y}`)
-      ? SHARED_BEND_PENALTY_PX
-      : 0
+    let cost = 0
     if (
       vertices[i].kind === KIND_CORNER &&
       Math.floor(vertices[i].cornerIndex / 4) !== preferredCornerRing
@@ -781,15 +665,7 @@ const routeSubPath = (
   }
 
   const segmentCost = (i: number, j: number): number =>
-    segLenInt(vertices[i], vertices[j]) +
-    neighborCostPx(
-      vertices[i],
-      vertices[j],
-      neighborRoutes,
-      crowdingClearancePx
-    ) +
-    // Zero clearance: a sibling only costs when it is crossed or lain upon.
-    neighborCostPx(vertices[i], vertices[j], siblingRoutes, 0)
+    segLenInt(vertices[i], vertices[j])
 
   for (const v of adjacency[startIndex]) {
     const dir = {
@@ -855,10 +731,6 @@ const routeSubPath = (
       startIndex,
       goalIndex,
       blockRects,
-      neighborRoutes,
-      crowdingClearancePx,
-      siblingRoutes,
-      occupiedBends,
       preferredCornerRing,
       sourceNormal,
       targetNormal
@@ -895,27 +767,16 @@ const collapseCollinear = (points: readonly IPoint[]): IPoint[] => {
 }
 
 /** The complete objective for a finished route, in integer px: travel, every bend,
- * both endpoint departure angles, and the shared neighbour-conflict cost. This is
- * the same sum the search minimises, so simplification can be accepted only when it
- * genuinely improves the drawing. */
+ * and both endpoint departure angles. This is the same sum the search minimises,
+ * so simplification can be accepted only when it genuinely improves the drawing. */
 const totalRouteCostPx = (
   route: readonly IPoint[],
-  neighborRoutes: readonly (readonly IPoint[])[],
-  crowdingClearancePx: number,
-  siblingRoutes: readonly (readonly IPoint[])[],
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined
 ): number => {
   let cost = 0
   for (let i = 1; i < route.length; i++) {
     cost += segLenInt(route[i - 1], route[i])
-    cost += neighborCostPx(
-      route[i - 1],
-      route[i],
-      neighborRoutes,
-      crowdingClearancePx
-    )
-    cost += neighborCostPx(route[i - 1], route[i], siblingRoutes, 0)
     if (i >= 2) cost += turnCostPx(route[i - 2], route[i - 1], route[i])
   }
   if (sourceNormal && route.length >= 2)
@@ -949,22 +810,12 @@ const totalRouteCostPx = (
 const simplifyRoute = (
   route: readonly IPoint[],
   blockRects: readonly IntRect[],
-  neighborRoutes: readonly (readonly IPoint[])[],
-  crowdingClearancePx: number,
-  siblingRoutes: readonly (readonly IPoint[])[],
   sourceNormal: IPoint | undefined,
   targetNormal: IPoint | undefined,
   protectedPoints: ReadonlySet<string> = new Set()
 ): IPoint[] => {
   let best = [...route]
-  let bestCost = totalRouteCostPx(
-    best,
-    neighborRoutes,
-    crowdingClearancePx,
-    siblingRoutes,
-    sourceNormal,
-    targetNormal
-  )
+  let bestCost = totalRouteCostPx(best, sourceNormal, targetNormal)
   for (let pass = 0; pass < 4; pass++) {
     let improved = false
     for (let i = 1; i < best.length - 1; i++) {
@@ -978,14 +829,7 @@ const simplifyRoute = (
         segmentBlockedByClearanceRect(a, b, r, isEndA, isEndB)
       )
       if (blocked) continue
-      const cost = totalRouteCostPx(
-        candidate,
-        neighborRoutes,
-        crowdingClearancePx,
-        siblingRoutes,
-        sourceNormal,
-        targetNormal
-      )
+      const cost = totalRouteCostPx(candidate, sourceNormal, targetNormal)
       if (cost < bestCost) {
         best = candidate
         bestCost = cost
@@ -1001,8 +845,8 @@ const simplifyRoute = (
 /**
  * Route a deterministic straight (obstacle-avoiding) polyline from source to target
  * through every checkpoint in order. Returns the full route INCLUDING the endpoints:
- * `[source, …bends, target]`. A direct polyline is returned unchanged only when it
- * clears hard obstacles and has no structural edge conflict.
+ * `[source, …bends, target]`. A direct polyline is returned unchanged whenever it
+ * clears hard obstacles; only node bodies can create an automatic detour.
  */
 export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
   const {
@@ -1010,9 +854,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
     target,
     checkpoints,
     obstacles,
-    neighborRoutes,
     clearancePx,
-    siblingRoutes,
     preferredCornerRing,
     sourceNormal,
     targetNormal,
@@ -1020,9 +862,11 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
   const hardObstacles = obstacles.filter((o) => !o.soft)
   const anchors: IPoint[] = [source, ...checkpoints, target]
 
-  // 1. Gate: every sub-chord clears hard obstacles and has no structural edge
-  //    conflict. Mere crowding does not manufacture a bend in an otherwise clean
-  //    chord; crossings and overlaps open the graph so it can avoid them.
+  // 1. Gate: every sub-chord clears hard obstacles. Edge crossings and overlaps
+  //    are not routing obstacles: trying to dodge them makes a direct edge change
+  //    topology as soon as another connector passes across it, and makes a dense
+  //    but unobstructed diagram pay for a quadratic visibility search. Apollon's
+  //    line jumps make an ordinary crossing readable without that excursion.
   const straightClears = anchors.every((a, i) => {
     if (i === 0) return true
     return chordClearsObstacles(
@@ -1033,104 +877,105 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
     )
   })
   const direct = collapseCollinear(anchors)
-  const conflictsStructurally = (
-    routes: readonly (readonly IPoint[])[]
-  ): boolean => {
-    const conflict = polylineConflictCost(direct, routes, 0)
-    return conflict.crossings > 0 || conflict.overlapPx > 0
-  }
-  const allSiblingRoutes = siblingRoutes ?? []
-  // Sibling crowding remains exempt, but a sibling crossing/overlap is structural:
-  // it must open the graph and contribute the same candidate detour vertices as an
-  // unrelated edge. Coordinated ports and obstacle rings still handle ordinary
-  // side-by-side fan separation without route-order-dependent crowding.
-  const conflictingNeighborRoutes = neighborRoutes.filter((route) =>
-    conflictsStructurally([route])
-  )
-  const conflictingSiblingRoutes = allSiblingRoutes.filter((route) =>
-    conflictsStructurally([route])
-  )
-  const conflictingRoutes = [
-    ...conflictingNeighborRoutes,
-    ...conflictingSiblingRoutes,
-  ]
-  if (straightClears && conflictingRoutes.length === 0) return direct
+  if (straightClears) return direct
 
-  // 2. Visibility graph over endpoints, checkpoints and inflated hard corners.
-  //    Corners are inflated by the SAME margin the visibility test blocks at. A
-  //    wider corner pad silently welds neighbouring obstacles together — their
-  //    padded corners land inside each other — which closes legitimate gaps between
-  //    two nodes and forces a long detour around the whole group.
-  const { vertices, indexAt } = buildVertices(
-    source,
-    target,
-    checkpoints,
-    hardObstacles,
-    [MIN_CLEARANCE_PX, clearancePx],
-    conflictingRoutes
-  )
-  const blockRects = hardObstacles.map((o) =>
-    inflate(rectOf(o), MIN_CLEARANCE_PX)
-  )
-  // Elbows other routes already turn at — see SHARED_BEND_PENALTY_PX.
-  const occupiedBends = new Set<string>()
-  for (const route of [...neighborRoutes, ...(siblingRoutes ?? [])])
-    for (const point of route.slice(1, -1))
-      occupiedBends.add(`${point.x},${point.y}`)
-
-  // 3. Route each checkpoint sub-chord independently and concatenate. Only the
-  //    first sub-chord departs the source node and only the last meets the target,
-  //    so the endpoint-angle terms apply to those alone.
-  const combined: IPoint[] = []
-  for (let k = 1; k < anchors.length; k++) {
-    const startIndex = indexAt(anchors[k - 1])
-    const goalIndex = indexAt(anchors[k])
-    const sub =
-      startIndex < 0 || goalIndex < 0
-        ? [anchors[k - 1], anchors[k]]
-        : vertices.length > MAX_DIRECTED_SEARCH_VERTICES
-          ? routeSubPathByVertex(
-              vertices,
-              startIndex,
-              goalIndex,
-              blockRects,
-              neighborRoutes,
-              EDGE_CROWDING_CLEARANCE_PX,
-              allSiblingRoutes,
-              occupiedBends,
-              preferredCornerRing ?? 0,
-              k === 1 ? sourceNormal : undefined,
-              k === anchors.length - 1 ? targetNormal : undefined
-            )
-          : routeSubPath(
-              vertices,
-              startIndex,
-              goalIndex,
-              blockRects,
-              neighborRoutes,
-              EDGE_CROWDING_CLEARANCE_PX,
-              allSiblingRoutes,
-              occupiedBends,
-              preferredCornerRing ?? 0,
-              k === 1 ? sourceNormal : undefined,
-              k === anchors.length - 1 ? targetNormal : undefined
-            )
-    if (combined.length === 0) combined.push(...sub)
-    else combined.push(...sub.slice(1))
-  }
-
-  // 4. Collapse collinear points, then string-pull away any bend the route does not
-  //    need using the complete search objective.
-  return collapseCollinear(
-    simplifyRoute(
-      collapseCollinear(combined),
-      blockRects,
-      neighborRoutes,
-      EDGE_CROWDING_CLEARANCE_PX,
-      allSiblingRoutes,
-      sourceNormal,
-      targetNormal,
-      new Set(checkpoints.map((point) => `${point.x},${point.y}`))
+  const routeWithObstacles = (
+    activeObstacles: StraightRouteObstacle[]
+  ): IPoint[] => {
+    // 2. Visibility graph over the endpoints, checkpoints and the obstacles that
+    //    can actually constrain this route. Corners use the same inflation as
+    //    visibility; a wider pad would weld neighbouring nodes together.
+    const { vertices, indexAt } = buildVertices(
+      source,
+      target,
+      checkpoints,
+      activeObstacles,
+      [MIN_CLEARANCE_PX, clearancePx]
     )
+    const blockRects = activeObstacles.map((obstacle) =>
+      inflate(rectOf(obstacle), MIN_CLEARANCE_PX)
+    )
+
+    // 3. Route each checkpoint sub-chord independently and concatenate. Only the
+    //    first sub-chord departs the source node and only the last meets the target.
+    const combined: IPoint[] = []
+    for (let k = 1; k < anchors.length; k++) {
+      const startIndex = indexAt(anchors[k - 1])
+      const goalIndex = indexAt(anchors[k])
+      const sub =
+        startIndex < 0 || goalIndex < 0
+          ? [anchors[k - 1], anchors[k]]
+          : vertices.length > MAX_DIRECTED_SEARCH_VERTICES
+            ? routeSubPathByVertex(
+                vertices,
+                startIndex,
+                goalIndex,
+                blockRects,
+                preferredCornerRing ?? 0,
+                k === 1 ? sourceNormal : undefined,
+                k === anchors.length - 1 ? targetNormal : undefined
+              )
+            : routeSubPath(
+                vertices,
+                startIndex,
+                goalIndex,
+                blockRects,
+                preferredCornerRing ?? 0,
+                k === 1 ? sourceNormal : undefined,
+                k === anchors.length - 1 ? targetNormal : undefined
+              )
+      if (combined.length === 0) combined.push(...sub)
+      else combined.push(...sub.slice(1))
+    }
+
+    // 4. Collapse collinear points, then string-pull away any unnecessary bend.
+    return collapseCollinear(
+      simplifyRoute(
+        collapseCollinear(combined),
+        blockRects,
+        sourceNormal,
+        targetNormal,
+        new Set(checkpoints.map((point) => `${point.x},${point.y}`))
+      )
+    )
+  }
+
+  const blocksRoute = (
+    obstacle: StraightRouteObstacle,
+    route: readonly IPoint[],
+    clearancePx: number
+  ): boolean =>
+    route.some(
+      (point, index) =>
+        index > 0 &&
+        !chordClearsObstacles(route[index - 1], point, [obstacle], clearancePx)
+    )
+
+  // The direct route's blockers are the only obstacles that belong in the first
+  // graph. A diagonal's axis-aligned bounds can contain an entire diagram even
+  // though it touches one node; putting all of those corners in the graph makes
+  // visibility work cubic in unrelated geometry. If the chosen detour approaches
+  // another node, add every newly relevant obstacle and solve again. This monotonic
+  // repair keeps the same safety guarantee without paying for distant nodes.
+  let activeObstacles = hardObstacles.filter((obstacle) =>
+    blocksRoute(obstacle, anchors, DIRECT_ROUTE_CLEARANCE_PX)
   )
+  let route = routeWithObstacles(activeObstacles)
+  const activeIds = new Set(activeObstacles.map((obstacle) => obstacle.id))
+  const MAX_LOCAL_REPAIRS = 2
+  for (let repair = 0; repair < MAX_LOCAL_REPAIRS; repair++) {
+    const newlyRelevant = hardObstacles.filter(
+      (obstacle) =>
+        !activeIds.has(obstacle.id) &&
+        blocksRoute(obstacle, route, MIN_CLEARANCE_PX)
+    )
+    if (newlyRelevant.length === 0) return route
+    for (const obstacle of newlyRelevant) activeIds.add(obstacle.id)
+    activeObstacles = [...activeObstacles, ...newlyRelevant]
+    route = routeWithObstacles(activeObstacles)
+  }
+
+  // A contrived chain can reveal one new obstacle per detour. Fall back once to
+  // the complete field after the bounded local repairs; safety is never degraded.
+  return routeWithObstacles(hardObstacles)
 }

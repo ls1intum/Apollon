@@ -20,6 +20,10 @@ const edge = {
   source: "source",
   target: "target",
 } as Edge
+const straightEdge = {
+  ...edge,
+  type: "SyntaxTreeLink",
+} as Edge
 
 describe("pending edge-geometry projection", () => {
   it("requires two consecutive provisional generations before changing route decisions", () => {
@@ -85,6 +89,34 @@ describe("pending edge-geometry projection", () => {
     expect(stabilizeProvisionalRoutes(input).routeById.e).toBe(candidate)
   })
 
+  it("holds a valid straight-edge decision for the complete node gesture", () => {
+    const displayed = [
+      { x: 100, y: 40 },
+      { x: 300, y: 240 },
+    ]
+    const candidate = [
+      { x: 100, y: 40 },
+      { x: 160, y: 180 },
+      { x: 300, y: 240 },
+    ]
+    const pending = new Map<string, string>()
+    const input = {
+      displayedById: { e: displayed },
+      candidateById: { e: candidate },
+      edges: [straightEdge],
+      nodes: new Map([
+        ["source", rect(0, 0)],
+        ["target", rect(300, 200)],
+      ]),
+      pendingDecisionById: pending,
+      holdDecisionEdgeTypes: new Set(["SyntaxTreeLink"]),
+    }
+
+    expect(stabilizeProvisionalRoutes(input).routeById.e).toBe(displayed)
+    expect(stabilizeProvisionalRoutes(input).routeById.e).toBe(displayed)
+    expect(stabilizeProvisionalRoutes(input).routeById.e).toBe(displayed)
+  })
+
   it("accepts same-topology diagonal coordinate refinements immediately", () => {
     const displayed = [
       { x: 100, y: 40 },
@@ -123,13 +155,14 @@ describe("pending edge-geometry projection", () => {
     const stabilization = stabilizeProvisionalRoutes({
       displayedById: { e: displayed },
       candidateById: { e: candidate },
-      edges: [edge],
+      edges: [straightEdge],
       nodes: new Map([
         ["source", rect(0, 0)],
         ["target", rect(300, 200)],
         ["obstacle", rect(180, 100, 40, 60)],
       ]),
       pendingDecisionById: new Map(),
+      holdDecisionEdgeTypes: new Set(["SyntaxTreeLink"]),
     })
     expect(stabilization.routeById.e).toBe(candidate)
     expect(stabilization.invalidatedDecisionCount).toBe(1)
@@ -458,6 +491,60 @@ describe("pending edge-geometry projection", () => {
         projected[index - 1].x === projected[index].x ||
           projected[index - 1].y === projected[index].y
       ).toBe(true)
+  })
+
+  it("keeps a diagonal straight edge diagonal while its node moves", () => {
+    const projected = projectRoutesWhileSolving(
+      {
+        e: [
+          { x: 100, y: 40 },
+          { x: 300, y: 240 },
+        ],
+      },
+      [straightEdge],
+      new Map([
+        ["source", rect(0, 0)],
+        ["target", rect(300, 200)],
+      ]),
+      new Map([
+        ["source", rect(40, 30)],
+        ["target", rect(300, 200)],
+      ]),
+      new Set(["SyntaxTreeLink"])
+    ).e
+
+    expect(projected).toEqual([
+      { x: 140, y: 70 },
+      { x: 300, y: 240 },
+    ])
+  })
+
+  it("keeps straight-edge obstacle bends fixed during projection", () => {
+    const projected = projectRoutesWhileSolving(
+      {
+        e: [
+          { x: 100, y: 40 },
+          { x: 180, y: 130 },
+          { x: 300, y: 240 },
+        ],
+      },
+      [straightEdge],
+      new Map([
+        ["source", rect(0, 0)],
+        ["target", rect(300, 200)],
+      ]),
+      new Map([
+        ["source", rect(40, 30)],
+        ["target", rect(300, 200)],
+      ]),
+      new Set(["SyntaxTreeLink"])
+    ).e
+
+    expect(projected).toEqual([
+      { x: 140, y: 70 },
+      { x: 180, y: 130 },
+      { x: 300, y: 240 },
+    ])
   })
 
   it("preserves authored internal bends and terminal directions during resize", () => {
