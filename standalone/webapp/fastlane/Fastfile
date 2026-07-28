@@ -1,4 +1,6 @@
 require "fileutils"
+require "digest/md5"
+require "deliver/loader"
 
 default_platform(:ios)
 opt_out_usage
@@ -73,6 +75,8 @@ platform :ios do
   # the age-rating questionnaire. These are the same on every version.
   def app_store_connect_options
     options = {
+      app_version: app_store_version,
+      platform: "ios",
       primary_category: PRIMARY_CATEGORY,
       secondary_category: SECONDARY_CATEGORY
     }
@@ -80,6 +84,17 @@ platform :ios do
     review = review_information
     options[:app_review_information] = review unless review.empty?
     options
+  end
+
+  # Always target the version selected by the workflow. Letting deliver infer
+  # the editable version is unsafe when App Store Connect contains multiple
+  # platforms or a release is prepared after the repository has moved on.
+  def app_store_version
+    version = ENV["APP_STORE_VERSION"]
+    UI.user_error!(
+      "APP_STORE_VERSION is required for App Store uploads"
+    ) unless version && !version.empty?
+    version
   end
 
   # App Review contact: notes are committed (non-personal); the reviewer's name,
@@ -137,20 +152,22 @@ platform :ios do
   desc "[CI] Upload App Store metadata and screenshots without uploading a binary"
   lane :store_assets do
     ensure_selected_screenshots_available
+    store_api_key = api_key
     upload_to_app_store(
       {
-        api_key: api_key,
+        api_key: store_api_key,
         metadata_path: METADATA_PATH,
-        screenshots_path: APP_STORE_SCREENSHOTS_PATH,
         skip_binary_upload: true,
         skip_metadata: false,
-        skip_screenshots: false,
-        overwrite_screenshots: true,
+        skip_screenshots: true,
         submit_for_review: false,
-        run_precheck_before_submit: false,
+        run_precheck_before_submit: true,
+        precheck_include_in_app_purchases: false,
+        precheck_default_rule_level: :error,
         force: true
       }.merge(app_store_connect_options)
     )
+    sync_store_screenshots
   end
 
   desc "[CI] Build the Apollon iOS app and produce an .ipa signed for the App Store"
@@ -229,30 +246,64 @@ platform :ios do
     )
   end
 
-  desc "[CI] Upload the build and public App Store assets; submission is opt-in"
+  desc "[CI] Prepare the App Store version from the tested TestFlight build; " \
+       "submission is opt-in"
   lane :release_app_store do
     ensure_selected_screenshots_available
+    submit_for_review = ENV["SUBMIT_FOR_REVIEW"] == "true"
+    build_number = ENV["BUILD_NUMBER"]
+    unless build_number && !build_number.empty?
+      UI.user_error!(
+        "BUILD_NUMBER is required so Fastlane cannot select an unintended " \
+        "TestFlight build"
+      )
+    end
+
+    options = {
+      api_key: api_key,
+      metadata_path: METADATA_PATH,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      # Answered code-first so submission never stalls on the review questions.
+      # Encryption is also declared in Info.plist (ITSAppUsesNonExemptEncryption).
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      },
+      run_precheck_before_submit: true,
+      precheck_include_in_app_purchases: false,
+      precheck_default_rule_level: :error,
+      force: true
+    }.merge(app_store_connect_options)
+
     upload_to_app_store(
-      {
-        api_key: api_key,
-        ipa: "./build/App.ipa",
-        metadata_path: METADATA_PATH,
-        screenshots_path: APP_STORE_SCREENSHOTS_PATH,
-        skip_metadata: false,
-        skip_screenshots: false,
-        overwrite_screenshots: true,
-        submit_for_review: ENV["SUBMIT_FOR_REVIEW"] == "true",
-        automatic_release: false,
-        # Answered code-first so submission never stalls on the review questions.
-        # Encryption is also declared in Info.plist (ITSAppUsesNonExemptEncryption).
-        submission_information: {
-          export_compliance_uses_encryption: false,
-          content_rights_contains_third_party_content: false
-        },
-        run_precheck_before_submit: false,
-        force: true
-      }.merge(app_store_connect_options)
+      options
     )
+    sync_store_screenshots
+
+    if submit_for_review
+      upload_to_app_store(
+        api_key: options[:api_key],
+        app_version: app_store_version,
+        platform: "ios",
+        build_number: build_number,
+        skip_binary_upload: true,
+        skip_metadata: true,
+        skip_screenshots: true,
+        submit_for_review: true,
+        automatic_release: false,
+        submission_information: options[:submission_information],
+        run_precheck_before_submit: true,
+        precheck_include_in_app_purchases: false,
+        precheck_default_rule_level: :error,
+        force: true
+      )
+    else
+      select_app_store_build(build_number: build_number)
+    end
   end
 
   desc "[CI] Upload the App Privacy (\"nutrition label\") declaration. Requires an " \
@@ -275,7 +326,7 @@ platform :ios do
 
   lane :api_key do
     app_store_connect_api_key(
-      duration: 300,
+      duration: 1200,
       key_id: ENV["API_KEY_ID"],
       issuer_id: ENV["API_KEY_ISSUER_ID"],
       key_content: ENV["API_KEY_PASSWORD"],
@@ -333,10 +384,221 @@ platform :ios do
     OFFICIAL_DEVICE_FRAMES.values.all? { |path| File.exist?(path) }
   end
 
+  # `deliver` selects a build only as part of submission. Preparation is a
+  # separate, reviewable phase here, so associate the exact processed
+  # TestFlight build through the official App Store Connect API without creating
+  # a review submission.
+  private_lane :select_app_store_build do |options|
+    build_number = options[:build_number]
+    app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(
+      :app_identifier
+    )
+    app = Spaceship::ConnectAPI::App.find(app_identifier)
+    UI.user_error!(
+      "Could not find #{app_identifier} in App Store Connect"
+    ) unless app
+
+    platform = Spaceship::ConnectAPI::Platform.map("ios")
+    version = app.get_edit_app_store_version(platform: platform)
+    UI.user_error!(
+      "The editable iOS version is not #{app_store_version}"
+    ) unless version && version.version_string == app_store_version
+
+    build = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      version: app_store_version,
+      build_number: build_number,
+      platform: platform,
+      processing_states: "VALID"
+    ).first
+    UI.user_error!(
+      "Processed build #{app_store_version} (#{build_number}) does not exist"
+    ) unless build
+
+    version.select_build(build_id: build.id)
+    UI.success(
+      "Selected App Store build #{app_store_version} (#{build_number})"
+    )
+  end
+
+  private_lane :editable_app_store_version do
+    app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(
+      :app_identifier
+    )
+    app = Spaceship::ConnectAPI::App.find(app_identifier)
+    UI.user_error!(
+      "Could not find #{app_identifier} in App Store Connect"
+    ) unless app
+
+    platform = Spaceship::ConnectAPI::Platform.map("ios")
+    version = app.get_edit_app_store_version(platform: platform)
+    UI.user_error!(
+      "The editable iOS version is not #{app_store_version}"
+    ) unless version && version.version_string == app_store_version
+    version
+  end
+
+  # Fastlane's legacy screenshot uploader retries the entire batch if App Store
+  # Connect has not exposed freshly uploaded checksums within a few seconds. A
+  # successful upload can therefore be duplicated by the retry. Reconcile each
+  # display set by filename + source checksum and wait for every new screenshot
+  # to finish processing before continuing, making reruns idempotent.
+  private_lane :sync_store_screenshots do
+    local_screenshots = Deliver::Loader.load_app_screenshots(
+      APP_STORE_SCREENSHOTS_PATH,
+      false
+    )
+    UI.user_error!(
+      "No screenshots found in #{APP_STORE_SCREENSHOTS_PATH}"
+    ) if local_screenshots.empty?
+
+    version = editable_app_store_version
+    local_screenshots.group_by(&:language).each do |locale, locale_screenshots|
+      localization = version.get_app_store_version_localizations.find do |candidate|
+        candidate.locale == locale
+      end
+      localization ||= version.create_app_store_version_localization(
+        attributes: { locale: locale }
+      )
+
+      expected_by_display_type = locale_screenshots.group_by(&:display_type)
+      expected_by_display_type.each do |display_type, screenshots|
+        UI.user_error!(
+          "#{locale}/#{display_type} has #{screenshots.count} screenshots; " \
+          "App Store Connect accepts at most 10"
+        ) if screenshots.count > 10
+
+        expected_keys = screenshots.map do |screenshot|
+          [
+            File.basename(screenshot.path),
+            Digest::MD5.file(screenshot.path).hexdigest
+          ]
+        end
+        UI.user_error!(
+          "#{locale}/#{display_type} contains duplicate local screenshots"
+        ) unless expected_keys.uniq.count == expected_keys.count
+      end
+
+      screenshot_sets = localization.get_app_screenshot_sets
+      screenshot_sets.each do |screenshot_set|
+        next if expected_by_display_type.key?(
+          screenshot_set.screenshot_display_type
+        )
+
+        screenshot_set.app_screenshots.each do |remote|
+          UI.message(
+            "Deleting unmanaged #{locale}/" \
+            "#{screenshot_set.screenshot_display_type}/#{remote.file_name}"
+          )
+          remote.delete!
+        end
+      end
+
+      expected_by_display_type.each do |display_type, screenshots|
+        screenshot_set = screenshot_sets.find do |candidate|
+          candidate.screenshot_display_type == display_type
+        end
+        screenshot_set ||= localization.create_app_screenshot_set(
+          attributes: { screenshotDisplayType: display_type }
+        )
+        reconcile_screenshot_set(
+          screenshot_set: screenshot_set,
+          locale: locale,
+          screenshots: screenshots
+        )
+      end
+    end
+  end
+
+  private_lane :reconcile_screenshot_set do |options|
+    screenshot_set = options[:screenshot_set]
+    locale = options[:locale]
+    local_screenshots = options[:screenshots]
+    display_type = screenshot_set.screenshot_display_type
+    expected = local_screenshots.map do |screenshot|
+      {
+        path: screenshot.path,
+        key: [
+          File.basename(screenshot.path),
+          Digest::MD5.file(screenshot.path).hexdigest
+        ]
+      }
+    end
+
+    current_set = Spaceship::ConnectAPI::AppScreenshotSet.get(
+      app_screenshot_set_id: screenshot_set.id
+    )
+    remote_screenshots = current_set.app_screenshots
+    kept = {}
+    expected.each do |local|
+      candidates = remote_screenshots.select do |remote|
+        screenshot_remote_key(remote) == local[:key] && remote.complete?
+      end
+      kept[local[:key]] = candidates.first if candidates.any?
+    end
+
+    (remote_screenshots - kept.values).each do |remote|
+      UI.message(
+        "Deleting stale or duplicate #{locale}/#{display_type}/" \
+        "#{remote.file_name}"
+      )
+      remote.delete!
+    end
+
+    expected.each do |local|
+      next if kept[local[:key]]
+
+      UI.message(
+        "Uploading #{locale}/#{display_type}/#{File.basename(local[:path])}"
+      )
+      uploaded = screenshot_set.upload_screenshot(
+        path: local[:path],
+        wait_for_processing: true
+      )
+      kept[local[:key]] = uploaded
+    end
+
+    final_set = Spaceship::ConnectAPI::AppScreenshotSet.get(
+      app_screenshot_set_id: screenshot_set.id
+    )
+    final_by_key = final_set.app_screenshots.group_by do |remote|
+      screenshot_remote_key(remote)
+    end
+    expected_keys = expected.map { |local| local[:key] }
+    valid =
+      final_set.app_screenshots.count == expected.count &&
+      final_by_key.keys.sort == expected_keys.sort &&
+      final_by_key.values.all? do |matches|
+        matches.count == 1 && matches.first.complete?
+      end
+    UI.user_error!(
+      "Screenshot synchronization failed for #{locale}/#{display_type}: " \
+      "expected #{expected.count} unique complete screenshots, found " \
+      "#{final_set.app_screenshots.count}"
+    ) unless valid
+
+    ordered_ids = expected_keys.map { |key| final_by_key.fetch(key).first.id }
+    current_ids = final_set.app_screenshots.map(&:id)
+    final_set.reorder_screenshots(
+      app_screenshot_ids: ordered_ids
+    ) unless current_ids == ordered_ids
+
+    UI.success(
+      "#{locale}/#{display_type} contains #{expected.count} unique screenshots"
+    )
+  end
+
+  def screenshot_remote_key(remote)
+    [
+      remote.file_name,
+      remote.source_file_checksum.to_s.downcase
+    ]
+  end
+
   private_lane :ensure_selected_screenshots_available do
-    # Both branches guard against uploading with `overwrite_screenshots: true`
-    # against an empty directory, which would DELETE the live App Store
-    # screenshots. CI always captures first; this protects local invocations.
+    # Both branches guard the authoritative screenshot sync against an empty
+    # directory, which would otherwise remove the live App Store screenshots.
+    # CI always captures first; this protects local invocations.
     if SCREENSHOT_STYLE == "framed"
       UI.user_error!(
         "The framed screenshot set has not been generated with authorized " \

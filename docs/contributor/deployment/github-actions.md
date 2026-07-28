@@ -30,9 +30,15 @@ tagging, and GitHub Release steps are safe to resume.
 
 `ios-testflight-release.yml` follows a successful standalone release and uploads
 the same version to TestFlight. It records `ios-testflight@X.Y.Z` only after the
-upload succeeds, making retries idempotent. App Store metadata, screenshots,
-submission, and review remain explicit manual destinations because they include
-human and legal checks.
+upload succeeds, making retries idempotent. Its manual App Store destinations
+upload metadata and screenshots, then reuse the exact processed TestFlight build
+number when submission is requested; they never rebuild an untested binary.
+Screenshots are reconciled by filename and source checksum, uploaded one at a
+time when changed, and verified against the generated set before the workflow
+can continue. This keeps reruns idempotent while App Store Connect is still
+exposing a previous upload.
+Submission and review remain explicit because they include human and legal
+checks.
 
 `pr-health-checks.yml` runs the full per-PR matrix, including the visual-regression
 guard (pinned Playwright container) feeding the required **PR Health Gate** check.
