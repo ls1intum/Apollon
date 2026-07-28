@@ -124,12 +124,16 @@ three destinations:
   manual dispatch is the recovery path).
 - `app-store-assets` regenerates and uploads metadata and screenshots without a
   binary.
-- `app-store` uploads the build, metadata, and screenshots. Submission for
-  review remains opt-in.
+- `app-store` regenerates the public assets and promotes the existing, tested
+  TestFlight build. It requires the exact processed TestFlight build number,
+  preventing Fastlane from selecting a different build; submission for review
+  remains opt-in.
 
 The workflow asks whether to upload the raw or framed set. The approved,
 official-bezel presentation is the default; the untouched raw masters remain
-available as an explicit fallback.
+available as an explicit fallback. App Store destinations explicitly target the
+version in `standalone/webapp/package.json`; Fastlane creates the version when
+needed, so creating it manually in App Store Connect is optional.
 
 ### Official device bezels
 

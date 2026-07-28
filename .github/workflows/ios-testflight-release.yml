@@ -17,6 +17,10 @@ on:
         required: true
         default: false
         type: boolean
+      build_number:
+        description: Exact processed TestFlight build (required for app-store)
+        required: false
+        type: string
       screenshot_style:
         description: Screenshot presentation to upload
         required: true
@@ -43,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       destination: ${{ steps.release.outputs.destination }}
+      build-number: ${{ steps.release.outputs.build-number }}
       publish: ${{ steps.release.outputs.publish }}
       source-ref: ${{ steps.release.outputs.source-ref }}
       version: ${{ steps.release.outputs.version }}
@@ -56,6 +61,7 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
           INPUT_DESTINATION: ${{ inputs.destination }}
           UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           UPSTREAM_SHA: ${{ github.event.workflow_run.head_sha }}
@@ -67,9 +73,15 @@ jobs:
           {
             echo "version=$VERSION"
             echo "source-ref=$SOURCE_REF"
+            echo "build-number=$INPUT_BUILD_NUMBER"
           } >> "$GITHUB_OUTPUT"
 
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_DESTINATION" = "app-store" ] &&
+               ! [[ "$INPUT_BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+              echo "::error::Enter the exact numeric TestFlight build number for App Store preparation."
+              exit 1
+            fi
             {
               echo "destination=$INPUT_DESTINATION"
               echo "publish=true"
@@ -170,26 +182,26 @@ jobs:
         run: pnpm exec cap sync ios
 
       - name: Resolve marketing version and build number
-        if: needs.check.outputs.destination != 'app-store-assets'
+        if: needs.check.outputs.destination == 'testflight'
         run: |
           MARKETING_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
           echo "MARKETING_VERSION=$MARKETING_VERSION" >> "$GITHUB_ENV"
           echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
 
       - name: Prepare licensed Apple product bezels
-        if: needs.check.outputs.destination != 'testflight' && inputs.screenshot_style == 'framed'
+        if: needs.check.outputs.destination == 'app-store' && inputs.screenshot_style == 'framed'
         working-directory: standalone/webapp
         run: pnpm run appstore:screenshots:prepare-frames
 
       - name: Capture iPhone and iPad App Store screenshots
-        if: needs.check.outputs.destination != 'testflight'
+        if: needs.check.outputs.destination == 'app-store'
         working-directory: standalone/webapp
         env:
           APP_STORE_SCREENSHOT_STYLE: ${{ inputs.screenshot_style }}
         run: bundle exec fastlane screenshots
 
       - name: Upload App Store screenshot review
-        if: needs.check.outputs.destination != 'testflight'
+        if: needs.check.outputs.destination == 'app-store'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-app-store-screenshot-review
@@ -201,7 +213,7 @@ jobs:
           retention-days: 14
 
       - name: Build iOS app (Fastlane)
-        if: needs.check.outputs.destination != 'app-store-assets'
+        if: needs.check.outputs.destination == 'testflight'
         working-directory: standalone/webapp
         env:
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
@@ -228,27 +240,23 @@ jobs:
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
         run: bundle exec fastlane release
 
-      - name: Upload App Store metadata and screenshots (Fastlane)
+      - name: Remove exact App Store screenshot duplicates (Fastlane)
         if: needs.check.outputs.destination == 'app-store-assets'
         working-directory: standalone/webapp
         env:
-          APP_STORE_SCREENSHOT_STYLE: ${{ inputs.screenshot_style }}
+          APP_STORE_VERSION: ${{ needs.check.outputs.version }}
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
-          # Optional: App Review contact. Unset secrets are skipped, leaving the
-          # existing App Store Connect values untouched.
-          APP_REVIEW_FIRST_NAME: ${{ secrets.IOS_APP_REVIEW_FIRST_NAME }}
-          APP_REVIEW_LAST_NAME: ${{ secrets.IOS_APP_REVIEW_LAST_NAME }}
-          APP_REVIEW_EMAIL: ${{ secrets.IOS_APP_REVIEW_EMAIL }}
-          APP_REVIEW_PHONE: ${{ secrets.IOS_APP_REVIEW_PHONE }}
-        run: bundle exec fastlane store_assets
+        run: bundle exec fastlane deduplicate_store_screenshots
 
-      - name: Upload App Store build, metadata, and screenshots (Fastlane)
+      - name: Prepare App Store version from the tested TestFlight build (Fastlane)
         if: needs.check.outputs.destination == 'app-store'
         working-directory: standalone/webapp
         env:
           APP_STORE_SCREENSHOT_STYLE: ${{ inputs.screenshot_style }}
+          APP_STORE_VERSION: ${{ needs.check.outputs.version }}
+          BUILD_NUMBER: ${{ needs.check.outputs.build-number }}
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
@@ -262,7 +270,7 @@ jobs:
         run: bundle exec fastlane release_app_store
 
       - name: Upload IPA artifact
-        if: always() && needs.check.outputs.destination != 'app-store-assets'
+        if: always() && needs.check.outputs.destination == 'testflight'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-ipa
