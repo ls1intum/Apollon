@@ -19,6 +19,7 @@ import {
   STORE_ORIGIN,
 } from "@/sync/ydoc"
 import { recordStoreNodeWrite } from "@/sync/perfCounters"
+import { computeTidyLayout } from "@/utils/tidyTree"
 import { deepEqual } from "@/utils/storeUtils"
 import { Assessment, DraggingNode, InteractiveElements } from "@/typings"
 import {
@@ -153,6 +154,9 @@ export type DiagramStore = {
    */
   endTransientNodeBroadcast: () => void
   setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
+  /** Reposition syntax-tree nodes into a tidy hierarchical layout (issue #282).
+   * A single undo step; a no-op on non-syntax-tree or already-tidy diagrams. */
+  layoutSyntaxTree: () => void
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
   addEdge: (edge: Edge) => void
@@ -501,6 +505,13 @@ export const createDiagramStore = (
               undefined,
               "setNodes"
             )
+          },
+
+          layoutSyntaxTree: () => {
+            // Tidy the syntax tree by repositioning nodes (issue #282). Routed
+            // through `setNodes`, so it is a single Yjs transaction / one undo step
+            // and the deep-equal guard makes an already-tidy layout a no-op.
+            get().setNodes(computeTidyLayout(get().nodes, get().edges))
           },
 
           setEdges: (payload) => {

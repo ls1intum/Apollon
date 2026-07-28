@@ -8,6 +8,7 @@ import {
   assignSides,
   assignPorts,
   endKey,
+  redistributeCrowdedStraightEnds,
   type SideEdge,
   type SideMember,
   type EndRef,
@@ -84,6 +85,57 @@ describe("orderSideMembers — the nesting rule", () => {
     )
     expect(reversed).toEqual(forward)
     expect(forward).toEqual(["e0", "e1", "e2", "e3"]) // top→bottom
+  })
+})
+
+describe("redistributeCrowdedStraightEnds", () => {
+  it("overflows the angular outer pair of a five-way fan symmetrically", () => {
+    const hub = rect(0, 0, 70, 60)
+    const partnerXs = [-200, -80, 0, 80, 200]
+    const ends: EndRef[] = partnerXs.map((x, index) => {
+      const partner = rect(x, 240, 70, 60)
+      return {
+        edgeId: `e${index}`,
+        end: "source" as const,
+        nodeId: "hub",
+        rect: hub,
+        side: Position.Bottom,
+        straight: true,
+        partnerCenter: centerOf(partner),
+        partnerNodeId: `partner-${index}`,
+        partnerRect: partner,
+      }
+    })
+    const redistributed = redistributeCrowdedStraightEnds(ends)
+    const sides = new Map(redistributed.map((item) => [item.edgeId, item.side]))
+    expect(sides.get("e0")).toBe(Position.Left)
+    expect(sides.get("e1")).toBe(Position.Bottom)
+    expect(sides.get("e2")).toBe(Position.Bottom)
+    expect(sides.get("e3")).toBe(Position.Bottom)
+    expect(sides.get("e4")).toBe(Position.Right)
+  })
+
+  it("never moves an authored reservation while overflowing mutable ends", () => {
+    const hub = rect(0, 0, 70, 60)
+    const ends: EndRef[] = Array.from({ length: 5 }, (_, index) => {
+      const partner = rect(index * 100 - 200, 240, 70, 60)
+      return {
+        edgeId: `e${index}`,
+        end: "source" as const,
+        nodeId: "hub",
+        rect: hub,
+        side: Position.Bottom,
+        straight: true,
+        partnerCenter: centerOf(partner),
+        partnerNodeId: `partner-${index}`,
+        partnerRect: partner,
+        immutableRatio: index === 0 ? 0.1 : undefined,
+      }
+    })
+    const redistributed = redistributeCrowdedStraightEnds(ends)
+    expect(redistributed.find((item) => item.edgeId === "e0")?.side).toBe(
+      Position.Bottom
+    )
   })
 })
 

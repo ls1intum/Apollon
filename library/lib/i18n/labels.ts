@@ -27,6 +27,12 @@ export interface ApollonLabels {
    * remains assignable; {@link mergeLabels} always fills the English default.
    */
   moveEdgeWaypoint?: string
+  /** Syntax-tree tidy-layout button (accessible name). */
+  tidyLayout?: string
+  /** Syntax-tree tidy-layout tooltip. */
+  tidyLayoutHint?: string
+  /** Accessible name for a straight-edge segment midpoint create handle. */
+  addEdgeWaypoint?: string
 
   // Minimap
   miniMap: string
@@ -319,6 +325,9 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  tidyLayout: "Tidy tree layout",
+  tidyLayoutHint: "Arrange the syntax tree so links no longer overlap nodes",
+  addEdgeWaypoint: "Drag to add a waypoint",
   moveEdgeWaypoint:
     "Waypoint: drag to move, double-click or press Delete to remove",
   miniMap: "Mini map",

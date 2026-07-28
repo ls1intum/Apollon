@@ -1,6 +1,7 @@
 import { useReactFlow, useStore } from "@xyflow/react"
 import { useShallow } from "zustand/shallow"
 import {
+  ListTree,
   Maximize,
   Redo2,
   SquareMousePointer,
@@ -13,6 +14,8 @@ import {
   useMetadataStore,
   useOverlayStore,
 } from "@/store/context"
+import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { UMLDiagramType } from "@/types"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { ariaKeyshortcuts } from "@/keyboard"
 import { Tooltip } from "@/components/ui"
@@ -48,12 +51,17 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
     }))
   )
 
-  const { multiSelectionMode, setMultiSelectionMode } = useMetadataStore(
-    useShallow((state) => ({
-      multiSelectionMode: state.multiSelectionMode,
-      setMultiSelectionMode: state.setMultiSelectionMode,
-    }))
-  )
+  const { multiSelectionMode, setMultiSelectionMode, isSyntaxTree } =
+    useMetadataStore(
+      useShallow((state) => ({
+        multiSelectionMode: state.multiSelectionMode,
+        setMultiSelectionMode: state.setMultiSelectionMode,
+        isSyntaxTree: state.diagramType === UMLDiagramType.SyntaxTree,
+      }))
+    )
+  const layoutSyntaxTree = useDiagramStore((state) => state.layoutSyntaxTree)
+  const isModifiable = useDiagramModifiable()
+  const showTidyLayout = isSyntaxTree && isModifiable
 
   const { ref: toolbarRef, onKeyDown: onToolbarKeyDown } =
     useRovingToolbar<HTMLDivElement>()
@@ -124,6 +132,18 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             <SquareMousePointer width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
+        {showTidyLayout && (
+          <Tooltip title={t.tidyLayoutHint}>
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn"
+              onClick={() => layoutSyntaxTree()}
+              aria-label={t.tidyLayout}
+            >
+              <ListTree width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
       {history && undoManagerExist && (

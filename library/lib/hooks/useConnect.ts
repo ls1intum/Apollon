@@ -219,7 +219,40 @@ export const useConnect = () => {
   const onConnectEnd: OnConnectEnd = useCallback(
     (event, connectionState) => {
       try {
-        if (!connectionState.isValid) {
+        if (connectionState.isValid) {
+          // A valid native handle is an exact attachment point, not merely a side
+          // hint. Persist the preview's resolved anchor on commit; otherwise the
+          // central solver can immediately move the endpoint to an automatic seat.
+          const edgeId = pendingConnectionId.current
+          const dropPosition = getDropPosition(event)
+          const nodeOnTop = resolveDropTarget(
+            dropPosition,
+            connectionState.fromNode?.id
+          )
+          if (edgeId && nodeOnTop) {
+            const anchor = getEdgeAnchorFromPoint(
+              nodeOnTop.type,
+              dropPosition,
+              nodeOnTop.rect
+            )
+            if (anchor) {
+              const endpoint =
+                connectionStartParams.current?.handleType === "target"
+                  ? "source"
+                  : "target"
+              setEdges((eds) =>
+                eds.map((edge) =>
+                  edge.id === edgeId
+                    ? {
+                        ...edge,
+                        data: withEndpointAnchor(edge.data, endpoint, anchor),
+                      }
+                    : edge
+                )
+              )
+            }
+          }
+        } else {
           const dropPosition = getDropPosition(event)
           const nodeOnTop = resolveDropTarget(
             dropPosition,

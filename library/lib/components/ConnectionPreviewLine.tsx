@@ -124,6 +124,20 @@ export const ConnectionPreviewLine = ({
       nativeTargetId !== undefined &&
       nativeTargetId !== fromNodeId &&
       nativeTargetPosition !== undefined
+    // A valid native handle is an exact attachment point, not merely a side hint.
+    // Resolve that point into the pending edge too, so the central solver cannot
+    // replace the native ghost endpoint with an automatic facing-side anchor.
+    const nativeDropTarget = hasNativeTarget
+      ? resolveDropTarget({ x: toX, y: toY }, fromNodeId)
+      : null
+    const nativeAnchor =
+      nativeDropTarget && nativeDropTarget.id === nativeTargetId
+        ? getEdgeAnchorFromPoint(
+            nativeDropTarget.type,
+            { x: toX, y: toY },
+            nativeDropTarget.rect
+          )
+        : null
     const target = hasNativeTarget
       ? null
       : resolveDropTarget(pointer, fromNodeId)
@@ -159,7 +173,8 @@ export const ConnectionPreviewLine = ({
         : freeformTarget
           ? getSideHandleIdForPosition(freeformTarget.position)
           : undefined,
-      targetAnchor: hit && dropAnchorIsAimed(hit.type) ? anchor : null,
+      targetAnchor:
+        nativeAnchor ?? (hit && dropAnchorIsAimed(hit.type) ? anchor : null),
       snapPoint: freeformTarget?.showSnapCircle ? freeformTarget.point : null,
       visible: draggedFar || hasNativeTarget || freeformTarget !== null,
     }

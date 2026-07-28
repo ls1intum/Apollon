@@ -83,6 +83,32 @@ describe("shared routing cost", () => {
     expect(crossing.crossings).toBe(1)
     expect(crossing.cost).toBe(ROUTING_COST.edgeCrossing)
 
+    // Lying ON another edge is the worst of the three incidences: it is priced
+    // above a crossing per shared pixel, and strictly above merely running close
+    // by. Straight edges rely on this ordering to fan out instead of merging.
+    const shared = [
+      { x: 20, y: 50 },
+      { x: 100, y: 50 },
+    ]
+    const overlapping = polylineConflictCost(route, [shared], 10)
+    const nearby = polylineConflictCost(
+      route,
+      [
+        [
+          { x: 20, y: 56 },
+          { x: 100, y: 56 },
+        ],
+      ],
+      10
+    )
+    expect(overlapping.overlapPx).toBe(80)
+    expect(overlapping.cost).toBe(80 * ROUTING_COST.overlapPerPx)
+    expect(overlapping.cost).toBeGreaterThan(nearby.cost)
+    expect(overlapping.cost).toBeGreaterThan(ROUTING_COST.edgeCrossing)
+    // Crowding is real but an order of magnitude gentler than overlap.
+    expect(nearby.cost).toBeGreaterThan(0)
+    expect(nearby.crowdingPx).toBeGreaterThan(0)
+
     const parallel = polylineConflictCost(
       [
         { x: 0, y: 0 },

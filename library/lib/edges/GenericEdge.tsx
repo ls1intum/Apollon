@@ -528,8 +528,10 @@ export const EdgeBendHandle = ({
  * handle on the point itself, not the step edge's elongated segment pill, and it
  * carries a `move` cursor because it travels in two dimensions rather than one.
  *
- * Every authored interior vertex gets one. Segment midpoints carry the same opaque
- * handle as step-edge bendable segments; dragging one materialises a waypoint.
+ * Every interior vertex of the rendered route gets one, whether the user placed it
+ * or the router did: dragging an automatic bend is how you take ownership of a route
+ * the solver chose. Segment midpoints carry the same opaque handle as step-edge
+ * bendable segments; dragging one materialises a waypoint.
  */
 export const EdgeWaypointHandles = ({
   route,
@@ -542,7 +544,7 @@ export const EdgeWaypointHandles = ({
 }: {
   /** Full route `[source, ...interior, target]`. */
   route: IPoint[]
-  /** The editable authored interior vertices. */
+  /** The editable interior vertices — every bend on the rendered route. */
   interior: IPoint[]
   selectedWaypointIndex: number | null
   onWaypointPointerDown: (

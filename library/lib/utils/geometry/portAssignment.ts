@@ -748,6 +748,9 @@ export type EndRef = {
   nodeId: string
   rect: Rect
   side: Position
+  /** This end belongs to a STRAIGHT edge, which reaches its partner directly rather
+   * than along axes — see `rotOf` for why that changes the non-crossing order. */
+  straight?: boolean
   partnerCenter: IPoint
   /** The partner node's id and rect — used to detect and align PARALLEL SIBLINGS
    * (several edges between the same node pair), which must share one straight lane
@@ -799,6 +802,102 @@ export type AssignedPort = {
 /** Key for one end in the returned map: `${edgeId}|${end}`. */
 export const endKey = (edgeId: string, end: "source" | "target"): string =>
   `${edgeId}|${end}`
+
+const adjacentSides = (side: Position): { low: Position; high: Position } => {
+  switch (side) {
+    case Position.Top:
+    case Position.Bottom:
+      return { low: Position.Left, high: Position.Right }
+    case Position.Left:
+    case Position.Right:
+      return { low: Position.Top, high: Position.Bottom }
+  }
+}
+
+/**
+ * Overflow a crowded straight-edge fan onto the two adjacent sides before seat
+ * assignment. Compressing five ports onto a 70px side makes their first segments
+ * indistinguishable and turns tiny geometry changes into order flips. The angular
+ * outer pair instead leaves through the corresponding adjacent sides, preserving
+ * the middle fan and mirror symmetry.
+ *
+ * Authored reservations and non-straight ends never move. The returned objects are
+ * clones and both ends' `partnerSide` references are refreshed after redistribution.
+ */
+export const redistributeCrowdedStraightEnds = (
+  ends: readonly EndRef[],
+  pitchPx: number = PORT_PITCH_PX
+): EndRef[] => {
+  const redistributed = ends.map((end) => ({ ...end }))
+  const groups = new Map<string, EndRef[]>()
+  for (const end of redistributed) {
+    const key = `${end.nodeId}|${end.side}`
+    const group = groups.get(key)
+    if (group) group.push(end)
+    else groups.set(key, [end])
+  }
+
+  for (const group of groups.values()) {
+    const { side, rect } = group[0]
+    const axis = sideAxisLength(side, rect)
+    if (axis <= 0) continue
+    const margin = Math.min(CORNER_CLEARANCE_PX, axis * 0.3)
+    const capacity = group[0].fourCenter
+      ? 1
+      : Math.max(1, Math.floor((axis - 2 * margin) / pitchPx) + 1)
+    if (group.length <= capacity) continue
+
+    const movable = group.filter(
+      (end) => end.straight && end.immutableRatio === undefined
+    )
+    let moveCount = Math.min(movable.length, group.length - capacity)
+    // When possible overflow a pair, not one arbitrary flank. For an odd fan this
+    // intentionally leaves one fewer seat on the original side than its numeric
+    // maximum; exact reflection is more stable and legible than one extra port.
+    if (moveCount % 2 === 1 && moveCount < movable.length) moveCount++
+    if (moveCount === 0) continue
+
+    const nodeCenter = centerOf(rect)
+    movable.sort((a, b) => {
+      const ak = alongSideKey(
+        side,
+        a.partnerCenter.x - nodeCenter.x,
+        a.partnerCenter.y - nodeCenter.y
+      )
+      const bk = alongSideKey(
+        side,
+        b.partnerCenter.x - nodeCenter.x,
+        b.partnerCenter.y - nodeCenter.y
+      )
+      return (
+        ak - bk ||
+        cmpStr(a.partnerNodeId, b.partnerNodeId) ||
+        cmpStr(a.edgeId, b.edgeId) ||
+        cmpStr(a.end, b.end)
+      )
+    })
+    const lowCount = Math.floor(moveCount / 2)
+    const highCount = moveCount - lowCount
+    const adjacent = adjacentSides(side)
+    for (const end of movable.slice(0, lowCount)) end.side = adjacent.low
+    for (const end of movable.slice(movable.length - highCount))
+      end.side = adjacent.high
+  }
+
+  const byEdge = new Map<string, Partial<Record<"source" | "target", EndRef>>>()
+  for (const end of redistributed) {
+    const pair = byEdge.get(end.edgeId) ?? {}
+    pair[end.end] = end
+    byEdge.set(end.edgeId, pair)
+  }
+  for (const end of redistributed) {
+    const other = byEdge.get(end.edgeId)?.[
+      end.end === "source" ? "target" : "source"
+    ]
+    if (other) end.partnerSide = other.side
+  }
+  return redistributed
+}
 
 /**
  * The shared straight band for K parallel siblings between `rect`'s `side` and the
@@ -1009,12 +1108,19 @@ export const assignPorts = (
     const tangentialHalfExtent = sideAxisLength(side, rect) / 2
     const rotOf = (e: EndRef): number => {
       const c = centerOf(e.rect)
-      return crossingOrderKey(
-        side,
-        e.partnerCenter.x - c.x,
-        e.partnerCenter.y - c.y,
-        tangentialHalfExtent
-      )
+      const dx = e.partnerCenter.x - c.x
+      const dy = e.partnerCenter.y - c.y
+      // A STRAIGHT edge runs directly at its partner, so the order that avoids a
+      // fan crossing itself is simply the angular one. `crossingOrderKey` exists
+      // for orthogonal routes, which leave along an axis and turn far away: for a
+      // partner beyond the node's own band it deliberately INVERTS the angular
+      // order so the farther-reaching route nests outside the nearer one. Applied
+      // to a straight line that inversion manufactures exactly the crossing it is
+      // meant to prevent — a near partner gets seated past a far one, and the two
+      // rays must cross.
+      return e.straight
+        ? alongSideKey(side, dx, dy)
+        : crossingOrderKey(side, dx, dy, tangentialHalfExtent)
     }
     const byPartner = new Map<string, EndRef[]>()
     for (const e of group) {
