@@ -33,6 +33,10 @@ the same version to TestFlight. It records `ios-testflight@X.Y.Z` only after the
 upload succeeds, making retries idempotent. Its manual App Store destinations
 upload metadata and screenshots, then reuse the exact processed TestFlight build
 number when submission is requested; they never rebuild an untested binary.
+Screenshots are reconciled by filename and source checksum, uploaded one at a
+time when changed, and verified against the generated set before the workflow
+can continue. This keeps reruns idempotent while App Store Connect is still
+exposing a previous upload.
 Submission and review remain explicit because they include human and legal
 checks.
 

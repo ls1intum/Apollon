@@ -149,6 +149,11 @@ or to use one of these explicit destinations:
 - `app-store` to prepare the version from the already-tested TestFlight build
   and, optionally, submit it.
 
+Both App Store destinations reconcile screenshots by filename and source
+checksum. Unchanged files are retained, changed files are uploaded
+sequentially, stale or duplicate files are removed, and the final set is
+verified before build selection or submission.
+
 For either App Store destination, choose `raw` or `framed` under **Screenshot
 presentation**. The approved official-bezel treatment is the default; choose
 `raw` only to upload the untouched Simulator captures instead. From a local

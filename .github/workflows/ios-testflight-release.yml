@@ -189,19 +189,19 @@ jobs:
           echo "BUILD_NUMBER=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
 
       - name: Prepare licensed Apple product bezels
-        if: needs.check.outputs.destination == 'app-store' && inputs.screenshot_style == 'framed'
+        if: needs.check.outputs.destination != 'testflight' && inputs.screenshot_style == 'framed'
         working-directory: standalone/webapp
         run: pnpm run appstore:screenshots:prepare-frames
 
       - name: Capture iPhone and iPad App Store screenshots
-        if: needs.check.outputs.destination == 'app-store'
+        if: needs.check.outputs.destination != 'testflight'
         working-directory: standalone/webapp
         env:
           APP_STORE_SCREENSHOT_STYLE: ${{ inputs.screenshot_style }}
         run: bundle exec fastlane screenshots
 
       - name: Upload App Store screenshot review
-        if: needs.check.outputs.destination == 'app-store'
+        if: needs.check.outputs.destination != 'testflight'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-app-store-screenshot-review
@@ -240,7 +240,7 @@ jobs:
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
         run: bundle exec fastlane release
 
-      - name: Remove exact App Store screenshot duplicates (Fastlane)
+      - name: Upload App Store metadata and screenshots (Fastlane)
         if: needs.check.outputs.destination == 'app-store-assets'
         working-directory: standalone/webapp
         env:
@@ -248,7 +248,14 @@ jobs:
           API_KEY_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           API_KEY_PASSWORD: ${{ secrets.IOS_APP_STORE_CONNECT_API_KEY_PASSWORD }}
-        run: bundle exec fastlane deduplicate_store_screenshots
+          APP_STORE_SCREENSHOT_STYLE: ${{ inputs.screenshot_style }}
+          # Optional: App Review contact. Unset secrets are skipped, leaving the
+          # existing App Store Connect values untouched.
+          APP_REVIEW_FIRST_NAME: ${{ secrets.IOS_APP_REVIEW_FIRST_NAME }}
+          APP_REVIEW_LAST_NAME: ${{ secrets.IOS_APP_REVIEW_LAST_NAME }}
+          APP_REVIEW_EMAIL: ${{ secrets.IOS_APP_REVIEW_EMAIL }}
+          APP_REVIEW_PHONE: ${{ secrets.IOS_APP_REVIEW_PHONE }}
+        run: bundle exec fastlane store_assets
 
       - name: Prepare App Store version from the tested TestFlight build (Fastlane)
         if: needs.check.outputs.destination == 'app-store'

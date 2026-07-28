@@ -123,7 +123,9 @@ three destinations:
 - `testflight` uploads only the signed build to TestFlight (normally automatic;
   manual dispatch is the recovery path).
 - `app-store-assets` regenerates and uploads metadata and screenshots without a
-  binary.
+  binary. The screenshot sync retains exact matches, removes stale or duplicate
+  entries, waits for each changed image to finish processing, and verifies the
+  final per-device set before succeeding.
 - `app-store` regenerates the public assets and promotes the existing, tested
   TestFlight build. It requires the exact processed TestFlight build number,
   preventing Fastlane from selecting a different build; submission for review
