@@ -326,7 +326,15 @@ export const EdgeGeometrySolver = () => {
                 ? (geometryState?.previewById ?? {})
                 : (geometryState?.geometryById ?? {}),
             candidateById: routeById,
-            edges: solveInput.edges,
+            // Synchronous hysteresis is new for the automatically routed
+            // straight-polyline families. Keep legacy step-edge interaction
+            // immediate: required-interface socket bundling, reconnect previews,
+            // and other route-sensitive adornments rely on the exact live route.
+            // Large-diagram Worker previews retain their existing holistic
+            // stabilization below.
+            edges: solveInput.edges.filter((edge) =>
+              STRAIGHT_HOOK_EDGE_TYPES.has(edge.type ?? "")
+            ),
             nodes: acceptedNodeGeometry,
             pendingDecisionById: provisionalDecisionRef.current,
           })
