@@ -128,9 +128,9 @@ describe("EdgeEndpointMarkers", () => {
 
     expect(sourceHandle).toHaveAttribute("width", "44")
     expect(sourceHandle).toHaveAttribute("height", "44")
-    expect(sourceHandle).toHaveAttribute("x", "10")
+    expect(sourceHandle).toHaveAttribute("x", "20")
     expect(sourceHandle).toHaveAttribute("y", "-2")
-    expect(targetHandle).toHaveAttribute("x", "66")
+    expect(targetHandle).toHaveAttribute("x", "56")
     expect(targetHandle).toHaveAttribute("y", "98")
   })
 

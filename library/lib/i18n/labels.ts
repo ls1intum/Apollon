@@ -21,6 +21,10 @@ export interface ApollonLabels {
   redoHint: string
   multiSelection: string
   multiSelectionHint: string
+  /** Accessible name for a straight-edge segment midpoint create handle. */
+  addEdgeWaypoint: string
+  /** Accessible name for an authored straight-edge waypoint handle. */
+  moveEdgeWaypoint: string
 
   // Minimap
   miniMap: string
@@ -307,6 +311,9 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  addEdgeWaypoint: "Drag to add a waypoint",
+  moveEdgeWaypoint:
+    "Waypoint: drag to move, double-click or press Delete to remove",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",

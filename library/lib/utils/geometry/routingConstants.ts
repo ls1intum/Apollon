@@ -76,4 +76,21 @@ export const EDGES = Object.freeze({
   LABEL_LINE_HEIGHT: 14,
   /** Nominal label half-width used by placement scoring. */
   LABEL_NOMINAL_HALF_EXTENT: 40,
+  /** Flow-space distance a straight-edge ghost midpoint must travel before it
+   * materialises a real waypoint (Excalidraw DRAGGING_THRESHOLD analogue). */
+  WAYPOINT_DRAG_THRESHOLD_PX: 6,
+  /** A straight-edge interior waypoint within this perpendicular distance of the
+   * line through its neighbours is treated as collinear and pruned. */
+  WAYPOINT_COLLINEAR_TOLERANCE_PX: 4,
+  /** Screen-space magnetic band around the neighbour-to-neighbour chord. Dragging
+   * a waypoint into this band previews its removal, so making a bent route straight
+   * again is a visible gesture rather than a release-time surprise. */
+  WAYPOINT_COLLAPSE_SNAP_SCREEN_PX: 10,
+  /** Radius of the round handle drawn on a route waypoint. */
+  WAYPOINT_HANDLE_RADIUS_PX: 5,
+  /** Invisible hit target around a waypoint handle (touch-friendly). */
+  WAYPOINT_HIT_TARGET_PX: 24,
+  /** Shortest segment (flow px) that still shows a ghost midpoint handle, so two
+   * handles never fuse on a tiny segment. */
+  WAYPOINT_GHOST_MIN_SEGMENT_PX: 24,
 } as const)

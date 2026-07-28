@@ -988,6 +988,44 @@
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
 }
 
+/* Straight-edge WAYPOINT handles: a round grip on the point itself, since a straight
+   edge is edited by moving points rather than by sliding segments. Hidden until the
+   edge is hovered or selected, like every other edge handle. A "proposed" handle sits
+   at a segment midpoint and is drawn faint — it is not a waypoint until dragged. */
+.edge-waypoint-handle {
+  opacity: 0;
+  fill: var(--apollon-primary, #3e8acc);
+  stroke: var(--apollon-primary, #3e8acc);
+  paint-order: stroke;
+  transition:
+    fill 120ms ease,
+    opacity 120ms ease,
+    stroke 120ms ease;
+}
+
+.react-flow__edge:hover .edge-waypoint-handle,
+.react-flow__edge.selected .edge-waypoint-handle {
+  opacity: 1;
+}
+
+.react-flow__edge:hover .edge-waypoint-handle--proposed,
+.react-flow__edge.selected .edge-waypoint-handle--proposed {
+  opacity: 0.34;
+}
+
+.edge-waypoint-handle--active,
+.react-flow__edge .edge-waypoint-handle:hover,
+.react-flow__edge
+  g:has(.edge-waypoint-hit-target:focus-visible)
+  .edge-waypoint-handle {
+  opacity: 1;
+  fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
+}
+
+.edge-waypoint-hit-target:active {
+  cursor: grabbing !important;
+}
+
 .react-flow__edge:hover .edge-overlay {
   opacity: 0;
 }

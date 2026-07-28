@@ -3,6 +3,7 @@ import {
   BaseEdgeProps,
   CommonEdgeElements,
   EdgeEndpointMarkers,
+  EdgeWaypointHandles,
 } from "../GenericEdge"
 import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
@@ -51,11 +52,20 @@ export const SyntaxTreeEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourceNeighbor,
+    targetNeighbor,
+    route,
+    interior,
+    selectedWaypointIndex,
     sourcePosition: renderSourcePosition,
     targetPosition: renderTargetPosition,
     isDiagramModifiable,
     canEditEndpoint,
     handleEndpointPointerDown,
+    handleWaypointPointerDown,
+    handleGhostPointerDown,
+    handleWaypointDoubleClick,
+    handleWaypointKeyDown,
   } = useStraightPathEdge({
     id,
     type,
@@ -104,11 +114,25 @@ export const SyntaxTreeEdge = ({
             style={{ opacity: 0.4 }}
           />
 
+          {isDiagramModifiable && (
+            <EdgeWaypointHandles
+              route={route}
+              interior={interior}
+              selectedWaypointIndex={selectedWaypointIndex}
+              onWaypointPointerDown={handleWaypointPointerDown}
+              onWaypointDoubleClick={handleWaypointDoubleClick}
+              onWaypointKeyDown={handleWaypointKeyDown}
+              onGhostPointerDown={handleGhostPointerDown}
+            />
+          )}
+
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
             sourcePosition={renderSourcePosition}
             targetPosition={renderTargetPosition}
+            sourceNeighbor={sourceNeighbor}
+            targetNeighbor={targetNeighbor}
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={handleEndpointPointerDown}
