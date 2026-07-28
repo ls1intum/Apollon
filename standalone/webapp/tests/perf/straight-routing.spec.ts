@@ -8,7 +8,7 @@ import {
 
 test.describe.configure({ mode: "serial" })
 
-const MAX_P95_INTERACTION_FRAME_MS = 40
+const MAX_P95_INTERACTION_FRAME_MS = 34
 const MAX_STRAIGHT_SOLVE_MS = 500
 
 test("dense straight-edge crossings stay responsive and node-driven", async ({
@@ -50,13 +50,21 @@ test("dense straight-edge crossings stay responsive and node-driven", async ({
   const editor = page.locator(`#react-flow-library-${fixture.id}`)
   const node = editor.locator('.react-flow__node[data-id="cross-node-5"]')
   const before = await readPerf(page, true)
-  const frames = await dragNodeBy(node, page, 180, 90, {
-    steps: 30,
-    measureFrames: true,
-  })
+  const frames: number[] = []
+  // Aggregate several real gestures, as the established large-diagram frame
+  // budget does. A single 30-step gesture has too few samples for p95: one
+  // scheduler hiccup can move the selected order statistic by a whole frame.
+  for (let gesture = 0; gesture < 4; gesture++)
+    frames.push(
+      ...(await dragNodeBy(node, page, 45, gesture % 2 === 0 ? 24 : 21, {
+        steps: 12,
+        measureFrames: true,
+      }))
+    )
   const after = await readPerf(page, true)
   const sorted = [...frames].sort((a, b) => a - b)
-  const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? 0
+  expect(sorted.length).toBeGreaterThan(20)
+  const p95 = sorted[Math.ceil(sorted.length * 0.95) - 1] ?? 0
 
   expect(
     after.workerSmallSyncCount - before.workerSmallSyncCount,
