@@ -6,7 +6,7 @@ import { getDiagramMetadata, STORE_ORIGIN } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
 import { IPoint } from "@/edges/Connection"
-import { DEFAULT_LABELS, type ApollonLabels } from "@/i18n/labels"
+import { mergeLabels, type ResolvedApollonLabels } from "@/i18n/labels"
 import type { Edge } from "@xyflow/react"
 import { DISABLED_TAG_CONFIG, type TagConfig } from "@/utils/tagUtils"
 
@@ -45,7 +45,7 @@ export type MetadataStore = {
   /** Whether the editor answers `APOLLON_SHORTCUTS` at all. */
   keyboardShortcuts: boolean
   /** User-facing strings for the editor's own chrome; host-overridable for i18n. */
-  labels: ApollonLabels
+  labels: ResolvedApollonLabels
   /** Element-tag authoring config; disabled until a host opts in. */
   tagConfig: TagConfig
   scrollEnabled: boolean
@@ -73,7 +73,7 @@ export type MetadataStore = {
   setScrollLock: (scrollLock: boolean) => void
   setMultiSelectionMode: (multiSelectionMode: boolean) => void
   setKeyboardShortcuts: (keyboardShortcuts: boolean) => void
-  setLabels: (labels: ApollonLabels) => void
+  setLabels: (labels: ResolvedApollonLabels) => void
   setTagConfig: (tagConfig: TagConfig) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
   startConnectionGuidance: (
@@ -101,7 +101,7 @@ type InitialMetadataState = {
   scrollLock: boolean
   multiSelectionMode: boolean
   keyboardShortcuts: boolean
-  labels: ApollonLabels
+  labels: ResolvedApollonLabels
   tagConfig: TagConfig
   scrollEnabled: boolean
   connectionGuidanceActive: boolean
@@ -124,7 +124,7 @@ const initialMetadataState: InitialMetadataState = {
   scrollLock: false,
   multiSelectionMode: false,
   keyboardShortcuts: true,
-  labels: DEFAULT_LABELS,
+  labels: mergeLabels(),
   tagConfig: DISABLED_TAG_CONFIG,
   scrollEnabled: false,
   connectionGuidanceActive: false,

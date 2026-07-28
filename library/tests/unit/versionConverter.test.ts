@@ -1564,6 +1564,24 @@ describe("normalizeStraightEdgeWaypoints", () => {
     )
   })
 
+  it("does not rewrite or discard waypoints from a future v4 minor", () => {
+    const model = makeV4Model({
+      version: "4.9.0",
+      edges: [
+        {
+          id: "straight",
+          type: "UseCaseAssociation",
+          data: { points: [...points] },
+        },
+      ],
+    })
+    normalizeStraightEdgeWaypoints(model)
+    expect(model.version).toBe("4.9.0")
+    expect((model.edges[0].data as { points: unknown[] }).points).toEqual(
+      points
+    )
+  })
+
   it("runs on the universal import path", () => {
     const model = makeV4Model({
       version: "4.0.0",

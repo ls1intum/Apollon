@@ -34,6 +34,8 @@ fixture.nodes = fixture.nodes.slice(0, 2)
 fixture.edges = fixture.edges.slice(0, 1)
 
 const edgeId = fixture.edges[0].id
+const midpointHandleSelector =
+  ".edge-waypoint-handle--proposed + .edge-waypoint-hit-target"
 
 async function persistedPoints(page: Page): Promise<unknown[] | null> {
   return page.evaluate((id) => {
@@ -94,13 +96,34 @@ test.beforeEach(async ({ page }) => {
   await selectEdgeOnPath(page, edgeId)
 })
 
+test("legacy straight-edge route caches do not become visible bends", async ({
+  page,
+}) => {
+  const legacyFixture = structuredClone(fixture)
+  legacyFixture.version = "4.1.0"
+  legacyFixture.edges[0].data.points = [
+    { x: 40, y: 40 },
+    { x: 180, y: 220 },
+  ]
+
+  await openFixtureInLocalEditor(page, legacyFixture)
+  await waitForCanvasReady(page)
+  await selectEdgeOnPath(page, edgeId)
+
+  await expect.poll(() => persistedPoints(page)).toEqual([])
+  await expect.poll(() => pathExcessLength(page)).toBeLessThan(1)
+  await expect(
+    page
+      .locator(`.react-flow__edge[data-id="${edgeId}"]`)
+      .getByRole("button", { name: /^Waypoint:/ })
+  ).toHaveCount(0)
+})
+
 test("straight and step bend handles share one opaque visual state", async ({
   page,
 }) => {
   const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
-  const createTarget = edge
-    .getByRole("button", { name: "Drag to add a waypoint" })
-    .first()
+  const createTarget = edge.locator(midpointHandleSelector).first()
   const createCircle = edge.locator(".edge-waypoint-handle--proposed").first()
 
   // Selection clicks the route midpoint, so the newly-mounted midpoint handle
@@ -116,12 +139,6 @@ test("straight and step bend handles share one opaque visual state", async ({
   await expect(createCircle).not.toHaveCSS("fill", straightFill)
   await page.mouse.move(280, 680)
   await expect(createCircle).toHaveCSS("fill", straightFill)
-
-  // Keyboard users retain a clear darkened-circle focus state, but the browser
-  // must not draw a square/ring around the invisible hit rectangle.
-  await createTarget.focus()
-  await expect(createTarget).toHaveCSS("outline-style", "none")
-  await expect(createCircle).not.toHaveCSS("fill", straightFill)
 
   await openFixtureInLocalEditor(page, structuredClone(stepFixture))
   await waitForCanvasReady(page)
@@ -139,9 +156,7 @@ test("straight waypoints feel editable and collapse live back to a line", async 
   page,
 }) => {
   const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
-  const createHandle = edge.getByRole("button", {
-    name: "Drag to add a waypoint",
-  })
+  const createHandle = edge.locator(midpointHandleSelector)
   await expect(createHandle.first()).toBeVisible()
   await dragBy(page, createHandle.first(), 70, 70)
 
@@ -186,15 +201,13 @@ test("a focused waypoint can be removed with the keyboard", async ({
   page,
 }) => {
   const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
-  await dragBy(
-    page,
-    edge.getByRole("button", { name: "Drag to add a waypoint" }).first(),
-    70,
-    70
-  )
+  await dragBy(page, edge.locator(midpointHandleSelector).first(), 70, 70)
 
   const waypoint = edge.getByRole("button", { name: /^Waypoint:/ })
   await waypoint.focus()
+  // Authored points are keyboard actions. Their circle provides the focus
+  // feedback; the invisible SVG hit rectangle must never acquire a square ring.
+  await expect(waypoint).toHaveCSS("outline-style", "none")
   await page.keyboard.press("Delete")
 
   await expect(waypoint).toHaveCount(0)
@@ -209,12 +222,7 @@ test("the edge toolbar never traps a waypoint underneath it", async ({
   await selectEdgeOnPath(page, edgeId)
 
   const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
-  await dragBy(
-    page,
-    edge.getByRole("button", { name: "Drag to add a waypoint" }).first(),
-    -70,
-    -70
-  )
+  await dragBy(page, edge.locator(midpointHandleSelector).first(), -70, -70)
 
   const waypoint = edge.getByRole("button", { name: /^Waypoint:/ })
   await expect(waypoint).toHaveCount(1)

@@ -573,7 +573,7 @@ export const EdgeWaypointHandles = ({
     className: string,
     key: string,
     onPointerDown: (event: ReactPointerEvent<SVGRectElement>) => void,
-    accessibleName: string,
+    accessibleName?: string,
     onDoubleClick?: () => void,
     onKeyDown?: (event: ReactKeyboardEvent<SVGRectElement>) => void
   ) => (
@@ -595,9 +595,9 @@ export const EdgeWaypointHandles = ({
         rx={hit / 2}
         ry={hit / 2}
         pointerEvents="all"
-        tabIndex={0}
-        role="button"
-        aria-label={accessibleName}
+        tabIndex={onKeyDown && accessibleName ? 0 : undefined}
+        role={onKeyDown && accessibleName ? "button" : undefined}
+        aria-label={onKeyDown ? accessibleName : undefined}
         style={{ cursor: "grab", fill: "transparent", zIndex: 9999 }}
         onPointerDown={onPointerDown}
         onDoubleClick={(event) => {
@@ -618,8 +618,7 @@ export const EdgeWaypointHandles = ({
           midpoint.position,
           "edge-circle edge-waypoint-handle edge-waypoint-handle--proposed",
           `midpoint-${midpoint.segmentIndex}`,
-          (event) => onGhostPointerDown(event, midpoint.segmentIndex),
-          t.addEdgeWaypoint
+          (event) => onGhostPointerDown(event, midpoint.segmentIndex)
         )
       )}
       {interior.map((waypoint, index) =>
