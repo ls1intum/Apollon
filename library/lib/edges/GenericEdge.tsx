@@ -562,9 +562,16 @@ export const EdgeWaypointHandles = ({
   const t = useLabels()
   const screenScale = useHandleScreenScale()
   // Midpoint-create handles would be misleading while another point is actively
-  // moving (especially while its path is previewing a collapse).
+  // moving (especially while its path is previewing a collapse). Counter-scale
+  // the density threshold with the handles: at low zoom their 24px targets grow
+  // in flow space, so a fixed flow-space threshold would let them fuse.
   const midpoints =
-    selectedWaypointIndex === null ? getSegmentGhostHandles(route) : []
+    selectedWaypointIndex === null
+      ? getSegmentGhostHandles(
+          route,
+          EDGES.WAYPOINT_GHOST_MIN_SEGMENT_PX * screenScale
+        )
+      : []
   const hit = EDGES.WAYPOINT_HIT_TARGET_PX * screenScale
   const radius = EDGES.WAYPOINT_HANDLE_RADIUS_PX * screenScale
 
@@ -598,7 +605,11 @@ export const EdgeWaypointHandles = ({
         tabIndex={onKeyDown && accessibleName ? 0 : undefined}
         role={onKeyDown && accessibleName ? "button" : undefined}
         aria-label={onKeyDown ? accessibleName : undefined}
-        style={{ cursor: "grab", fill: "transparent", zIndex: 9999 }}
+        // Above endpoint reconnect targets (z 10000): the exact visible point
+        // owns its centre, while the endpoint remains available at its separate
+        // node-adjacent grip. DOM order provides the same fallback in SVG engines
+        // that ignore z-index on graphics elements.
+        style={{ cursor: "grab", fill: "transparent", zIndex: 10001 }}
         onPointerDown={onPointerDown}
         onDoubleClick={(event) => {
           if (!onDoubleClick) return
@@ -638,6 +649,87 @@ export const EdgeWaypointHandles = ({
     </>
   )
 }
+
+/**
+ * One shared interaction stack for direct edges. Broad endpoint reconnect
+ * rectangles paint first; exact waypoint targets paint last and therefore own
+ * their visible circles. Keeping the order here prevents use-case, syntax-tree,
+ * and Petri-net edges from drifting into different hit-test behaviour.
+ */
+export const StraightEdgeControls = ({
+  route,
+  interior,
+  selectedWaypointIndex,
+  sourcePoint,
+  targetPoint,
+  sourcePosition,
+  targetPosition,
+  sourceNeighbor,
+  targetNeighbor,
+  isDiagramModifiable,
+  canEditEndpoint,
+  onEndpointPointerDown,
+  onWaypointPointerDown,
+  onWaypointDoubleClick,
+  onWaypointKeyDown,
+  onGhostPointerDown,
+}: {
+  route: IPoint[]
+  interior: IPoint[]
+  selectedWaypointIndex: number | null
+  sourcePoint: IPoint
+  targetPoint: IPoint
+  sourcePosition?: EndpointSide
+  targetPosition?: EndpointSide
+  sourceNeighbor?: IPoint
+  targetNeighbor?: IPoint
+  isDiagramModifiable: boolean
+  canEditEndpoint: boolean
+  onEndpointPointerDown?: (
+    event: ReactPointerEvent<SVGRectElement>,
+    endpoint: "source" | "target"
+  ) => void
+  onWaypointPointerDown: (
+    event: ReactPointerEvent<SVGRectElement>,
+    index: number
+  ) => void
+  onWaypointDoubleClick: (index: number) => void
+  onWaypointKeyDown: (
+    event: ReactKeyboardEvent<SVGRectElement>,
+    index: number
+  ) => void
+  onGhostPointerDown: (
+    event: ReactPointerEvent<SVGRectElement>,
+    segmentIndex: number
+  ) => void
+}) => (
+  <>
+    <EdgeEndpointMarkers
+      sourcePoint={sourcePoint}
+      targetPoint={targetPoint}
+      sourcePosition={sourcePosition}
+      targetPosition={targetPosition}
+      sourceNeighbor={sourceNeighbor}
+      targetNeighbor={targetNeighbor}
+      isDiagramModifiable={isDiagramModifiable}
+      canEditEndpoint={canEditEndpoint}
+      onEndpointPointerDown={onEndpointPointerDown}
+      straight
+    />
+
+    {isDiagramModifiable && (
+      <EdgeWaypointHandles
+        route={route}
+        interior={interior}
+        selectedWaypointIndex={selectedWaypointIndex}
+        onWaypointPointerDown={onWaypointPointerDown}
+        onWaypointDoubleClick={onWaypointDoubleClick}
+        onWaypointKeyDown={onWaypointKeyDown}
+        onGhostPointerDown={onGhostPointerDown}
+      />
+    )}
+  </>
+)
 
 /**
  * The shared SVG body for every orthogonal (step-path) edge: the base path,

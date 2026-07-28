@@ -2,8 +2,7 @@ import { BaseEdge } from "@xyflow/react"
 import {
   BaseEdgeProps,
   CommonEdgeElements,
-  EdgeEndpointMarkers,
-  EdgeWaypointHandles,
+  StraightEdgeControls,
 } from "../GenericEdge"
 import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
@@ -114,19 +113,10 @@ export const SyntaxTreeEdge = ({
             style={{ opacity: 0.4 }}
           />
 
-          {isDiagramModifiable && (
-            <EdgeWaypointHandles
-              route={route}
-              interior={interior}
-              selectedWaypointIndex={selectedWaypointIndex}
-              onWaypointPointerDown={handleWaypointPointerDown}
-              onWaypointDoubleClick={handleWaypointDoubleClick}
-              onWaypointKeyDown={handleWaypointKeyDown}
-              onGhostPointerDown={handleGhostPointerDown}
-            />
-          )}
-
-          <EdgeEndpointMarkers
+          <StraightEdgeControls
+            route={route}
+            interior={interior}
+            selectedWaypointIndex={selectedWaypointIndex}
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
             sourcePosition={renderSourcePosition}
@@ -136,7 +126,10 @@ export const SyntaxTreeEdge = ({
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={handleEndpointPointerDown}
-            straight
+            onWaypointPointerDown={handleWaypointPointerDown}
+            onWaypointDoubleClick={handleWaypointDoubleClick}
+            onWaypointKeyDown={handleWaypointKeyDown}
+            onGhostPointerDown={handleGhostPointerDown}
           />
         </g>
 

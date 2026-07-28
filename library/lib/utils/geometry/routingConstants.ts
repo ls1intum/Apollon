@@ -90,7 +90,8 @@ export const EDGES = Object.freeze({
   WAYPOINT_HANDLE_RADIUS_PX: 5,
   /** Invisible hit target around a waypoint handle (touch-friendly). */
   WAYPOINT_HIT_TARGET_PX: 24,
-  /** Shortest segment (flow px) that still shows a ghost midpoint handle, so two
-   * handles never fuse on a tiny segment. */
-  WAYPOINT_GHOST_MIN_SEGMENT_PX: 24,
+  /** Shortest segment at natural zoom that still shows a ghost midpoint handle.
+   * The renderer counter-scales this threshold below 1× so fixed-screen waypoint
+   * and endpoint targets retain distinct grab centres. */
+  WAYPOINT_GHOST_MIN_SEGMENT_PX: 64,
 } as const)

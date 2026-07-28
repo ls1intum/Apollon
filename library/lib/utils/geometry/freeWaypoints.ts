@@ -34,17 +34,18 @@ export const snapPoint = (
 ): IPoint => ({ x: snap(point.x, grid), y: snap(point.y, grid) })
 
 /**
- * A faint ghost handle at the midpoint of every route segment. Dragging one past
+ * A ghost handle at the midpoint of every route segment. Dragging one past
  * `exceedsDragThreshold` materialises a new interior waypoint (see `insertWaypoint`).
- * Segments shorter than `WAYPOINT_GHOST_MIN_SEGMENT_PX` are skipped so a ghost never
- * fuses with an endpoint or an adjacent waypoint handle.
+ * Short segments are skipped so a ghost never fuses with an endpoint or an adjacent
+ * waypoint handle. The renderer supplies a zoom-adjusted minimum; pure geometry
+ * callers default to the natural-scale value.
  */
 export const getSegmentGhostHandles = (
-  route: readonly IPoint[]
+  route: readonly IPoint[],
+  minimumSegmentLength: number = EDGES.WAYPOINT_GHOST_MIN_SEGMENT_PX
 ): SegmentGhostHandle[] => {
   const handles: SegmentGhostHandle[] = []
-  const minLenSq =
-    EDGES.WAYPOINT_GHOST_MIN_SEGMENT_PX * EDGES.WAYPOINT_GHOST_MIN_SEGMENT_PX
+  const minLenSq = minimumSegmentLength * minimumSegmentLength
   for (let i = 0; i < route.length - 1; i++) {
     const a = route[i]
     const b = route[i + 1]

@@ -10,7 +10,7 @@ import {
 
 const directory = path.dirname(fileURLToPath(import.meta.url))
 type StraightEdgeFixture = Record<string, unknown> & {
-  nodes: unknown[]
+  nodes: Array<{ position: { x: number; y: number } }>
   edges: Array<{ id: string; data: { points: unknown[] } }>
 }
 
@@ -34,6 +34,9 @@ fixture.nodes = fixture.nodes.slice(0, 2)
 fixture.edges = fixture.edges.slice(0, 1)
 
 const edgeId = fixture.edges[0].id
+const closeHandleFixture = structuredClone(fixture)
+closeHandleFixture.nodes[0].position = { x: 200, y: 0 }
+closeHandleFixture.nodes[1].position = { x: 200, y: 180 }
 const midpointHandleSelector =
   ".edge-waypoint-handle--proposed + .edge-waypoint-hit-target"
 
@@ -131,6 +134,9 @@ test("straight and step bend handles share one opaque visual state", async ({
   // its resting state rather than accidentally sampling its hover color.
   await page.mouse.move(280, 680)
   await expect(createCircle).toHaveCSS("opacity", "1")
+  // Firefox exposes the interpolated `color(srgb …)` value while the declared
+  // 120ms fill transition is active; sample the actual resting state.
+  await page.waitForTimeout(150)
   const straightFill = await createCircle.evaluate(
     (element) => getComputedStyle(element).fill
   )
@@ -138,6 +144,7 @@ test("straight and step bend handles share one opaque visual state", async ({
   await createTarget.hover()
   await expect(createCircle).not.toHaveCSS("fill", straightFill)
   await page.mouse.move(280, 680)
+  await page.waitForTimeout(150)
   await expect(createCircle).toHaveCSS("fill", straightFill)
 
   await openFixtureInLocalEditor(page, structuredClone(stepFixture))
@@ -150,6 +157,56 @@ test("straight and step bend handles share one opaque visual state", async ({
 
   await expect(stepHandle).toHaveCSS("opacity", "1")
   await expect(stepHandle).toHaveCSS("fill", straightFill)
+})
+
+test("a waypoint handle wins its circle without blocking endpoint grips", async ({
+  page,
+}) => {
+  await openFixtureInLocalEditor(page, structuredClone(closeHandleFixture))
+  await waitForCanvasReady(page)
+  await selectEdgeOnPath(page, edgeId)
+
+  const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
+  const midpoint = edge.locator(midpointHandleSelector)
+  await expect(midpoint).toHaveCount(1)
+
+  const owners = await edge.evaluate((root, selector) => {
+    const ownerAtCenter = (element: Element | null) => {
+      if (!element) return null
+      const box = element.getBoundingClientRect()
+      return document
+        .elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+        ?.getAttribute("class")
+    }
+    return {
+      midpoint: ownerAtCenter(root.querySelector(selector)),
+      source: ownerAtCenter(root.querySelector(".edge-endpoint-grip--source")),
+      target: ownerAtCenter(root.querySelector(".edge-endpoint-grip--target")),
+    }
+  }, midpointHandleSelector)
+
+  expect(owners.midpoint).toContain("edge-waypoint-hit-target")
+  expect(owners.source).toContain("edge-endpoint-handle--source")
+  expect(owners.target).toContain("edge-endpoint-handle--target")
+
+  // Real pointer input—not a dispatched event—proves the visible midpoint owns
+  // its grab centre even where the broad endpoint rectangles meet nearby.
+  await dragBy(page, midpoint, 55, 0)
+  await expect.poll(() => persistedPoints(page)).toHaveLength(1)
+  const waypoint = edge.getByRole("button", { name: /^Waypoint:/ })
+  await expect(waypoint).toHaveCount(1)
+  expect(
+    await waypoint.evaluate((element) => {
+      const box = element.getBoundingClientRect()
+      return document
+        .elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+        ?.getAttribute("class")
+    })
+  ).toContain("edge-waypoint-hit-target")
+
+  const before = await persistedPoints(page)
+  await dragBy(page, waypoint, 20, 10)
+  await expect.poll(() => persistedPoints(page)).not.toEqual(before)
 })
 
 test("straight waypoints feel editable and collapse live back to a line", async ({

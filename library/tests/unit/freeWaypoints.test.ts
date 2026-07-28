@@ -39,6 +39,12 @@ describe("freeWaypoints", () => {
       const ghosts = getSegmentGhostHandles(route)
       expect(ghosts.map((g) => g.segmentIndex)).toEqual([1])
     })
+    it("accepts the renderer's zoom-adjusted spacing threshold", () => {
+      const route = [p(0, 0), p(100, 0)]
+
+      expect(getSegmentGhostHandles(route, 101)).toEqual([])
+      expect(getSegmentGhostHandles(route, 100)).toHaveLength(1)
+    })
   })
 
   describe("insert/move/remove", () => {

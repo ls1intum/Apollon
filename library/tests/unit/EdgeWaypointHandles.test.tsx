@@ -45,6 +45,7 @@ describe("EdgeWaypointHandles", () => {
     expect(midpoint).not.toHaveAttribute("tabindex")
     expect(midpoint).not.toHaveAttribute("role")
     expect(midpoint).not.toHaveAttribute("aria-label")
+    expect(midpoint).toHaveStyle({ zIndex: 10001 })
   })
 
   it("keeps authored waypoints keyboard focusable and named", () => {
