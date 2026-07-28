@@ -6,17 +6,18 @@ description: Compose built-in editor chrome and add host controls in named canva
 
 # Overlay controls
 
-Apollon renders editor chrome — the palette, zoom controls, minimap, and host
-buttons or rails — as **controls anchored in named canvas regions**. Built-in and
-host controls use the same placement rules, so they can be composed instead of
-being fixed around the editor.
+Apollon renders editor chrome — the palette, zoom controls, automatic layout
+action, minimap, and host buttons or rails — as **controls anchored in named
+canvas regions**. Built-in and host controls use the same placement rules, so
+they can be composed instead of being fixed around the editor.
 
 Most hosts start with one of these tasks:
 
 - **Keep the defaults and add one React button:** render `<ApollonDefaultControls />`
   plus an `<ApollonControl>` child.
-- **Show only selected built-ins:** list `<Apollon.Zoom />`, `<Apollon.MiniMap />`,
-  and/or `<Apollon.Palette />` as `<Apollon>` children.
+- **Show only selected built-ins:** list `<Apollon.Zoom />`,
+  `<Apollon.Layout />`, `<Apollon.MiniMap />`, and/or `<Apollon.Palette />` as
+  `<Apollon>` children.
 - **Mount host-owned UI with its own context:** use `getRegionElement()` and render
   into it from your host root.
 
@@ -94,8 +95,9 @@ function Editor() {
 output is the portaled `children`. The `id` must be stable — changing it
 re-registers a fresh control. Supplying children to `<Apollon>` means you own the
 composition; include `<ApollonDefaultControls />` (or the individual
-`<Apollon.Palette />`, `<Apollon.Zoom />`, `<Apollon.MiniMap />`) when a custom
-child should keep the default chrome visible.
+`<Apollon.Palette />`, `<Apollon.Zoom />`, `<Apollon.Layout />`,
+`<Apollon.MiniMap />`) when a custom child should keep the default chrome
+visible.
 
 ## Imperative: `addControl`
 
@@ -137,10 +139,10 @@ editor.getControl("my-app:banner")?.region
 
 ## Built-in controls
 
-The editor's own chrome — the element **palette**, the **minimap**, and the
-**zoom / history** cluster — are ordinary records in this same registry under
-reserved ids (`PALETTE_ID`, `ZOOM_ID`, `MINIMAP_ID`). You compose them the same
-two ways.
+The editor's own chrome — the element **palette**, **automatic layout** action,
+**minimap**, and **zoom / history** cluster — are ordinary records in this same
+registry under reserved ids (`PALETTE_ID`, `LAYOUT_ID`, `ZOOM_ID`,
+`MINIMAP_ID`). You compose them the same two ways.
 
 Built-in renderers support these regions:
 
@@ -148,6 +150,7 @@ Built-in renderers support these regions:
 | -------------- | ------------------------------------------------------------------------------------- |
 | Palette        | `left-rail`, `right-rail`                                                             |
 | Zoom / history | any `OverlayRegion`                                                                   |
+| Layout         | any `OverlayRegion`                                                                   |
 | MiniMap        | `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right` |
 
 Moving `PALETTE_ID` or `MINIMAP_ID` with `updateControl()` keeps those renderer
@@ -158,8 +161,8 @@ use any valid region.
 **React — as `<Apollon>` children.** Presence renders, omission hides, typed
 props reconfigure. Passing _any_ children makes the composition explicit, so you
 list exactly the chrome you want. Use `<ApollonDefaultControls />` to keep the
-standard palette + zoom + minimap next to custom children; pass `null` or an empty
-fragment for a bare canvas. A conditional child expression still counts as
+standard palette + zoom + layout + minimap next to custom children; pass `null`
+or an empty fragment for a bare canvas. A conditional child expression still counts as
 children in React, even when it currently renders `false`; use
 `<ApollonDefaultControls />` when defaults must stay visible next to conditional
 custom chrome.
@@ -172,6 +175,7 @@ function Editor() {
     <Apollon defaultType={UMLDiagramType.ClassDiagram}>
       <Apollon.Palette />
       <Apollon.Zoom region="bottom-center" history={false} />
+      <Apollon.Layout region="bottom-left" />
       <Apollon.MiniMap region="bottom-right" />
       {/* minimap omitted? then it is hidden */}
     </Apollon>
@@ -198,20 +202,25 @@ function BrandedZoom({ region = "bottom-left" }: { region?: OverlayRegion }) {
 ```
 
 **Vanilla / imperative — descriptor factories.** `paletteControl()`,
-`zoomControl({ history })`, and `miniMapControl()` build the same records. Omit
-`controls` for the defaults, pass `[]` for a bare canvas, or a subset to show
-only those:
+`zoomControl({ history })`, `layoutControl()`, and `miniMapControl()` build the
+same records. Omit `controls` for the defaults, pass `[]` for a bare canvas, or
+a subset to show only those:
 
 ```tsx no-check
 import {
   ApollonEditor,
   ZOOM_ID,
+  layoutControl,
   paletteControl,
   zoomControl,
 } from "@tumaet/apollon"
 
 new ApollonEditor(el, {
-  controls: [paletteControl(), zoomControl({ history: false })],
+  controls: [
+    paletteControl(),
+    zoomControl({ history: false }),
+    layoutControl(),
+  ],
 })
 
 // Later, address a built-in by its reserved id:
@@ -328,7 +337,7 @@ editor.fitView() // respectInsets defaults to true
 | --------------- | ------------------------------------------------ | ------- | ---------------------------------------------------------------------------------- |
 | `respectInsets` | `boolean`                                        | `true`  | Pad the fit by the reserved overlay insets. Set `false` to ignore chrome.          |
 | `padding`       | `number \| Partial<Record<OverlaySide, number>>` | —       | Extra padding. A per-side object overrides the default 16px gutter on those sides. |
-| `duration`      | `number`                                         | `200`   | Fit animation duration in ms.                                                      |
+| `duration`      | `number`                                         | `200`   | Fit animation duration in ms; forced to `0` when the user prefers reduced motion.  |
 
 With no reserved chrome, no device safe area and a scalar (or absent) `padding`,
 `fitView` keeps the existing fraction-based padding behavior (`0.15`). Otherwise
@@ -459,7 +468,7 @@ The editor UI strings exposed in the typed `ApollonLabels` dictionary ship with
 English defaults. Public names follow React Flow's `MiniMap` casing for the
 component and factory (`<Apollon.MiniMap />`, `miniMapControl()`), while label
 keys use the exact exported `ApollonLabels` names (`miniMap`, `showMinimap`,
-`hideMinimap`, ...). The surface includes the built-in palette / zoom / minimap
+`hideMinimap`, ...). The surface includes the built-in palette / zoom / layout / minimap
 tooltips and aria-labels, plus the edit/assessment popover copy. Override any
 subset:
 

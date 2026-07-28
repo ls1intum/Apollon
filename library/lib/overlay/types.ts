@@ -58,6 +58,19 @@ export const REGION_EDGE: Partial<Record<OverlayRegion, OverlaySide>> = {
 }
 /** Reserved room per side, in px. */
 export type Insets = Record<OverlaySide, number>
+
+/** Public options shared by `fitView()` and Arrange's automatic framing. */
+export type ApollonFitViewOptions = Readonly<{
+  /**
+   * Scalar React Flow fit fraction, or per-side pixel gutter overrides. Device
+   * safe areas are always added on top.
+   */
+  padding?: number | Partial<Record<OverlaySide, number>>
+  /** Viewport transition duration in milliseconds. Defaults to 200. */
+  duration?: number
+  /** Pad around registered overlay chrome. Defaults to true. */
+  respectInsets?: boolean
+}>
 export const ZERO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 }
 
 /**

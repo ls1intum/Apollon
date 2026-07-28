@@ -3,6 +3,17 @@ import { ApollonMode, ApollonView } from "@/typings"
 import { useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
+export const isDiagramStateModifiable = ({
+  readonly,
+  mode,
+  view,
+}: {
+  readonly: boolean
+  mode: ApollonMode
+  view: ApollonView
+}): boolean =>
+  mode === ApollonMode.Modelling && view === ApollonView.Modelling && !readonly
+
 export const useDiagramModifiable = () => {
   const { readonlyDiagram, diagramMode, diagramView } = useMetadataStore(
     useShallow((state) => ({
@@ -14,9 +25,11 @@ export const useDiagramModifiable = () => {
 
   const isDiagramUpdatable = useMemo(
     () =>
-      diagramMode === ApollonMode.Modelling &&
-      diagramView === ApollonView.Modelling &&
-      !readonlyDiagram,
+      isDiagramStateModifiable({
+        readonly: readonlyDiagram,
+        mode: diagramMode,
+        view: diagramView,
+      }),
     [diagramMode, diagramView, readonlyDiagram]
   )
 

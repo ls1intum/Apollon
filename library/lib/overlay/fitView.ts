@@ -7,6 +7,15 @@ const GUTTER = 16
 const anySide = (i: Insets): boolean =>
   !!(i.top || i.right || i.bottom || i.left)
 
+/** Suppress non-essential pan/zoom animation when the user requests it. */
+const motionSafeDuration = (
+  duration: number | undefined
+): number | undefined =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ? 0
+    : duration
+
 /**
  * Frame the diagram MapLibre-style. Two reservations stack on each side and are
  * measured independently, so they never double-count:
@@ -38,7 +47,7 @@ export function insetAwareFitView(
   }
 ): void {
   const maxZoom = options?.maxZoom ?? 1.0
-  const duration = options?.duration
+  const duration = motionSafeDuration(options?.duration)
   const nodes = options?.nodes
   const padding = options?.padding
   const override = typeof padding === "object" ? padding : undefined

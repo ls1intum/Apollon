@@ -26,6 +26,14 @@ import {
   pruneInteractiveElements,
   toggleInteractiveRecord,
 } from "@/utils/interactiveUtils"
+import type {
+  DiagramLayoutChangeSummary,
+  DiagramLayoutPositions,
+} from "@/layout/types"
+import {
+  hasManualEdgeRouting,
+  resetManualEdgeRouting,
+} from "@/edges/routingAuthority"
 
 type InitialDiagramState = {
   nodes: Node[]
@@ -153,6 +161,15 @@ export type DiagramStore = {
    */
   endTransientNodeBroadcast: () => void
   setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
+  /**
+   * Commit one complete automatic layout and its routing-authority reset as an
+   * isolated undo item. Returns exact change counts, or null when nothing
+   * changes.
+   */
+  applyDiagramLayout: (layout: {
+    positions: DiagramLayoutPositions
+    resetEdgeRoutingIds: readonly string[]
+  }) => DiagramLayoutChangeSummary | null
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
   addEdge: (edge: Edge) => void
@@ -501,6 +518,63 @@ export const createDiagramStore = (
               undefined,
               "setNodes"
             )
+          },
+
+          applyDiagramLayout: ({ positions, resetEdgeRoutingIds }) => {
+            const current = get().nodes
+            const expectedIds = new Set(current.map((node) => node.id))
+            const positionIds = Object.keys(positions)
+            const currentEdges = get().edges
+            const edgeById = new Map(
+              currentEdges.map((edge) => [edge.id, edge])
+            )
+            if (
+              positionIds.length !== current.length ||
+              positionIds.some((id) => !expectedIds.has(id)) ||
+              new Set(resetEdgeRoutingIds).size !==
+                resetEdgeRoutingIds.length ||
+              resetEdgeRoutingIds.some((id) => !edgeById.has(id)) ||
+              current.some((node) => {
+                const position = positions[node.id]
+                return (
+                  !position ||
+                  !Number.isFinite(position.x) ||
+                  !Number.isFinite(position.y)
+                )
+              })
+            )
+              throw new Error("Cannot apply an incomplete diagram layout")
+            let movedNodeCount = 0
+            const nodes = current.map((node) => {
+              const position = positions[node.id]
+              if (
+                !position ||
+                (position.x === node.position.x &&
+                  position.y === node.position.y)
+              )
+                return node
+              movedNodeCount++
+              return { ...node, position: { ...position } }
+            })
+            const resetIds = new Set(resetEdgeRoutingIds)
+            let replacedManualRouteCount = 0
+            const edges = currentEdges.map((edge) => {
+              if (!resetIds.has(edge.id) || !hasManualEdgeRouting(edge))
+                return edge
+              replacedManualRouteCount++
+              return resetManualEdgeRouting(edge)
+            })
+            if (movedNodeCount === 0 && replacedManualRouteCount === 0)
+              return null
+
+            // Y.UndoManager coalesces transactions inside its capture timeout.
+            // A layout is one explicit command: isolate it from both the gesture
+            // immediately before it and the next edit.
+            const undoManager = get().undoManager
+            undoManager?.stopCapturing()
+            get().setNodesAndEdges(nodes, edges)
+            undoManager?.stopCapturing()
+            return { movedNodeCount, replacedManualRouteCount }
           },
 
           setEdges: (payload) => {

@@ -1,0 +1,180 @@
+{
+  "id": "9c6b4673-737f-4a08-8fe2-ed11850ddcf0",
+  "version": "4.1.0",
+  "title": "",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "b88b8ad7-80db-4689-b3eb-d77503b259c6",
+      "width": 160,
+      "height": 120,
+      "type": "package",
+      "position": {
+        "x": 110,
+        "y": 375
+      },
+      "data": {
+        "name": "Package"
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "d80adab4-465d-4084-b2bf-83450dfe7415",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 380,
+        "y": 385
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "9ae1d7a2-7dbc-4ae3-8a14-3a9d9bd552a7",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "b6797f35-5b29-4164-bb1f-0aab4bbafb6d",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "db57b6ce-d6c4-4468-ba58-a5739cdab01f",
+      "width": 160,
+      "height": 140,
+      "type": "class",
+      "position": {
+        "x": 85,
+        "y": 580
+      },
+      "data": {
+        "name": "Enumeration",
+        "stereotype": "enumeration",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "6ce447fc-2a8d-4f56-8aef-2a6b41439f90",
+            "name": "Case 1"
+          },
+          {
+            "id": "ff117014-cc8a-4b63-b7c0-fb474c3be27d",
+            "name": "Case 2"
+          },
+          {
+            "id": "cb91276c-190c-4cba-aa38-49ac1ae701cc",
+            "name": "Case 3"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 140
+      }
+    },
+    {
+      "id": "e5b289cf-badb-4e55-a780-d33a442896a8",
+      "width": 160,
+      "height": 120,
+      "type": "package",
+      "position": {
+        "x": 135,
+        "y": 175
+      },
+      "data": {
+        "name": "Package"
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "8d5e595d-443e-43bb-9ff2-a8186dc5d321",
+      "width": 160,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": -190,
+        "y": 435
+      },
+      "data": {
+        "name": "Class",
+        "methods": [
+          {
+            "id": "5f678728-c6ad-4d8e-aae4-07dc405a3eb5",
+            "name": "+ method()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "89161575-29cf-4a09-8ad0-5aa8085719dc",
+            "name": "+ attribute: Type"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "194c5b4b-be40-41e7-9f6c-402835b7ee16",
+      "source": "b88b8ad7-80db-4689-b3eb-d77503b259c6",
+      "target": "d80adab4-465d-4084-b2bf-83450dfe7415",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-between-mid-left-center",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "f59d295f-6d5a-4d12-a5ad-72f4488b58af",
+      "source": "db57b6ce-d6c4-4468-ba58-a5739cdab01f",
+      "target": "b88b8ad7-80db-4689-b3eb-d77503b259c6",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left-mid-bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "1f2876e1-d2bb-443a-8845-961b059bf011",
+      "source": "e5b289cf-badb-4e55-a780-d33a442896a8",
+      "target": "b88b8ad7-80db-4689-b3eb-d77503b259c6",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-mid-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "e107a3a3-759d-4d50-9a45-bfb65233262c",
+      "source": "8d5e595d-443e-43bb-9ff2-a8186dc5d321",
+      "target": "b88b8ad7-80db-4689-b3eb-d77503b259c6",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

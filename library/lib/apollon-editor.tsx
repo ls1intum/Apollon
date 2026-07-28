@@ -53,13 +53,14 @@ import {
 } from "./chrome/builtins/controls"
 import { mergeLabels } from "./i18n/labels"
 import { insetAwareFitView } from "./overlay/fitView"
+import { fitArrangedDiagram } from "./layout/fitView"
 import { RegionMount } from "./overlay/RegionMount"
 import {
   type InsetContribution,
   type OverlayControlInput,
   type OverlayControlSnapshot,
   type OverlayRegion,
-  type OverlaySide,
+  type ApollonFitViewOptions,
   OVERLAY_REGIONS,
   ZERO_INSETS,
 } from "./overlay/types"
@@ -70,6 +71,15 @@ import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
 import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
+import {
+  cancelActiveDiagramLayout,
+  executeArrangeDiagram,
+} from "./layout/arrangeDiagram"
+import type {
+  ArrangeDiagramOptions,
+  ArrangeDiagramResult,
+} from "./layout/types"
+import { isDiagramStateModifiable } from "./hooks/useDiagramModifiable"
 
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
@@ -135,6 +145,7 @@ export class ApollonEditor {
   private readonly overlayStore: StoreApi<OverlayStore>
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private readonly controlGenerations = new Map<string, number>()
+  private cancelActiveLayout: (() => void) | null = null
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -250,7 +261,8 @@ export class ApollonEditor {
       this.metadataStore.getState().setTagConfig(resolveTagConfig(options.tags))
     }
     // Register the chrome: the given descriptors (even `[]`, an explicit bare
-    // canvas), or the palette + zoom + minimap defaults when omitted. The React
+    // canvas), or the palette + zoom + layout + minimap defaults when omitted.
+    // The React
     // `<Apollon>` wrapper always passes `[]` and instead composes its own defaults
     // as fallback children, so composing-ness stays fully reactive (no mount-time
     // snapshot, no default fighting a composed control over a reserved id).
@@ -360,12 +372,7 @@ export class ApollonEditor {
    *   (header, rails, …). Default `true`. The device safe area (notch, home
    *   indicator) is always cleared — it is a hardware constraint, not chrome.
    */
-  public fitView(options?: {
-    padding?: number | Partial<Record<OverlaySide, number>>
-    duration?: number
-    /** Pad the fit by the reserved overlay insets (header, rails, …). */
-    respectInsets?: boolean
-  }): void {
+  public fitView(options?: ApollonFitViewOptions): void {
     const duration = options?.duration ?? 200
     const respectInsets = options?.respectInsets ?? true
     const explicit = options?.padding
@@ -403,6 +410,72 @@ export class ApollonEditor {
       requestAnimationFrame(attempt)
     }
     requestAnimationFrame(attempt)
+  }
+
+  /**
+   * Arrange a flat diagram.
+   *
+   * Deterministic placement candidates are evaluated off-thread by Apollon's
+   * own edge router and label geometry. Visible manually routed edges require
+   * `replaceManualRoutes: true` before they are evaluated and
+   * committed under automatic routing authority. A concurrent model or
+   * geometry change makes the result stale instead of overwriting newer work.
+   * Positions and routing resets form exactly one undo item. When positions
+   * move, the local viewport frames the result by default; pass `fitView:
+   * false` to preserve it.
+   */
+  public arrangeDiagram(
+    options: ArrangeDiagramOptions = {}
+  ): Promise<ArrangeDiagramResult> {
+    if (options.signal?.aborted)
+      return Promise.reject(
+        new DOMException("Diagram layout cancelled", "AbortError")
+      )
+    const reactFlow = this.reactFlowInstance
+    if (!reactFlow)
+      return Promise.resolve({
+        status: "unavailable",
+        reason: "not-ready",
+      })
+
+    this.cancelActiveLayout?.()
+    const execution = executeArrangeDiagram({
+      diagramStore: this.diagramStore,
+      reactFlow,
+      isModifiable: () =>
+        isDiagramStateModifiable(this.metadataStore.getState()),
+      isInteractionActive: () => {
+        const state = this.metadataStore.getState()
+        return (
+          state.liveEdgeOverride !== null ||
+          state.pendingConnectionEdge !== null ||
+          state.pendingConnectionId !== null
+        )
+      },
+      getDiagramType: () => this.metadataStore.getState().diagramType,
+      replaceManualRoutes: options.replaceManualRoutes,
+    })
+    this.cancelActiveLayout = execution.cancel
+    const abort = () => execution.cancel()
+    options.signal?.addEventListener("abort", abort, { once: true })
+    return execution.result
+      .then((result) => {
+        if (result.status === "applied" && result.movedNodeCount > 0) {
+          const overlay = this.overlayStore.getState()
+          fitArrangedDiagram(
+            reactFlow,
+            overlay.insets,
+            overlay.safeArea,
+            options.fitView
+          )
+        }
+        return result
+      })
+      .finally(() => {
+        options.signal?.removeEventListener("abort", abort)
+        if (this.cancelActiveLayout === execution.cancel)
+          this.cancelActiveLayout = null
+      })
   }
 
   // ---- Canvas overlay / control API -------------------------------------
@@ -563,6 +636,9 @@ export class ApollonEditor {
 
   public destroy() {
     try {
+      this.cancelActiveLayout?.()
+      cancelActiveDiagramLayout(this.diagramStore)
+      this.cancelActiveLayout = null
       Object.keys(this.subscribers).forEach((subscriberId) => {
         this.subscribers[parseInt(subscriberId)]?.()
       })
@@ -955,6 +1031,11 @@ export class ApollonEditor {
   /** Live-toggle modeling vs assessment vs exporting mode. */
   public setMode(mode: Apollon.ApollonMode): void {
     this.metadataStore.getState().setMode(mode)
+    if (
+      mode === Apollon.ApollonMode.Modelling &&
+      !this.diagramStore.getState().undoManager
+    )
+      this.diagramStore.getState().initializeUndoManager()
   }
 
   /** Live-toggle whether the canvas captures page scroll. */

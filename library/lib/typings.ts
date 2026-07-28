@@ -2,8 +2,14 @@ import type { IPoint } from "./edges/types"
 import type { DiagramEdgeType, DiagramNodeType } from "./modelElementTypes"
 import { UMLDiagramType } from "./types/DiagramType"
 import type { OverlayControlInput } from "./overlay/types"
+export type { ApollonFitViewOptions } from "./overlay/types"
 import type { ApollonLabels } from "./i18n/labels"
 export type { ApollonLabels } from "./i18n/labels"
+export type {
+  ArrangeDiagramOptions,
+  ArrangeDiagramResult,
+  DiagramLayoutAvailabilityReason,
+} from "./layout/types"
 import type { TagOptions } from "./utils/tagUtils"
 export type { TagOptions, TagConfig } from "./utils/tagUtils"
 
@@ -167,10 +173,11 @@ export type ApollonOptions = {
   /**
    * The chrome to register (vanilla / imperative). Build descriptors with the
    * built-in factories — `paletteControl()`, `zoomControl({ history })`,
-   * `miniMapControl()` — and/or your own. OMIT for the editor defaults (palette +
-   * zoom + minimap); pass `[]` for a bare canvas; pass a subset to show only
-   * those. In React, compose `<Apollon.Palette|Zoom|MiniMap>` / `<ApollonControl>`
-   * children instead — both compile to the same registry records.
+   * `layoutControl()`, `miniMapControl()` — and/or your own. OMIT for the editor
+   * defaults (palette + zoom + layout + minimap); pass `[]` for a bare canvas;
+   * pass a subset to show only those. In React, compose
+   * `<Apollon.Palette|Zoom|Layout|MiniMap>` / `<ApollonControl>` children instead
+   * — both compile to the same registry records.
    */
   controls?: OverlayControlInput[]
   /**

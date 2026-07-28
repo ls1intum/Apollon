@@ -156,6 +156,7 @@ function MinimalChromeDiagram() {
   return (
     <Apollon style={{ height: 600 }}>
       <Apollon.Zoom region="bottom-center" history={false} />
+      <Apollon.Layout region="bottom-left" />
       <Apollon.MiniMap region="bottom-right" />
     </Apollon>
   )

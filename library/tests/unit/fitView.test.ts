@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { insetAwareFitView, readSafeArea } from "@/overlay/fitView"
 import { ZERO_INSETS, type Insets } from "@/overlay/types"
+import {
+  ARRANGE_FIT_VIEW_DURATION_MS,
+  fitArrangedDiagram,
+} from "@/layout/fitView"
 
 const insets = (partial: Partial<Insets> = {}): Insets => ({
   ...ZERO_INSETS,
@@ -12,6 +16,10 @@ const fitSpy = () => {
   const fitView = vi.fn()
   return { rf: { fitView }, fitView }
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe("insetAwareFitView", () => {
   it("falls back to a fraction fit when nothing is reserved", () => {
@@ -62,6 +70,66 @@ describe("insetAwareFitView", () => {
       duration: 300,
       maxZoom: 1.0,
     })
+  })
+
+  it("removes viewport animation when reduced motion is requested", () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true }) as MediaQueryList)
+    )
+    const { rf, fitView } = fitSpy()
+    insetAwareFitView(rf, ZERO_INSETS, ZERO_INSETS, { duration: 300 })
+
+    expect(fitView).toHaveBeenCalledWith(
+      expect.objectContaining({ duration: 0 })
+    )
+  })
+})
+
+describe("fitArrangedDiagram", () => {
+  it("uses the shared inset-aware fit with the arrangement duration", () => {
+    const { rf, fitView } = fitSpy()
+    fitArrangedDiagram(rf, insets({ top: 40 }), insets({ bottom: 20 }))
+
+    expect(fitView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        duration: ARRANGE_FIT_VIEW_DURATION_MS,
+        maxZoom: 1,
+        padding: {
+          top: "56px",
+          right: "16px",
+          bottom: "36px",
+          left: "16px",
+        },
+      })
+    )
+  })
+
+  it("preserves the viewport when disabled", () => {
+    const { rf, fitView } = fitSpy()
+    fitArrangedDiagram(rf, ZERO_INSETS, ZERO_INSETS, false)
+    expect(fitView).not.toHaveBeenCalled()
+  })
+
+  it("honors custom fit options while always clearing the safe area", () => {
+    const { rf, fitView } = fitSpy()
+    fitArrangedDiagram(rf, insets({ top: 40 }), insets({ top: 8 }), {
+      duration: 325,
+      padding: { left: 4 },
+      respectInsets: false,
+    })
+
+    expect(fitView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        duration: 325,
+        padding: {
+          top: "24px",
+          right: "16px",
+          bottom: "16px",
+          left: "4px",
+        },
+      })
+    )
   })
 })
 
