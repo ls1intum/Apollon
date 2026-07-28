@@ -21,6 +21,12 @@ const crowdedFixture = JSON.parse(
   )
 ) as StraightEdgeFixture
 crowdedFixture.version = "4.2.0"
+const stepFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(directory, "..", "fixtures", "class-diagram.json"),
+    "utf-8"
+  )
+) as Record<string, unknown>
 
 const fixture = structuredClone(crowdedFixture)
 fixture.version = "4.2.0"
@@ -88,6 +94,47 @@ test.beforeEach(async ({ page }) => {
   await selectEdgeOnPath(page, edgeId)
 })
 
+test("straight and step bend handles share one opaque visual state", async ({
+  page,
+}) => {
+  const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
+  const createTarget = edge
+    .getByRole("button", { name: "Drag to add a waypoint" })
+    .first()
+  const createCircle = edge.locator(".edge-waypoint-handle--proposed").first()
+
+  // Selection clicks the route midpoint, so the newly-mounted midpoint handle
+  // initially appears under the stationary pointer. Move clear before measuring
+  // its resting state rather than accidentally sampling its hover color.
+  await page.mouse.move(280, 680)
+  await expect(createCircle).toHaveCSS("opacity", "1")
+  const straightFill = await createCircle.evaluate(
+    (element) => getComputedStyle(element).fill
+  )
+
+  await createTarget.hover()
+  await expect(createCircle).not.toHaveCSS("fill", straightFill)
+  await page.mouse.move(280, 680)
+  await expect(createCircle).toHaveCSS("fill", straightFill)
+
+  // Keyboard users retain a clear darkened-circle focus state, but the browser
+  // must not draw a square/ring around the invisible hit rectangle.
+  await createTarget.focus()
+  await expect(createTarget).toHaveCSS("outline-style", "none")
+  await expect(createCircle).not.toHaveCSS("fill", straightFill)
+
+  await openFixtureInLocalEditor(page, structuredClone(stepFixture))
+  await waitForCanvasReady(page)
+  const stepEdgeId = "edge-bidirectional-dog-imovable"
+  await selectEdgeOnPath(page, stepEdgeId)
+  const stepHandle = page
+    .locator(`.react-flow__edge[data-id="${stepEdgeId}"] .edge-bend-handle`)
+    .first()
+
+  await expect(stepHandle).toHaveCSS("opacity", "1")
+  await expect(stepHandle).toHaveCSS("fill", straightFill)
+})
+
 test("straight waypoints feel editable and collapse live back to a line", async ({
   page,
 }) => {
@@ -107,6 +154,15 @@ test("straight waypoints feel editable and collapse live back to a line", async 
   )
   await expect(visiblePoint).toHaveCSS("opacity", "1")
   await expect(visiblePoint).not.toHaveCSS("fill", "rgb(255, 255, 255)")
+  await expect
+    .poll(() =>
+      edge
+        .locator(".edge-waypoint-handle--proposed")
+        .evaluateAll((handles) =>
+          handles.every((handle) => getComputedStyle(handle).opacity === "1")
+        )
+    )
+    .toBe(true)
 
   const midpoint = await directChordMidpoint(page)
   if (!midpoint) throw new Error("edge path is not measurable")

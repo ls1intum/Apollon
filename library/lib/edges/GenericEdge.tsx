@@ -528,9 +528,8 @@ export const EdgeBendHandle = ({
  * handle on the point itself, not the step edge's elongated segment pill, and it
  * carries a `move` cursor because it travels in two dimensions rather than one.
  *
- * Every authored interior vertex gets one. Segment midpoints additionally carry a
- * faint HALF handle — the same point affordance, just not real yet — which becomes
- * a waypoint when dragged.
+ * Every authored interior vertex gets one. Segment midpoints carry the same opaque
+ * handle as step-edge bendable segments; dragging one materialises a waypoint.
  */
 export const EdgeWaypointHandles = ({
   route,
