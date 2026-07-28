@@ -273,21 +273,24 @@ platform :ios do
       duplicate_groups = screenshots.group_by do |screenshot|
         [screenshot.file_name, screenshot.source_file_checksum]
       end
-      valid_exact_pairs =
-        screenshots.count == expected_count * 2 &&
+      valid_exact_groups =
+        screenshots.count.between?(expected_count, expected_count * 2) &&
         duplicate_groups.count == expected_count &&
         duplicate_groups.values.all? do |duplicates|
-          duplicates.count == 2 &&
+          duplicates.count.between?(1, 2) &&
             duplicates.all?(&:complete?) &&
             duplicates.first.source_file_checksum.to_s != ""
         end
       UI.user_error!(
-        "Refusing to modify #{display_type}: expected #{expected_count} exact " \
-        "duplicate pairs, found #{screenshots.count} screenshots in " \
+        "Refusing to modify #{display_type}: expected #{expected_count} " \
+        "unique screenshots with at most two exact copies, found " \
+        "#{screenshots.count} screenshots in " \
         "#{duplicate_groups.count} groups"
-      ) unless valid_exact_pairs
+      ) unless valid_exact_groups
 
       duplicate_groups.each_value do |duplicates|
+        next if duplicates.count == 1
+
         duplicate = duplicates.last
         UI.message(
           "Deleting exact duplicate #{display_type}/#{duplicate.file_name} " \
