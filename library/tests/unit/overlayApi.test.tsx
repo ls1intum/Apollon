@@ -5,6 +5,7 @@ import { ApollonProvider } from "@/components/react/context"
 import { ApollonControl } from "@/components/react/ApollonControl"
 import { ApollonSelectionToolbar } from "@/components/react/ApollonSelectionToolbar"
 import {
+  ApollonLayout,
   ApollonPalette,
   ApollonZoom,
   ApollonMiniMap,
@@ -18,6 +19,7 @@ import type {
   OverlayControlSnapshot,
 } from "@/overlay/types"
 import {
+  LAYOUT_ID,
   MINIMAP_ID,
   PALETTE_ID,
   ZOOM_ID,
@@ -147,9 +149,10 @@ describe("built-in controls (imperative descriptors)", () => {
       controls: [zoomControl({ region: "bottom-center" })],
     })
 
-    // Supplied → registered; the palette + minimap were omitted → not registered.
+    // Supplied → registered; the other built-ins were omitted → not registered.
     expect(ed.hasControl(ZOOM_ID)).toBe(true)
     expect(ed.hasControl(PALETTE_ID)).toBe(false)
+    expect(ed.hasControl(LAYOUT_ID)).toBe(false)
     expect(ed.hasControl(MINIMAP_ID)).toBe(false)
 
     // addControl / removeControl are the imperative show / hide for a built-in.
@@ -168,6 +171,7 @@ describe("built-in controls (imperative descriptors)", () => {
 
     expect(ed.hasControl(ZOOM_ID)).toBe(false)
     expect(ed.hasControl(PALETTE_ID)).toBe(false)
+    expect(ed.hasControl(LAYOUT_ID)).toBe(false)
     expect(ed.hasControl(MINIMAP_ID)).toBe(false)
 
     // A factory descriptor added later still lands under its reserved id.
@@ -177,13 +181,14 @@ describe("built-in controls (imperative descriptors)", () => {
     ed.destroy()
   })
 
-  it("omitting controls registers all three defaults", () => {
+  it("omitting controls registers every default", () => {
     el = document.createElement("div")
     document.body.appendChild(el)
     const ed = new ApollonEditor(el)
 
     expect(ed.hasControl(PALETTE_ID)).toBe(true)
     expect(ed.hasControl(ZOOM_ID)).toBe(true)
+    expect(ed.hasControl(LAYOUT_ID)).toBe(true)
     expect(ed.hasControl(MINIMAP_ID)).toBe(true)
 
     ed.destroy()
@@ -320,10 +325,11 @@ describe("<ApollonControl> facade", () => {
   })
 })
 
-// The compound built-ins (`<Apollon.Palette|Zoom|MiniMap>`) are thin `useControl`
-// wrappers: mounting registers the reserved id, a prop change re-registers, and
-// unmount disposes — the composition contract behind "presence renders, omission
-// hides". Same fake-editor harness (jsdom can't lay the real editor out).
+// The compound built-ins (`<Apollon.Palette|Zoom|Layout|MiniMap>`) are thin
+// `useControl` wrappers: mounting registers the reserved id, a prop change
+// re-registers, and unmount disposes — the composition contract behind "presence
+// renders, omission hides". Same fake-editor harness (jsdom can't lay the real
+// editor out).
 describe("compound built-in components", () => {
   function makeFakeEditor() {
     const controls = new Set<string>()
@@ -346,17 +352,20 @@ describe("compound built-in components", () => {
       <ApollonProvider editor={editor}>
         <ApollonPalette />
         <ApollonZoom history={false} />
+        <ApollonLayout />
         <ApollonMiniMap region="top-right" />
       </ApollonProvider>
     )
 
     expect(editor.hasControl(PALETTE_ID)).toBe(true)
     expect(editor.hasControl(ZOOM_ID)).toBe(true)
+    expect(editor.hasControl(LAYOUT_ID)).toBe(true)
     expect(editor.hasControl(MINIMAP_ID)).toBe(true)
 
     unmount()
     expect(editor.hasControl(PALETTE_ID)).toBe(false)
     expect(editor.hasControl(ZOOM_ID)).toBe(false)
+    expect(editor.hasControl(LAYOUT_ID)).toBe(false)
     expect(editor.hasControl(MINIMAP_ID)).toBe(false)
   })
 

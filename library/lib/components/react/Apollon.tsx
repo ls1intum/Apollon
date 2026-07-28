@@ -19,7 +19,12 @@ import type {
   UMLModel,
 } from "@/typings"
 import { ApollonInstanceContext } from "./context"
-import { ApollonPalette, ApollonZoom, ApollonMiniMap } from "./builtins"
+import {
+  ApollonLayout,
+  ApollonPalette,
+  ApollonZoom,
+  ApollonMiniMap,
+} from "./builtins"
 import { ApollonSelectionToolbar } from "./ApollonSelectionToolbar"
 
 /**
@@ -259,12 +264,13 @@ export function Apollon(props: ApollonProps) {
 }
 
 /** The editor's default chrome. Render it explicitly when adding host children
- *  that should keep palette + zoom + minimap visible. */
+ *  that should keep palette + zoom + layout + minimap visible. */
 export function ApollonDefaultControls() {
   return (
     <>
       <ApollonPalette />
       <ApollonZoom />
+      <ApollonLayout />
       <ApollonMiniMap />
     </>
   )
@@ -272,12 +278,14 @@ export function ApollonDefaultControls() {
 
 /**
  * Compound built-in chrome, so consumers compose `<Apollon.Palette/>`,
- * `<Apollon.Zoom/>`, `<Apollon.MiniMap/>` as children — presence renders, omission
- * hides, typed props reconfigure. Custom controls / replacements use the bare
- * `<ApollonControl>` (or `useControl`) at a reserved id. Also exported by name.
+ * `<Apollon.Zoom/>`, `<Apollon.Layout/>`, `<Apollon.MiniMap/>` as children —
+ * presence renders, omission hides, typed props reconfigure. Custom controls /
+ * replacements use the bare `<ApollonControl>` (or `useControl`) at a reserved
+ * id. Also exported by name.
  */
 Apollon.Palette = ApollonPalette
 Apollon.Zoom = ApollonZoom
+Apollon.Layout = ApollonLayout
 Apollon.MiniMap = ApollonMiniMap
 Apollon.SelectionToolbar = ApollonSelectionToolbar
 Apollon.DefaultControls = ApollonDefaultControls

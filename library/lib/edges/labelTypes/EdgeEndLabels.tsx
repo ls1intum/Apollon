@@ -1,6 +1,6 @@
 import { useMemo } from "react"
-import { calculateDynamicEdgeLabels } from "@/utils/edgeUtils"
 import { IPoint } from "../Connection"
+import { getEdgeEndLabelPlacements } from "@/utils/geometry/edgeEndLabelLayout"
 
 interface EdgeEndLabelsProps {
   data?: {
@@ -31,47 +31,25 @@ export const EdgeEndLabels = ({
   targetPosition,
   textColor = "var(--apollon-foreground, #000000)",
 }: EdgeEndLabelsProps) => {
-  const sourceLabels = useMemo(() => {
-    if (activePoints.length < 2) {
-      return calculateDynamicEdgeLabels(sourceX, sourceY, sourcePosition)
-    }
-
-    const sourcePoint = activePoints[0]
-    const nextPoint = activePoints[1]
-    const deltaX = nextPoint.x - sourcePoint.x
-    const deltaY = nextPoint.y - sourcePoint.y
-
-    let direction: string
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      direction = deltaX > 0 ? "right" : "left"
-    } else {
-      direction = deltaY > 0 ? "bottom" : "top"
-    }
-    return calculateDynamicEdgeLabels(sourcePoint.x, sourcePoint.y, direction)
-  }, [activePoints, sourceX, sourceY, sourcePosition])
-
-  const targetLabels = useMemo(() => {
-    if (activePoints.length < 2) {
-      return calculateDynamicEdgeLabels(targetX, targetY, targetPosition)
-    }
-
-    // Mirror the source: derive the side from the REAL terminal segment
-    // (penultimate -> last point), not the declared targetPosition. On a bent
-    // edge whose final segment approaches from a different side than the handle
-    // implies, this keeps the target role/multiplicity on the correct side.
-    const targetPoint = activePoints[activePoints.length - 1]
-    const prevPoint = activePoints[activePoints.length - 2]
-    const deltaX = prevPoint.x - targetPoint.x
-    const deltaY = prevPoint.y - targetPoint.y
-
-    let direction: string
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      direction = deltaX > 0 ? "right" : "left"
-    } else {
-      direction = deltaY > 0 ? "bottom" : "top"
-    }
-    return calculateDynamicEdgeLabels(targetPoint.x, targetPoint.y, direction)
-  }, [activePoints, targetX, targetY, targetPosition])
+  const { source: sourceLabels, target: targetLabels } = useMemo(
+    () =>
+      getEdgeEndLabelPlacements({
+        activePoints,
+        source: { x: sourceX, y: sourceY },
+        target: { x: targetX, y: targetY },
+        sourcePosition,
+        targetPosition,
+      }),
+    [
+      activePoints,
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      sourcePosition,
+      targetPosition,
+    ]
+  )
 
   return (
     <>

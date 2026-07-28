@@ -135,7 +135,7 @@ export function getMidSegment(
   }
 }
 
-const rectsIntersect = (a: Rect, b: Rect): boolean =>
+export const rectsIntersect = (a: Rect, b: Rect): boolean =>
   a.x < b.x + b.width &&
   a.x + a.width > b.x &&
   a.y < b.y + b.height &&
@@ -176,7 +176,7 @@ export function candidateBox(
 }
 
 /** Whether an axis-aligned polyline segment passes through the box. */
-const segmentCrossesBox = (
+export const segmentCrossesBox = (
   seg: {
     orientation: "horizontal" | "vertical"
     fixed: number
@@ -328,9 +328,17 @@ export interface MiddleLabelInput {
   neighborGeometry?: IPoint[][]
 }
 
+export interface MiddleLabelEvaluation {
+  placed: PlacedLabel
+  /** Node hits, line hits, arm-fit penalty, arc distance, side preference. */
+  cost: readonly [number, number, number, number, number]
+  /** Inflated box used by the collision score. */
+  box: Rect
+}
+
 /** Clearance (flow px) kept between the label box and any line or node, so a
  * label that merely sits NEXT TO a parallel arm still counts as overlapping. */
-const LABEL_CLEARANCE = 5
+export const EDGE_LABEL_CLEARANCE_PX = 5
 /** Cap on along-arm sample points per arm, to bound candidate count. */
 const MAX_ARM_SAMPLES = 20
 
@@ -360,7 +368,9 @@ const inflate = (r: Rect, m: number): Rect => ({
  * neighbouring arms. All inputs are static geometry, so the placement is stable
  * across selection and identical in headless export.
  */
-export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
+export function evaluateMiddleLabelLayout(
+  input: MiddleLabelInput
+): MiddleLabelEvaluation {
   const { renderPoints, labelText, fontSize, neighborGeometry } = input
   const nodeRects = input.nodeRects ?? []
   const neighbors = neighborGeometry ?? []
@@ -375,11 +385,16 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
   const h = EDGES.LABEL_LINE_HEIGHT
   const segments = getAxisAlignedSegments(points)
   if (segments.length === 0) {
-    return placeOnSide({ point: arc }, "above")
+    const placed = placeOnSide({ point: arc }, "above")
+    return {
+      placed,
+      cost: [0, 0, 1, 0, 0],
+      box: inflate(candidateBox(arc, "above", w, h), EDGE_LABEL_CLEARANCE_PX),
+    }
   }
 
   let best: { point: IPoint; side: LabelSide } | null = null
-  let bestCost: number[] | null = null
+  let bestCost: [number, number, number, number, number] | null = null
 
   for (const seg of segments) {
     const isHorizontal = seg.orientation === "horizontal"
@@ -420,7 +435,10 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
       for (const side of sides) {
         // Pad the box by the clearance so a label merely sitting NEXT TO a line
         // or node (not strictly crossing it) is still penalised.
-        const box = inflate(candidateBox(anchor, side, w, h), LABEL_CLEARANCE)
+        const box = inflate(
+          candidateBox(anchor, side, w, h),
+          EDGE_LABEL_CLEARANCE_PX
+        )
         // Cost, most-significant first: sitting on a NODE (covers its content)
         // is worse than touching a thin line (own arm or neighbour edge); then
         // prefer a label that fits within its arm, then a central spot, then the
@@ -442,7 +460,18 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
     }
   }
 
-  return placeOnSide({ point: best!.point }, best!.side)
+  return {
+    placed: placeOnSide({ point: best!.point }, best!.side),
+    cost: bestCost!,
+    box: inflate(
+      candidateBox(best!.point, best!.side, w, h),
+      EDGE_LABEL_CLEARANCE_PX
+    ),
+  }
+}
+
+export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
+  return evaluateMiddleLabelLayout(input).placed
 }
 
 export interface RotatedLabelPlacement {

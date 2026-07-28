@@ -20,8 +20,11 @@ import {
 import type { DiagramEdgeType } from "./types"
 import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
-import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
 import { CANVAS, EDGES } from "@/constants"
+import {
+  hasManualEdgeRouting,
+  resetManualEdgeRouting,
+} from "./routingAuthority"
 
 // Edge handles live inside the zoomed React Flow viewport. We want them to
 // keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
@@ -667,23 +670,13 @@ export const CommonEdgeElements = ({
   const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
 
   const setEdges = useDiagramStore((state) => state.setEdges)
-  const points = data?.points
-  const hasManualPoints = Array.isArray(points) && points.length > 0
-  const hasPinnedAnchor =
-    isFreeformEdgeAnchor(data?.sourceAnchor) ||
-    isFreeformEdgeAnchor(data?.targetAnchor)
-  const hasManualRoute = hasManualPoints || hasPinnedAnchor
+  const hasManualRoute = hasManualEdgeRouting({ data })
 
   const handleResetRouting = useCallback(() => {
     setEdges((edges) =>
-      edges.map((edge) => {
-        if (edge.id !== id) return edge
-        const nextData = { ...(edge.data ?? {}) } as Record<string, unknown>
-        nextData.points = []
-        delete nextData.sourceAnchor
-        delete nextData.targetAnchor
-        return { ...edge, data: nextData }
-      })
+      edges.map((edge) =>
+        edge.id === id ? resetManualEdgeRouting(edge) : edge
+      )
     )
   }, [id, setEdges])
 

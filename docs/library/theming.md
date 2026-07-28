@@ -229,7 +229,7 @@ defaults re-resolve per theme so the swatches stay legible on both canvases.
 
 ### Editor chrome (`--apollon-chrome-*`) — auto-derived, rarely set
 
-The floating chrome (element palette, zoom/undo controls, minimap, header
+The floating chrome (element palette, zoom/undo controls, layout, minimap, header
 islands, version rail) is painted from the `--apollon-chrome-*` band. **You
 almost never set these.** Every chrome surface, border, and text color is
 `color-mix()`-derived from `--apollon-background` and `--apollon-foreground`,

@@ -2,30 +2,38 @@
 // `./internals` (unstable) or intentionally private.
 export * from "./typings"
 export { ApollonEditor } from "./apollon-editor"
+export {
+  DiagramLayoutError,
+  type DiagramLayoutErrorCode,
+} from "./layout/workerController"
 // Canvas overlay / control API types — needed by both the imperative and React
 // injection paths.
 export type {
   OverlayRegion,
   OverlaySide,
+  ApollonFitViewOptions,
   InsetContribution,
   OverlayControlOptions,
   OverlayControlInput,
   OverlayControlSnapshot,
 } from "./overlay/types"
 // Built-in chrome descriptor factories — the framework-agnostic source of truth
-// for the palette, zoom cluster, and minimap. Pass the results to
+// for the palette, zoom cluster, layout action, and minimap. Pass the results to
 // `ApollonOptions.controls` (or omit for the defaults); the React compound
 // components below wrap the same factories.
 export {
   paletteControl,
   zoomControl,
+  layoutControl,
   miniMapControl,
   defaultControls,
   PALETTE_ID,
   ZOOM_ID,
+  LAYOUT_ID,
   MINIMAP_ID,
   type PaletteControlOptions,
   type ZoomControlOptions,
+  type LayoutControlOptions,
   type MiniMapControlOptions,
 } from "./chrome/builtins/controls"
 export {
@@ -97,6 +105,7 @@ export {
   useControl,
   ApollonPalette,
   ApollonZoom,
+  ApollonLayout,
   ApollonMiniMap,
 } from "./components/react/builtins"
 // Selection-anchored toolbar (screen-space, follows the selection, non-scaling).

@@ -21,6 +21,28 @@ export interface ApollonLabels {
   redoHint: string
   multiSelection: string
   multiSelectionHint: string
+  arrangeDiagram: string
+  arrangeDiagramHint: string
+  arrangingDiagram: string
+  cancelArrangeDiagram: string
+  arrangeDiagramApplied: string
+  arrangeDiagramAppliedWithRoutingReset: (count: number) => string
+  arrangeDiagramRoutingResetOnly: (count: number) => string
+  arrangeDiagramUnchanged: string
+  arrangeDiagramStale: string
+  arrangeDiagramCancelled: string
+  arrangeDiagramFailed: string
+  arrangeDiagramTimeout: string
+  arrangeDiagramWorkerUnavailable: string
+  arrangeDiagramUnavailable: string
+  arrangeDiagramManualRoutingConfirmationHint: (count: number) => string
+  arrangeDiagramManualRoutingConfirmationTitle: string
+  arrangeDiagramManualRoutingConfirmationDescription: (count: number) => string
+  arrangeDiagramManualRoutingConfirmationCancel: string
+  arrangeDiagramManualRoutingConfirmationConfirm: string
+  arrangeDiagramNestedNodes: string
+  arrangeDiagramInteractionActive: string
+  arrangeDiagramTooLarge: string
 
   // Minimap
   miniMap: string
@@ -307,6 +329,38 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  arrangeDiagram: "Arrange diagram",
+  arrangeDiagramHint:
+    "Arrange nodes automatically and choose the clearest routed result",
+  arrangingDiagram: "Arranging diagram…",
+  cancelArrangeDiagram: "Cancel arranging diagram",
+  arrangeDiagramApplied: "Diagram arranged and fitted to view.",
+  arrangeDiagramAppliedWithRoutingReset: (count) =>
+    `Diagram arranged and fitted to view. ${count} visible manual edge ${count === 1 ? "route was" : "routes were"} replaced. Undo restores the positions and ${count === 1 ? "route" : "routes"}.`,
+  arrangeDiagramRoutingResetOnly: (count) =>
+    `${count} visible manual edge ${count === 1 ? "route was" : "routes were"} replaced. Node positions were already optimal. Undo restores ${count === 1 ? "the route" : "the routes"}.`,
+  arrangeDiagramUnchanged: "No clearer arrangement was found.",
+  arrangeDiagramStale: "The diagram changed. Arrange it again.",
+  arrangeDiagramCancelled: "Diagram arrangement cancelled.",
+  arrangeDiagramFailed:
+    "Arrangement failed unexpectedly. No changes were made.",
+  arrangeDiagramTimeout: "Arrangement took too long. No changes were made.",
+  arrangeDiagramWorkerUnavailable:
+    "Automatic arrangement isn’t available in this environment.",
+  arrangeDiagramUnavailable: "This diagram cannot be arranged automatically.",
+  arrangeDiagramManualRoutingConfirmationHint: (count) =>
+    `Arrange nodes. Replacing ${count} visible manually routed ${count === 1 ? "edge requires" : "edges require"} confirmation.`,
+  arrangeDiagramManualRoutingConfirmationTitle: "Replace manual edge routing?",
+  arrangeDiagramManualRoutingConfirmationDescription: (count) =>
+    `Arrange will replace ${count} visible manually routed ${count === 1 ? "edge" : "edges"} with automatic routing. Undo restores both the node positions and manual routing.`,
+  arrangeDiagramManualRoutingConfirmationCancel: "Cancel",
+  arrangeDiagramManualRoutingConfirmationConfirm: "Replace and arrange",
+  arrangeDiagramNestedNodes:
+    "Arrange supports flat diagrams only. This diagram contains nested elements.",
+  arrangeDiagramInteractionActive:
+    "Finish moving or resizing elements before arranging the diagram.",
+  arrangeDiagramTooLarge:
+    "Arrange supports up to 120 visible elements and 240 visible relationships.",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",

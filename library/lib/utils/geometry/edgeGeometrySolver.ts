@@ -1557,7 +1557,7 @@ function computeAllEdgeGeometryPass(
   return { routeById }
 }
 
-type RouteSetScore = Readonly<{
+export type RouteSetScore = Readonly<{
   hardInvalidity: number
   weightedCost: number
   crossings: number
@@ -1638,7 +1638,9 @@ const actualRouteSides = (
   return result
 }
 
-const routeSetScoreValues = (score: RouteSetScore): readonly number[] => [
+export const routeSetScoreValues = (
+  score: RouteSetScore
+): readonly number[] => [
   score.hardInvalidity,
   score.weightedCost,
   score.maxSideGapImbalancePx,
@@ -1777,7 +1779,7 @@ const trimSharedPinnedTrunk = (
   ]
 }
 
-const routeSetScore = (
+export const scoreRouteSet = (
   routeById: Readonly<Record<string, readonly IPoint[]>>,
   edges: readonly Edge[],
   nodes: readonly Node[],
@@ -2114,6 +2116,7 @@ const refinementComponents = (
  */
 export function computeAllEdgeGeometry(input: SolverInput): {
   routeById: Record<string, IPoint[]>
+  score: RouteSetScore
 } {
   const prepared = prepareLiveEdgeSolve(input.edges, input.liveOverride)
   const solveInput: SolverInput = {
@@ -2140,7 +2143,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     solveInput.edges.filter(immutableForRefinement).map((edge) => edge.id)
   )
 
-  const primaryScore = routeSetScore(
+  const primaryScore = scoreRouteSet(
     primary.routeById,
     solveInput.edges,
     solveInput.nodes,
@@ -2148,7 +2151,8 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     undefined,
     immutableEdgeIds
   )
-  if (!routeSetNeedsRefinement(primaryScore)) return primary
+  if (!routeSetNeedsRefinement(primaryScore))
+    return { ...primary, score: primaryScore }
 
   let bestRoutes = primary.routeById
   const nodeById = new Map(solveInput.nodes.map((node) => [node.id, node]))
@@ -2177,7 +2181,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
     if (mutableEdges.length < 2 || mutableEdges.length > MAX_REFINEMENT_EDGES)
       continue
     const componentIds = new Set(componentEdges.map((edge) => edge.id))
-    let bestComponentScore = routeSetScore(
+    let bestComponentScore = scoreRouteSet(
       bestRoutes,
       solveInput.edges,
       solveInput.nodes,
@@ -2210,7 +2214,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
         variant,
         fixedRoutes
       )
-      const score = routeSetScore(
+      const score = scoreRouteSet(
         candidate.routeById,
         solveInput.edges,
         solveInput.nodes,
@@ -2245,7 +2249,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       fixedRoutes,
       feedbackSides
     )
-    const feedbackScore = routeSetScore(
+    const feedbackScore = scoreRouteSet(
       feedbackCandidate.routeById,
       solveInput.edges,
       solveInput.nodes,
@@ -2271,7 +2275,7 @@ export function computeAllEdgeGeometry(input: SolverInput): {
           const route = candidate.routeById[edge.id]
           if (!route || route === bestRoutes[edge.id]) continue
           const combined = { ...bestRoutes, [edge.id]: route }
-          const score = routeSetScore(
+          const score = scoreRouteSet(
             combined,
             solveInput.edges,
             solveInput.nodes,
@@ -2288,7 +2292,17 @@ export function computeAllEdgeGeometry(input: SolverInput): {
       if (!improved) break
     }
   }
-  return { routeById: bestRoutes }
+  return {
+    routeById: bestRoutes,
+    score: scoreRouteSet(
+      bestRoutes,
+      solveInput.edges,
+      solveInput.nodes,
+      solveInput.straightPathTypes,
+      undefined,
+      immutableEdgeIds
+    ),
+  }
 }
 
 /**

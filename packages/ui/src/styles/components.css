@@ -325,7 +325,8 @@
 }
 
 /* Lower-specificity states first (stylelint no-descending-specificity). */
-.apollon-chrome-iconbtn:disabled {
+.apollon-chrome-iconbtn:disabled,
+.apollon-chrome-iconbtn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -336,11 +337,11 @@
     color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
 }
 
-.apollon-chrome-iconbtn:hover:not(:disabled) {
+.apollon-chrome-iconbtn:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--apollon-chrome-surface-hover);
 }
 
-.apollon-chrome-iconbtn:active:not(:disabled) {
+.apollon-chrome-iconbtn:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--apollon-chrome-surface-active);
 }
 

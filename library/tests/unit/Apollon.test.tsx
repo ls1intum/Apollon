@@ -79,7 +79,7 @@ describe("<Apollon>", () => {
   it("renders default chrome only when children are omitted", async () => {
     const { unmount } = render(<Apollon />)
 
-    await waitFor(() => expect(addControlSpy).toHaveBeenCalledTimes(3))
+    await waitFor(() => expect(addControlSpy).toHaveBeenCalledTimes(4))
     unmount()
     addControlSpy.mockClear()
 

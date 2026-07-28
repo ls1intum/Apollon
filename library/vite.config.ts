@@ -24,8 +24,7 @@ const dtsInvokeOptions: IExtractorInvokeOptions = {
 
 // The bundled Inter woff2 is base64-inlined into style.css (and index.js via
 // `?inline`), so the SIL Open Font License binary ships inside our artifacts.
-// The OFL requires its license text to travel with the font, so emit it into
-// dist as a sibling file.
+// The OFL requires its license text to travel with the font.
 function emitFontLicense(): Plugin {
   return {
     name: "apollon-emit-font-license",
@@ -45,7 +44,7 @@ function emitFontLicense(): Plugin {
 
 // Single build pass — `dist/{index,internals,export,model}.js`.
 //
-// EVERY runtime dependency a consumer can install from `@tumaet/apollon` is
+// EVERY UI/runtime dependency a consumer can install from `@tumaet/apollon` is
 // externalized: the React family (react / react-dom / @xyflow/react), the UI
 // primitives (Base UI, lucide), @dnd-kit, zustand, @chenglou/pretext, and
 // the CRDT singletons (yjs / y-protocols). The host's bundler resolves and
@@ -98,7 +97,7 @@ const RUNTIME_DEPS = [
 // Pure routing kernel loaded by a module Worker. It contains no JSX and must not
 // receive React Refresh's browser-only `window` preamble in Vite dev mode.
 const ROUTING_KERNEL =
-  /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
+  /library\/lib\/(?:layout\/|utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
 
 export default defineConfig({
   // Runtime assets emitted by the published library (notably the geometry

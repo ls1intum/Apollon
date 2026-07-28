@@ -4,7 +4,9 @@ import type { OverlayControlInput } from "@/overlay/types"
 import {
   miniMapControl,
   paletteControl,
+  layoutControl,
   zoomControl,
+  type LayoutControlOptions,
   type PaletteControlOptions,
   type MiniMapControlOptions,
   type ZoomControlOptions,
@@ -58,6 +60,11 @@ export function ApollonZoom({
     () => zoomControl({ history, ...placement }),
     [history, key(placement)]
   )
+  return null
+}
+
+export function ApollonLayout(props: LayoutControlOptions = {}): null {
+  useControl(() => layoutControl(props), [key(props)])
   return null
 }
 
