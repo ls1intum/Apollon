@@ -21,6 +21,12 @@ export interface ApollonLabels {
   redoHint: string
   multiSelection: string
   multiSelectionHint: string
+  /**
+   * Accessible name for an authored straight-edge waypoint handle.
+   * Optional so a complete dictionary written against an older library release
+   * remains assignable; {@link mergeLabels} always fills the English default.
+   */
+  moveEdgeWaypoint?: string
 
   // Minimap
   miniMap: string
@@ -293,8 +299,14 @@ function defaultNodeTypeLabel(nodeType?: string): string {
     .trim()
 }
 
+/**
+ * The fully resolved dictionary used inside the editor. Public host dictionaries
+ * may omit keys added in later minor releases; merging always restores them.
+ */
+export type ResolvedApollonLabels = Required<ApollonLabels>
+
 /** The shipped English strings — the fallback for any key a host doesn't override. */
-export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
+const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   zoomToolbar: "Zoom, history and selection controls",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
@@ -307,6 +319,8 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  moveEdgeWaypoint:
+    "Waypoint: drag to move, double-click or press Delete to remove",
   miniMap: "Mini map",
   showMinimap: "Show minimap",
   showMinimapHint: "Show minimap (overview)",
@@ -505,8 +519,17 @@ export const DEFAULT_LABELS: ApollonLabels = Object.freeze<ApollonLabels>({
   nodeWord: "node",
 })
 
+/**
+ * Publicly retain the historical `ApollonLabels` type. The value is fully
+ * populated, but consumers that used `typeof DEFAULT_LABELS` for a translation
+ * dictionary must not acquire new required keys in a minor release.
+ */
+export const DEFAULT_LABELS: ApollonLabels = RESOLVED_DEFAULT_LABELS
+
 /** Merge a host's partial overrides over the English defaults (shallow, per key). */
 export const mergeLabels = (
   overrides?: Partial<ApollonLabels>
-): ApollonLabels =>
-  overrides ? { ...DEFAULT_LABELS, ...overrides } : DEFAULT_LABELS
+): ResolvedApollonLabels =>
+  overrides
+    ? { ...RESOLVED_DEFAULT_LABELS, ...overrides }
+    : RESOLVED_DEFAULT_LABELS

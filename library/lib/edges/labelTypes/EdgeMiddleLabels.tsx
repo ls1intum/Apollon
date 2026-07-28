@@ -16,6 +16,7 @@ interface EdgeMiddleLabelsProps {
   activePoints?: IPoint[]
   sourcePoint?: IPoint
   targetPoint?: IPoint
+  anchorPoint?: IPoint
   /** Every node the edge routes near, so the label avoids all of them. */
   nodeRects?: Rect[]
   neighborGeometry?: IPoint[][]
@@ -32,6 +33,7 @@ export const EdgeMiddleLabels = ({
   activePoints,
   sourcePoint,
   targetPoint,
+  anchorPoint,
   nodeRects,
   neighborGeometry,
   showRelationshipLabels = false,
@@ -51,7 +53,8 @@ export const EdgeMiddleLabels = ({
     const { x, y, rotation } = computeUseCaseLabelLayout(
       sourcePoint,
       targetPoint,
-      USE_CASE_LABEL_OFFSET
+      USE_CASE_LABEL_OFFSET,
+      anchorPoint
     )
 
     return (

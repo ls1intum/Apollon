@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react"
 import { Position, useReactFlow, type Edge } from "@xyflow/react"
@@ -34,7 +35,17 @@ import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { BaseEdgeProps } from "../edges/GenericEdge"
 import { computeToolbarPosition } from "@/utils/geometry/bendHandles"
-import { getMidSegment } from "@/utils/geometry/edgeLabelLayout"
+import {
+  exceedsDragThreshold,
+  insertWaypoint,
+  isWaypointCollapseCandidate,
+  moveWaypoint,
+  pruneCollinearWaypoints,
+  removeWaypoint,
+  snapPointToAngle,
+  snapPoint,
+} from "@/utils/geometry/freeWaypoints"
+import { getStraightMidSegment } from "@/utils/geometry/edgeLabelLayout"
 import { useEdgeLineJumps, buildEdgePath } from "./useEdgeLineJumps"
 import {
   useDiagramStore,
@@ -50,9 +61,41 @@ export interface StraightPathEdgeData {
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
+  /** Endpoints of the LOCAL arc-mid segment. Labels follow this segment rather
+   * than the endpoint chord when obstacle avoidance or waypoints bend the edge. */
+  labelSourcePoint: IPoint
+  labelTargetPoint: IPoint
 }
 
+/** Stable empty interior list so an unbent edge keeps a constant reference and
+ * does not churn the downstream route memos every render. */
+const EMPTY_POINTS: IPoint[] = []
+
 type EndpointType = "source" | "target"
+
+/** Keep the selectable ribbon clear of node connection handles. Endpoint-specific
+ * reconnect targets start just outside this same gap; without it an existing edge
+ * ending on a handle steals pointer-down and turns "new connection" into "select
+ * edge", especially on occupied use-case handles. */
+const trimOverlayEndpoints = (points: IPoint[], trimPx = 10): IPoint[] => {
+  if (points.length < 2) return points
+  const trimmed = points.map((point) => ({ ...point }))
+  const moveToward = (from: IPoint, to: IPoint, maximum: number): IPoint => {
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const length = Math.sqrt(dx * dx + dy * dy)
+    if (length === 0) return from
+    const amount = Math.min(maximum, Math.max(0, length / 3))
+    return {
+      x: from.x + (dx / length) * amount,
+      y: from.y + (dy / length) * amount,
+    }
+  }
+  trimmed[0] = moveToward(points[0], points[1], trimPx)
+  const last = points.length - 1
+  trimmed[last] = moveToward(points[last], points[last - 1], trimPx)
+  return trimmed
+}
 
 type StraightEndpointDragCommit = {
   endpoint: EndpointType
@@ -85,24 +128,46 @@ export const useStraightPathEdge = ({
   const endpointDragCommitRef = useRef<StraightEndpointDragCommit | null>(null)
   const activePointerCancelRef = useRef<(() => void) | null>(null)
   const activePointerTeardownRef = useRef<(() => void) | null>(null)
+  // Per-gesture waypoint-drag state. Refs (not a captured object) keep the drag
+  // closures React-Compiler-safe, mirroring useStepPathEdge's drag refs.
+  const dragInteriorRef = useRef<IPoint[]>([])
+  const dragMovedRef = useRef(false)
+  const dragCollapseRef = useRef(false)
   const isDiagramModifiable = useDiagramModifiable()
   const setLiveEdgeOverride = useMetadataStore(
     (state) => state.setLiveEdgeOverride
   )
-  const { getIntersectingNodes, getNode, getNodes, screenToFlowPosition } =
-    useReactFlow()
+  const {
+    getIntersectingNodes,
+    getNode,
+    getNodes,
+    getZoom,
+    screenToFlowPosition,
+  } = useReactFlow()
   const [dragPreviewPoints, setDragPreviewPoints] = useState<IPoint[] | null>(
     null
   )
+  // The grabbed waypoint must remain mounted while the PATH previews its
+  // removal. Removing the pointer-capturing SVG node cancels the browser gesture
+  // and restores the bend before pointer-up.
+  const [dragHandleRoute, setDragHandleRoute] = useState<IPoint[] | null>(null)
   const [dragPreviewPositions, setDragPreviewPositions] = useState<{
     sourcePosition: Position
     targetPosition: Position
   } | null>(null)
   const [endpointPreviewCommit, setEndpointPreviewCommit] =
     useState<StraightEndpointDragCommit | null>(null)
+  const [selectedWaypointIndex, setSelectedWaypointIndex] = useState<
+    number | null
+  >(null)
   const centralRoute = useEdgeGeometryStore(
     (state) => state.previewById[id] ?? state.geometryById[id]
   )
+  // Interior waypoints authored on this edge (JointJS "vertices" model): the route
+  // is [source, ...interior, target]. Never includes the endpoints.
+  const interiorPoints: IPoint[] = Array.isArray(data?.points)
+    ? (data.points as IPoint[])
+    : EMPTY_POINTS
 
   useEffect(
     () => () => {
@@ -307,23 +372,26 @@ export const useStraightPathEdge = ({
     sourceConnectionPointPadding
   )
 
+  const sourceEndpoint = useMemo<IPoint>(
+    () => ({
+      x: adjustedSourceCoordinates.sourceX,
+      y: adjustedSourceCoordinates.sourceY,
+    }),
+    [adjustedSourceCoordinates.sourceX, adjustedSourceCoordinates.sourceY]
+  )
+  const targetEndpoint = useMemo<IPoint>(
+    () => ({
+      x: adjustedTargetCoordinates.targetX,
+      y: adjustedTargetCoordinates.targetY,
+    }),
+    [adjustedTargetCoordinates.targetX, adjustedTargetCoordinates.targetY]
+  )
+  // The authored route is source → interior waypoints → target. Automatic
+  // straight-edge routing is deliberately a separate concern: this branch
+  // renders only user intent and the endpoint preview already present on main.
   const basePoints = useMemo<IPoint[]>(
-    () => [
-      {
-        x: adjustedSourceCoordinates.sourceX,
-        y: adjustedSourceCoordinates.sourceY,
-      },
-      {
-        x: adjustedTargetCoordinates.targetX,
-        y: adjustedTargetCoordinates.targetY,
-      },
-    ],
-    [
-      adjustedSourceCoordinates.sourceX,
-      adjustedSourceCoordinates.sourceY,
-      adjustedTargetCoordinates.targetX,
-      adjustedTargetCoordinates.targetY,
-    ]
+    () => [sourceEndpoint, ...interiorPoints, targetEndpoint],
+    [sourceEndpoint, interiorPoints, targetEndpoint]
   )
   const centralPreviewMatchesCommit =
     dragPreviewPoints !== null &&
@@ -340,9 +408,19 @@ export const useStraightPathEdge = ({
   const renderPoints = useMemo<IPoint[]>(
     () =>
       centralPreviewMatchesCommit
-        ? [centralRoute[0], centralRoute[centralRoute.length - 1]]
+        ? [
+            centralRoute[0],
+            ...interiorPoints,
+            centralRoute[centralRoute.length - 1],
+          ]
         : (dragPreviewPoints ?? basePoints),
-    [basePoints, centralPreviewMatchesCommit, centralRoute, dragPreviewPoints]
+    [
+      basePoints,
+      centralPreviewMatchesCommit,
+      centralRoute,
+      dragPreviewPoints,
+      interiorPoints,
+    ]
   )
   const renderSourcePosition =
     dragPreviewPositions?.sourcePosition ?? resolvedSourcePosition
@@ -371,17 +449,38 @@ export const useStraightPathEdge = ({
     type !== "UseCaseInclude" && type !== "UseCaseExtend"
   )
 
-  // Midpoint + orientation derived purely from the two endpoints. A straight
-  // edge's middle is analytic, so it is computed synchronously, DOM-free, and
-  // export-stable.
+  // Arc midpoint + local orientation derived from the routed polyline. This stays
+  // synchronous, DOM-free, and export-stable while following obstacle detours and
+  // authored waypoints rather than the endpoint chord.
+  const middleSegment = useMemo(
+    () =>
+      getStraightMidSegment(
+        renderPoints,
+        renderPoints[0],
+        renderPoints[renderPoints.length - 1]
+      ),
+    [renderPoints]
+  )
   const { point: pathMiddlePosition, isHorizontal: isMiddlePathHorizontal } =
-    useMemo(
-      () => getMidSegment(renderPoints, renderPoints[0], renderPoints[1]),
-      [renderPoints]
-    )
+    middleSegment
 
+  // A bent edge (interior waypoints or a bridged crossing) draws its polyline via
+  // buildEdgePath; a plain 2-point edge keeps calculateStraightPath so the marker
+  // padding / include-extend gap on its single segment is byte-identical to before.
+  const isPolyline = renderPoints.length > 2 || lineJumps.length > 0
   const currentPath = useMemo(() => {
-    if (lineJumps.length > 0) return buildEdgePath(renderPoints, lineJumps)
+    if (isPolyline)
+      return buildEdgePath(
+        renderPoints,
+        lineJumps,
+        type === "UseCaseInclude" || type === "UseCaseExtend"
+          ? {
+              segmentIndex: middleSegment.segmentIndex,
+              center: middleSegment.point,
+              halfSize: 40,
+            }
+          : undefined
+      )
     return calculateStraightPath(
       renderPoints[0].x,
       renderPoints[0].y,
@@ -389,28 +488,43 @@ export const useStraightPathEdge = ({
       renderPoints[1].y,
       type
     )
-  }, [renderPoints, type, lineJumps])
+  }, [renderPoints, type, lineJumps, isPolyline, middleSegment])
 
   const overlayPath = useMemo(() => {
-    // When bridging, the arc'd path is the hit target too, so the selectable
-    // stroke matches exactly what's drawn.
-    if (lineJumps.length > 0) return currentPath
+    const overlayPoints = trimOverlayEndpoints(renderPoints)
+    if (lineJumps.length > 0) return buildEdgePath(overlayPoints, lineJumps)
+    if (renderPoints.length > 2) return buildEdgePath(overlayPoints, [])
     return calculateOverlayPath(
-      renderPoints[0].x,
-      renderPoints[0].y,
-      renderPoints[1].x,
-      renderPoints[1].y,
+      overlayPoints[0].x,
+      overlayPoints[0].y,
+      overlayPoints[1].x,
+      overlayPoints[1].y,
       type
     )
-  }, [renderPoints, type, currentPath, lineJumps])
+  }, [renderPoints, type, lineJumps])
 
-  const [sourcePoint, targetPoint] = renderPoints
+  const sourcePoint = renderPoints[0]
+  const targetPoint = renderPoints[renderPoints.length - 1]
+  // Every authored bend is editable. Automatic detours are introduced by the
+  // separate auto-layout/routing change and can later reuse the same controls.
+  const editableWaypoints = useMemo<IPoint[]>(
+    () => (dragHandleRoute ?? renderPoints).slice(1, -1),
+    [dragHandleRoute, renderPoints]
+  )
+  const waypointHandleRoute = dragHandleRoute ?? renderPoints
+  const sourceNeighbor = renderPoints[1]
+  const targetNeighbor = renderPoints[renderPoints.length - 2]
   // Always: a straight edge has no bend handles, so a minimum-length gate would
   // leave short ones with no editable affordance at all.
   const canEditEndpoint = true
   const toolbarPosition = computeToolbarPosition(
     pathMiddlePosition,
-    isMiddlePathHorizontal
+    isMiddlePathHorizontal,
+    // A waypoint can sit exactly at the route's arc midpoint. The standard
+    // edge-toolbar offset was designed around step segments and lets the taller
+    // three-action toolbar cover that circular grip, making it impossible to
+    // pick up again. Keep the toolbar one handle target farther off the route.
+    EDGES.WAYPOINT_HIT_TARGET_PX + EDGES.WAYPOINT_HANDLE_RADIUS_PX * 2
   )
 
   const edgeData: StraightPathEdgeData = {
@@ -419,6 +533,8 @@ export const useStraightPathEdge = ({
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,
+    labelSourcePoint: middleSegment.start,
+    labelTargetPoint: middleSegment.end,
   }
 
   const { getNodeRect, findFreeformEndpointNode } = useFreeformEndpointNode()
@@ -436,8 +552,8 @@ export const useStraightPathEdge = ({
       setEndpointPreviewCommit(null)
 
       const ownerDocument = event.currentTarget.ownerDocument
-      const currentSourceEndpoint = basePoints[0]
-      const currentTargetEndpoint = basePoints[1]
+      const currentSourceEndpoint = sourcePoint
+      const currentTargetEndpoint = targetPoint
 
       const resolveDragCommit = (
         clientX: number,
@@ -544,7 +660,12 @@ export const useStraightPathEdge = ({
         endpointDragCommitRef.current = commit
         setEndpointPreviewCommit(commit)
         if (commit) {
-          setDragPreviewPoints([commit.sourceEndpoint, commit.targetEndpoint])
+          // Reconnecting an endpoint preserves authored interior waypoints.
+          setDragPreviewPoints([
+            commit.sourceEndpoint,
+            ...interiorPoints,
+            commit.targetEndpoint,
+          ])
           setDragPreviewPositions({
             sourcePosition: commit.sourcePosition,
             targetPosition: commit.targetPosition,
@@ -558,8 +679,8 @@ export const useStraightPathEdge = ({
         const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
         setDragPreviewPoints(
           endpoint === "source"
-            ? [flowPoint, currentTargetEndpoint]
-            : [currentSourceEndpoint, flowPoint]
+            ? [flowPoint, ...interiorPoints, currentTargetEndpoint]
+            : [currentSourceEndpoint, ...interiorPoints, flowPoint]
         )
         setDragPreviewPositions(null)
       }
@@ -635,7 +756,9 @@ export const useStraightPathEdge = ({
       ownerDocument.addEventListener("pointercancel", handlePointerCancel)
     },
     [
-      basePoints,
+      sourcePoint,
+      targetPoint,
+      interiorPoints,
       data,
       findFreeformEndpointNode,
       getIntersectingNodes,
@@ -654,6 +777,278 @@ export const useStraightPathEdge = ({
     ]
   )
 
+  // Persist the interior waypoints and pin their visible endpoints when the first
+  // bend is authored. This mirrors the step-edge bend-commit behaviour and keeps
+  // later geometry updates from moving a hand-shaped route at its ends.
+  const commitWaypoints = useCallback(
+    (nextInterior: IPoint[], pinSource: IPoint, pinTarget: IPoint) => {
+      setEdges((edges) =>
+        edges.map((edge) => {
+          if (edge.id !== id) return edge
+          const nextData: Record<string, unknown> = {
+            ...((edge.data ?? {}) as Record<string, unknown>),
+            points: nextInterior,
+          }
+          if (nextInterior.length > 0) {
+            if (!isFreeformEdgeAnchor(sourceAnchor) && sourceRect) {
+              const anchor = getEdgeAnchorFromPoint(
+                sourceNode?.type,
+                pinSource,
+                sourceRect
+              )
+              if (anchor) nextData.sourceAnchor = anchor
+            }
+            if (!isFreeformEdgeAnchor(targetAnchor) && targetRect) {
+              const anchor = getEdgeAnchorFromPoint(
+                targetNode?.type,
+                pinTarget,
+                targetRect
+              )
+              if (anchor) nextData.targetAnchor = anchor
+            }
+          }
+          return { ...edge, data: nextData }
+        })
+      )
+    },
+    [
+      id,
+      setEdges,
+      sourceAnchor,
+      targetAnchor,
+      sourceRect,
+      targetRect,
+      sourceNode?.type,
+      targetNode?.type,
+    ]
+  )
+
+  // Shared drag routine for both an existing waypoint and a freshly materialised
+  // one. `startInterior` is the interior array the drag operates on; `index` is the
+  // waypoint being moved. Only pointer-up commits `data.points`.
+  const beginWaypointDrag = useCallback(
+    (
+      pointerId: number,
+      pointerTarget: SVGRectElement,
+      index: number,
+      startInterior: IPoint[],
+      movedAtStart = false
+    ) => {
+      if (!pointerTarget.hasPointerCapture(pointerId))
+        pointerTarget.setPointerCapture(pointerId)
+      const ownerDocument = pointerTarget.ownerDocument
+      dragInteriorRef.current = startInterior
+      dragMovedRef.current = movedAtStart
+      dragCollapseRef.current = false
+      // Capture the endpoints at gesture start so the preview and eventual commit
+      // pivot around stable attachment sites.
+      const routeSource = sourcePoint
+      const routeTarget = targetPoint
+      const collapseTolerance =
+        EDGES.WAYPOINT_COLLAPSE_SNAP_SCREEN_PX / Math.max(getZoom(), 0.01)
+      const routeAtStart = [routeSource, ...startInterior, routeTarget]
+      // Match tldraw's stable "next vertex first" reference rule. The final
+      // waypoint falls back to its previous neighbour.
+      const angleReference = routeAtStart[index + 2] ?? routeAtStart[index]
+
+      // Drive the preview through state; the existing layout effect republishes it
+      // to shared edge geometry and clears it when the drag ends.
+      const publish = (
+        pathInterior: IPoint[],
+        handleInterior: IPoint[] = pathInterior
+      ) => {
+        setDragPreviewPoints([routeSource, ...pathInterior, routeTarget])
+        setDragHandleRoute([routeSource, ...handleInterior, routeTarget])
+      }
+      // Seed the preview so the edge does not flicker to its committed shape on the
+      // first frame (the inserted point starts on the segment).
+      publish(dragInteriorRef.current)
+
+      const handlePointerMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+        const candidate = e.shiftKey
+          ? snapPointToAngle(flowPoint, angleReference)
+          : flowPoint
+        dragInteriorRef.current = moveWaypoint(
+          dragInteriorRef.current,
+          index,
+          candidate,
+          e.shiftKey ? 1 : EDGES.BEND_SNAP_GRID_PX
+        )
+        dragMovedRef.current = true
+        dragCollapseRef.current = isWaypointCollapseCandidate(
+          [routeSource, ...dragInteriorRef.current, routeTarget],
+          index + 1,
+          dragInteriorRef.current[index],
+          collapseTolerance
+        )
+        // Visibly straighten while inside the magnetic band. The document-level
+        // listeners keep the gesture alive while its handle is absent, so moving
+        // away restores the bend naturally.
+        publish(
+          dragCollapseRef.current
+            ? removeWaypoint(dragInteriorRef.current, index)
+            : dragInteriorRef.current,
+          dragInteriorRef.current
+        )
+      }
+
+      const teardown = () => {
+        ownerDocument.removeEventListener("pointermove", handlePointerMove)
+        ownerDocument.removeEventListener("pointerup", handlePointerUp)
+        ownerDocument.removeEventListener("pointercancel", handlePointerCancel)
+        if (pointerTarget.hasPointerCapture(pointerId))
+          pointerTarget.releasePointerCapture(pointerId)
+        if (activePointerTeardownRef.current === teardown) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const handlePointerCancel = (e?: PointerEvent) => {
+        if (e && e.pointerId !== pointerId) return
+        setDragPreviewPoints(null)
+        setDragHandleRoute(null)
+        teardown()
+      }
+
+      const handlePointerUp = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
+        setDragPreviewPoints(null)
+        setDragHandleRoute(null)
+        // Drag-to-collinear removes redundant bends (incl. the dragged one).
+        const releasedInterior = dragCollapseRef.current
+          ? removeWaypoint(dragInteriorRef.current, index)
+          : dragInteriorRef.current
+        const pruned = pruneCollinearWaypoints([
+          routeSource,
+          ...releasedInterior,
+          routeTarget,
+        ])
+        // Only persist when the geometry actually changed (a click that never
+        // moved must not freeze a fresh point into the model).
+        if (dragMovedRef.current || pruned.length !== startInterior.length) {
+          commitWaypoints(pruned, routeSource, routeTarget)
+        }
+        setSelectedWaypointIndex(null)
+        teardown()
+      }
+
+      activePointerCancelRef.current = handlePointerCancel
+      activePointerTeardownRef.current = teardown
+      ownerDocument.addEventListener("pointermove", handlePointerMove)
+      ownerDocument.addEventListener("pointerup", handlePointerUp)
+      ownerDocument.addEventListener("pointercancel", handlePointerCancel)
+    },
+    [commitWaypoints, getZoom, screenToFlowPosition, sourcePoint, targetPoint]
+  )
+
+  const handleWaypointPointerDown = useCallback(
+    (event: ReactPointerEvent<SVGRectElement>, index: number) => {
+      if (!event.isPrimary || event.button !== 0) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.currentTarget.focus()
+      activePointerCancelRef.current?.()
+      setSelectedWaypointIndex(index)
+      beginWaypointDrag(
+        event.pointerId,
+        event.currentTarget,
+        index,
+        editableWaypoints
+      )
+    },
+    [beginWaypointDrag, editableWaypoints]
+  )
+
+  // A ghost midpoint materialises a new waypoint only once the pointer has moved
+  // past the threshold (so a stray tap never litters the edge with points); the
+  // gesture then continues as an ordinary waypoint drag on the new point.
+  const handleGhostPointerDown = useCallback(
+    (event: ReactPointerEvent<SVGRectElement>, segmentIndex: number) => {
+      if (!event.isPrimary || event.button !== 0) return
+      event.preventDefault()
+      event.stopPropagation()
+      activePointerCancelRef.current?.()
+      const pointerId = event.pointerId
+      const pointerTarget = event.currentTarget
+      pointerTarget.setPointerCapture(pointerId)
+      const ownerDocument = pointerTarget.ownerDocument
+      const origin = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+
+      const cleanup = () => {
+        ownerDocument.removeEventListener("pointermove", handleFirstMove)
+        ownerDocument.removeEventListener("pointerup", handleEnd)
+        ownerDocument.removeEventListener("pointercancel", handleEnd)
+        if (pointerTarget.hasPointerCapture(pointerId))
+          pointerTarget.releasePointerCapture(pointerId)
+        if (activePointerTeardownRef.current === cleanup) {
+          activePointerTeardownRef.current = null
+          activePointerCancelRef.current = null
+        }
+      }
+
+      const handleFirstMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
+        const flowPoint = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+        if (!exceedsDragThreshold(origin, flowPoint)) return
+        cleanup()
+        const seeded = insertWaypoint(
+          editableWaypoints,
+          segmentIndex,
+          snapPoint(flowPoint)
+        )
+        setSelectedWaypointIndex(segmentIndex)
+        // Hand off on the same pointer/element. Crossing the threshold is already
+        // a meaningful move: pointer-up may be the very next event on a quick
+        // mouse, touch, or stylus gesture, so preserve that state across handoff.
+        beginWaypointDrag(pointerId, pointerTarget, segmentIndex, seeded, true)
+      }
+
+      const handleEnd = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return
+        cleanup()
+      }
+
+      activePointerCancelRef.current = cleanup
+      activePointerTeardownRef.current = cleanup
+      ownerDocument.addEventListener("pointermove", handleFirstMove)
+      ownerDocument.addEventListener("pointerup", handleEnd)
+      ownerDocument.addEventListener("pointercancel", handleEnd)
+    },
+    [beginWaypointDrag, editableWaypoints, screenToFlowPosition]
+  )
+
+  const handleWaypointDoubleClick = useCallback(
+    (index: number) => {
+      commitWaypoints(
+        pruneCollinearWaypoints([
+          sourcePoint,
+          ...removeWaypoint(editableWaypoints, index),
+          targetPoint,
+        ]),
+        sourcePoint,
+        targetPoint
+      )
+      setSelectedWaypointIndex(null)
+    },
+    [editableWaypoints, commitWaypoints, sourcePoint, targetPoint]
+  )
+
+  const handleWaypointKeyDown = useCallback(
+    (event: ReactKeyboardEvent<SVGRectElement>, index: number) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return
+      event.preventDefault()
+      event.stopPropagation()
+      handleWaypointDoubleClick(index)
+    },
+    [handleWaypointDoubleClick]
+  )
+
   return {
     pathRef,
     edgeData,
@@ -664,9 +1059,18 @@ export const useStraightPathEdge = ({
     strokeDashArray,
     sourcePoint,
     targetPoint,
+    sourceNeighbor,
+    targetNeighbor,
+    route: waypointHandleRoute,
+    interior: editableWaypoints,
+    selectedWaypointIndex,
     isDiagramModifiable,
     canEditEndpoint,
     handleEndpointPointerDown,
+    handleWaypointPointerDown,
+    handleGhostPointerDown,
+    handleWaypointDoubleClick,
+    handleWaypointKeyDown,
     sourcePosition: renderSourcePosition,
     targetPosition: renderTargetPosition,
   }

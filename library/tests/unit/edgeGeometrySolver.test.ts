@@ -209,6 +209,36 @@ describe("computeAllEdgeGeometry", () => {
     expect(routeById["e1"]).toHaveLength(2)
   })
 
+  it("publishes authored straight-hook waypoints as interior route vertices", () => {
+    const a = makeNode("a", 0, 0)
+    const b = makeNode("b", 300, 0)
+    const waypoint = { x: 180, y: 160 }
+    const nodeLookup = new Map<string, InternalNode>([
+      ["a", a.internal],
+      ["b", b.internal],
+    ])
+    const edges: Edge[] = [
+      {
+        id: "e1",
+        source: "a",
+        target: "b",
+        type: "SyntaxTreeLink",
+        data: { points: [waypoint] },
+      },
+    ]
+    const { routeById } = computeAllEdgeGeometry({
+      nodes: [a.node, b.node],
+      nodeLookup,
+      connectionMode: ConnectionMode.Loose,
+      edges,
+      straightPathTypes: STRAIGHT_PATH_STEP_EDGE_TYPES,
+      straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
+    })
+
+    expect(routeById.e1).toHaveLength(3)
+    expect(routeById.e1[1]).toEqual(waypoint)
+  })
+
   it("routes all edges when their ids arrive out of order", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)

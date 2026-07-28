@@ -276,6 +276,21 @@ function mergeManualPoints(
   return points
 }
 
+/** Straight-hook edges persist interior vertices only, unlike orthogonal edges
+ * whose manual points contain the full route. Keep that data contract visible to
+ * shared geometry so crossings and neighbouring routes see the authored bend. */
+function getStraightHookRoute(
+  edge: Edge,
+  endpoints: ResolvedEdgeEndpoints
+): IPoint[] {
+  const interior = edge.data?.points
+  return [
+    endpoints.adjustedSource,
+    ...(Array.isArray(interior) ? (interior as IPoint[]) : []),
+    endpoints.adjustedTarget,
+  ]
+}
+
 /**
  * A grid bucketing each already-routed edge's polyline by cell, so an edge finds
  * its nearby neighbours without scanning every routed edge (the walk is
@@ -1218,6 +1233,21 @@ function computeAllEdgeGeometryPass(
       reservedRouteById.set(edge.id, liveOverride.points)
       continue
     }
+    if (straightHookTypes.has(edge.type ?? "")) {
+      const endpoints = resolveEdgeEndpoints(
+        edge,
+        nodes,
+        nodeById,
+        nodeLookup,
+        connectionMode,
+        undefined,
+        undefined,
+        nodeIndex
+      )
+      if (endpoints)
+        reservedRouteById.set(edge.id, getStraightHookRoute(edge, endpoints))
+      continue
+    }
     const manual = edge.data?.points
     if (Array.isArray(manual) && manual.length >= 2) {
       const endpoints = resolveEdgeEndpoints(
@@ -1243,23 +1273,6 @@ function computeAllEdgeGeometryPass(
           : (manual as IPoint[])
       )
       continue
-    }
-    if (straightHookTypes.has(edge.type ?? "")) {
-      const endpoints = resolveEdgeEndpoints(
-        edge,
-        nodes,
-        nodeById,
-        nodeLookup,
-        connectionMode,
-        undefined,
-        undefined,
-        nodeIndex
-      )
-      if (endpoints)
-        reservedRouteById.set(edge.id, [
-          endpoints.adjustedSource,
-          endpoints.adjustedTarget,
-        ])
     }
   }
   const bandPorts = assignPorts(
@@ -1299,13 +1312,13 @@ function computeAllEdgeGeometryPass(
       continue
     }
 
-    // Straight-hook edges (use-case, syntax-tree, petri-net) are a plain line
-    // between the adjusted endpoints — no obstacle or neighbour routing — but
-    // their polyline still enters the map so step edges route around them.
+    // Straight-hook edges connect authored interior waypoints directly — no
+    // obstacle or neighbour routing — but their polyline still enters the map so
+    // crossings and neighbouring step edges see the same geometry users see.
     if (straightHookTypes.has(edge.type ?? "")) {
-      const line = [endpoints.adjustedSource, endpoints.adjustedTarget]
-      routeById[edge.id] = line
-      indexRoutePolyline(neighborGrid, edge.id, line)
+      const route = getStraightHookRoute(edge, endpoints)
+      routeById[edge.id] = route
+      indexRoutePolyline(neighborGrid, edge.id, route)
       continue
     }
 

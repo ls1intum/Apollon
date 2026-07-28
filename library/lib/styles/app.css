@@ -988,6 +988,51 @@
   fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
 }
 
+/* Straight-edge WAYPOINT handles follow the step-edge handle state model: hidden
+   until the edge is hovered/selected, then fully opaque primary blue. A midpoint
+   create handle is an actionable bend handle too, so fading it made the two edge
+   regimes feel inconsistent and falsely suggested that it was disabled. */
+.edge-waypoint-handle {
+  opacity: 0;
+  fill: var(--apollon-primary, #3e8acc);
+  stroke: var(--apollon-primary, #3e8acc);
+  paint-order: stroke;
+  transition:
+    fill 120ms ease,
+    opacity 120ms ease,
+    stroke 120ms ease;
+}
+
+.react-flow__edge:hover .edge-waypoint-handle,
+.react-flow__edge.selected .edge-waypoint-handle {
+  opacity: 1;
+}
+
+.edge-waypoint-handle--active,
+.react-flow__edge
+  g:has(
+    .edge-waypoint-hit-target:hover,
+    .edge-waypoint-hit-target:focus-visible,
+    .edge-waypoint-hit-target:active
+  )
+  .edge-waypoint-handle {
+  opacity: 1;
+  fill: color-mix(in srgb, var(--apollon-primary, #3e8acc) 70%, #000);
+}
+
+.edge-waypoint-hit-target,
+.edge-waypoint-hit-target:focus,
+.edge-waypoint-hit-target:focus-visible {
+  /* SVG focus defaults outline the entire invisible 24px hit rectangle. Keep
+     keyboard focus visible through the darkened circle above, not a browser-
+     specific square/ring that no step-edge handle has. */
+  outline: none;
+}
+
+.edge-waypoint-hit-target:active {
+  cursor: grabbing !important;
+}
+
 .react-flow__edge:hover .edge-overlay {
   opacity: 0;
 }

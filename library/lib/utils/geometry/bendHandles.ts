@@ -273,11 +273,16 @@ export function applyInnerSegmentBend(
 
 export function computeToolbarPosition(
   pathMiddlePosition: IPoint,
-  isMiddlePathHorizontal: boolean
+  isMiddlePathHorizontal: boolean,
+  extraClearance = 0
 ): IPoint {
   return {
-    x: pathMiddlePosition.x + (isMiddlePathHorizontal ? 0 : -52),
-    y: pathMiddlePosition.y + (isMiddlePathHorizontal ? -64 : 0),
+    x:
+      pathMiddlePosition.x +
+      (isMiddlePathHorizontal ? 0 : -52 - extraClearance),
+    y:
+      pathMiddlePosition.y +
+      (isMiddlePathHorizontal ? -64 - extraClearance : 0),
   }
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   getMidSegment,
+  getStraightMidSegment,
   computeMiddleLabelLayout,
   computeUseCaseLabelLayout,
   collectNeighborPolylines,
@@ -92,6 +93,23 @@ describe("getMidSegment", () => {
     const mid = getMidSegment([p(0, 0), p(15, 0)], p(0, 0), p(15, 0))
     expect(Number.isInteger(mid.point.x)).toBe(true)
     expect(mid.point.x).toBe(8) // round(7.5)
+  })
+})
+
+describe("getStraightMidSegment", () => {
+  it("uses Euclidean arc length and returns the original local segment", () => {
+    const mid = getStraightMidSegment(
+      [p(0, 0), p(100, 0), p(100, 300)],
+      p(0, 0),
+      p(100, 300)
+    )
+    expect(mid).toEqual({
+      point: p(100, 100),
+      isHorizontal: false,
+      segmentIndex: 1,
+      start: p(100, 0),
+      end: p(100, 300),
+    })
   })
 })
 
@@ -248,6 +266,11 @@ describe("computeUseCaseLabelLayout", () => {
   it("keeps a moderate downward-right diagonal un-flipped", () => {
     const r = computeUseCaseLabelLayout(p(0, 0), p(100, 100), 0)
     expect(r.rotation).toBeCloseTo(45)
+  })
+
+  it("uses a local arc-mid anchor instead of the endpoint chord midpoint", () => {
+    const r = computeUseCaseLabelLayout(p(100, 0), p(100, 300), 0, p(100, 100))
+    expect(r).toEqual({ x: 100, y: 100, rotation: 90 })
   })
 })
 

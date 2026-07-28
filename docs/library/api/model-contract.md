@@ -43,7 +43,7 @@ A v4 model is:
 
 ```ts no-check
 type UMLModel = {
-  version: `4.${number}.${number}` // wire-format version, e.g. "4.0.0"
+  version: `4.${number}.${number}` // wire-format version, currently "4.2.0"
   id: string
   title: string
   type: UMLDiagramType // "ClassDiagram" | "BPMN" | … (13 values)
@@ -79,8 +79,16 @@ normalization rules and the addressing API.
 ## Versioning policy
 
 `version` tracks the **wire-format major line (4.x)** — _not_ the npm package
-version. `importDiagram` stamps `4.0.0` when it _converts_ a v2 / v3 payload;
-an already-v4 model passes through with its existing version string untouched.
+version. The current canonical model version is `4.2.0`. `importDiagram`
+accepts every supported v2, v3, and v4 payload, migrates it in place where
+necessary, and returns the current v4 representation.
+
+The 4.2 minor adds optional, interior-only waypoints to straight connections.
+When loading a 4.0 or 4.1 model, Apollon discards `data.points` only on those
+straight edge families: older releases used that field for inert full-route
+geometry, which must not become visible user-authored bends. Orthogonal edge
+waypoints and all other model data are preserved. Models from 4.2 and later keep
+their straight-edge waypoints unchanged.
 
 | Change                | Bump  | What you do                                       |
 | --------------------- | ----- | ------------------------------------------------- |
