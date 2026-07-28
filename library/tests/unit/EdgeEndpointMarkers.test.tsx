@@ -13,6 +13,7 @@ const renderEndpointMarkers = ({
   onEndpointPointerDown,
   sourcePoint = { x: 10, y: 20 },
   targetPoint = { x: 110, y: 120 },
+  straight = false,
 }: {
   isDiagramModifiable?: boolean
   canEditEndpoint?: boolean
@@ -21,6 +22,7 @@ const renderEndpointMarkers = ({
   >["onEndpointPointerDown"]
   sourcePoint?: { x: number; y: number }
   targetPoint?: { x: number; y: number }
+  straight?: boolean
 } = {}) =>
   render(
     <ReactFlowProvider>
@@ -34,7 +36,7 @@ const renderEndpointMarkers = ({
             isDiagramModifiable={isDiagramModifiable}
             canEditEndpoint={canEditEndpoint}
             onEndpointPointerDown={onEndpointPointerDown}
-            diagramType="step"
+            straight={straight}
           />
         </g>
       </svg>
@@ -115,7 +117,7 @@ describe("EdgeEndpointMarkers", () => {
     expect(sourceHandle).toHaveAttribute("pointer-events", "none")
   })
 
-  it("uses a larger invisible hit target for freeform endpoint dragging", () => {
+  it("uses a larger invisible hit target for endpoint dragging", () => {
     const { container } = renderEndpointMarkers({
       onEndpointPointerDown: vi.fn(),
     })
@@ -132,6 +134,26 @@ describe("EdgeEndpointMarkers", () => {
     expect(sourceHandle).toHaveAttribute("y", "-2")
     expect(targetHandle).toHaveAttribute("x", "66")
     expect(targetHandle).toHaveAttribute("y", "98")
+  })
+
+  it("leaves a node-handle gap only for straight-edge endpoint dragging", () => {
+    const { container } = renderEndpointMarkers({
+      onEndpointPointerDown: vi.fn(),
+      sourcePoint: { x: 0, y: 0 },
+      targetPoint: { x: 100, y: 0 },
+      straight: true,
+    })
+    const sourceHandle = container.querySelector(
+      ".edge-endpoint-handle--source"
+    )
+    const targetHandle = container.querySelector(
+      ".edge-endpoint-handle--target"
+    )
+
+    expect(sourceHandle).toHaveAttribute("x", "10")
+    expect(sourceHandle).toHaveAttribute("y", "-22")
+    expect(targetHandle).toHaveAttribute("x", "46")
+    expect(targetHandle).toHaveAttribute("y", "-22")
   })
 
   it("anchors the visible endpoint grips to the endpoints, just clear of the heads", () => {

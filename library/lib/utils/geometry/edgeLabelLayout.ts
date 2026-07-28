@@ -135,6 +135,62 @@ export function getMidSegment(
   }
 }
 
+/**
+ * Arc-length midpoint for an arbitrary-angle polyline. Unlike `getMidSegment`,
+ * this keeps the original segment indices (needed to carve a label gap in the
+ * rendered path) and uses Euclidean length, which is the visible length of a
+ * straight-hook segment rather than an orthogonal routing proxy.
+ */
+export function getStraightMidSegment(
+  renderPoints: IPoint[],
+  fallbackSource: IPoint,
+  fallbackTarget: IPoint
+): MidSegment {
+  const usable = renderPoints
+    .slice(1)
+    .map((end, index) => {
+      const start = renderPoints[index]
+      return {
+        start,
+        end,
+        segmentIndex: index,
+        length: Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2),
+      }
+    })
+    .filter((segment) => segment.length > 0)
+  if (usable.length === 0)
+    return getMidSegment(
+      [fallbackSource, fallbackTarget],
+      fallbackSource,
+      fallbackTarget
+    )
+
+  const total = usable.reduce((sum, segment) => sum + segment.length, 0)
+  const half = total / 2
+  let running = 0
+  let selected = usable[usable.length - 1]
+  for (const segment of usable) {
+    if (running + segment.length >= half) {
+      selected = segment
+      break
+    }
+    running += segment.length
+  }
+  const t = (half - running) / selected.length
+  const dx = selected.end.x - selected.start.x
+  const dy = selected.end.y - selected.start.y
+  return {
+    point: {
+      x: round(selected.start.x + dx * t),
+      y: round(selected.start.y + dy * t),
+    },
+    isHorizontal: Math.abs(dx) >= Math.abs(dy),
+    segmentIndex: selected.segmentIndex,
+    start: selected.start,
+    end: selected.end,
+  }
+}
+
 const rectsIntersect = (a: Rect, b: Rect): boolean =>
   a.x < b.x + b.width &&
   a.x + a.width > b.x &&
@@ -465,15 +521,16 @@ export interface RotatedLabelPlacement {
 export function computeUseCaseLabelLayout(
   source: IPoint,
   target: IPoint,
-  perpendicularOffset: number
+  perpendicularOffset: number,
+  anchor?: IPoint
 ): RotatedLabelPlacement {
   const dx = target.x - source.x
   const dy = target.y - source.y
   const angle = Math.atan2(dy, dx) * (180 / Math.PI)
   const rotation = angle > 90 || angle < -90 ? angle + 180 : angle
 
-  const midX = (source.x + target.x) / 2
-  const midY = (source.y + target.y) / 2
+  const midX = anchor?.x ?? (source.x + target.x) / 2
+  const midY = anchor?.y ?? (source.y + target.y) / 2
   const length = Math.sqrt(dx * dx + dy * dy)
   if (length === 0 || perpendicularOffset === 0) {
     return { x: midX, y: midY, rotation }

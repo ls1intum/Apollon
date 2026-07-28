@@ -5,6 +5,7 @@
  * isn't in scope here. */
 import type { UMLModel, ApollonNode, ApollonEdge, Assessment } from "../typings"
 import { transformEdges } from "../services/migration/EdgeTransformer"
+import { STRAIGHT_HOOK_EDGE_TYPES } from "../edges/edgeRoutingBehavior"
 import { UMLDiagramType } from "../types/DiagramType"
 import { ClassStereotype } from "../types/nodes/enums"
 import type { IPoint } from "../edges/Connection"
@@ -36,6 +37,12 @@ import type {
   ReachabilityGraphMarkingProps,
 } from "../types/nodes/NodeProps"
 import type { MessageData } from "@/edges/EdgeProps"
+
+/** Version 4.2 introduces authored INTERIOR waypoints for straight-hook edges.
+ * Earlier 4.x files stored a full computed/rendered route in `data.points`; those
+ * values must not be reinterpreted as user-authored bends. */
+export const CURRENT_MODEL_VERSION = "4.2.0" as const
+const STRAIGHT_WAYPOINT_MODEL_MINOR = 2
 
 function normalizeImportedInterfaceGeometry(
   nodeType: string,
@@ -745,6 +752,13 @@ function convertV3RelationshipToV4Edge(
       y: point.y + relationship.bounds.y,
     }))
   }
+  // Straight-hook edges (use-case, syntax-tree, petri-net) render as diagonal lines
+  // through INTERIOR waypoints only. The legacy v3 `path` is the full rendered
+  // polyline including endpoints and was inert for these types, so importing it as
+  // waypoints would sprout spurious (double-endpoint) bends. Clear it.
+  if (STRAIGHT_HOOK_EDGE_TYPES.has(edgeType as string)) {
+    points = []
+  }
 
   const edge: ApollonEdge = {
     id: relationship.id,
@@ -836,7 +850,7 @@ export function convertV3ToV4(v3Data: V3DiagramFormat | V3UMLModel): UMLModel {
   }
 
   return {
-    version: "4.0.0",
+    version: CURRENT_MODEL_VERSION,
     id,
     title,
     type: model.type as UMLDiagramType,
@@ -965,6 +979,31 @@ export function normalizeElementTags(model: UMLModel): UMLModel {
 }
 
 /**
+ * Clear pre-feature straight-edge route caches before they can become authored
+ * waypoints. Versions 4.0 and 4.1 used `data.points` as full rendered geometry for
+ * these edge types; 4.2 changes the same field to interior-only user intent.
+ *
+ * This mutates in place like the other import normalizers and is idempotent.
+ */
+export function normalizeStraightEdgeWaypoints(model: UMLModel): UMLModel {
+  const match = /^4\.(\d+)\.(\d+)$/.exec(model.version)
+  if (!match) return model
+  const minor = Number(match[1])
+  if (minor < STRAIGHT_WAYPOINT_MODEL_MINOR) {
+    for (const edge of model.edges) {
+      if (!STRAIGHT_HOOK_EDGE_TYPES.has(edge.type ?? "")) continue
+      const data = edge.data as
+        | (Record<string, unknown> & { points?: unknown })
+        | null
+        | undefined
+      if (data && Array.isArray(data.points)) data.points = []
+    }
+    model.version = CURRENT_MODEL_VERSION
+  }
+  return model
+}
+
+/**
  * Remove React Flow interaction state that older exports and captured fixtures
  * could persist. Imported models should contain only durable diagram data, not
  * the selection or drag state of the editor that produced the file.
@@ -1014,7 +1053,9 @@ function stripRuntimeInteractionState(model: UMLModel): UMLModel {
  */
 export function normalizeModel(model: UMLModel): UMLModel {
   return stripRuntimeInteractionState(
-    normalizeElementTags(normalizeClassStereotypes(model))
+    normalizeElementTags(
+      normalizeClassStereotypes(normalizeStraightEdgeWaypoints(model))
+    )
   )
 }
 

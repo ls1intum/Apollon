@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  CURRENT_MODEL_VERSION,
   convertV2ToV4,
   isV2Format,
   convertV3HandleToV4,
@@ -12,6 +13,7 @@ import {
   importDiagram,
   normalizeClassStereotypes,
   normalizeElementTags,
+  normalizeStraightEdgeWaypoints,
 } from "@/utils/versionConverter"
 import { ClassStereotype } from "@/types/nodes/enums"
 
@@ -428,7 +430,7 @@ describe("convertV3MessagesToV4", () => {
 describe("convertV3ToV4", () => {
   it("produces a V4 model with version 4.0.0", () => {
     const result = convertV3ToV4(makeV3Wrapped())
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("preserves id and title from wrapped V3", () => {
@@ -647,6 +649,27 @@ describe("convertV3ToV4", () => {
     // Points are offset by bounds
     expect((edge.data.points as unknown[])[0]).toEqual({ x: 5, y: 5 })
     expect((edge.data.points as unknown[])[1]).toEqual({ x: 15, y: 25 })
+  })
+
+  it("clears legacy path points on straight-hook edges", () => {
+    // v3 stored the full rendered polyline (endpoints included) in `path`. Under
+    // the interior-waypoint model these were inert, so importing them as waypoints
+    // would sprout spurious bends — the converter must drop them.
+    const rel = makeV3Relationship({
+      id: "r2",
+      type: "SyntaxTreeLink",
+      source: { element: "n1", direction: "Down" },
+      target: { element: "n2", direction: "Up" },
+      path: [
+        { x: 0, y: 0 },
+        { x: 10, y: 20 },
+        { x: 30, y: 40 },
+      ],
+      bounds: { x: 5, y: 5, width: 0, height: 0 },
+    })
+    const result = convertV3ToV4(makeV3Wrapped({ relationships: { r2: rel } }))
+    expect(result.edges[0].type).toBe("SyntaxTreeLink")
+    expect(result.edges[0].data.points).toEqual([])
   })
 
   it("defaults missing relationship fields gracefully", () => {
@@ -1019,7 +1042,7 @@ describe("convertV2ToV4", () => {
   it("converts a minimal V2 diagram to V4", () => {
     const v2 = makeV2Data()
     const result = convertV2ToV4(v2)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
     expect(result.type).toBe("ClassDiagram")
     expect(result.nodes).toEqual([])
     expect(result.edges).toEqual([])
@@ -1048,7 +1071,7 @@ describe("convertV2ToV4", () => {
       interactive: { elements: ["c1"], relationships: ["r1"] },
     })
     const result = convertV2ToV4(v2)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
     expect(result.nodes.length).toBeGreaterThanOrEqual(1)
     expect(result.nodes[0].id).toBe("c1")
   })
@@ -1070,7 +1093,7 @@ describe("convertV2ToV4", () => {
     delete (v2 as Record<string, unknown>).interactive
     // Should not throw
     const result = convertV2ToV4(v2)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("handles V2 with missing elements/relationships/assessments", () => {
@@ -1313,34 +1336,34 @@ describe("importDiagram", () => {
   it("converts V3 wrapped format", () => {
     const v3 = makeV3Wrapped()
     const result = importDiagram(v3)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
     expect(result.id).toBe("diagram-1")
   })
 
   it("converts flat V3 model", () => {
     const v3 = makeV3Model()
     const result = importDiagram(v3)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("converts V2 format", () => {
     const v2 = makeV2Data()
     const result = importDiagram(v2)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("unwraps playground { model: ... } wrapper with V3 inside", () => {
     const v3 = makeV3Wrapped()
     const playground = { model: v3 }
     const result = importDiagram(playground)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("unwraps playground { model: ... } wrapper with V4 inside", () => {
     const v4 = makeV4Model()
     const playground = { model: v4 }
     const result = importDiagram(playground)
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("throws for completely unsupported format", () => {
@@ -1380,7 +1403,7 @@ describe("importDiagram", () => {
     }
     const result = importDiagram(hybrid)
     // Returns as-is since isV4Format matches first
-    expect(result.version).toBe("4.0.0")
+    expect(result.version).toBe(CURRENT_MODEL_VERSION)
   })
 })
 
@@ -1491,6 +1514,88 @@ describe("normalizeClassStereotypes (legacy 4.x class nodes)", () => {
     }
     expect(data.isAbstract).toBe(true)
     expect(data.stereotype).toBeUndefined()
+  })
+})
+
+describe("normalizeStraightEdgeWaypoints", () => {
+  const points = [
+    { x: 10, y: 20 },
+    { x: 30, y: 40 },
+  ]
+
+  it("clears cached full routes from straight edges saved before 4.2", () => {
+    const model = makeV4Model({
+      version: "4.1.0",
+      edges: [
+        {
+          id: "straight",
+          type: "SyntaxTreeLink",
+          data: { points: [...points] },
+        },
+        {
+          id: "step",
+          type: "ClassUnidirectional",
+          data: { points: [...points] },
+        },
+      ],
+    })
+    normalizeStraightEdgeWaypoints(model)
+    expect(model.version).toBe(CURRENT_MODEL_VERSION)
+    expect((model.edges[0].data as { points: unknown[] }).points).toEqual([])
+    expect((model.edges[1].data as { points: unknown[] }).points).toEqual(
+      points
+    )
+  })
+
+  it("preserves authored interior waypoints from 4.2 onward", () => {
+    const model = makeV4Model({
+      version: CURRENT_MODEL_VERSION,
+      edges: [
+        {
+          id: "straight",
+          type: "UseCaseAssociation",
+          data: { points: [...points] },
+        },
+      ],
+    })
+    normalizeStraightEdgeWaypoints(model)
+    expect((model.edges[0].data as { points: unknown[] }).points).toEqual(
+      points
+    )
+  })
+
+  it("does not rewrite or discard waypoints from a future v4 minor", () => {
+    const model = makeV4Model({
+      version: "4.9.0",
+      edges: [
+        {
+          id: "straight",
+          type: "UseCaseAssociation",
+          data: { points: [...points] },
+        },
+      ],
+    })
+    normalizeStraightEdgeWaypoints(model)
+    expect(model.version).toBe("4.9.0")
+    expect((model.edges[0].data as { points: unknown[] }).points).toEqual(
+      points
+    )
+  })
+
+  it("runs on the universal import path", () => {
+    const model = makeV4Model({
+      version: "4.0.0",
+      edges: [
+        {
+          id: "straight",
+          type: "PetriNetArc",
+          data: { points: [...points] },
+        },
+      ],
+    })
+    const imported = importDiagram(model)
+    expect(imported.version).toBe(CURRENT_MODEL_VERSION)
+    expect((imported.edges[0].data as { points: unknown[] }).points).toEqual([])
   })
 })
 

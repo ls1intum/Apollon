@@ -105,7 +105,12 @@ export type ApollonNode = {
 
 export interface OrthogonalEdgeData {
   [key: string]: unknown
-  // Manual waypoint array used by the step-path edges.
+  // Manual waypoint array. Its semantics differ by edge regime:
+  //  • step (orthogonal) edges store the FULL committed route (endpoints included),
+  //    re-projected by the solver;
+  //  • straight-hook edges (use-case, syntax-tree, petri-net) store INTERIOR
+  //    waypoints ONLY (JointJS "vertices" model) — the route is
+  //    [source, ...points, target] connected by plain diagonal segments.
   points: IPoint[]
 }
 

@@ -10,10 +10,10 @@
  */
 
 /**
- * Edge types rendered by the straight-path hook (`useStraightPathEdge`): a plain
- * two-point line between the adjusted endpoints, with no obstacle or neighbour
- * routing. Other (step) edges still route AROUND these lines — the solver emits
- * their two-point polylines into the shared route map for that reason.
+ * Edge types rendered by the straight-path hook (`useStraightPathEdge`): a direct
+ * line through any user-authored interior waypoints, with no automatic obstacle
+ * or neighbour routing. Other (step) edges still route AROUND these polylines —
+ * the solver emits their complete authored routes into the shared map.
  */
 export const STRAIGHT_HOOK_EDGE_TYPES: ReadonlySet<string> = new Set([
   "UseCaseAssociation",

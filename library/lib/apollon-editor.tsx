@@ -22,7 +22,7 @@ import {
 // incoming model onto the current schema (e.g. legacy class stereotypes) at
 // every hydration boundary, since editor load does NOT route through the public
 // `importDiagram`.
-import { normalizeModel } from "./utils/versionConverter"
+import { CURRENT_MODEL_VERSION, normalizeModel } from "./utils/versionConverter"
 import { UMLDiagramType } from "./types"
 import { createDiagramStore, type DiagramStore } from "@/store/diagramStore"
 import { createMetadataStore, type MetadataStore } from "@/store/metadataStore"
@@ -1061,7 +1061,7 @@ export class ApollonEditor {
     const interactive = this.getInteractiveForSerialization()
     return {
       id: diagramId,
-      version: "4.1.0",
+      version: CURRENT_MODEL_VERSION,
       title: diagramTitle,
       type: diagramType,
       nodes: nodes.map((node) => mapFromReactFlowNodeToApollonNode(node)),

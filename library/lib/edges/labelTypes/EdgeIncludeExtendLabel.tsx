@@ -4,6 +4,7 @@ import { computeUseCaseLabelLayout } from "@/utils/geometry/edgeLabelLayout"
 interface EdgeIncludeExtendLabelsProps {
   sourcePoint?: IPoint
   targetPoint?: IPoint
+  anchorPoint?: IPoint
   showRelationshipLabels?: boolean
   relationshipType?: "include" | "extend"
   textColor?: string
@@ -12,6 +13,7 @@ interface EdgeIncludeExtendLabelsProps {
 export const EdgeIncludeExtendLabel = ({
   sourcePoint,
   targetPoint,
+  anchorPoint,
   showRelationshipLabels = false,
   relationshipType = "include",
   textColor = "var(--apollon-foreground, #000000)",
@@ -31,7 +33,8 @@ export const EdgeIncludeExtendLabel = ({
   const { x, y, rotation } = computeUseCaseLabelLayout(
     sourcePoint,
     targetPoint,
-    0
+    0,
+    anchorPoint
   )
 
   return (

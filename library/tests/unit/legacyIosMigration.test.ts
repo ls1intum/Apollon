@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { importDiagram } from "@/utils/versionConverter"
+import { CURRENT_MODEL_VERSION, importDiagram } from "@/utils/versionConverter"
 
 // ===========================================================================
 // Legacy Apollon iOS -> v4 migration fidelity
@@ -157,7 +157,7 @@ describe("legacy iOS class diagram", () => {
     expect(model.id).toBe("diagram-ClassDiagram")
     expect(model.title).toBe("My ClassDiagram")
     expect(model.type).toBe("ClassDiagram")
-    expect(model.version).toBe("4.0.0")
+    expect(model.version).toBe(CURRENT_MODEL_VERSION)
   })
 
   it("folds attribute/method children into the parent node (not standalone nodes)", () => {
