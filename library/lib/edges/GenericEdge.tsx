@@ -360,7 +360,7 @@ export const EdgeEndpointMarkers = ({
     onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
     sourceOutward,
     sourceRun,
-    onEndpointPointerDown ? 10 * screenScale : 0
+    straight && onEndpointPointerDown ? 10 * screenScale : 0
   )
   const targetHitTarget = getEndpointHitTargetRect(
     targetPoint,
@@ -369,7 +369,7 @@ export const EdgeEndpointMarkers = ({
     onEndpointPointerDown ? FREEFORM_ENDPOINT_HIT_TARGET_SIZE : undefined,
     targetOutward,
     targetRun,
-    onEndpointPointerDown ? 10 * screenScale : 0
+    straight && onEndpointPointerDown ? 10 * screenScale : 0
   )
   const className = [
     "edge-endpoint-handle",
