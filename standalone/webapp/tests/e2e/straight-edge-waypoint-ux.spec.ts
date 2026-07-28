@@ -209,6 +209,27 @@ test("a waypoint handle wins its circle without blocking endpoint grips", async 
   await expect.poll(() => persistedPoints(page)).not.toEqual(before)
 })
 
+test("one threshold-crossing move is enough to create a waypoint", async ({
+  page,
+}) => {
+  const edge = page.locator(`.react-flow__edge[data-id="${edgeId}"]`)
+  const midpoint = edge.locator(midpointHandleSelector).first()
+  const box = await midpoint.boundingBox()
+  if (!box) throw new Error("midpoint handle has no bounding box")
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  // Keep this deliberately to one move followed immediately by pointer-up. The
+  // threshold-to-waypoint handoff must not require a second browser event.
+  await page.mouse.move(x + 55, y + 55)
+  await page.mouse.up()
+
+  await expect.poll(() => persistedPoints(page)).toHaveLength(1)
+  await expect(edge.getByRole("button", { name: /^Waypoint:/ })).toHaveCount(1)
+})
+
 test("straight waypoints feel editable and collapse live back to a line", async ({
   page,
 }) => {

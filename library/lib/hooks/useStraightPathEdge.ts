@@ -831,13 +831,14 @@ export const useStraightPathEdge = ({
       pointerId: number,
       pointerTarget: SVGRectElement,
       index: number,
-      startInterior: IPoint[]
+      startInterior: IPoint[],
+      movedAtStart = false
     ) => {
       if (!pointerTarget.hasPointerCapture(pointerId))
         pointerTarget.setPointerCapture(pointerId)
       const ownerDocument = pointerTarget.ownerDocument
       dragInteriorRef.current = startInterior
-      dragMovedRef.current = false
+      dragMovedRef.current = movedAtStart
       dragCollapseRef.current = false
       // Capture the endpoints at gesture start so the preview and eventual commit
       // pivot around stable attachment sites.
@@ -1002,8 +1003,10 @@ export const useStraightPathEdge = ({
           snapPoint(flowPoint)
         )
         setSelectedWaypointIndex(segmentIndex)
-        // Hand off to the shared drag routine on the same pointer/element.
-        beginWaypointDrag(pointerId, pointerTarget, segmentIndex, seeded)
+        // Hand off on the same pointer/element. Crossing the threshold is already
+        // a meaningful move: pointer-up may be the very next event on a quick
+        // mouse, touch, or stylus gesture, so preserve that state across handoff.
+        beginWaypointDrag(pointerId, pointerTarget, segmentIndex, seeded, true)
       }
 
       const handleEnd = (e: PointerEvent) => {
