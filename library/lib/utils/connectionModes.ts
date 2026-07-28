@@ -1,4 +1,9 @@
-import { Position, type Rect, type XYPosition } from "@xyflow/system"
+import {
+  Position,
+  type InternalNodeBase,
+  type Rect,
+  type XYPosition,
+} from "@xyflow/system"
 import {
   type FreeformEdgeAnchor,
   getFreeformAnchorFromPoint,
@@ -266,6 +271,31 @@ export function getEdgeAnchorFromPoint(
     default:
       return getFreeformAnchorFromPoint(point, rect)
   }
+}
+
+/**
+ * Resolve a valid React Flow native-handle target from its authoritative
+ * connection state. The release pointer and scene hit-testing are intentionally
+ * absent: a pointer may sit anywhere inside the handle, and overlapping nodes must
+ * not replace `toNode`, which is the target React Flow actually validated.
+ */
+export function getNativeConnectionAnchor({
+  to,
+  toNode,
+}: {
+  to: XYPosition
+  toNode: InternalNodeBase | null
+}): FreeformEdgeAnchor | null {
+  if (!toNode) return null
+  const width = toNode.measured.width ?? toNode.width
+  const height = toNode.measured.height ?? toNode.height
+  if (width === undefined || height === undefined || width <= 0 || height <= 0)
+    return null
+  return getEdgeAnchorFromPoint(toNode.type, to, {
+    ...toNode.internals.positionAbsolute,
+    width,
+    height,
+  })
 }
 
 /**

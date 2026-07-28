@@ -17,6 +17,7 @@ import {
 import {
   dropAnchorIsAimed,
   getEdgeAnchorFromPoint,
+  getNativeConnectionAnchor,
 } from "@/utils/connectionModes"
 import { HandleId } from "@/nodes/wrappers"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
@@ -224,17 +225,14 @@ export const useConnect = () => {
           // hint. Persist the preview's resolved anchor on commit; otherwise the
           // central solver can immediately move the endpoint to an automatic seat.
           const edgeId = pendingConnectionId.current
-          const dropPosition = getDropPosition(event)
-          const nodeOnTop = resolveDropTarget(
-            dropPosition,
-            connectionState.fromNode?.id
-          )
-          if (edgeId && nodeOnTop) {
-            const anchor = getEdgeAnchorFromPoint(
-              nodeOnTop.type,
-              dropPosition,
-              nodeOnTop.rect
-            )
+          if (edgeId && connectionState.toNode) {
+            // `FinalConnectionState.to` is the exact validated handle centre in
+            // screen coordinates; convert that point, rather than the release
+            // event's potentially offset pointer, into the node's flow-space rect.
+            const anchor = getNativeConnectionAnchor({
+              to: screenToFlowPosition(connectionState.to),
+              toNode: connectionState.toNode,
+            })
             if (anchor) {
               const endpoint =
                 connectionStartParams.current?.handleType === "target"
@@ -372,6 +370,7 @@ export const useConnect = () => {
       edges,
       getDropPosition,
       resolveDropTarget,
+      screenToFlowPosition,
       setEdges,
       stopConnectionGuidance,
       setPendingConnectionEdge,

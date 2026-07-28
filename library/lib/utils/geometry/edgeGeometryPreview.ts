@@ -141,9 +141,12 @@ const routeDirectionKey = (points: readonly IPoint[]): string | null => {
       directions.push(point.x > previous.x ? "R" : "L")
     else if (previous.x === point.x)
       directions.push(point.y > previous.y ? "D" : "U")
-    else return null
+    else
+      directions.push(
+        `${point.y > previous.y ? "D" : "U"}${point.x > previous.x ? "R" : "L"}`
+      )
   }
-  return directions.join("")
+  return directions.length > 0 ? directions.join(",") : null
 }
 
 const relativeEndpointKey = (
@@ -180,22 +183,25 @@ const segmentIntersectsRect = (
   b: IPoint,
   rect: EdgeGeometryNodeRect
 ): boolean => {
-  const right = rect.x + rect.width
-  const bottom = rect.y + rect.height
-  if (a.y === b.y)
-    return (
-      a.y >= rect.y &&
-      a.y <= bottom &&
-      Math.max(a.x, b.x) >= rect.x &&
-      Math.min(a.x, b.x) <= right
-    )
-  if (a.x === b.x)
-    return (
-      a.x >= rect.x &&
-      a.x <= right &&
-      Math.max(a.y, b.y) >= rect.y &&
-      Math.min(a.y, b.y) <= bottom
-    )
+  // Slab intersection works for orthogonal and diagonal segments alike. The
+  // preview safety check is inclusive: a held route touching a node border should
+  // yield immediately to the new exact route rather than flicker beneath the node.
+  let entry = 0
+  let exit = 1
+  for (const [start, delta, min, max] of [
+    [a.x, b.x - a.x, rect.x, rect.x + rect.width],
+    [a.y, b.y - a.y, rect.y, rect.y + rect.height],
+  ] as const) {
+    if (delta === 0) {
+      if (start < min || start > max) return false
+      continue
+    }
+    const first = (min - start) / delta
+    const second = (max - start) / delta
+    entry = Math.max(entry, Math.min(first, second))
+    exit = Math.min(exit, Math.max(first, second))
+    if (entry > exit) return false
+  }
   return true
 }
 
@@ -344,11 +350,52 @@ const normalizeSettlementRoute = (
   return normalized
 }
 
+const interpolate = (from: number, to: number, progress: number): number =>
+  from + (to - from) * progress
+
 /**
- * Pair two orthogonal routes so point-wise interpolation stays orthogonal even
- * when their first direction or bend count differs. Zero-length leading/trailing
- * segments align both alternating H/V sequences; simplifying either endpoint
- * yields the original route exactly.
+ * Sample a polyline at equal arc-length intervals. This is used only for the
+ * display handoff of arbitrary-angle routes; exact routing stays integer and
+ * history-independent.
+ */
+const sampleSettlementRoute = (
+  route: readonly IPoint[],
+  pointCount: number
+): IPoint[] => {
+  const points = simplify(route)
+  const lengths: number[] = []
+  let total = 0
+  for (let index = 1; index < points.length; index++) {
+    total += Math.hypot(
+      points[index].x - points[index - 1].x,
+      points[index].y - points[index - 1].y
+    )
+    lengths.push(total)
+  }
+  if (total === 0)
+    return Array.from({ length: pointCount }, () => ({ ...points[0] }))
+
+  return Array.from({ length: pointCount }, (_, index) => {
+    const distance = (total * index) / (pointCount - 1)
+    let segment = lengths.findIndex((end) => end >= distance)
+    if (segment < 0) segment = lengths.length - 1
+    const startDistance = segment === 0 ? 0 : lengths[segment - 1]
+    const endDistance = lengths[segment]
+    const progress =
+      endDistance === startDistance
+        ? 0
+        : (distance - startDistance) / (endDistance - startDistance)
+    return {
+      x: interpolate(points[segment].x, points[segment + 1].x, progress),
+      y: interpolate(points[segment].y, points[segment + 1].y, progress),
+    }
+  })
+}
+
+/**
+ * Pair two routes for point-wise display interpolation. Orthogonal pairs keep the
+ * orientation-preserving zero-segment normalization. If either route is diagonal,
+ * equal arc-length samples let bends appear, disappear, or change side smoothly.
  */
 const normalizeSettlementPair = (
   fromRoute: readonly IPoint[],
@@ -370,8 +417,13 @@ const normalizeSettlementPair = (
       (orientation, index) =>
         index > 0 && orientation === toOrientations[index - 1]
     )
-  )
-    return null
+  ) {
+    const pointCount = Math.max(from.length, to.length, 3)
+    return {
+      from: sampleSettlementRoute(from, pointCount),
+      to: sampleSettlementRoute(to, pointCount),
+    }
+  }
 
   const canonicalStart = fromOrientations[0]
   const fromLeading = 0
@@ -387,9 +439,9 @@ const normalizeSettlementPair = (
 }
 
 /**
- * Capture only routes whose accepted result differs from the current display and
- * can be morphed without ever drawing a diagonal. Exact geometry is free to
- * settle immediately; these pairs are a short display-only handoff.
+ * Capture routes whose accepted result differs from the current display.
+ * Orthogonal routes remain orthogonal throughout the handoff; arbitrary-angle
+ * routes use arc-length sampling so topology changes do not snap into place.
  */
 export const prepareEdgeGeometrySettlement = (
   displayedById: Readonly<Record<string, IPoint[]>>,
@@ -416,13 +468,11 @@ export const prepareEdgeGeometrySettlement = (
   return transitions
 }
 
-const interpolate = (from: number, to: number, progress: number): number =>
-  from + (to - from) * progress
-
 /**
  * Return the transient display routes for one settlement frame. The cubic ease
  * moves decisively away from the stale preview and arrives gently at the exact
- * route. Every intermediate segment remains horizontal or vertical.
+ * route. Orthogonal transitions stay orthogonal; straight-edge polylines can
+ * interpolate at arbitrary angles.
  */
 export const interpolateEdgeGeometrySettlement = (
   transitions: EdgeGeometrySettlementTransition,

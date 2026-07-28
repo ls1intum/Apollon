@@ -130,6 +130,28 @@ describe("straight-hook edge routing", () => {
     expect(route[route.length - 1].x).toBeLessThan(420)
   })
 
+  it("leaves an authored route untouched even when it crosses another node", () => {
+    // Once a user adds a bend, its segments are direct-manipulation geometry. The
+    // automatic router must not silently add more bends around a later obstruction.
+    const waypoint = { x: 280, y: 200 }
+    const blocker = makeNode("c", 190, 95, 70, 70)
+    const nodes = [makeNode("a", 0, 0), makeNode("b", 520, 0), blocker]
+    const { routeById } = computeAllEdgeGeometry(
+      solverInput(nodes, [straightHookEdge([waypoint])])
+    )
+    const route = routeById["e1"]
+    expect(route).toHaveLength(3)
+    expect(route[1]).toEqual(waypoint)
+    expect(
+      segIntersectsRect(route[0], route[1], {
+        x: 190,
+        y: 95,
+        width: 70,
+        height: 70,
+      })
+    ).toBe(true)
+  })
+
   it("keeps an unobstructed connection straight (a 2-point line)", () => {
     const nodes = [makeNode("a", 0, 0), makeNode("b", 400, 0)]
     const { routeById } = computeAllEdgeGeometry(
@@ -450,6 +472,21 @@ describe("straight-hook edge routing", () => {
     ]) {
       expect(layout(dx, dy)).toBe(base)
     }
+  })
+
+  it("keeps the facing side through a small nudge near a diagonal boundary", () => {
+    const sourceSide = (targetY: number) => {
+      const nodes = [
+        makeNode("a", 0, 0, 100, 60),
+        makeNode("b", 500, targetY, 100, 60),
+      ]
+      const source = computeAllEdgeGeometry(
+        solverInput(nodes, [straightHookEdge()])
+      ).routeById["e1"][0]
+      return Math.abs(source.x - 100) <= 6 ? "right" : "bottom"
+    }
+    expect(sourceSide(300)).toBe("right")
+    expect(sourceSide(305)).toBe("right")
   })
 
   it("is deterministic: a cold re-solve yields byte-identical routes", () => {

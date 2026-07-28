@@ -28,6 +28,21 @@ export interface ZoomControlsProps {
 }
 
 /**
+ * Apply controlled node positions, then wait two paint boundaries before fitting.
+ * The first lets React publish the new node array; the second lets React Flow
+ * measure and index it. Kept injectable for a deterministic toolbar regression
+ * test.
+ */
+export const runTidyLayoutAndFit = (
+  layout: () => void,
+  fit: () => void,
+  schedule: (callback: FrameRequestCallback) => number = requestAnimationFrame
+): void => {
+  layout()
+  schedule(() => schedule(() => fit()))
+}
+
+/**
  * The canvas cluster: a [zoom-out][%-reset][zoom-in][fit][multi-select] island and
  * a separate [undo][redo] history island. The fit button reserves the current insets
  * so content frames clear of the chrome. `history: false` drops the history island.
@@ -137,7 +152,11 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             <button
               type="button"
               className="apollon-chrome-iconbtn"
-              onClick={() => layoutSyntaxTree()}
+              onClick={() =>
+                runTidyLayoutAndFit(layoutSyntaxTree, () =>
+                  insetAwareFitView(rf, insets, safeArea, { duration: 200 })
+                )
+              }
               aria-label={t.tidyLayout}
             >
               <ListTree width={18} height={18} aria-hidden="true" />

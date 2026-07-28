@@ -64,15 +64,27 @@ export const sideAxisLength = (side: Position, rect: Rect): number =>
  *
  * Cross-multiplied rather than divided: on integer-ish coordinates the products are
  * exact where the quotients are not, so the comparison cannot land differently on
- * different engines.
+ * different engines. `deadbandPermille` optionally treats a near-tie as the
+ * existing horizontal tie-break; automatic straight edges use this to avoid
+ * switching sides for a tiny movement around the diagonal boundary.
  */
-export const facingSide = (rect: Rect, toward: IPoint): Position => {
+export const facingSide = (
+  rect: Rect,
+  toward: IPoint,
+  deadbandPermille = 0
+): Position => {
   const c = centerOf(rect)
   const dx = toward.x - c.x
   const dy = toward.y - c.y
   const halfW = rect.width / 2 || 1
   const halfH = rect.height / 2 || 1
-  return Math.abs(dx) * halfH >= Math.abs(dy) * halfW
+  const horizontal = Math.abs(dx) * halfH
+  const vertical = Math.abs(dy) * halfW
+  const nearBoundary =
+    deadbandPermille > 0 &&
+    Math.abs(horizontal - vertical) * 1000 <=
+      Math.max(horizontal, vertical) * deadbandPermille
+  return horizontal >= vertical || nearBoundary
     ? dx >= 0
       ? Position.Right
       : Position.Left

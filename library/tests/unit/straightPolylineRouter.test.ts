@@ -111,6 +111,25 @@ describe("routeStraightPolyline — empty and gated cases", () => {
     ])
   })
 
+  it("does not bend merely to create preferred clearance around a nearby node", () => {
+    // A visible 2 px gap is not a collision. Using the full 10 px routing margin as
+    // the intervention threshold made this tiny nudge replace a straight edge with
+    // a conspicuous detour.
+    const nearby: StraightRouteObstacle = {
+      id: "nearby",
+      x: 40,
+      y: 2,
+      width: 40,
+      height: 30,
+      soft: false,
+    }
+    const route = routeStraightPolyline(baseReq({ obstacles: [nearby] }))
+    expect(route).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ])
+  })
+
   it("ignores soft obstacles for visibility (never routes around them)", () => {
     const soft: StraightRouteObstacle = {
       id: "pkg",
@@ -150,6 +169,26 @@ describe("routeStraightPolyline — obstacle avoidance", () => {
     expect(route[route.length - 1]).toEqual({ x: 200, y: 0 })
     expect(isInteger(route)).toBe(true)
     expectRouteClears(route, obstacle)
+  })
+
+  it("never exempts a blocker merely because its clearance halo contains the source", () => {
+    const blocker: StraightRouteObstacle = {
+      id: "near-source",
+      x: 5,
+      y: -10,
+      width: 30,
+      height: 20,
+      soft: false,
+    }
+    const route = routeStraightPolyline(baseReq({ obstacles: [blocker] }))
+    expect(route.length).toBeGreaterThan(2)
+    for (let index = 1; index < route.length; index++)
+      expect(crossesRectInterior(route[index - 1], route[index], blocker)).toBe(
+        false
+      )
+    expect(
+      chordClearsObstacles({ x: 0, y: 0 }, { x: 100, y: 0 }, [blocker], MIN)
+    ).toBe(false)
   })
 
   it("threads a two-obstacle corridor, clearing both", () => {
@@ -225,6 +264,37 @@ describe("routeStraightPolyline — edge conflicts", () => {
     )
     expect(route.length).toBeGreaterThan(2)
     expect(routesCrossOpen(route, crossingNeighbor)).toBe(false)
+  })
+
+  it("also avoids structural conflicts with sibling routes", () => {
+    const route = routeStraightPolyline(
+      baseReq({
+        target: { x: 200, y: 0 },
+        siblingRoutes: [crossingNeighbor],
+      })
+    )
+    expect(route.length).toBeGreaterThan(2)
+    expect(routesCrossOpen(route, crossingNeighbor)).toBe(false)
+  })
+
+  it("accepts a readable crossing when avoiding it would require a large excursion", () => {
+    // Apollon renders crossings with a line jump. Crossing should still be costly
+    // enough to avoid cheaply, but not so costly that a 200 px edge travels around
+    // the end of a 240 px neighbour.
+    const longNeighbor: IPoint[] = [
+      { x: 100, y: -120 },
+      { x: 100, y: 120 },
+    ]
+    const route = routeStraightPolyline(
+      baseReq({
+        target: { x: 200, y: 0 },
+        neighborRoutes: [longNeighbor],
+      })
+    )
+    expect(route).toEqual([
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+    ])
   })
 
   it("is independent of the order of conflicting neighbor routes", () => {

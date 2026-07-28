@@ -318,19 +318,32 @@ export const EdgeGeometrySolver = () => {
       const acceptedNodeGeometry = snapshotEdgeGeometryNodes(
         solveInput.nodeLookup
       )
+      const geometryState = geometryStore?.getState()
+      const stabilization = interacting
+        ? stabilizeProvisionalRoutes({
+            displayedById:
+              Object.keys(geometryState?.previewById ?? {}).length > 0
+                ? (geometryState?.previewById ?? {})
+                : (geometryState?.geometryById ?? {}),
+            candidateById: routeById,
+            edges: solveInput.edges,
+            nodes: acceptedNodeGeometry,
+            pendingDecisionById: provisionalDecisionRef.current,
+          })
+        : null
+      if (!interacting) provisionalDecisionRef.current.clear()
       if (
         !setAllGeometry(
           routeById,
           routingEpoch,
           acceptedNodeGeometry,
-          undefined
+          stabilization?.routeById
         )
       )
         return
       releasedEdgePreviewRef.current = null
       provisionalRoutesRef.current = null
       provisionalNodeGeometryRef.current = null
-      provisionalDecisionRef.current.clear()
       settledRoutesRef.current =
         geometryStore?.getState().geometryById ?? routeById
       settledNodeGeometryRef.current = acceptedNodeGeometry

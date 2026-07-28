@@ -96,26 +96,6 @@ const nodeWidth = (node: Node): number | undefined =>
 const nodeHeight = (node: Node): number | undefined =>
   node.height ?? node.measured?.height
 
-/** Expand a source/target corridor to include authored straight-edge checkpoints.
- * A checkpoint may sit far outside the endpoint-node box; querying obstacles only
- * in that box makes every blocker on the distant legs invisible to the router. */
-const includePointsInBounds = (
-  bounds: Rect,
-  points: readonly IPoint[]
-): Rect => {
-  let minX = bounds.x
-  let minY = bounds.y
-  let maxX = bounds.x + bounds.width
-  let maxY = bounds.y + bounds.height
-  for (const point of points) {
-    minX = Math.min(minX, point.x)
-    minY = Math.min(minY, point.y)
-    maxX = Math.max(maxX, point.x)
-    maxY = Math.max(maxY, point.y)
-  }
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-}
-
 /**
  * Resolve one edge's endpoints, or `null` when the base position is unknowable
  * (a node not yet measured) so the caller can hold the previous route.
@@ -346,6 +326,14 @@ function outwardNormal(side: Position | undefined): IPoint | undefined {
       return undefined
   }
 }
+
+/**
+ * A 5% deadband around the aspect-scaled diagonal. This is deliberately
+ * deterministic rather than history-based: peers and cold re-solves still choose
+ * byte-identical sides, while an ordinary one-grid-cell drag no longer makes an
+ * endpoint jump across a node corner.
+ */
+const STRAIGHT_SIDE_DEADBAND_PERMILLE = 50
 
 function indexRoutePolyline(
   grid: NeighborGrid,
@@ -1356,12 +1344,20 @@ function computeAllEdgeGeometryPass(
     if (!fixedPorts.has(sourceKey) && !sideOverrideByEnd?.has(sourceKey))
       straightSideByEnd.set(
         sourceKey,
-        facingSide(sourceRect, centerOf(targetRect))
+        facingSide(
+          sourceRect,
+          centerOf(targetRect),
+          STRAIGHT_SIDE_DEADBAND_PERMILLE
+        )
       )
     if (!fixedPorts.has(targetKey) && !sideOverrideByEnd?.has(targetKey))
       straightSideByEnd.set(
         targetKey,
-        facingSide(targetRect, centerOf(sourceRect))
+        facingSide(
+          targetRect,
+          centerOf(sourceRect),
+          STRAIGHT_SIDE_DEADBAND_PERMILLE
+        )
       )
   }
   const originalPortEnds = collectPortEnds(
@@ -1526,19 +1522,23 @@ function computeAllEdgeGeometryPass(
     // lines, but they get the SAME sophistication as step edges up to the routing
     // primitive: an unbent, unpinned edge picks its facing sides and a balanced
     // centred port (via `selectEdgeAnchors` + the shared `assignPorts` band), while
-    // a bent edge keeps its authored waypoints. The chosen endpoints are then joined
-    // by a straight, obstacle-avoiding polyline (Track D) instead of an orthogonal
-    // route — waypoints ride along as mandatory checkpoints. The result enters the
-    // neighbour map so step edges route around it.
+    // a bent edge keeps its authored route exactly. Automatic edges are joined by a
+    // straight, obstacle-avoiding polyline (Track D) instead of an orthogonal route.
+    // Every result enters the neighbour map so later step edges route around it.
     if (straightHookTypes.has(edge.type ?? "")) {
       const interior = getStraightHookInterior(edge)
-      const straightCandidateBounds = includePointsInBounds(
-        candidateBounds,
-        interior
-      )
+      if (interior.length > 0) {
+        const authored = [
+          endpoints.adjustedSource,
+          ...interior,
+          endpoints.adjustedTarget,
+        ]
+        routeById[edge.id] = authored
+        indexRoutePolyline(neighborGrid, edge.id, authored)
+        continue
+      }
       // Every straight edge avoids intervening node bodies; the routing cost keeps
       // the detour readable (see `straightPolylineRouter`).
-      const avoidsObstacles = true
       const straightObstacles = getEdgeObstacles(
         nodes,
         edge.source,
@@ -1546,120 +1546,114 @@ function computeAllEdgeGeometryPass(
         endpoints.adjustedSource,
         endpoints.adjustedTarget,
         nodeIndex,
-        straightCandidateBounds
+        candidateBounds
       )
       let straightSource = endpoints.adjustedSource
       let straightTarget = endpoints.adjustedTarget
       let straightSourceSide = endpoints.sourcePosition
       let straightTargetSide = endpoints.targetPosition
-      let straightNeighbors: IPoint[][] = []
-      let straightSiblings: IPoint[][] = []
-      if (interior.length === 0) {
-        const sourceType = nodeById.get(edge.source)?.type
-        const targetType = nodeById.get(edge.target)?.type
-        const { edgeRoutes: neighborEdges } = collectNeighbors(
-          edge,
-          endpoints,
-          nodes,
-          nodeIndex,
-          straightObstacles,
-          routeById,
-          neighborGrid,
-          edgeById
-        )
-        const selected = selectEdgeAnchors({
-          sourceRect: rectFromEndpoint(
-            endpoints.sourceAbsolutePosition,
-            endpoints.sourceSize
+      const sourceType = nodeById.get(edge.source)?.type
+      const targetType = nodeById.get(edge.target)?.type
+      const { edgeRoutes: neighborEdges } = collectNeighbors(
+        edge,
+        endpoints,
+        nodes,
+        nodeIndex,
+        straightObstacles,
+        routeById,
+        neighborGrid,
+        edgeById
+      )
+      const selected = selectEdgeAnchors({
+        sourceRect: rectFromEndpoint(
+          endpoints.sourceAbsolutePosition,
+          endpoints.sourceSize
+        ),
+        targetRect: rectFromEndpoint(
+          endpoints.targetAbsolutePosition,
+          endpoints.targetSize
+        ),
+        sourceType,
+        targetType,
+        // On a node side shared with other connectors the coordinated seat is
+        // AUTHORITATIVE, not a suggestion. A straight edge can always shorten
+        // itself by aiming its port straight at the partner, so a soft
+        // preference loses every time — and the whole fan collapses onto one or
+        // two points, which is how two edges end up leaving from the SAME pixel.
+        // Pinning the seat is what keeps the fan evenly spread and symmetric.
+        // Lone ends are absent from the band and stay free to optimise.
+        sourceCustom:
+          asFreeformAnchor(edge.data?.sourceAnchor) ??
+          coordinatedStraightPort(edge.id, "source"),
+        targetCustom:
+          asFreeformAnchor(edge.data?.targetAnchor) ??
+          coordinatedStraightPort(edge.id, "target"),
+        resolve: (overrides) =>
+          resolveEdgeEndpoints(
+            edge,
+            nodes,
+            nodeById,
+            nodeLookup,
+            connectionMode,
+            overrides,
+            true,
+            nodeIndex
           ),
-          targetRect: rectFromEndpoint(
-            endpoints.targetAbsolutePosition,
-            endpoints.targetSize
-          ),
-          sourceType,
-          targetType,
-          // On a node side shared with other connectors the coordinated seat is
-          // AUTHORITATIVE, not a suggestion. A straight edge can always shorten
-          // itself by aiming its port straight at the partner, so a soft
-          // preference loses every time — and the whole fan collapses onto one or
-          // two points, which is how two edges end up leaving from the SAME pixel.
-          // Pinning the seat is what keeps the fan evenly spread and symmetric.
-          // Lone ends are absent from the band and stay free to optimise.
-          sourceCustom:
-            asFreeformAnchor(edge.data?.sourceAnchor) ??
-            coordinatedStraightPort(edge.id, "source"),
-          targetCustom:
-            asFreeformAnchor(edge.data?.targetAnchor) ??
-            coordinatedStraightPort(edge.id, "target"),
-          resolve: (overrides) =>
-            resolveEdgeEndpoints(
-              edge,
-              nodes,
-              nodeById,
-              nodeLookup,
-              connectionMode,
-              overrides,
-              true,
-              nodeIndex
-            ),
-          // Side selection stays obstacle-aware for EVERY straight edge, so a
-          // stacked node makes the edge pick a side that clears it (a straight line
-          // that avoids the overlap) rather than one that runs through it. Only the
-          // bend-generating router below is gated per type.
-          obstacles: straightObstacles,
-          thirdPartyObstacles: straightObstacles.filter(
-            (o) => !o.soft && o.id !== edge.source && o.id !== edge.target
-          ),
-          neighborEdges,
-          enableStraightPath: true,
-        })
-        // Sibling carve-out (the same one the orthogonal neighbour scan makes):
-        // connectors that share a node with this edge are MEANT to fan out from it
-        // side by side. Pricing that as crowding makes the search shove the
-        // departure sideways into exactly the grazing exit we are trying to remove.
-        // Unrelated edges still contribute crossing/overlap/crowding cost.
-        const shares = (other: Edge): boolean =>
-          other.source === edge.source ||
-          other.source === edge.target ||
-          other.target === edge.source ||
-          other.target === edge.target
-        straightNeighbors = []
-        straightSiblings = []
-        for (const [otherId, route] of Object.entries(routeById)) {
-          if (otherId === edge.id || route.length < 2) continue
-          const other = edgeById.get(otherId)
-          if (other && shares(other)) straightSiblings.push(route)
-          else straightNeighbors.push(route)
-        }
-        if (selected) {
-          straightSource = selected.endpoints.adjustedSource
-          straightTarget = selected.endpoints.adjustedTarget
-          straightSourceSide = selected.endpoints.sourcePosition
-          straightTargetSide = selected.endpoints.targetPosition
-        }
+        // Side selection stays obstacle-aware for EVERY straight edge, so a
+        // stacked node makes the edge pick a side that clears it (a straight line
+        // that avoids the overlap) rather than one that runs through it. Only the
+        // bend-generating router below is gated per type.
+        obstacles: straightObstacles,
+        thirdPartyObstacles: straightObstacles.filter(
+          (o) => !o.soft && o.id !== edge.source && o.id !== edge.target
+        ),
+        neighborEdges,
+        enableStraightPath: true,
+      })
+      // Sibling carve-out (the same one the orthogonal neighbour scan makes):
+      // connectors that share a node with this edge are MEANT to fan out from it
+      // side by side. Pricing that as crowding makes the search shove the
+      // departure sideways into exactly the grazing exit we are trying to remove.
+      // Unrelated edges still contribute crossing/overlap/crowding cost.
+      const shares = (other: Edge): boolean =>
+        other.source === edge.source ||
+        other.source === edge.target ||
+        other.target === edge.source ||
+        other.target === edge.target
+      const straightNeighbors: IPoint[][] = []
+      const straightSiblings: IPoint[][] = []
+      for (const [otherId, route] of Object.entries(routeById)) {
+        if (otherId === edge.id || route.length < 2) continue
+        const other = edgeById.get(otherId)
+        if (other && shares(other)) straightSiblings.push(route)
+        else straightNeighbors.push(route)
       }
-      const line = avoidsObstacles
-        ? routeStraightPolyline({
-            source: straightSource,
-            target: straightTarget,
-            checkpoints: interior,
-            // Never treat the edge's OWN endpoint nodes as obstacles — they are
-            // where it attaches, and routing around them produces a backwards jog.
-            obstacles: straightObstacles.filter(
-              (o) => o.id !== edge.source && o.id !== edge.target
-            ),
-            neighborRoutes: straightNeighbors,
-            siblingRoutes: straightSiblings,
-            // Outer members of a fan turn on the outer corner ring, so siblings
-            // clearing one obstacle nest instead of stacking on a single elbow.
-            // `|ratio - 1/2|` is mirror-invariant, so the two halves of a
-            // symmetric diagram still make the same choice.
-            preferredCornerRing: straightCornerRing(edge),
-            clearancePx: EDGES.NODE_CLEARANCE_PX,
-            sourceNormal: outwardNormal(straightSourceSide),
-            targetNormal: outwardNormal(straightTargetSide),
-          })
-        : [straightSource, ...interior, straightTarget]
+      if (selected) {
+        straightSource = selected.endpoints.adjustedSource
+        straightTarget = selected.endpoints.adjustedTarget
+        straightSourceSide = selected.endpoints.sourcePosition
+        straightTargetSide = selected.endpoints.targetPosition
+      }
+      const line = routeStraightPolyline({
+        source: straightSource,
+        target: straightTarget,
+        checkpoints: [],
+        // Never treat the edge's OWN endpoint nodes as obstacles — they are where
+        // it attaches, and routing around them produces a backwards jog.
+        obstacles: straightObstacles.filter(
+          (o) => o.id !== edge.source && o.id !== edge.target
+        ),
+        neighborRoutes: straightNeighbors,
+        siblingRoutes: straightSiblings,
+        // Outer members of a fan turn on the outer corner ring, so siblings
+        // clearing one obstacle nest instead of stacking on a single elbow.
+        // `|ratio - 1/2|` is mirror-invariant, so the two halves of a symmetric
+        // diagram still make the same choice.
+        preferredCornerRing: straightCornerRing(edge),
+        clearancePx: EDGES.NODE_CLEARANCE_PX,
+        sourceNormal: outwardNormal(straightSourceSide),
+        targetNormal: outwardNormal(straightTargetSide),
+      })
       routeById[edge.id] = line
       indexRoutePolyline(neighborGrid, edge.id, line)
       continue

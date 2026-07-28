@@ -25,4 +25,13 @@ describe("facingSide", () => {
     const wide = rect(0, 0, 400, 20)
     expect(facingSide(wide, { x: 320, y: -30 })).toBe(Position.Top)
   })
+
+  it("can absorb small movements around an axis boundary", () => {
+    const square = rect(0, 0, 100, 100)
+    // Vertical wins by 5% without a deadband. Automatic straight edges opt into a
+    // 5% band so one grid-cell nudge does not make the endpoint jump sides.
+    expect(facingSide(square, { x: 150, y: 155 })).toBe(Position.Bottom)
+    expect(facingSide(square, { x: 150, y: 155 }, 50)).toBe(Position.Right)
+    expect(facingSide(square, { x: 150, y: 170 }, 50)).toBe(Position.Bottom)
+  })
 })

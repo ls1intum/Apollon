@@ -16,9 +16,9 @@
  *    the input order of obstacles/neighbours.
  *
  * Design:
- *  1. Gate: if every checkpoint sub-chord already clears all hard obstacles by
- *     ≥ MIN clearance AND has no crossing/overlap with another edge, return the
- *     straight polyline unchanged (the common case).
+ *  1. Gate: if every checkpoint sub-chord avoids hard obstacles by the direct-route
+ *     guard AND has no crossing/overlap with another edge, return the straight
+ *     polyline unchanged (the common case).
  *  2. Otherwise build a reduced/tangent visibility graph over the endpoints, the
  *     checkpoints, two rings of inflated corners per HARD obstacle, and clearance
  *     corners around neighbouring segments that conflict with the direct route.
@@ -134,18 +134,15 @@ const turnCostPx = (from: IPoint, via: IPoint, to: IPoint): number => {
   )
 }
 
-/** A diagonal crossing needs a stronger deterrent than the orthogonal baseline.
- * Orthogonal lines cross at 90° and remain easy to trace; arbitrary-angle straight
- * lines can merge visually. Keep this surcharge crossing-only so parallel crowding
- * cannot force gratuitous bends in an otherwise clean fan. */
-const STRAIGHT_CROSSING_SURCHARGE_PX = ROUTING_COST.edgeCrossing
-
 /**
  * Cost of one candidate segment against every neighbouring edge, delegated to the
  * SHARED `polylineConflictCost` so a crossing, a collinear overlap and a too-close
  * parallel run keep the orthogonal engine's shared scale (`edgeCrossing` 400,
- * `overlapPerPx` 25, `crowdingPerPx` 3), then adding the diagonal-only crossing
- * surcharge above. Summed over neighbours, so input order cannot change the cost.
+ * `overlapPerPx` 25, `crowdingPerPx` 3). A crossing is intentionally charged once:
+ * axis-aligned crossings can use line-jump bridges, and even an unavoidable
+ * diagonal crossing is easier to trace than a disproportionate excursion around a
+ * long neighbouring line. Summed over neighbours, so input order cannot change
+ * the cost.
  */
 const neighborCostPx = (
   a: IPoint,
@@ -153,18 +150,19 @@ const neighborCostPx = (
   neighborRoutes: readonly (readonly IPoint[])[],
   crowdingClearancePx: number
 ): number => {
-  const conflict = polylineConflictCost(
-    [a, b],
-    neighborRoutes,
-    crowdingClearancePx
-  )
-  return conflict.cost + conflict.crossings * STRAIGHT_CROSSING_SURCHARGE_PX
+  return polylineConflictCost([a, b], neighborRoutes, crowdingClearancePx).cost
 }
 
-/** The MINIMUM clearance the returned route guarantees from every hard obstacle.
- * It is also the obstacle half of the direct-route gate; a chord must additionally
- * have no crossing or overlap to be returned as-is. */
+/** The MINIMUM clearance a generated detour guarantees from every hard obstacle. */
 const MIN_CLEARANCE_PX = EDGES.MIN_NODE_CLEARANCE_PX
+
+/**
+ * A straight line should reroute when it hits a node, not merely because it comes
+ * within the preferred detour clearance. Keep a 1 px collision guard so a line on
+ * the node outline does not disappear beneath its border. Once routing intervenes,
+ * the generated detour still receives the full `MIN_CLEARANCE_PX` breathing room.
+ */
+const DIRECT_ROUTE_CLEARANCE_PX = 1
 
 /**
  * The routing objective, expressed entirely in pixels of travel so it composes with
@@ -339,10 +337,34 @@ const segmentIntersectsRectInterior = (
 }
 
 /**
+ * Test a visibility segment against a MIN-clearance rectangle. A route endpoint
+ * already inside the clearance halo may leave it, but the exemption stops at the
+ * obstacle's actual body. The solver removes the real source/target bodies before
+ * calling the router, so entering this deflated body is always invalid.
+ */
+const segmentBlockedByClearanceRect = (
+  a: IPoint,
+  b: IPoint,
+  clearanceRect: IntRect,
+  relaxAtA: boolean,
+  relaxAtB: boolean
+): boolean => {
+  const startsInHalo = relaxAtA && inclusiveContains(clearanceRect, a)
+  const endsInHalo = relaxAtB && inclusiveContains(clearanceRect, b)
+  if (startsInHalo || endsInHalo)
+    return segmentIntersectsRectInterior(
+      a,
+      b,
+      inflate(clearanceRect, -MIN_CLEARANCE_PX)
+    )
+  return segmentIntersectsRectInterior(a, b, clearanceRect)
+}
+
+/**
  * Does the straight chord a→b clear every HARD obstacle by at least
- * `minClearancePx`? An obstacle whose `minClearancePx`-inflated body already
- * contains an endpoint is that endpoint's OWN node and is exempt (you cannot clear
- * the node your endpoint sits on). Soft obstacles are ignored.
+ * `minClearancePx`? An endpoint already inside a third-party clearance halo may
+ * leave that halo, but its chord must still avoid the obstacle's actual body.
+ * Soft obstacles are ignored.
  */
 export function chordClearsObstacles(
   a: IPoint,
@@ -352,9 +374,12 @@ export function chordClearsObstacles(
 ): boolean {
   for (const o of hardObstacles) {
     if (o.soft) continue
-    const inflated = inflate(rectOf(o), minClearancePx)
-    if (inclusiveContains(inflated, a) || inclusiveContains(inflated, b))
+    const body = rectOf(o)
+    const inflated = inflate(body, minClearancePx)
+    if (inclusiveContains(inflated, a) || inclusiveContains(inflated, b)) {
+      if (segmentIntersectsRectInterior(a, b, body)) return false
       continue
+    }
     if (segmentIntersectsRectInterior(a, b, inflated)) return false
   }
   return true
@@ -568,8 +593,8 @@ const buildVertices = (
 /**
  * Mutual visibility of two vertices: the segment between them must not enter the
  * MIN-clearance-inflated interior of any hard obstacle. A segment incident to the
- * sub-chord's own endpoint is exempt from obstacles whose inflated body contains
- * that endpoint (the node it departs from / arrives at). Corner touches are allowed.
+ * sub-chord endpoint may leave a clearance halo it already occupies, but never
+ * enter the obstacle's actual body. Corner touches are allowed.
  */
 const visible = (
   vertices: readonly Vertex[],
@@ -584,9 +609,7 @@ const visible = (
   const exemptI = i === endA || i === endB
   const exemptJ = j === endA || j === endB
   for (const r of blockRects) {
-    if (exemptI && inclusiveContains(r, p)) continue
-    if (exemptJ && inclusiveContains(r, q)) continue
-    if (segmentIntersectsRectInterior(p, q, r)) return false
+    if (segmentBlockedByClearanceRect(p, q, r, exemptI, exemptJ)) return false
   }
   return true
 }
@@ -951,11 +974,9 @@ const simplifyRoute = (
       const b = candidate[i]
       const isEndA = i - 1 === 0
       const isEndB = i === candidate.length - 1
-      const blocked = blockRects.some((r) => {
-        if (isEndA && inclusiveContains(r, a)) return false
-        if (isEndB && inclusiveContains(r, b)) return false
-        return segmentIntersectsRectInterior(a, b, r)
-      })
+      const blocked = blockRects.some((r) =>
+        segmentBlockedByClearanceRect(a, b, r, isEndA, isEndB)
+      )
       if (blocked) continue
       const cost = totalRouteCostPx(
         candidate,
@@ -1008,7 +1029,7 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
       anchors[i - 1],
       a,
       hardObstacles,
-      MIN_CLEARANCE_PX
+      DIRECT_ROUTE_CLEARANCE_PX
     )
   })
   const direct = collapseCollinear(anchors)
@@ -1019,14 +1040,20 @@ export function routeStraightPolyline(req: StraightRouteRequest): IPoint[] {
     return conflict.crossings > 0 || conflict.overlapPx > 0
   }
   const allSiblingRoutes = siblingRoutes ?? []
-  // Only unrelated neighbors contribute detour vertices. Siblings arrive through
-  // the greedy route walk one at a time; materialising vertices from only the
-  // already-routed half makes a symmetric fan resolve asymmetrically. Their
-  // crossings/overlaps are still priced by the search, while coordinated ports
-  // and obstacle rings provide the order-independent sibling separation.
-  const conflictingRoutes = neighborRoutes.filter((route) =>
+  // Sibling crowding remains exempt, but a sibling crossing/overlap is structural:
+  // it must open the graph and contribute the same candidate detour vertices as an
+  // unrelated edge. Coordinated ports and obstacle rings still handle ordinary
+  // side-by-side fan separation without route-order-dependent crowding.
+  const conflictingNeighborRoutes = neighborRoutes.filter((route) =>
     conflictsStructurally([route])
   )
+  const conflictingSiblingRoutes = allSiblingRoutes.filter((route) =>
+    conflictsStructurally([route])
+  )
+  const conflictingRoutes = [
+    ...conflictingNeighborRoutes,
+    ...conflictingSiblingRoutes,
+  ]
   if (straightClears && conflictingRoutes.length === 0) return direct
 
   // 2. Visibility graph over endpoints, checkpoints and inflated hard corners.

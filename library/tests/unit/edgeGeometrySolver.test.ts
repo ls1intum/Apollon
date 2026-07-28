@@ -238,7 +238,7 @@ describe("computeAllEdgeGeometry", () => {
     expect(routeById.e1).toContainEqual(waypoint)
   })
 
-  it("discovers blockers on waypoint legs outside the endpoint-node corridor", () => {
+  it("keeps a far-reaching authored waypoint leg exact across a blocker", () => {
     const a = makeNode("a", 0, 0)
     const b = makeNode("b", 300, 0)
     const blocker = makeNode("blocker", 108, 190, 32, 64)
@@ -266,6 +266,7 @@ describe("computeAllEdgeGeometry", () => {
       straightHookTypes: STRAIGHT_HOOK_EDGE_TYPES,
     })
     const route = routeById.e1
+    expect(route).toHaveLength(3)
     expect(route).toContainEqual(checkpoint)
     expect(
       crossesInterior(route, {
@@ -274,7 +275,7 @@ describe("computeAllEdgeGeometry", () => {
         width: blocker.node.width!,
         height: blocker.node.height!,
       })
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it("routes all edges when their ids arrive out of order", () => {

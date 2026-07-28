@@ -28,6 +28,7 @@ import {
   getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  getNativeConnectionAnchor,
 } from "@/utils/connectionModes"
 import { computeConnectionPreviewRoute } from "@/utils/geometry/edgeGeometrySolver"
 import { STRAIGHT_PATH_STEP_EDGE_TYPES } from "@/edges/edgeRoutingBehavior"
@@ -127,17 +128,12 @@ export const ConnectionPreviewLine = ({
     // A valid native handle is an exact attachment point, not merely a side hint.
     // Resolve that point into the pending edge too, so the central solver cannot
     // replace the native ghost endpoint with an automatic facing-side anchor.
-    const nativeDropTarget = hasNativeTarget
-      ? resolveDropTarget({ x: toX, y: toY }, fromNodeId)
+    const nativeAnchor = hasNativeTarget
+      ? getNativeConnectionAnchor({
+          to: { x: toX, y: toY },
+          toNode,
+        })
       : null
-    const nativeAnchor =
-      nativeDropTarget && nativeDropTarget.id === nativeTargetId
-        ? getEdgeAnchorFromPoint(
-            nativeDropTarget.type,
-            { x: toX, y: toY },
-            nativeDropTarget.rect
-          )
-        : null
     const target = hasNativeTarget
       ? null
       : resolveDropTarget(pointer, fromNodeId)
@@ -190,6 +186,7 @@ export const ConnectionPreviewLine = ({
     nativeTargetId,
     nativeTargetHandleId,
     nativeTargetPosition,
+    toNode,
   ])
 
   const pinnedTargetAnchor = newConnection.targetId

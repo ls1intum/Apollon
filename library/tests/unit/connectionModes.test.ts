@@ -1,9 +1,15 @@
 import { describe, it, expect } from "vitest"
-import { Position, type Rect, type XYPosition } from "@xyflow/react"
+import {
+  Position,
+  type InternalNode,
+  type Rect,
+  type XYPosition,
+} from "@xyflow/react"
 import {
   getConnectionMode,
   getEdgeAnchorFromPoint,
   getEdgeAnchorPoint,
+  getNativeConnectionAnchor,
 } from "@/utils/connectionModes"
 
 // center (180, 150), rx 80, ry 50
@@ -13,6 +19,62 @@ const cy = rect.y + rect.height / 2
 
 const onEllipse = (p: XYPosition) =>
   ((p.x - cx) / (rect.width / 2)) ** 2 + ((p.y - cy) / (rect.height / 2)) ** 2
+
+const internalNode = (
+  id: string,
+  x: number,
+  y: number,
+  type = "class"
+): InternalNode =>
+  ({
+    id,
+    type,
+    position: { x, y },
+    width: 160,
+    height: 100,
+    measured: { width: 160, height: 100 },
+    data: {},
+    internals: {
+      positionAbsolute: { x, y },
+      userNode: {},
+      z: 0,
+    },
+  }) as unknown as InternalNode
+
+describe("native connection targets", () => {
+  it("uses the validated handle point and node even when the pointer and scene disagree", () => {
+    const target = internalNode("target", 100, 100)
+    const overlappingNode = internalNode("overlap", 240, 100)
+    const exactHandle = { x: 260, y: 125 }
+    const releasePointer = { x: 180, y: 200 }
+
+    const committed = getNativeConnectionAnchor({
+      to: exactHandle,
+      toNode: target,
+    })
+    expect(committed).toEqual({ side: Position.Right, ratio: 0.25 })
+
+    // Recomputing from the event pointer would choose another side, while
+    // resolving the overlapping node would choose its left border. Neither may
+    // influence a native target React Flow already validated.
+    expect(
+      getEdgeAnchorFromPoint(target.type, releasePointer, {
+        x: 100,
+        y: 100,
+        width: 160,
+        height: 100,
+      })
+    ).not.toEqual(committed)
+    expect(
+      getEdgeAnchorFromPoint(overlappingNode.type, exactHandle, {
+        x: 240,
+        y: 100,
+        width: 160,
+        height: 100,
+      })
+    ).not.toEqual(committed)
+  })
+})
 
 describe("getConnectionMode", () => {
   it("defaults box shapes (and unknowns) to freeform-rect", () => {
