@@ -2,6 +2,7 @@ import React, { ReactNode } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 
 interface GenericPopoverProps {
   id: string
@@ -54,6 +55,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   const popoverThemeVars = usePortalThemeVars(
     anchorEl instanceof Element ? anchorEl : null
   )
+  const portalContainer = useApollonPortalContainer()
 
   const { side, align } = toSideAlign(transformOrigin)
 
@@ -66,7 +68,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
         if (!next) onClose()
       }}
     >
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer}>
         {anchorEl && (
           <Popover.Positioner
             anchor={anchorEl}

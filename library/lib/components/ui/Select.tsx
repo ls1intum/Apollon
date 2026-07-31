@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { ChevronDown } from "lucide-react"
+import { useApollonPortalContainer } from "./portalContainer"
 import { usePortalThemeVars } from "./portalTheme"
 import { useLabels } from "@/i18n/useLabels"
 
@@ -59,6 +60,7 @@ export const Select: React.FC<SelectProps> = ({
   // scopes `--apollon-*`; carry the resolved theme onto the popup so a dark or
   // custom embed theme paints the open menu.
   const portalThemeVars = usePortalThemeVars(trigger)
+  const portalContainer = useApollonPortalContainer()
 
   const selected = options.find((o) => o.value === value)
 
@@ -180,7 +182,7 @@ export const Select: React.FC<SelectProps> = ({
             </button>
           }
         />
-        <Popover.Portal>
+        <Popover.Portal container={portalContainer}>
           <Popover.Positioner align="start" sideOffset={4} collisionPadding={8}>
             <Popover.Popup
               initialFocus={false}

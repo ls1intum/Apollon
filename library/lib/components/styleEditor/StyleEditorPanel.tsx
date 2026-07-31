@@ -4,6 +4,7 @@ import { Popover } from "@base-ui/react/popover"
 import { DividerLine, Tooltip, Typography } from "@/components/ui"
 import { EditorColorPicker } from "./ColorButtons"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 import { useLabels } from "@/i18n/useLabels"
 
 /**
@@ -51,6 +52,7 @@ export function StyleEditorPanel<K extends string>({
   // picker) so a dark/custom embed theme paints the panel.
   const [trigger, setTrigger] = useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
+  const portalContainer = useApollonPortalContainer()
   const paintToggleLabel = colorEditorActionLabel ?? t.editColors
 
   return (
@@ -75,7 +77,7 @@ export function StyleEditorPanel<K extends string>({
                 <PaintRoller width={16} height={16} aria-hidden="true" />
               </Popover.Trigger>
             </Tooltip>
-            <Popover.Portal>
+            <Popover.Portal container={portalContainer}>
               <Popover.Positioner sideOffset={6} align="end">
                 <Popover.Popup
                   data-slot="style-editor-content"

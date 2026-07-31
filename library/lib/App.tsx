@@ -62,6 +62,10 @@ import {
 } from "@/components/collaboration/CollaborationLayer"
 import { TooltipProvider } from "@/components/ui"
 import { EdgeGeometrySolver } from "@/components/EdgeGeometrySolver"
+import {
+  ApollonPortalContainerProvider,
+  ApollonPortalRoot,
+} from "@/components/ui/portalContainer"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
@@ -271,6 +275,7 @@ function App({
           <ScrollOverlay />
           <CollaborationLayer options={collaboration} awareness={awareness} />
         </div>
+        <ApollonPortalRoot />
       </div>
     </TooltipProvider>
   )
@@ -279,7 +284,9 @@ function App({
 export function AppWithProvider(props: AppProps) {
   return (
     <ReactFlowProvider>
-      <App {...props} />
+      <ApollonPortalContainerProvider>
+        <App {...props} />
+      </ApollonPortalContainerProvider>
     </ReactFlowProvider>
   )
 }

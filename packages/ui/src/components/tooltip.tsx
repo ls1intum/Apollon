@@ -25,6 +25,7 @@ function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
 
 function TooltipContent({
   className,
+  portalContainer,
   side = "top",
   sideOffset = 4,
   align = "center",
@@ -35,9 +36,12 @@ function TooltipContent({
   Pick<
     TooltipPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+  > & {
+    /** Optional host for fullscreen-safe embedding; defaults to document.body. */
+    portalContainer?: TooltipPrimitive.Portal.Props["container"]
+  }) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={portalContainer}>
       <TooltipPrimitive.Positioner
         data-slot="tooltip-positioner"
         align={align}

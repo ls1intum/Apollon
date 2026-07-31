@@ -9,6 +9,7 @@ import {
   SWATCH_NAMES,
 } from "@tumaet/ui/lib/color-swatch-tokens"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 import { useLabels } from "@/i18n/useLabels"
 
 // Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker STRUCTURE
@@ -56,6 +57,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
   // onto it so a dark or custom embed theme paints the picker.
   const [trigger, setTrigger] = React.useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
+  const portalContainer = useApollonPortalContainer()
 
   const isCustom =
     selectedColor !== "" &&
@@ -82,7 +84,7 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
           } as React.CSSProperties
         }
       />
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer}>
         <Popover.Positioner sideOffset={6} align="start">
           <Popover.Popup
             data-slot="color-picker-content"

@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipProvider as SharedTooltipProvider,
 } from "@tumaet/ui/components/tooltip"
+import { useApollonPortalContainer } from "./portalContainer"
 import { usePortalThemeVars } from "./portalTheme"
 
 // Wraps the shared @tumaet/ui Tooltip so the editor renders the same primitive as
@@ -41,6 +42,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const [triggerElement, setTriggerElement] =
     React.useState<HTMLButtonElement | null>(null)
   const portalThemeVars = usePortalThemeVars(triggerElement)
+  const portalContainer = useApollonPortalContainer()
 
   if (!title) return <>{children}</>
 
@@ -59,7 +61,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   return (
     <SharedTooltip>
       {trigger}
-      <TooltipContent side={side} style={portalThemeVars}>
+      <TooltipContent
+        side={side}
+        style={portalThemeVars}
+        portalContainer={portalContainer}
+      >
         {title}
       </TooltipContent>
     </SharedTooltip>
