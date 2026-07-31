@@ -63,6 +63,20 @@
   z-index: var(--apollon-z-chrome);
 }
 
+/* Each editor owns a layout-neutral portal root. Floating surfaces use it only
+   while this editor participates in fullscreen, keeping them in the browser's
+   fullscreen subtree without escaping the editor's host stacking context. */
+.apollon-editor__portal-root {
+  position: absolute;
+  z-index: var(--apollon-z-chrome);
+  inset: 0;
+  pointer-events: none;
+}
+
+.apollon-editor__portal-root > * {
+  pointer-events: auto;
+}
+
 /* The chrome frame. A CSS grid over the full-bleed canvas: the header/footer own
    the top/bottom rows, rails span the side tracks between those bands, corner
    slots float over the side/center tracks, and the centre cell is the canvas

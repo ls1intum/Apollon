@@ -4,6 +4,7 @@ import { createPortal } from "react-dom"
 import { useReactFlow, type XYPosition } from "@xyflow/react"
 import { useMetadataStore } from "@/store/context"
 import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 import { useShallow } from "zustand/shallow"
 import { usePalettePlacement } from "@/hooks/usePalettePlacement"
 
@@ -63,6 +64,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       nodeTypeLabel: state.labels.nodeTypeLabel,
     }))
   )
+  const portalContainer = useApollonPortalContainer()
 
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
@@ -281,7 +283,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       >
         {children}
       </button>
-      {isDragging && createPortal(ghostElement, document.body)}
+      {isDragging && createPortal(ghostElement, portalContainer)}
     </>
   )
 }

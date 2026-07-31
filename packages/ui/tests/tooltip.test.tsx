@@ -37,4 +37,27 @@ describe("Tooltip", () => {
     expect(screen.getByRole("button", { name: "Hover me" })).toHaveFocus()
     await waitFor(() => expect(screen.getByText("Help text")).toBeVisible())
   })
+
+  it("forwards a custom portal container", async () => {
+    const user = userEvent.setup()
+    const portalContainer = document.createElement("div")
+    document.body.append(portalContainer)
+
+    render(
+      <TooltipProvider delay={0}>
+        <Tooltip>
+          <TooltipTrigger>Fullscreen help</TooltipTrigger>
+          <TooltipContent portalContainer={portalContainer}>
+            Portaled help
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+
+    await user.hover(screen.getByRole("button", { name: "Fullscreen help" }))
+    await waitFor(() =>
+      expect(portalContainer).toHaveTextContent("Portaled help")
+    )
+    portalContainer.remove()
+  })
 })
