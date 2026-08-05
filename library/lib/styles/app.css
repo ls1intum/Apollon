@@ -1074,13 +1074,17 @@
 
 .react-flow__node:hover {
   opacity: 0.9;
-  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 0;
+  box-shadow: none;
   border-radius: var(--apollon-radius-sm, 4px);
 }
 
 .react-flow__node.selected {
   opacity: 0.9;
-  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 0;
+  box-shadow: none;
   border-radius: var(--apollon-radius-sm, 4px);
 }
 

@@ -807,7 +807,9 @@ export const StepEdgeBody = ({
         // reliable hit surface for automatically routed bends as well as straight
         // segments. The visible overlay remains useful for hover/selection styling.
         pointerEvents={isDiagramModifiable ? "none" : "stroke"}
-        interactionWidth={isDiagramModifiable ? 0 : 20}
+        // Assessment has no edit handles competing for the path, so give the
+        // native hit surface a forgiving width for routed segments at low zoom.
+        interactionWidth={isDiagramModifiable ? 0 : 32}
         style={{
           stroke: strokeColor,
           strokeDasharray: strokeDashArray,
