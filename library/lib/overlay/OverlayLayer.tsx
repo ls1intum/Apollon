@@ -58,7 +58,7 @@ const REGION_PLACEMENT: Partial<Record<OverlayRegion, Placement>> = {
   },
   "bottom-center": {
     gridArea: "botcenter",
-    justifySelf: "center",
+    justifySelf: "stretch",
     alignSelf: "end",
   },
   "bottom-right": {
@@ -287,14 +287,19 @@ export function OverlayLayer() {
       const clear = (region: OverlayRegion) => {
         const el = elByRegionRef.current.get(region)
         if (!el) return 0
-        const rect = el.getBoundingClientRect()
-        if (rect.height === 0) return 0
+        // Layout reservation must ignore entry animations. A transformed
+        // getBoundingClientRect() reports the temporarily scaled paint box and
+        // leaves the rail permanently too close because ResizeObserver does not
+        // fire for transform-only animation frames.
+        const height = el.offsetHeight
+        if (height === 0) return 0
         const styles = getComputedStyle(el)
         const edge =
           parseFloat(styles.getPropertyValue("--apollon-chrome-edge")) || 0
-        const gap =
-          parseFloat(styles.getPropertyValue("--apollon-chrome-gap")) || 0
-        return Math.ceil(rect.height + edge + gap)
+        // The rail control (notably the palette) owns the gap from the corner.
+        // Reserve only the corner's painted height plus its edge offset here;
+        // including the gap in both places doubles the intended spacing.
+        return Math.ceil(height + edge)
       }
       grid.style.setProperty(
         "--apollon-left-rail-top-clearance",
@@ -478,6 +483,7 @@ export function OverlayLayer() {
               display: "flex",
               gap: "var(--apollon-chrome-gap)",
               alignItems: CORNER_ALIGN_ITEMS[region],
+              justifyContent: region === "bottom-center" ? "center" : undefined,
               pointerEvents: "none",
               ...REGION_PLACEMENT[region],
             }}
