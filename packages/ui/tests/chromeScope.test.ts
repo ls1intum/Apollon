@@ -26,15 +26,22 @@ const SCOPED_DERIVED_COLORS = [
   "--apollon-hover-neutral",
 ]
 
-const css = readFileSync(resolve(__dirname, "../src/styles/tokens.css"), "utf8")
+const tokenCss = readFileSync(
+  resolve(__dirname, "../src/styles/tokens.css"),
+  "utf8"
+)
+const componentCss = readFileSync(
+  resolve(__dirname, "../src/styles/components.css"),
+  "utf8"
+)
 
 /** The selector of the rule block that declares `prop` (comments stripped). */
 function declaringSelector(prop: string): string {
-  const declIdx = css.indexOf(`${prop}:`)
+  const declIdx = tokenCss.indexOf(`${prop}:`)
   if (declIdx === -1) return "<undeclared>"
-  const openBrace = css.lastIndexOf("{", declIdx)
-  const prevClose = css.lastIndexOf("}", openBrace)
-  return css
+  const openBrace = tokenCss.lastIndexOf("{", declIdx)
+  const prevClose = tokenCss.lastIndexOf("}", openBrace)
+  return tokenCss
     .slice(prevClose + 1, openBrace)
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .trim()
@@ -46,5 +53,22 @@ describe("derived theme-dependent colors are scoped for re-resolution", () => {
       (prop) => !declaringSelector(prop).includes(".apollon-editor")
     )
     expect(misscoped).toEqual([])
+  })
+})
+
+describe("public labeled chrome action", () => {
+  it("uses the same neutral interaction tokens as the icon control", () => {
+    expect(componentCss).toMatch(
+      /\.apollon-chrome-actionbtn:hover:not\(:disabled\)\s*\{\s*background:\s*var\(--apollon-chrome-surface-hover\)/
+    )
+    expect(componentCss).toMatch(
+      /\.apollon-chrome-actionbtn:active:not\(:disabled\)\s*\{\s*background:\s*var\(--apollon-chrome-surface-active\)/
+    )
+    expect(componentCss).toMatch(
+      /\.apollon-chrome-actionbtn\s*\{[\s\S]*?border-radius:\s*var\(--apollon-chrome-radius-sm\)/
+    )
+    expect(componentCss).not.toMatch(
+      /\.apollon-chrome-actionbtn:hover:not\(:disabled\)\s*\{[^}]*--apollon-chrome-accent/
+    )
   })
 })

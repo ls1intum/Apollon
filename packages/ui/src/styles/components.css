@@ -246,7 +246,7 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Shared editor CHROME — .apollon-glass + .apollon-chrome-iconbtn.
+   Shared editor CHROME — glass surfaces and their icon/text actions.
 
    The webapp HOME (rendered with no editor mounted) needs the same floating-glass
    surface + icon-control idiom for its island band, so the class definitions live
@@ -341,6 +341,53 @@
 }
 
 .apollon-chrome-iconbtn:active:not(:disabled) {
+  background: var(--apollon-chrome-surface-active);
+}
+
+/* A labeled chrome action for host-owned commands that would be ambiguous as an
+   icon alone. It deliberately shares the icon button's height, radius, neutral
+   state layers, and focus ring. The wider hit area comes from the label itself,
+   so it does not need the icon button's overlapping ::before touch target.
+   Accent is reserved for .apollon-chrome-accent-btn. */
+.apollon-chrome-actionbtn {
+  box-sizing: border-box;
+  display: inline-flex;
+  min-width: 0;
+  height: var(--apollon-chrome-btn);
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--apollon-chrome-radius-sm);
+  background: transparent;
+  color: var(--apollon-chrome-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color var(--apollon-chrome-duration-hover)
+    var(--apollon-chrome-ease-standard);
+}
+
+.apollon-chrome-actionbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apollon-chrome-actionbtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--apollon-chrome-accent) 45%, transparent);
+}
+
+.apollon-chrome-actionbtn:hover:not(:disabled) {
+  background: var(--apollon-chrome-surface-hover);
+}
+
+.apollon-chrome-actionbtn:active:not(:disabled) {
   background: var(--apollon-chrome-surface-active);
 }
 
