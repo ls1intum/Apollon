@@ -596,9 +596,18 @@ export class ApollonEditor {
     container.style.height = "4000px"
     container.style.zIndex = "-1000"
     container.style.top = "0"
-    container.style.position = "absolute"
-    container.style.left = "-99px"
+    // Keep the large measurement surface out of the host document's scroll
+    // geometry. An absolutely positioned 4000x4000 mount still expands the
+    // body's scrollWidth/scrollHeight while an async export is running, even
+    // when visibility:hidden. Fixed positioning is viewport-relative and
+    // strict containment prevents its internal React Flow layout from leaking
+    // size or paint effects into an embedding application.
+    container.style.position = "fixed"
+    container.style.left = "0"
+    container.style.contain = "strict"
+    container.style.pointerEvents = "none"
     container.style.visibility = "hidden"
+    container.setAttribute("aria-hidden", "true")
 
     document.body.appendChild(container)
 

@@ -46,6 +46,7 @@ describe("self-contained headless export", () => {
 
     // Capture the injected <style>'s content the moment it lands in <head>.
     let injected: string | null = null
+    let exportContainer: HTMLDivElement | undefined
     const realAppend = document.head.appendChild.bind(document.head)
     const spy = vi.spyOn(document.head, "appendChild").mockImplementation(((
       node: Node
@@ -55,6 +56,15 @@ describe("self-contained headless export", () => {
       }
       return realAppend(node as never)
     }) as typeof document.head.appendChild)
+    const realBodyAppend = document.body.appendChild.bind(document.body)
+    const bodySpy = vi.spyOn(document.body, "appendChild").mockImplementation(((
+      node: Node
+    ) => {
+      if (node instanceof HTMLDivElement && node.style.width === "4000px") {
+        exportContainer = node
+      }
+      return realBodyAppend(node as never)
+    }) as typeof document.body.appendChild)
 
     // Takes the ~3 s React-Flow-init timeout then rejects (stubbed App never
     // inits) — the throw path whose cleanup the fix guards.
@@ -62,6 +72,7 @@ describe("self-contained headless export", () => {
       () => {}
     )
     spy.mockRestore()
+    bodySpy.mockRestore()
 
     // Both halves of the payload are concatenated and injected: the layout CSS
     // (sentinel, mocked above) and the Inter @font-face (real exportFonts chunk).
@@ -69,8 +80,15 @@ describe("self-contained headless export", () => {
     // injection makes `injected` null.
     expect(injected).toContain(LAYOUT_SENTINEL)
     expect(injected).toContain("@font-face")
+    // The large async measurement mount must never alter the embedding page's
+    // document dimensions or intercept interaction while export is running.
+    expect(exportContainer?.style.position).toBe("fixed")
+    expect(exportContainer?.style.contain).toBe("strict")
+    expect(exportContainer?.style.pointerEvents).toBe("none")
+    expect(exportContainer?.getAttribute("aria-hidden")).toBe("true")
     // Dropping the `finally` cleanup leaves a <style> behind — caught here.
     expect(document.head.querySelector(STYLE)).toBeNull()
+    expect(exportContainer?.isConnected).toBe(false)
   }, 10_000)
 })
 
