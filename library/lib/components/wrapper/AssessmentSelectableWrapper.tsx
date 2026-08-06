@@ -162,12 +162,14 @@ export const AssessmentSelectableWrapper: React.FC<
     ...(highlightColor && { position: "relative" }),
     ...(isSelected && {
       backgroundColor: INTERACTIVE_SELECTION_FILL,
-      border: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
+      outline: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
+      outlineOffset: 0,
     }),
     ...(isHighlighted &&
       !isSelected && {
         backgroundColor: INTERACTIVE_SELECTION_FILL_STRONG,
-        border: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
+        outline: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
+        outlineOffset: 0,
       }),
   }
 
@@ -175,18 +177,17 @@ export const AssessmentSelectableWrapper: React.FC<
     const gStyle = {
       cursor: "pointer",
       ...(highlightColor && { filter: highlightEdgeFilter }),
-      ...(isSelected && {
-        stroke: INTERACTIVE_SELECTION_FILL,
-      }),
-      ...(isHighlighted &&
-        !isSelected && {
-          stroke: INTERACTIVE_SELECTION_FILL_STRONG,
-        }),
     }
 
     return (
       <g
-        className="nodrag nopan"
+        className={`nodrag nopan apollon-assessment-edge-selection${
+          isSelected
+            ? " apollon-assessment-edge-selection--selected"
+            : isHighlighted
+              ? " apollon-assessment-edge-selection--highlighted"
+              : ""
+        }`}
         data-apollon-element-id={elementId}
         style={gStyle}
         onPointerDown={handleElementClick}

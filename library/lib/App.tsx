@@ -55,6 +55,7 @@ import {
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
 import { getConnectionLineType } from "./utils/edgeUtils"
+import { ApollonMode } from "./typings"
 import {
   CollaborationLayer,
   type CollaborationAwarenessApi,
@@ -98,6 +99,7 @@ function App({
 
   const {
     diagramType,
+    mode,
     readonly,
     scrollLock,
     scrollEnabled,
@@ -106,6 +108,7 @@ function App({
   } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
+      mode: state.mode,
       readonly: state.readonly,
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
@@ -140,8 +143,13 @@ function App({
   const onDragOver = useDragOver()
   const { onConnect, onConnectEnd, onConnectStart, onEdgesDelete } =
     useConnect()
-  const { onBeforeDelete, onNodeDoubleClick, onEdgeDoubleClick } =
-    useElementInteractions()
+  const {
+    onBeforeDelete,
+    onNodeClick,
+    onEdgeClick,
+    onNodeDoubleClick,
+    onEdgeDoubleClick,
+  } = useElementInteractions()
   const { onPaneClicked } = usePaneClicked()
   const multiSelectionMode = useMultiSelectionMode()
   const routingReady = useEdgeGeometryStore((state) => state.routingReady)
@@ -157,6 +165,8 @@ function App({
     <TooltipProvider>
       <div
         className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
+          mode === ApollonMode.Assessment ? "apollon-editor--assessment" : ""
+        } ${
           connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
         }`}
         style={
@@ -227,6 +237,8 @@ function App({
             maxZoom={CANVAS.MAX_SCALE_TO_ZOOM_IN}
             snapToGrid
             snapGrid={[CANVAS.SNAP_TO_GRID_PX, CANVAS.SNAP_TO_GRID_PX]}
+            onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
             onNodeDoubleClick={onNodeDoubleClick}
             onEdgeDoubleClick={onEdgeDoubleClick}
             onBeforeDelete={onBeforeDelete}

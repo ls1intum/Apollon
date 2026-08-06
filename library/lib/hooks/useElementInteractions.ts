@@ -42,21 +42,42 @@ export const useElementInteractions = () => {
 
   const onNodeDoubleClick: NodeMouseHandler<Node> = useCallback(
     (_event, node) => {
-      if (!canOpenPopover) return
+      // Assessment has no separate selection/editing step: a single click
+      // opens its feedback editor. Keep double-click for editable diagrams,
+      // where the first click still belongs to normal React Flow selection.
+      if (!canOpenPopover || canOpenAssessmentPopover) return
       setPopOverElementId(node.id)
     },
-    [canOpenPopover, setPopOverElementId]
+    [canOpenAssessmentPopover, canOpenPopover, setPopOverElementId]
   )
 
   const onEdgeDoubleClick: EdgeMouseHandler<Edge> = useCallback(
     (_event, edge) => {
-      if (!canOpenPopover) return
+      if (!canOpenPopover || canOpenAssessmentPopover) return
       setPopOverElementId(edge.id)
     },
-    [canOpenPopover, setPopOverElementId]
+    [canOpenAssessmentPopover, canOpenPopover, setPopOverElementId]
+  )
+
+  const onNodeClick: NodeMouseHandler<Node> = useCallback(
+    (_event, node) => {
+      if (!canOpenAssessmentPopover) return
+      setPopOverElementId(node.id)
+    },
+    [canOpenAssessmentPopover, setPopOverElementId]
+  )
+
+  const onEdgeClick: EdgeMouseHandler<Edge> = useCallback(
+    (_event, edge) => {
+      if (!canOpenAssessmentPopover) return
+      setPopOverElementId(edge.id)
+    },
+    [canOpenAssessmentPopover, setPopOverElementId]
   )
   return {
     onBeforeDelete,
+    onNodeClick,
+    onEdgeClick,
     onNodeDoubleClick,
     onEdgeDoubleClick,
   }

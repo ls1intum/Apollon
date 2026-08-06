@@ -801,15 +801,15 @@ export const StepEdgeBody = ({
         key={markerKey}
         id={id}
         path={currentPath}
-        pointerEvents="none"
-        // No fat React Flow interaction ribbon (default 20px): select/hover ride
-        // our own `.edge-overlay` stroke instead. RF's ribbon is a wider hit path
-        // that, on a dense diagram, paints OVER a neighbour edge's precise endpoint/
-        // bend handle and steals its pointer. `.edge-overlay` is narrower and never
-        // reaches a co-located neighbour's handle, so removing the ribbon fixes the
-        // theft by subtraction. Selection/hover fire on the wrapping `.react-flow__
-        // edge` group, not the ribbon, so nothing is lost.
-        interactionWidth={0}
+        // Editable diagrams use the narrow overlay so endpoint and bend handles
+        // retain priority in dense layouts. Assessment/read-only diagrams have no
+        // drag handles; use React Flow's route-following interaction ribbon as the
+        // reliable hit surface for automatically routed bends as well as straight
+        // segments. The visible overlay remains useful for hover/selection styling.
+        pointerEvents={isDiagramModifiable ? "none" : "stroke"}
+        // Assessment has no edit handles competing for the path, so give the
+        // native hit surface a forgiving width for routed segments at low zoom.
+        interactionWidth={isDiagramModifiable ? 0 : 32}
         style={{
           stroke: strokeColor,
           strokeDasharray: strokeDashArray,

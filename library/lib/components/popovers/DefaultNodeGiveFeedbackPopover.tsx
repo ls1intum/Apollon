@@ -3,8 +3,6 @@ import { useShallow } from "zustand/shallow"
 import { DefaultNodeProps } from "@/types"
 import { PopoverProps } from "./types"
 import { GiveFeedbackAssessmentBox } from "./GiveFeedbackAssessmentBox"
-import { Button } from "@tumaet/ui/components/button"
-import { useGoToNextAssessment } from "@/hooks"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverLayout } from "./PopoverLayout"
 
@@ -13,7 +11,6 @@ export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
     useShallow((state) => ({ nodes: state.nodes }))
   )
   const t = useLabels()
-  const handleGoToNextAssessment = useGoToNextAssessment(elementId)
 
   const node = nodes.find((node) => node.id === elementId)
   if (!node) return null
@@ -28,9 +25,6 @@ export const DefaultNodeGiveFeedbackPopover = ({ elementId }: PopoverProps) => {
         elementType="node"
         typeLabel={t.nodeTypeLabel(node.type)}
       />
-      <Button variant="outline" onClick={handleGoToNextAssessment}>
-        {t.nextAssessment}
-      </Button>
     </PopoverLayout>
   )
 }

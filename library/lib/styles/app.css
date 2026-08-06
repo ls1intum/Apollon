@@ -867,6 +867,14 @@
   pointer-events: none;
 }
 
+/* Assessment is a reading/feedback surface, not a connection canvas. Keep the
+   React Flow handles mounted for edge geometry, but remove their visual and
+   pointer affordance so node selection is not polluted by connection circles. */
+.apollon-editor--assessment .react-flow__handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Coarse-pointer fallback for the hover-gated rules above. Touch devices never
    fire :hover, so those rules would leave a selected node's affordances
    ungrabbable — you could not start a connection or resize with a finger. Arm
@@ -1086,16 +1094,50 @@
   fill: var(--apollon-primary, #3e8acc) !important;
 }
 
-.react-flow__node:hover {
-  opacity: 0.9;
-  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: var(--apollon-radius-sm, 4px);
+/* Assessment edges use the same primary stroke language as edit-mode edges.
+   The wrapper state is separate from React Flow's selected class, because
+   assessment selection is managed by Apollon's assessment store. */
+.react-flow__edge:has(
+    .apollon-assessment-edge-selection--selected,
+    .apollon-assessment-edge-selection--highlighted
+  )
+  .react-flow__edge-path,
+.react-flow__edge:has(
+    .apollon-assessment-edge-selection--selected,
+    .apollon-assessment-edge-selection--highlighted
+  )
+  [data-inline-marker] {
+  stroke: var(--apollon-primary, #3e8acc) !important;
 }
 
+.react-flow__edge:has(.apollon-assessment-edge-selection--selected)
+  .edge-overlay,
+.react-flow__edge:has(.apollon-assessment-edge-selection--highlighted)
+  .edge-overlay {
+  opacity: 0.45;
+  stroke: var(--apollon-primary, #3e8acc);
+  /* Edit mode deliberately uses the 15px overlay to protect nearby handles.
+     Assessment has no competing drag handles, so match the forgiving native
+     hit ribbon and keep the edge easy to acquire at low zoom. */
+  stroke-width: 32px;
+}
+
+/* The assessment wrapper is present before the first hover event as well. Keep
+   its hit surface wide throughout the hover -> selected transition instead of
+   making users aim at a narrow centre line to enter the highlighted state. */
+.react-flow__edge:has(.apollon-assessment-edge-selection) .edge-overlay {
+  stroke-width: 32px;
+}
+
+.react-flow__node {
+  /* Keep the focus ring in the same paint geometry before and after hover. */
+  outline: 2px solid transparent;
+  outline-offset: 0;
+}
+
+.react-flow__node:hover,
 .react-flow__node.selected {
-  opacity: 0.9;
-  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-  border-radius: var(--apollon-radius-sm, 4px);
+  outline-color: var(--apollon-primary, #3e8acc);
 }
 
 .apollon-interactive-selection {
@@ -1589,6 +1631,37 @@ svg.react-flow__connectionline {
     opacity 100ms ease,
     transform 100ms ease;
   z-index: 10003;
+}
+
+.apollon-popover__content {
+  box-sizing: border-box;
+  min-height: 0;
+  /* Keep Base UI/shadcn focus rings inside the scroll viewport instead of
+     letting the scroll container clip their outer ring. The negative margin
+     preserves the popover's original visual inset. */
+  padding: 3px;
+  margin: -3px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.apollon-assessment-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--apollon-border, #cdd5df);
+}
+
+.apollon-assessment-navigation > [data-slot="button"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-shrink: 1;
+  justify-content: center;
 }
 
 .apollon-popover[data-starting-style],

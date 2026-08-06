@@ -432,6 +432,7 @@ export const PopoverManager = ({
       transformOrigin={popoverOrigin.transformOrigin}
       maxHeight={500}
       maxWidth={isEditing ? 278 : 400}
+      assessmentNavigation={isGivingFeedback || isSeeingFeedback}
     >
       <Component elementId={elementId} />
     </GenericPopover>

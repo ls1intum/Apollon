@@ -62,6 +62,7 @@ export interface ApollonLabels {
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   assessmentFor: (type: string) => string
+  previousAssessment: string
   nextAssessment: string
   noComment: string
   notGraded: string
@@ -349,6 +350,7 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   assessmentFor: (type) => `Assessment for ${type}`,
+  previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",
   noComment: "No comment",
   notGraded: "Not graded",
