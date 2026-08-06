@@ -900,6 +900,12 @@ export const CommonEdgeElements = ({
 }) => {
   const nodeScore = assessments[id]?.score
   const uiPosition = toolbarPosition ?? pathMiddlePosition
+  // `toolbarPosition` is placed clear of the line so the EDIT toolbar does not
+  // cover it. Assessment has no toolbar, so its badge and its popover anchor
+  // must sit on the edge itself — reusing the toolbar's offset left the badge
+  // floating in empty space and anchored the popover far enough off the line to
+  // land on top of the node the edge points at.
+  const assessmentPosition = pathMiddlePosition
   // The callback ref makes the framework toolbar's portal content available
   // as soon as it mounts, without reading `.current` during render.
   const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
@@ -930,7 +936,7 @@ export const CommonEdgeElements = ({
       <CustomEdgeToolbar
         edgeId={id}
         anchorRef={anchorRef}
-        position={uiPosition}
+        position={isDiagramModifiable ? uiPosition : assessmentPosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
         canResetRouting={isDiagramModifiable && hasManualRoute}
@@ -939,8 +945,8 @@ export const CommonEdgeElements = ({
 
       {!isDiagramModifiable && (
         <AssessmentIcon
-          x={uiPosition.x - 15}
-          y={uiPosition.y - 15}
+          x={assessmentPosition.x - 15}
+          y={assessmentPosition.y - 15}
           score={nodeScore}
         />
       )}

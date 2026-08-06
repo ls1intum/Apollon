@@ -95,7 +95,7 @@ export function DiagramFileDropzone() {
       // Decorative: the drop is handled on the window, and the same import is
       // reachable from the File menu and the home page's Import button.
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-background/80 p-6 backdrop-blur-sm"
+      className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-background/92 p-6"
     >
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-primary bg-background/60 px-10 py-8 text-center shadow-lg">
         <FileUpIcon className="size-9 text-primary" aria-hidden />

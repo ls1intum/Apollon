@@ -5,6 +5,7 @@ import {
 } from "@/store/context"
 import { ApollonMode } from "@/typings"
 import { useShallow } from "zustand/shallow"
+import { hasAssessmentToShow } from "@/utils/assessmentPresence"
 import {
   ClassEditPopover,
   ClassGiveFeedbackPopover,
@@ -364,9 +365,10 @@ export const PopoverManager = ({
   type,
 }: PopoverManagerProps) => {
   const viewportCenter = useViewportCenter()
-  const { nodes } = useDiagramStore(
+  const { nodes, getAssessment } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
+      getAssessment: state.getAssessment,
     }))
   )
 
@@ -420,7 +422,15 @@ export const PopoverManager = ({
   } else if (isGivingFeedback) {
     Component = giveFeedbackPopovers[type] ?? null
   } else if (isSeeingFeedback) {
-    Component = seeFeedbackPopovers[type] ?? null
+    // A reader gets a popover only where there is something to read. A tutor
+    // still gets an empty form everywhere — that is how feedback is written —
+    // but for a student an element nobody graded has nothing to say, and
+    // answering every click with "Not graded" is noise. Members count: the
+    // popover lists a class's attributes and methods, so a class that is
+    // ungraded itself is still the only way to reach feedback on them.
+    Component = hasAssessmentToShow(elementId, nodes, getAssessment)
+      ? (seeFeedbackPopovers[type] ?? null)
+      : null
   }
 
   return Component ? (

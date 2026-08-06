@@ -21,11 +21,21 @@ export const AssessmentNavigationFooter = ({
       className="apollon-assessment-navigation"
       aria-label={`${t.previousAssessment} / ${t.nextAssessment}`}
     >
-      <Button variant="outline" size="sm" onClick={() => navigate("previous")}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate("previous")}
+        aria-keyshortcuts="Control+ArrowLeft Meta+ArrowLeft"
+      >
         <ChevronLeft aria-hidden="true" />
         {t.previousAssessment}
       </Button>
-      <Button variant="outline" size="sm" onClick={() => navigate("next")}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate("next")}
+        aria-keyshortcuts="Control+ArrowRight Meta+ArrowRight"
+      >
         {t.nextAssessment}
         <ChevronRight aria-hidden="true" />
       </Button>

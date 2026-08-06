@@ -76,11 +76,49 @@ const all: Record<string, Assessment> = editor.model.assessments
 | `labelColor`       | `string?`                                                                        | CSS color for the label.                              |
 | `correctionStatus` | `{ status: "CORRECT" \| "INCORRECT" \| "NOT_VALIDATED"; description?: string }?` | For automated/suggested feedback review.              |
 
+## Drive the canvas from a feedback list
+
+A host that lists feedback beside the diagram has a problem the list alone
+cannot solve: an entry says _what_ a tutor wrote, never _where_ it applies. The
+reader is left matching text against boxes by eye.
+
+`revealAssessment` closes that loop. It selects the element, opens its feedback
+popover, and pans the canvas to it — keeping the reader's zoom, because the zoom
+is theirs.
+
+```ts
+import { ApollonEditor } from "@tumaet/apollon"
+
+function showFeedbackFor(
+  editor: ApollonEditor,
+  feedback: { elementId: string }
+) {
+  editor.revealAssessment(feedback.elementId)
+}
+
+// Closing the list, or deselecting, puts the canvas back:
+function clearFeedback(editor: ApollonEditor) {
+  editor.revealAssessment(null)
+}
+```
+
+Pass `{ reveal: false }` to select without panning — useful when the element is
+already on screen and moving the canvas would be disorienting.
+
+Pair it with `subscribeToAssessmentSelection` for the other direction, so
+clicking an element marks its entry in the list. Together the two halves explain
+each other instead of sitting side by side.
+
+The popover only opens in `ApollonMode.Assessment`. In assessment **with**
+`readonly` — a student reading a graded diagram — it opens the read-only
+feedback popover; without `readonly`, the tutor's editable one.
+
 ## Highlight elements
 
-`setElementHighlights` tints elements by id with a CSS color — e.g. to mark the
-elements that still need feedback. Use **translucent** colors so the element's
-own text stays readable. Highlights are ephemeral: they are not serialized into
+`setElementHighlights` rings elements by id with a CSS color — e.g. to mark the
+elements that still need feedback. It draws an outline rather than a fill, so use
+**opaque** colors: the element's own content, including its assessment badge,
+stays fully visible underneath. Highlights are ephemeral: they are not serialized into
 the model and not shared over collaboration. Pass `null` or an empty map to clear.
 
 To color a whole **group** of attributes/methods at once — e.g. by a build
@@ -93,8 +131,8 @@ import { ApollonEditor } from "@tumaet/apollon"
 function highlightMissing(editor: ApollonEditor) {
   editor.setElementHighlights(
     new Map([
-      ["node-2", "rgba(0, 123, 255, 0.35)"],
-      ["node-5", "rgba(0, 123, 255, 0.35)"],
+      ["node-2", "#0d6efd"],
+      ["node-5", "#0d6efd"],
     ])
   )
 }

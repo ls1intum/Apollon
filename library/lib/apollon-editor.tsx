@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client"
+import { assessedIdsFor } from "@/utils/assessmentPresence"
 import type { CSSProperties } from "react"
 // Must be imported FIRST (before ./utils, the stores and overlay modules) so the
 // editor render tree — and the node/edge component registries it pulls in —
@@ -1120,6 +1121,96 @@ export class ApollonEditor {
             highlights instanceof Map ? highlights : Object.entries(highlights)
           )
     this.assessmentSelectionStore.getState().setElementHighlights(record)
+  }
+
+  /**
+   * Bring one element's assessment into view: select it, open its feedback
+   * popover, and pan the canvas to it without changing the zoom.
+   *
+   * This is what a host's feedback list needs. Assessed elements carry a score
+   * badge, but a list beside the canvas has no way to say "this entry is about
+   * THAT box" other than making the canvas answer — so without this, such a list
+   * can only be read, never navigated. Pass `null` to close the popover and drop
+   * the selection again.
+   *
+   * The popover only opens in {@link Apollon.ApollonMode.Assessment}; in other
+   * modes this still selects and reveals the element, which is the meaningful
+   * part of the gesture there.
+   *
+   * @param elementId id of a node or edge, or `null` to clear.
+   * @param options.reveal pan the canvas to the element. Default `true`.
+   */
+  public revealAssessment(
+    elementId: string | null,
+    options?: { reveal?: boolean }
+  ): void {
+    const { nodes, edges, setNodes, setEdges } = this.diagramStore.getState()
+
+    if (elementId === null) {
+      setNodes((current) => current.map((n) => ({ ...n, selected: false })))
+      setEdges((current) => current.map((e) => ({ ...e, selected: false })))
+      this.assessmentSelectionStore.getState().selectMultipleElements([])
+      this.popoverStore.getState().setPopOverElementId(null)
+      return
+    }
+
+    // A member (a class attribute, an SFC action row) is assessable but is not
+    // clickable on the canvas: its feedback is shown by the popover of the node
+    // that owns it. Resolve to that owner so a host's list entry for a member
+    // still opens something.
+    const owner = nodes.find((node) =>
+      assessedIdsFor(node.id, nodes).includes(elementId)
+    )
+    const targetId = owner?.id ?? elementId
+    const element =
+      nodes.find((node) => node.id === targetId) ??
+      edges.find((edge) => edge.id === targetId)
+    const isTopLevel = element !== undefined
+
+    setNodes((current) =>
+      current.map((node) => ({ ...node, selected: node.id === targetId }))
+    )
+    setEdges((current) =>
+      current.map((edge) => ({ ...edge, selected: edge.id === targetId }))
+    )
+    // Selection follows what the caller asked for, not what had to be opened to
+    // show it. Asking for a class selects the class and its members, so a host
+    // list marks the whole group; asking for one method selects that method
+    // alone, even though the class's popover is what opens. Keying this off
+    // `targetId` instead made every member look selected whichever one you
+    // picked.
+    this.assessmentSelectionStore
+      .getState()
+      .selectMultipleElements(assessedIdsFor(elementId, nodes))
+    this.popoverStore.getState().setPopOverElementId(targetId)
+
+    if (options?.reveal === false || !isTopLevel) return
+
+    const rf = this.reactFlowInstance
+    if (!rf) return
+    // An edge has no position of its own; centre on the midpoint of the nodes it
+    // joins, which is where its label and badge sit.
+    const anchorIds =
+      element && "source" in element
+        ? [element.source, element.target]
+        : [targetId]
+    const anchors = anchorIds
+      .map((id) => nodes.find((node) => node.id === id))
+      .filter((node): node is (typeof nodes)[number] => node !== undefined)
+    if (anchors.length === 0) return
+
+    const centre = anchors.reduce(
+      (accumulator, node) => ({
+        x: accumulator.x + node.position.x + (node.width ?? 0) / 2,
+        y: accumulator.y + node.position.y + (node.height ?? 0) / 2,
+      }),
+      { x: 0, y: 0 }
+    )
+    // Zoom is the reader's, not ours: pan only.
+    rf.setCenter(centre.x / anchors.length, centre.y / anchors.length, {
+      duration: 220,
+      zoom: rf.getZoom(),
+    })
   }
 
   /** Returns a copy of the current highlight record (id -> CSS color). */

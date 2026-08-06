@@ -63,6 +63,13 @@ export const ClassSVG = ({
         width={width}
         itemHeight={headerHeight}
         yOffset={0}
+        // The node wrapper rings the whole class; a header ring would double it.
+        highlightable={false}
+        badge={
+          showAssessmentResults ? (
+            <AssessmentIcon score={nodeScore} x={width - 15} y={-15} />
+          ) : undefined
+        }
       >
         <StyledRect
           x={0}
@@ -83,52 +90,56 @@ export const ClassSVG = ({
           textColor={textColor}
           fill={fillColor}
         />
-
-        {/* Attributes Section */}
-        {attributes.length >= 0 && (
-          <>
-            {/* Separation Line After Header */}
-            <SeparationLine
-              y={headerHeight}
-              width={width}
-              strokeColor={strokeColor}
-            />
-            <RowBlockSection
-              items={processedAttributes}
-              padding={padding}
-              itemHeight={attributeHeight}
-              width={width}
-              offsetFromTop={headerHeight}
-              showAssessmentResults={showAssessmentResults}
-              itemElementType="attribute"
-            />
-          </>
-        )}
-
-        {/* Methods Section */}
-        {methods.length >= 0 && (
-          <>
-            <SeparationLine
-              y={headerHeight + attributes.length * attributeHeight}
-              width={width}
-              strokeColor={strokeColor}
-            />
-            <RowBlockSection
-              items={processedMethods}
-              padding={padding}
-              itemHeight={methodHeight}
-              width={width}
-              offsetFromTop={headerHeight + attributes.length * methodHeight}
-              showAssessmentResults={showAssessmentResults}
-              itemElementType="method"
-            />
-          </>
-        )}
-
-        {showAssessmentResults && (
-          <AssessmentIcon score={nodeScore} x={width - 15} y={-15} />
-        )}
       </AssessmentSelectableElement>
+
+      {/* The member sections sit OUTSIDE the class's selectable group on
+          purpose. SVG paints in document order, so anything inside that group
+          is painted before its selection rect — which would put a member's
+          assessment badge underneath the mark for the class, since the first
+          attribute's badge overhangs into the header band. Members carry their
+          own selectable groups, and the node wrapper still handles clicks
+          anywhere on the body. */}
+
+      {/* Attributes Section */}
+      {attributes.length >= 0 && (
+        <>
+          {/* Separation Line After Header */}
+          <SeparationLine
+            y={headerHeight}
+            width={width}
+            strokeColor={strokeColor}
+          />
+          <RowBlockSection
+            items={processedAttributes}
+            padding={padding}
+            itemHeight={attributeHeight}
+            width={width}
+            offsetFromTop={headerHeight}
+            showAssessmentResults={showAssessmentResults}
+            itemElementType="attribute"
+          />
+        </>
+      )}
+
+      {/* Methods Section */}
+      {methods.length >= 0 && (
+        <>
+          <SeparationLine
+            y={headerHeight + attributes.length * attributeHeight}
+            width={width}
+            strokeColor={strokeColor}
+          />
+          <RowBlockSection
+            items={processedMethods}
+            padding={padding}
+            itemHeight={methodHeight}
+            width={width}
+            offsetFromTop={headerHeight + attributes.length * methodHeight}
+            showAssessmentResults={showAssessmentResults}
+            itemElementType="method"
+          />
+        </>
+      )}
     </svg>
   )
 }

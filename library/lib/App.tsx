@@ -56,6 +56,8 @@ import {
   applyDraggingOverlay,
 } from "./hooks/useRemoteDraggingNodes"
 import { getConnectionLineType } from "./utils/edgeUtils"
+import { applyAssessmentFocus } from "./utils/assessmentFocus"
+import { usePopoverStore } from "@/store/context"
 import { ApollonMode } from "./typings"
 import {
   CollaborationLayer,
@@ -134,7 +136,14 @@ function App({
     awareness,
     collaboration.enabled && !previewMode
   )
-  const displayNodes = applyDraggingOverlay(nodes, remoteDraggingNodes)
+  // The element whose feedback popover is open stays visibly marked for as long
+  // as that form is mounted — see `applyAssessmentFocus`.
+  const assessedElementId = usePopoverStore((state) => state.popoverElementId)
+  const displayNodes = applyAssessmentFocus(
+    applyDraggingOverlay(nodes, remoteDraggingNodes),
+    assessedElementId
+  )
+  const displayEdges = applyAssessmentFocus(edges, assessedElementId)
 
   const connectionLineType = getConnectionLineType(diagramType)
   const onNodeDragStop = useNodeDragStop()
@@ -204,7 +213,7 @@ function App({
             // The solver reads DiagramStore directly. Keep provisional React
             // Flow edges unmounted until this model's first exact generation;
             // nodes still mount below so their runtime handles can be measured.
-            edges={routingReady ? edges : []}
+            edges={routingReady ? displayEdges : []}
             // React Flow's viewport culling keeps large off-screen diagrams out
             // of the DOM while the central solver still optimizes every edge.
             // This is purely a rendering boundary: export and exact geometry

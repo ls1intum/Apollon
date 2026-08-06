@@ -20,12 +20,34 @@ interface AssessmentSelectableElementProps {
   width: number
   itemHeight: number
   yOffset?: number
+  /**
+   * The row's assessment badge, if it has one. A separate slot rather than part
+   * of `children` because SVG paints in document order: the selection tint has
+   * to sit ABOVE the row it marks and BELOW the badge that says what the mark is
+   * about. Putting the badge in `children` forces one or the other.
+   */
+  badge?: React.ReactNode
+  /**
+   * Whether this row draws the host highlight. Off where the row IS the node —
+   * a class header carries the node's own id, and the node wrapper already rings
+   * the whole node, so drawing it here too gave a class a second inner ring that
+   * no other node type has.
+   */
+  highlightable?: boolean
   children: React.ReactNode
 }
 
 export const AssessmentSelectableElement: FC<
   AssessmentSelectableElementProps
-> = ({ elementId, width, itemHeight, yOffset = 0, children }) => {
+> = ({
+  elementId,
+  width,
+  itemHeight,
+  yOffset = 0,
+  highlightable = true,
+  badge,
+  children,
+}) => {
   const { mode, readonly, view } = useMetadataStore(
     useShallow((state) => ({
       mode: state.mode,
@@ -51,24 +73,33 @@ export const AssessmentSelectableElement: FC<
     handleElementMouseLeave,
   } = useAssessmentSelection(elementId)
 
-  // Host-driven highlight overlay rect (see `highlightedElements` in the store).
+  // Host-driven highlight (see `highlightedElements` in the store), drawn as a
+  // ring rather than a fill.
+  //
+  // SVG has no z-index: paint order is document order, and this rect has to come
+  // after `children` to sit above the row's own background. A filled rect there
+  // covers everything the row drew — its text, and the assessment badge at its
+  // edge — which is the one thing a highlight must never do, since the badge is
+  // what it is pointing at. An inset stroke marks the row just as clearly.
   const highlightColor = useAssessmentSelectionStore(
     (state) => state.highlightedElements[elementId]
   )
-  const highlightRect = highlightColor ? (
-    <rect
-      aria-hidden
-      x={0}
-      y={yOffset}
-      width={width}
-      height={itemHeight}
-      fill={highlightColor}
-      stroke={highlightColor}
-      strokeWidth={1}
-      rx={2}
-      pointerEvents="none"
-    />
-  ) : null
+  const HIGHLIGHT_RING_WIDTH = 2
+  const highlightRect =
+    highlightColor && highlightable ? (
+      <rect
+        aria-hidden
+        x={HIGHLIGHT_RING_WIDTH / 2}
+        y={yOffset + HIGHLIGHT_RING_WIDTH / 2}
+        width={Math.max(width - HIGHLIGHT_RING_WIDTH, 0)}
+        height={Math.max(itemHeight - HIGHLIGHT_RING_WIDTH, 0)}
+        fill="none"
+        stroke={highlightColor}
+        strokeWidth={HIGHLIGHT_RING_WIDTH}
+        rx={2}
+        pointerEvents="none"
+      />
+    ) : null
 
   const showInteractiveInteraction =
     mode === ApollonMode.Modelling &&
@@ -106,6 +137,7 @@ export const AssessmentSelectableElement: FC<
             pointerEvents="none"
           />
         )}
+        {badge}
       </g>
     )
   }
@@ -115,6 +147,7 @@ export const AssessmentSelectableElement: FC<
       <g data-apollon-element-id={elementId}>
         {children}
         {highlightRect}
+        {badge}
       </g>
     )
   }
@@ -135,7 +168,9 @@ export const AssessmentSelectableElement: FC<
       onMouseLeave={handleElementMouseLeave}
     >
       {children}
-      {/* Selection highlight overlay - rendered after children to be on top */}
+      {/* Content, then decoration, then badge. SVG paints in document order and
+          has no z-index, so this is the only way to get a tint that covers the
+          row it marks without covering the badge that says why it is marked. */}
       {(isSelected || isHighlighted) && (
         <rect
           x={0}
@@ -157,9 +192,8 @@ export const AssessmentSelectableElement: FC<
           pointerEvents="none"
         />
       )}
-      {/* Host highlight paints last, over the selection rect, matching the
-          div wrapper's layering invariant (host overlay on top). */}
       {highlightRect}
+      {badge}
     </g>
   )
 }

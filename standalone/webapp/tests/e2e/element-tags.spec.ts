@@ -87,6 +87,9 @@ test.describe("element tags & group coloring", () => {
     )
 
     await expect(highlightRect).toHaveCount(1)
-    await expect(highlightRect).toHaveAttribute("fill", COLOR)
+    // A ring, not a fill — the rect paints above the row, so filling it would
+    // bury the row's text and its assessment badge. The colour is on the stroke.
+    await expect(highlightRect).toHaveAttribute("fill", "none")
+    await expect(highlightRect).toHaveAttribute("stroke", COLOR)
   })
 })

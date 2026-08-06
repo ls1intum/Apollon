@@ -15,18 +15,18 @@ import { useCallback } from "react"
 
 export const useElementInteractions = () => {
   const isDiagramModifiable = useDiagramModifiable()
-  const { mode, readonly } = useMetadataStore(
-    useShallow((state) => ({
-      mode: state.mode,
-      readonly: state.readonly,
-    }))
-  )
+  const mode = useMetadataStore((state) => state.mode)
   const { setPopOverElementId } = usePopoverStore(
     useShallow((state) => ({
       setPopOverElementId: state.setPopOverElementId,
     }))
   )
-  const canOpenAssessmentPopover = mode === ApollonMode.Assessment && !readonly
+  // Both halves of assessment open a popover on click: a tutor gets the editable
+  // feedback form, a student the read-only one PopoverManager already builds for
+  // `Assessment + readonly`. Gating this on `!readonly` left that student popover
+  // implemented but unreachable, so an assessed diagram could show a score badge
+  // on an element while offering no way to read what it was for.
+  const canOpenAssessmentPopover = mode === ApollonMode.Assessment
   const canOpenPopover = isDiagramModifiable || canOpenAssessmentPopover
 
   const onBeforeDelete: OnBeforeDelete = useCallback(() => {

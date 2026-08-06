@@ -13,7 +13,7 @@ import {
 } from "../_support/editor"
 
 // The editor's INTERACTIVE MODES — the surfaces the per-type stories skip: the
-// quiz interactive-element picker (ApollonView.Highlight), the host-driven
+// element picker (ApollonView.Highlight), the host-driven
 // highlight overlay (setElementHighlights), the assessment-review SELECTION
 // model, the Exporting mode, and the dark theme. Full-editor stories mount a
 // second React copy of the editor so they stay out of the Vitest runner
@@ -37,10 +37,10 @@ const DEPENDENCY_EDGE_ID = "edge-dependency-imovable-vehicle"
 // selected/hovered element (its border + color-mix fill both reference this
 // CSS custom property). cssstyle preserves `var()` values verbatim, so this is
 // a deterministic substring to assert against.
-const SELECTION_STYLE_TOKEN = "apollon-interactive-selection"
+const SELECTION_STYLE_TOKEN = "apollon-highlight"
 
 // ── Highlight view (interactive-element picker) ──────────────────────────────
-/** The quiz "highlight" picker the playground's Highlight toggle opens — click elements to mark them interactive. */
+/** The highlight picker the playground's Highlight toggle opens — click elements to mark them. */
 export const HighlightPicker: Story = {
   name: "Highlight: Interactive Element Picker",
   parameters: { layout: "fullscreen" },

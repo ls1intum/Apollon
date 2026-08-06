@@ -52,9 +52,7 @@ test.describe("host-driven element highlighting", () => {
     )
   })
 
-  test("paints a node overlay and removes it when cleared", async ({
-    page,
-  }) => {
+  test("rings a node and removes it when cleared", async ({ page }) => {
     const overlay = page.locator(
       `[data-apollon-element-id="${NODE_ID}"] > div[aria-hidden="true"]`
     )
@@ -62,13 +60,24 @@ test.describe("host-driven element highlighting", () => {
 
     await page.evaluate(setHighlights, { [NODE_ID]: COLOR })
     await expect(overlay).toHaveCount(1)
-    await expect(overlay).toHaveCSS("background-color", COLOR)
+    // A ring, not a fill. This overlay is a positioned sibling of the node's
+    // SVG, so it paints above everything the node draws — including the
+    // assessment badge at its edge. A wash sat on top of the very indicator the
+    // reader needs; an outline marks the element without hiding anything.
+    await expect
+      .poll(async () =>
+        overlay.evaluate((el) => getComputedStyle(el).boxShadow)
+      )
+      .toContain(COLOR)
+    await expect(overlay).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
 
     await page.evaluate(setHighlights, null)
     await expect(overlay).toHaveCount(0)
   })
 
-  test("paints a class-member (attribute) overlay rect", async ({ page }) => {
+  test("rings a class member (attribute) without covering it", async ({
+    page,
+  }) => {
     const highlightRect = page.locator(
       `g[data-apollon-element-id="${ATTRIBUTE_ID}"] rect[stroke="${COLOR}"]`
     )
@@ -76,7 +85,10 @@ test.describe("host-driven element highlighting", () => {
 
     await page.evaluate(setHighlights, { [ATTRIBUTE_ID]: COLOR })
     await expect(highlightRect).toHaveCount(1)
-    await expect(highlightRect).toHaveAttribute("fill", COLOR)
+    // Unfilled. SVG paints in document order and this rect comes after the row's
+    // content, so a fill would bury the row's text and its assessment badge —
+    // the very thing the highlight is pointing at.
+    await expect(highlightRect).toHaveAttribute("fill", "none")
 
     await page.evaluate(setHighlights, null)
     await expect(highlightRect).toHaveCount(0)
@@ -103,8 +115,22 @@ test.describe("host-driven element highlighting (edges)", () => {
 
     await page.evaluate(setHighlights, { [EDGE_ID]: COLOR })
     await expect(edge).toHaveCount(1)
-    const filter = await edge.evaluate((el) => getComputedStyle(el).filter)
-    expect(filter).toMatch(/drop-shadow/)
+
+    // The glow is on the STROKE, not on the group. An SVG filter applies to its
+    // whole subtree, and that subtree includes the edge's assessment badge —
+    // filtering the group repainted a green "correct" check in the highlight
+    // colour.
+    await expect
+      .poll(async () =>
+        edge
+          .locator(".react-flow__edge-path")
+          .first()
+          .evaluate((el) => getComputedStyle(el).filter)
+      )
+      .toMatch(/drop-shadow/)
+    expect(await edge.evaluate((el) => getComputedStyle(el).filter)).toBe(
+      "none"
+    )
 
     await page.evaluate(setHighlights, null)
     await expect(edge).toHaveCount(0)
