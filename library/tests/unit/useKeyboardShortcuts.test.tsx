@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest"
-import type { ReactNode } from "react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import type { ReactNode, RefObject } from "react"
 import { renderHook } from "@testing-library/react"
 import { ReactFlowProvider } from "@xyflow/react"
 import { createDiagramStore } from "@/store/diagramStore"
@@ -13,14 +13,17 @@ import {
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 
 /**
- * The hook's own wiring: which document listener exists, and when. What each
+ * The hook's own wiring: which editor-root listener exists, and when. What each
  * shortcut then does is `handleShortcutKeydown`'s job — see keyboard.test.ts.
  */
-const mount = (keyboardShortcuts = true) => {
+const mount = (keyboardShortcuts = true, editorRoot = createEditorRoot()) => {
   const diagramStore = createDiagramStore()
   const metadataStore = createMetadataStore()
   metadataStore.getState().setKeyboardShortcuts(keyboardShortcuts)
   const overlayStore = createOverlayStore()
+  const editorRootRef = {
+    current: editorRoot,
+  } as RefObject<HTMLElement>
 
   const wrapper = ({ children }: { children: ReactNode }) => (
     <ReactFlowProvider>
@@ -35,13 +38,22 @@ const mount = (keyboardShortcuts = true) => {
   )
 
   return {
-    ...renderHook(() => useKeyboardShortcuts(), { wrapper }),
+    ...renderHook(() => useKeyboardShortcuts(editorRootRef), { wrapper }),
     diagramStore,
+    editorRoot,
   }
 }
 
-const selectAll = () =>
-  document.body.dispatchEvent(
+const createEditorRoot = () => {
+  const editorRoot = document.createElement("div")
+  editorRoot.className = "apollon-editor"
+  editorRoot.append(document.createElement("div"))
+  document.body.append(editorRoot)
+  return editorRoot
+}
+
+const selectAll = (target: EventTarget = document.body) =>
+  target.dispatchEvent(
     new KeyboardEvent("keydown", {
       key: "a",
       ctrlKey: true,
@@ -51,11 +63,16 @@ const selectAll = () =>
   )
 
 describe("useKeyboardShortcuts", () => {
-  it("keeps one listener across re-renders and drops it on unmount", () => {
-    const add = vi.spyOn(document, "addEventListener")
-    const remove = vi.spyOn(document, "removeEventListener")
+  afterEach(() => {
+    document.body.innerHTML = ""
+  })
 
-    const { rerender, unmount, diagramStore } = mount()
+  it("keeps one listener across re-renders and drops it on unmount", () => {
+    const editorRoot = createEditorRoot()
+    const add = vi.spyOn(editorRoot, "addEventListener")
+    const remove = vi.spyOn(editorRoot, "removeEventListener")
+
+    const { rerender, unmount, diagramStore } = mount(true, editorRoot)
     const registrations = () =>
       add.mock.calls.filter(([type]) => type === "keydown").length
 
@@ -76,13 +93,24 @@ describe("useKeyboardShortcuts", () => {
   })
 
   it("binds nothing when the host turns shortcuts off", () => {
-    mount(false)
+    const { editorRoot } = mount(false)
     // `dispatchEvent` is false only once something calls `preventDefault`.
-    expect(selectAll()).toBe(true)
+    expect(selectAll(editorRoot.firstElementChild!)).toBe(true)
   })
 
-  it("claims the keys it handles", () => {
-    mount()
-    expect(selectAll()).toBe(false)
+  it("claims keys inside its editor and leaves the surrounding page alone", () => {
+    const { editorRoot } = mount()
+    expect(selectAll(editorRoot.firstElementChild!)).toBe(false)
+    expect(selectAll(document.body)).toBe(true)
+  })
+
+  it("does not let one editor answer for a sibling", () => {
+    const first = mount().editorRoot
+    const second = mount().editorRoot
+
+    const firstSelectAll = vi.fn()
+    first.addEventListener("keydown", firstSelectAll)
+    expect(selectAll(second.firstElementChild!)).toBe(false)
+    expect(firstSelectAll).not.toHaveBeenCalled()
   })
 })

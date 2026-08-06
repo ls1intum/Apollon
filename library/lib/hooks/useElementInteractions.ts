@@ -30,10 +30,8 @@ export const useElementInteractions = () => {
   const canOpenPopover = isDiagramModifiable || canOpenAssessmentPopover
 
   const onBeforeDelete: OnBeforeDelete = useCallback(() => {
-    // React Flow's Delete listener is document-level, so a Delete pressed while
-    // focus is in a dialog or menu over the canvas would otherwise remove the
-    // selection behind it. Block that here — the one place every RF deletion
-    // funnels through — the same way the editor's own shortcuts stand down.
+    // Keep the deletion funnel defensive for toolbar/API calls as well as the
+    // scoped keyboard path: an overlay over the canvas owns the interaction.
     if (isElementInOverlay(document.activeElement)) {
       return Promise.resolve(false)
     }

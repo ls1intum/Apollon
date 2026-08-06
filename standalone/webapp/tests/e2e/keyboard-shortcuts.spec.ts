@@ -3,9 +3,9 @@ import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * Every shortcut and gesture the "How to use this editor?" sheet advertises,
- * proven end to end so the sheet can't lie. Undo/redo, Delete and the arrow
- * keys are React Flow's; the rest run through `APOLLON_SHORTCUTS`. The version
- * shortcuts (Ctrl/Cmd+Shift+S, Alt+Shift+H) live in local-version-history.spec.
+ * proven end to end so the sheet can't lie. Arrow-key movement is React Flow's;
+ * the rest run through `APOLLON_SHORTCUTS`. The version shortcuts
+ * (Ctrl/Cmd+Shift+S, Alt+Shift+H) live in local-version-history.spec.
  *
  * Two fixtures: COMPACT fits at 100% so its nodes are full-size and clickable;
  * SPREAD overflows the viewport so a real zoom-to-fit reads below 100% (on a
@@ -63,7 +63,12 @@ const viewport = (page: Page) => page.locator(".react-flow__viewport")
 const openWith = async (page: Page, fixture: Record<string, unknown>) => {
   await openFixtureInLocalEditor(page, fixture)
   await waitForCanvasReady(page)
+  await activateEditor(page)
 }
+
+/** A canvas shortcut belongs to the editor only after the user enters it. */
+const activateEditor = (page: Page) =>
+  page.locator(".react-flow__pane").click({ position: { x: 8, y: 8 } })
 
 /** Center of a node in screen coordinates. */
 const nodeCenter = async (page: Page, name: string) => {
@@ -224,6 +229,28 @@ test.describe("History", () => {
 })
 
 test.describe("View", () => {
+  test("Ctrl/Cmd+scroll works on first hover without stealing focus", async ({
+    page,
+  }) => {
+    await openFixtureInLocalEditor(page, COMPACT)
+    await waitForCanvasReady(page)
+    await expect(zoomReadout(page)).toHaveText("100%")
+
+    await page.mouse.move(640, 400)
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => !!document.activeElement?.closest(".apollon-editor")
+        )
+      )
+      .toBe(false)
+
+    await page.keyboard.down("Control")
+    await page.mouse.wheel(0, -300)
+    await page.keyboard.up("Control")
+    await expect(zoomReadout(page)).not.toHaveText("100%")
+  })
+
   test("zoom in / out / reset", async ({ page }) => {
     await openWith(page, COMPACT)
     await expect(zoomReadout(page)).toHaveText("100%")
@@ -247,6 +274,7 @@ test.describe("View", () => {
     // is what must bring them into view, so canvas readiness cannot require a
     // rendered node before the shortcut runs.
     await waitForCanvasReady(page, false)
+    await activateEditor(page)
     // SPREAD overflows at 100%, so a real fit reads below it — a fit that fell
     // through to reset-zoom would stay at 100%.
     await page.keyboard.press("ControlOrMeta+Shift+Digit1")
@@ -315,6 +343,61 @@ test.describe("File", () => {
 })
 
 test.describe("Guards", () => {
+  test("releases browser keys and deletion when pointer focus leaves", async ({
+    page,
+  }) => {
+    await openWith(page, COMPACT)
+    await node(page, "Alpha").click()
+    await expect(selectedNodes(page)).toHaveCount(1)
+
+    // The standalone canvas fills the viewport, so add the host-page surface
+    // that an embed such as Artemis naturally has around it.
+    const hostSurface = page.locator("#shortcut-host-surface")
+    await page.evaluate(() => {
+      const surface = document.createElement("div")
+      surface.id = "shortcut-host-surface"
+      Object.assign(surface.style, {
+        position: "fixed",
+        inset: "0 auto auto 0",
+        width: "64px",
+        height: "64px",
+        zIndex: "2147483647",
+      })
+      document.body.append(surface)
+    })
+
+    // Leaving is enough: the user must not have to find another focusable
+    // control while page zoom is already making the surrounding UI hard to use.
+    await hostSurface.hover()
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => !!document.activeElement?.closest(".apollon-editor")
+        )
+      )
+      .toBe(false)
+
+    await page.keyboard.press("Delete")
+    await expect(nodes(page)).toHaveCount(2)
+
+    const pageKey = page.evaluate(
+      () =>
+        new Promise<boolean>((resolve) => {
+          document.addEventListener(
+            "keydown",
+            (event) => {
+              requestAnimationFrame(() => resolve(event.defaultPrevented))
+            },
+            { once: true }
+          )
+        })
+    )
+    await page.keyboard.press("ControlOrMeta+Minus")
+
+    expect(await pageKey).toBe(false)
+    await expect(zoomReadout(page)).toHaveText("100%")
+  })
+
   test("shortcuts stay out of a text field", async ({ page }) => {
     await openWith(page, COMPACT)
     // Type into the diagram-title field, then press the select-all combo: the

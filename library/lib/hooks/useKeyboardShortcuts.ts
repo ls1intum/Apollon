@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 import { useReactFlow } from "@xyflow/react"
 import {
   useDiagramStore,
@@ -12,14 +12,15 @@ import { insetAwareFitView } from "@/overlay/fitView"
 import { handleShortcutKeydown, type KeyboardShortcutDeps } from "@/keyboard"
 
 /**
- * Wires `APOLLON_SHORTCUTS` to the store, the clipboard helpers and the
- * viewport. Registered on `document`, so shortcuts work without the canvas
- * holding focus — which assumes one editor per page; two would both react, so a
- * host mounting several passes `keyboardShortcuts: false` to all but one.
- * Registered once: the actions close over `nodes`/`edges`, so a dependency on
- * them would re-register the listener on every drag frame.
+ * Wires `APOLLON_SHORTCUTS` to the store, the clipboard helpers and viewport.
+ * The listener belongs to this editor root: events from focused descendants
+ * bubble to it, while the surrounding page and sibling editors keep their keys.
+ * Registered once per root: the actions close over live state, so a dependency
+ * on them would re-register the listener on every drag frame.
  */
-export const useKeyboardShortcuts = () => {
+export const useKeyboardShortcuts = (
+  editorRootRef: RefObject<HTMLElement | null>
+) => {
   const pasteCountRef = useRef(0)
   // Serializes a burst of pastes so their copies cascade in order.
   const pasteChainRef = useRef<Promise<unknown>>(Promise.resolve())
@@ -55,6 +56,20 @@ export const useKeyboardShortcuts = () => {
         setMultiSelectionMode(false)
         clearSelection()
       },
+      delete: () => {
+        const selectedNodes = rf.getNodes().filter((node) => node.selected)
+        const selectedEdges = rf.getEdges().filter((edge) => edge.selected)
+        if (selectedNodes.length === 0 && selectedEdges.length === 0)
+          return false
+        // A selected node can itself own DOM focus. Move focus to the stable
+        // composite root before removing it so the next undo/paste remains in
+        // the same editor instead of falling through to the host page.
+        editorRootRef.current?.focus({ preventScroll: true })
+        void rf.deleteElements({
+          nodes: selectedNodes,
+          edges: selectedEdges,
+        })
+      },
       // Nothing selected means nothing to copy, so leave Mod+C/Mod+X to the
       // browser rather than swallowing a copy of whatever text is selected.
       copy: () => {
@@ -64,6 +79,7 @@ export const useKeyboardShortcuts = () => {
       },
       cut: () => {
         if (!hasSelectedElements()) return false
+        editorRootRef.current?.focus({ preventScroll: true })
         pasteCountRef.current = 0
         void cutSelectedElements()
       },
@@ -124,9 +140,11 @@ export const useKeyboardShortcuts = () => {
 
   useEffect(() => {
     if (!enabled) return
+    const editorRoot = editorRootRef.current
+    if (!editorRoot) return
     const onKeyDown = (event: KeyboardEvent) =>
       handleShortcutKeydown(event, depsRef.current)
-    document.addEventListener("keydown", onKeyDown)
-    return () => document.removeEventListener("keydown", onKeyDown)
-  }, [enabled])
+    editorRoot.addEventListener("keydown", onKeyDown)
+    return () => editorRoot.removeEventListener("keydown", onKeyDown)
+  }, [editorRootRef, enabled])
 }

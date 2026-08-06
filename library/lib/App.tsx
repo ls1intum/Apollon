@@ -48,6 +48,7 @@ import {
 import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
+import { useKeyboardScope } from "./hooks/useKeyboardScope"
 import { useMultiSelectionMode } from "./hooks/useMultiSelectionMode"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import {
@@ -83,8 +84,6 @@ function App({
   awareness,
   onlyRenderVisibleElements = true,
 }: AppProps) {
-  useKeyboardShortcuts()
-
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId, previewMode } =
     useDiagramStore(
       useShallow((state) => ({
@@ -153,6 +152,12 @@ function App({
   const { onPaneClicked } = usePaneClicked()
   const multiSelectionMode = useMultiSelectionMode()
   const routingReady = useEdgeGeometryStore((state) => state.routingReady)
+  const {
+    rootRef,
+    active: keyboardScopeActive,
+    rootHandlers,
+  } = useKeyboardScope(keyboardShortcuts)
+  useKeyboardShortcuts(rootRef)
 
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
@@ -164,6 +169,9 @@ function App({
   return (
     <TooltipProvider>
       <div
+        ref={rootRef}
+        tabIndex={-1}
+        {...rootHandlers}
         className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
           mode === ApollonMode.Assessment ? "apollon-editor--assessment" : ""
         } ${
@@ -249,10 +257,6 @@ function App({
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
             zoomOnScroll={!scrollLock || scrollEnabled}
-            // Shift is also selectionKeyCode's default, but there's no conflict:
-            // a click on a node and a Shift+drag on the pane are different
-            // surfaces.
-            multiSelectionKeyCode={["Shift", "Meta", "Control"]}
             // With multiSelectionActive forced on, React Flow's pointerdown
             // select would toggle the pressed node OUT of the selection and drop
             // it from the group drag; selecting on click keeps the group whole.
@@ -265,15 +269,24 @@ function App({
             // is why a one-finger drag never box-selects and pinch-zoom survives.
             selectionOnDrag={multiSelectionMode}
             panOnDrag={multiSelectionMode ? [1, 2] : true}
-            // Delete the current selection with either key (Backspace on macOS,
-            // Delete on full keyboards) — but hand these keys back with the
-            // editor's other shortcuts when a host opts out via
-            // `keyboardShortcuts: false`. `onBeforeDelete` additionally blocks a
-            // delete whose focus is inside an overlay over the canvas.
-            deleteKeyCode={keyboardShortcuts ? ["Backspace", "Delete"] : []}
+            // Deletion runs through the editor-root shortcut dispatcher. React
+            // Flow's built-in handler listens on document and would otherwise
+            // delete a selection while the user is elsewhere on the host page.
+            deleteKeyCode={null}
             // Arrow-key node nudging + Enter/Escape selection a11y are React
             // Flow's; disable them together with the rest when shortcuts are off.
-            disableKeyboardA11y={!keyboardShortcuts}
+            disableKeyboardA11y={!keyboardScopeActive}
+            // React Flow implements these modifier keys with window/document
+            // listeners. Mount them only while this editor owns the interaction,
+            // so the page and sibling editors retain their keyboard contracts.
+            selectionKeyCode={keyboardScopeActive ? "Shift" : null}
+            multiSelectionKeyCode={
+              keyboardScopeActive ? ["Shift", "Meta", "Control"] : null
+            }
+            panActivationKeyCode={keyboardScopeActive ? "Space" : null}
+            zoomActivationKeyCode={
+              keyboardScopeActive ? ["Meta", "Control"] : null
+            }
           >
             <CustomBackground />
             <AlignmentGuides />

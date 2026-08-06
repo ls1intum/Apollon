@@ -40,8 +40,8 @@ export type ApollonShortcutId =
   | "fit-view"
   | "zoom-to-selection"
 
-/** The ids React Flow implements; the rest run on the editor's own handler. */
-type CanvasHandledId = "delete" | "move-selection"
+/** The ids React Flow implements on the focused canvas element itself. */
+type CanvasHandledId = "move-selection"
 
 type HandledShortcutId = Exclude<ApollonShortcutId, CanvasHandledId>
 
@@ -85,7 +85,6 @@ export const APOLLON_SHORTCUTS: readonly ApollonShortcut[] = [
     id: "delete",
     combos: [{ key: "Delete" }, { key: "Backspace" }],
     requiresModifiable: true,
-    canvasHandled: true,
   },
   { id: "copy", combos: [{ key: "c", mod: true }], requiresModifiable: false },
   { id: "cut", combos: [{ key: "x", mod: true }], requiresModifiable: true },
@@ -211,6 +210,15 @@ export function ariaKeyshortcuts(id: ApollonShortcutId): string {
 
 const TYPING_TAGS = ["INPUT", "SELECT", "TEXTAREA"]
 
+/** Whether an element is, or is contained by, an editable shortcut boundary. */
+export function isTypingElement(target: Element | null): boolean {
+  if (target?.nodeType !== 1) return false
+  return (
+    TYPING_TAGS.includes(target.nodeName) ||
+    !!target.closest('[contenteditable]:not([contenteditable="false"]), .nokey')
+  )
+}
+
 /**
  * Whether the event comes from a surface the user is typing into. Mirrors React
  * Flow's internal `isInputDOMNode` — which its public entry doesn't export — so
@@ -219,12 +227,7 @@ const TYPING_TAGS = ["INPUT", "SELECT", "TEXTAREA"]
  */
 export function isTypingTarget(event: KeyboardEvent): boolean {
   const target = (event.composedPath?.()[0] ?? event.target) as Element | null
-  if (target?.nodeType !== 1) return false
-  return (
-    TYPING_TAGS.includes(target.nodeName) ||
-    target.hasAttribute("contenteditable") ||
-    !!target.closest(".nokey")
-  )
+  return isTypingElement(target)
 }
 
 const OVERLAY_ROLES =
@@ -234,8 +237,8 @@ const OVERLAY_ROLES =
  * Whether an element sits inside a widget that owns its own key handling while
  * open — a dialog, a menu, a select. An overlay that *contains* the editor is a
  * host mounting the canvas inside its own dialog, which owns nothing; only an
- * overlay ON TOP of the canvas counts. Exported so React Flow's own keys
- * (delete, arrows) can stand down on the same surfaces the editor's do.
+ * overlay ON TOP of the canvas counts. Exported so host shortcuts and deletion
+ * affordances can stand down on the same surfaces the editor's do.
  */
 export function isElementInOverlay(element: Element | null): boolean {
   if (element?.nodeType !== 1) return false

@@ -267,7 +267,11 @@ SVG/PNG/PDF over HTTP via the standalone server.
 
 `Mod` is Ctrl on Windows/Linux and Cmd on macOS; combos marked _view_ work on
 read-only diagrams too. Nothing fires while the user is typing in a field or
-while a dialog or menu is open.
+while a dialog or menu is open. Shortcuts belong to the editor that has focus:
+click or tap the canvas to activate it, then move focus outside the editor to
+return every shortcut to the surrounding page. Pointer-acquired canvas focus is
+released when the pointer leaves, so browser zoom remains available around an
+embedded editor. Keyboard users keep ownership until they move focus normally.
 
 | Combo                          | Action                                   |
 | ------------------------------ | ---------------------------------------- |
@@ -286,17 +290,18 @@ whose keys produce a printable character fails
 [WCAG 2.1.4](https://www.w3.org/WAI/WCAG21/Understanding/character-key-shortcuts)
 unless it can be turned off, remapped, or scoped to focus.
 
-Pass `keyboardShortcuts: false` to keep the editor's hands off every key above —
-for a host that binds them itself, or that mounts more than one editor (they
-listen on `document`, so two would both answer).
+Pass `keyboardShortcuts: false` to keep the editor's hands off every key above
+when the host binds them itself. Multiple editors need no special coordination:
+only the focused editor answers.
 
 `APOLLON_SHORTCUTS` is the list the editor runs, so a host can render a sheet
 that tracks it, or check it before binding a key of its own. Each entry's
 **first** combo is the primary one — a sheet should render only that; the rest
 are aliases (`Mod+Y` redo, layout variants of `Mod+=`). Entries flagged
-`canvasHandled` are React Flow's, not the editor's own handler. `shortcutKeyName`
-turns a combo into the key it names, so a sheet renders "1" rather than the
-`Digit1` code that combo matches on.
+`canvasHandled` are handled directly by React Flow on a focused canvas element,
+not by the editor-root dispatcher. `shortcutKeyName` turns a combo into
+the key it names, so a sheet renders "1" rather than the `Digit1` code that combo
+matches on.
 
 `matchesShortcutCombo`, `isTypingTarget` and `isInsideOverlay` are the
 primitives that handler matches and stands down with, exported so a host's own
