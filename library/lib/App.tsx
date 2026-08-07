@@ -266,6 +266,14 @@ function App({
             nodesDraggable={isDiagramModifiable}
             panOnScroll={!scrollLock || scrollEnabled}
             zoomOnScroll={!scrollLock || scrollEnabled}
+            // React Flow calls preventDefault() on every wheel over the pane
+            // unless told otherwise, INDEPENDENTLY of panOnScroll/zoomOnScroll.
+            // Leaving it on turned scroll lock into a dead zone: the canvas
+            // refused to zoom and the host page refused to scroll, so an editor
+            // embedded in a form could not be scrolled past at all. The lock's
+            // whole promise is that the wheel belongs to the page until the zoom
+            // modifier is held.
+            preventScrolling={!scrollLock || scrollEnabled}
             // With multiSelectionActive forced on, React Flow's pointerdown
             // select would toggle the pressed node OUT of the selection and drop
             // it from the group drag; selecting on click keeps the group whole.
