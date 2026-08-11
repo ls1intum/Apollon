@@ -42,8 +42,11 @@ describe(".react-flow__node selection ring", () => {
 
   it("keeps the badge ring under the badges everywhere it is drawn", () => {
     // Every state that rings a node must use the same under-painting mechanism.
+    // The assessment-focus ring is scoped to the assessment editor: the focus
+    // class follows whichever popover is open, in every mode, so an unscoped rule
+    // marked elements amber while modelling too.
     for (const selector of [
-      ".react-flow__node.apollon-assessment-focus",
+      ".apollon-editor--assessment .react-flow__node.apollon-assessment-focus",
       ".apollon-highlight--selected,\n.apollon-highlight--highlighted",
     ]) {
       expect(ruleBody(selector)).toMatch(/box-shadow:/)

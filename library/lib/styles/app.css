@@ -782,14 +782,43 @@
   z-index: 9;
 }
 
+/* ── Grab targets ─────────────────────────────────────────────────────────
+   Canvas affordances are drawn small so they do not swamp the diagram, and are
+   grabbed through a larger invisible area. Two sizes, and only two, so the
+   resizer does not offer a generous corner beside a hairline edge:
+
+   `--apollon-grab-target` (24px) is a point target — a corner handle. WCAG 2.2
+   SC 2.5.8 (AA) asks for 24x24 CSS pixels and measures the region that accepts
+   the pointer, not the ink, which is exactly what these ::before boxes widen.
+
+   `--apollon-grab-band` (14px) is for an affordance that runs along an edge. It
+   matches `--arc-short`, the connection arc that sits at the same edge's
+   midpoint, so the two edge-anchored affordances present the same thickness;
+   z-index (arc 10, line 9) decides which wins where they meet. A full 24px band
+   is deliberately not used here: it would reach past the corner handles' own
+   24px targets and swallow them. */
+.apollon-editor {
+  --apollon-grab-target: 24px;
+  --apollon-grab-band: 14px;
+}
+
 /* React Flow draws the edge lines 1px wide, a hair-thin grab target. Widen the
    hit area without moving the visible border, the same way the connection arcs
-   get a usable target. Kept small (and hover-gated, via the base rule below)
-   because it overhangs the node edge onto whatever sits beneath. */
+   get a usable target. Hover-gated via the base rule below, because it overhangs
+   the node edge onto whatever sits beneath. */
 .apollon-resize-line::before {
   content: "";
   position: absolute;
-  inset: -3px;
+  inset: calc((1px - var(--apollon-grab-band)) / 2);
+}
+
+/* Same trick for the corner handles, which are a point target rather than a band:
+   the handle stays the 10x10 square set in NodeResizer while the ::before grows
+   it to the full 24x24. */
+.apollon-resize-handle::before {
+  content: "";
+  position: absolute;
+  inset: calc((10px - var(--apollon-grab-target)) / 2);
 }
 
 /* A content-sized node keeps its corner handles (NodeResizer constrains each to
@@ -931,7 +960,8 @@
    it kept swallowing the pointer and showing a crosshair over a diagram nobody
    can connect. Disarm the pseudo-element too, and take the cursor back. */
 .apollon-editor--assessment .react-flow__handle.apollon-arc-handle::before,
-.apollon-editor--assessment .react-flow__node:hover
+.apollon-editor--assessment
+  .react-flow__node:hover
   .react-flow__handle.apollon-arc-handle::before {
   background-color: transparent !important;
   pointer-events: none !important;
@@ -1227,8 +1257,13 @@
    Amber, not the primary blue: this is the same "this element is marked" state
    the highlight classes paint, and a node marked blue beside an edge marked
    amber read as two unrelated things. Blue stays what it always was — selected
-   for EDITING. */
-.react-flow__node.apollon-assessment-focus {
+   for EDITING.
+
+   Scoped to the assessment editor like every other amber rule above. Leaving it
+   unscoped is what let the marking escape into modelling: the focus class is
+   driven by whichever popover is open, so an unscoped rule ringed elements amber
+   in the submission editor too. */
+.apollon-editor--assessment .react-flow__node.apollon-assessment-focus {
   box-shadow: 0 0 0 2px var(--apollon-interactive-selection, #f39c12);
 }
 
@@ -1242,8 +1277,13 @@
     drop-shadow(0 0 2px var(--apollon-edge-highlight));
 }
 
-.react-flow__edge.apollon-assessment-focus .react-flow__edge-path,
-.react-flow__edge.apollon-assessment-focus [data-inline-marker] {
+/* Assessment-scoped for the same reason as the node rule above. */
+.apollon-editor--assessment
+  .react-flow__edge.apollon-assessment-focus
+  .react-flow__edge-path,
+.apollon-editor--assessment
+  .react-flow__edge.apollon-assessment-focus
+  [data-inline-marker] {
   stroke: var(--apollon-interactive-selection, #f39c12);
 }
 
