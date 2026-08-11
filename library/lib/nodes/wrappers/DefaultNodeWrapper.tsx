@@ -135,6 +135,30 @@ export function DefaultNodeWrapper({
     })
   )
   const isDiagramModifiable = useDiagramModifiable()
+  // Which of this node's handles an edge is actually anchored to, as a stable
+  // string so the selector only fires when the set changes rather than on every
+  // edge mutation. These must stay mounted whatever the zoom: React Flow derives
+  // an edge's endpoint from its handle's measured geometry, so unmounting one
+  // strands the edge.
+  const connectedHandleKey = useStore((state) => {
+    const ids: string[] = []
+    for (const edge of state.edges) {
+      if (edge.source === elementId && edge.sourceHandle)
+        ids.push(edge.sourceHandle)
+      if (edge.target === elementId && edge.targetHandle)
+        ids.push(edge.targetHandle)
+    }
+    return ids.sort().join("\u0000")
+  })
+  const connectedHandleIds = useMemo(
+    () => new Set(connectedHandleKey ? connectedHandleKey.split("\u0000") : []),
+    [connectedHandleKey]
+  )
+  // While a connection is being dragged every anchor has to exist, so the drag can
+  // land on one that is not currently drawn.
+  const connectionInProgress = useStore(
+    (state) => state.connection?.inProgress === true
+  )
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
@@ -585,6 +609,21 @@ export function DefaultNodeWrapper({
           <>
             {handles.map((handle) => {
               if (isHandleHiddenByProp(handle.id)) {
+                return null
+              }
+
+              // Only the handles that are drawn, the ones an edge is anchored to,
+              // and — while a connection is in flight — all of them. A node
+              // otherwise mounted all 36 anchors regardless of how many were
+              // drawn, and at 45 nodes that was 2583 elements in the viewport,
+              // every one of them repainted at a new scale on each frame of a
+              // zoom. The rest exist only so a saved edge can resolve its anchor,
+              // which the connected set already covers.
+              if (
+                !connectionInProgress &&
+                !visibleHandleIds.has(handle.id) &&
+                !connectedHandleIds.has(handle.id)
+              ) {
                 return null
               }
 
