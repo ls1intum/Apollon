@@ -23,30 +23,10 @@ import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
 import { getSegmentGhostHandles } from "@/utils/geometry/freeWaypoints"
 import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
-import { CANVAS, EDGES } from "@/constants"
+import { EDGES } from "@/constants"
 import { useLabels } from "@/i18n/useLabels"
+import { getHandleScreenScale } from "@/utils/geometry/scalar"
 
-// Edge handles live inside the zoomed React Flow viewport. We want them to
-// keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
-// a few px), but to GROW with the edge when zoomed in (so they stay in
-// proportion to the thick edge instead of looking like a tiny dot on it).
-//
-//   scale = 1 / min(zoom, 1)   (zoom floored to the canvas minimum)
-//     zoom <= 1  → 1/zoom  → constant on-screen size (counter-scaled)
-//     zoom  > 1  → 1       → natural flow size → grows on-screen with zoom
-export const getHandleScreenScale = (zoom: number): number => {
-  const safeZoom = Math.max(
-    Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
-    CANVAS.MIN_SCALE_TO_ZOOM_OUT
-  )
-  return 1 / Math.min(safeZoom, 1)
-}
-
-// The reduction runs INSIDE the selector so Zustand compares the scale rather than
-// the raw zoom. The scale is exactly 1 for every zoom >= 1, so zooming in stops
-// re-rendering these handles entirely; selecting `transform[2]` and reducing
-// outside re-rendered every edge's handles on every frame of every gesture, which
-// is the bulk of what made zooming heavy on a diagram with edges.
 const useHandleScreenScale = (): number =>
   useStore((state) => getHandleScreenScale(state.transform[2]))
 
