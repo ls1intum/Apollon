@@ -50,6 +50,12 @@ const config = {
   width: 160,
   height: 100,
   defaultData: {},
+  // The ghost renders the config's own SVG at the drop size rather than reusing the
+  // palette preview, so a stub is required even though these tests assert nothing
+  // about the shape itself.
+  svg: ({ width, height }: { width: number; height: number }) => (
+    <svg data-testid="ghost-svg" width={width} height={height} />
+  ),
 } as unknown as DropElementConfig
 
 const CANVAS_RECT = {
