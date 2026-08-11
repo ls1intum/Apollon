@@ -35,8 +35,7 @@ export interface ZoomControlsProps {
 export function ZoomControls({ history = true }: ZoomControlsProps) {
   const rf = useReactFlow()
   const t = useLabels()
-  // Rounded inside the selector: the readout only changes at whole percents, so
-  // it re-renders on those rather than on every frame of a wheel gesture.
+  // Rounded inside the selector so it re-renders at whole percents, not per frame.
   const zoomLevelPercent = useStore((s) => Math.round(s.transform[2] * 100))
   const insets = useOverlayStore((s) => s.insets)
   const safeArea = useOverlayStore((s) => s.safeArea)

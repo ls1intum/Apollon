@@ -878,12 +878,10 @@ export const dropElementConfigs: Readonly<
   ],
 })
 
-// Appended to every palette, whatever the diagram type — this is the general
-// note element (UML draws a comment as a rectangle with a folded corner, which is
-// the shape rendered here), not something specific to colour. "Color Description"
-// both misdescribed it and was too long to fit the default 160px box, so the
-// palette showed it truncated. The `colorDescription` type is deliberately left
-// alone: it is serialised into saved diagrams and renaming it would strand them.
+// Appended to every palette, whatever the diagram type — the general UML note (a
+// rectangle with a folded corner), nothing to do with colour. The
+// `colorDescription` type stays: it is serialised into saved diagrams and renaming
+// it would strand them.
 export const ColorDescriptionConfig: DropElementConfig = Object.freeze({
   type: "colorDescription",
   width: 160,

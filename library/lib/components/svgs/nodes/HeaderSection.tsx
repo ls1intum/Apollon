@@ -49,16 +49,11 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
         textDecoration={isUnderlined ? "underline" : "normal"}
         fill={textColor}
       >
-        {/* `dominantBaseline` is repeated on each tspan rather than inherited from
-            the <text>. An `x` starts a new positioning run, and WebKit resolves the
-            baseline per run — it drops the parent's value and falls back to
-            alphabetic, lifting these titles about 5px, while Blink inherits it and
-            looks right. That is why the header names read as sitting high in Safari
-            only.
+        {/* Baseline repeated per tspan: see CustomText — each carries its own `x`,
+            which starts a new positioning run.
 
-            The two lines are also placed symmetrically about the centre. `dy` is
-            relative, so -9 then +18 leaves them at -9 and +9; the previous -8/+18
-            landed at -8 and +10, putting the pair's midpoint a pixel low. */}
+            `dy` is relative, so -HALF then +2*HALF places the two lines
+            symmetrically about the centre. */}
         {showStereotype && stereotype && (
           <tspan
             x={width / 2}

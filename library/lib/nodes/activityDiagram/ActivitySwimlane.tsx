@@ -37,10 +37,8 @@ function LaneResizeHandles({
   data: ActivitySwimlaneProps
 }) {
   const t = useLabels()
-  // Read imperatively at drag time, not subscribed. The zoom is only needed to
-  // convert a pointer delta into flow units while a divider is being dragged, so
-  // subscribing re-rendered every swimlane on every frame of every zoom gesture
-  // for a value nothing in the render output uses.
+  // Read imperatively at drag time, not subscribed: zoom only converts a pointer
+  // delta to flow units and nothing in the render output uses it.
   const store = useStoreApi()
   const setNodes = useDiagramStore(useShallow((state) => state.setNodes))
   const drag = useRef<{

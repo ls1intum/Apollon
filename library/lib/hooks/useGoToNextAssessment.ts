@@ -47,18 +47,13 @@ export const useAssessmentNavigation = (elementId: string) => {
   const isGivingFeedback = diagramMode === ApollonMode.Assessment && !readonly
 
   // What is worth stepping through depends on who is stepping — the same split
-  // `PopoverManager` already makes when it decides whether to open a popover at
-  // all.
+  // `PopoverManager` makes when deciding whether to open a popover.
   //
-  // A tutor is grading: every element is a target, including the ones nobody has
-  // touched yet, because those are precisely the ones still needing feedback.
-  // Filtering to assessed elements left a fresh submission with a list of one —
-  // the element the tutor happened to open — so navigation disappeared exactly
-  // when it was most useful, at the start of an assessment.
-  //
-  // A reader is reading: an element nobody graded has nothing to say, so walking
-  // onto it is a dead end. Only elements with something to show are listed, plus
-  // the current one so the reader never loses their place.
+  // Grading: every element is a target, including untouched ones — those are
+  // precisely the ones still needing feedback.
+  // Reading: an ungraded element has nothing to show, so stepping onto it is a
+  // dead end. Assessed elements only, plus the current one so the reader keeps
+  // their place.
   const elements = useMemo(() => {
     const all = [...nodes, ...edges]
     if (isGivingFeedback) return all

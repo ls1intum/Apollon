@@ -98,8 +98,7 @@ export const UseCaseNodeSVG: React.FC<Props> = ({
                 key={index}
                 x={centerX}
                 y={centerY + layout.lineOffsets[index]}
-                // Repeated per tspan: an x/y starts a new positioning run and
-                // WebKit resolves the baseline per run, ignoring the parent's.
+                // Repeated per tspan: see CustomText.
                 dominantBaseline="central"
               >
                 {line.text}

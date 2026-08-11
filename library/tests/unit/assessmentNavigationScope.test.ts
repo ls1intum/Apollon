@@ -47,6 +47,9 @@ describe("assessment navigation scope", () => {
   beforeEach(() => {
     mode = ApollonMode.Assessment
     readonly = false
+    // Module-level and mutated by the reader cases; reset so order cannot matter.
+    for (const key of Object.keys(assessments)) delete assessments[key]
+    assessments.graded = { score: 1 }
   })
 
   it("steps through every element while a tutor is giving feedback", () => {
@@ -56,14 +59,6 @@ describe("assessment navigation scope", () => {
     const { result } = renderHook(() => useAssessmentNavigation("ungraded-a"))
 
     expect(result.current.total).toBe(nodes.length)
-    expect(result.current.canNavigate).toBe(true)
-  })
-
-  it("offers navigation from an unassessed element with nothing else graded", () => {
-    assessments.graded = { score: 1 }
-    const { result } = renderHook(() => useAssessmentNavigation("ungraded-b"))
-
-    expect(result.current.currentIndex).toBeGreaterThanOrEqual(0)
     expect(result.current.canNavigate).toBe(true)
   })
 
@@ -79,13 +74,10 @@ describe("assessment navigation scope", () => {
   it("gives a reader no navigation when only the current element would be listed", () => {
     readonly = true
     delete assessments.graded
-    try {
-      const { result } = renderHook(() => useAssessmentNavigation("ungraded-a"))
 
-      expect(result.current.total).toBe(1)
-      expect(result.current.canNavigate).toBe(false)
-    } finally {
-      assessments.graded = { score: 1 }
-    }
+    const { result } = renderHook(() => useAssessmentNavigation("ungraded-a"))
+
+    expect(result.current.total).toBe(1)
+    expect(result.current.canNavigate).toBe(false)
   })
 })

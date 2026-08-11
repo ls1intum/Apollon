@@ -66,7 +66,6 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   )
   const portalContainer = useApollonPortalContainer()
 
-  // The size the element becomes on drop, which is what the ghost previews.
   const ghostDropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
   const ghostDropHeight =
     dropElementConfig.dropHeight ?? dropElementConfig.height
@@ -77,17 +76,11 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // the preview offset because the entry flex-centres its preview; positioning
   // the ghost by the preview offset would re-apply that centring and jump.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
-  // The ghost is drawn at the on-screen size the node will have, rather than
-  // drawn small and scaled up. A CSS `transform: scale()` on this element made
-  // the browser rasterise the SVG at the palette's preview size and stretch that
-  // bitmap — the ghost came off the palette visibly pixelated, and worse the
-  // further the canvas was zoomed in. Rendering at the final size keeps it vector
-  // sharp at any zoom. Captured on grab; zoom cannot change mid palette-drag.
-  const [ghostRender, setGhostRender] = useState({
-    scale: 1,
-    grabX: 0,
-    grabY: 0,
-  })
+  // Drawn at the node's final on-screen size rather than drawn small and scaled: a
+  // CSS transform rasterises the SVG at preview size and stretches the bitmap, so
+  // the ghost comes off the palette pixelated and worse the further the canvas is
+  // zoomed. Captured on grab; zoom cannot change mid palette-drag.
+  const [ghostRender, setGhostRender] = useState({ scale: 1 })
   // The theme the palette entry was painted under, captured on grab. The ghost
   // portals to `document.body`, leaving the subtree that scopes `--apollon-*`.
   // Both halves are needed: the resolved token VALUES cover a mount themed by
@@ -151,7 +144,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     // true dropped size, and the SVG lays its content out for that size instead
     // of having a smaller rendering stretched over it.
     const zoom = getViewport().zoom
-    setGhostRender({ scale: zoom, grabX, grabY })
+    setGhostRender({ scale: zoom })
 
     const ghostWidth = ghostDropWidth * zoom
     const ghostHeight = ghostDropHeight * zoom
@@ -269,12 +262,8 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         opacity: 0.8,
       }}
     >
-      {/* Rendered here at the drop size rather than reusing the palette's preview
-          element, so nothing is scaled after rasterisation. `SIDEBAR_PREVIEW_SCALE`
-          multiplies the rendered box while the viewBox stays in element units, so
-          the SVG is laid out for its dropped size and drawn at the zoom's on-screen
-          size — sharp at any zoom, where the previous `transform: scale()` stretched
-          a preview-sized bitmap. */}
+      {/* Rendered at the drop size so the SVG lays out for it, instead of reusing
+          the palette's preview element. */}
       {React.createElement(dropElementConfig.svg, {
         width: ghostDropWidth,
         height: ghostDropHeight,

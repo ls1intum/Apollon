@@ -140,11 +140,8 @@ function App({
   // The element whose feedback popover is open stays visibly marked for as long
   // as that form is mounted — see `applyAssessmentFocus`.
   //
-  // Only in assessment. `popoverElementId` is set by every popover in every mode,
-  // so marking unconditionally painted the amber "being assessed" ring around any
-  // element whose popover was opened while modelling — in the submission editor
-  // and on the exercise form alike, where there is no feedback form to mark.
-  // Editing selection stays blue; amber means "this element is marked".
+  // Assessment only: `popoverElementId` is set by every popover in every mode, and
+  // amber means "marked for feedback". Editing selection stays blue.
   const openPopoverElementId = usePopoverStore(
     (state) => state.popoverElementId
   )

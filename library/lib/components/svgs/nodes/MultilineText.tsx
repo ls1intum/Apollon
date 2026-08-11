@@ -140,13 +140,8 @@ export const MultilineText: FC<Props> = ({
       pointerEvents={pointerEvents}
       {...rest}
     >
-      {/* The baseline is repeated on every tspan, not just inherited from the
-          <text> above. A tspan that carries its own `y` starts a new positioning
-          run, and WebKit resolves the baseline per run: it ignores the parent's
-          value there and falls back to alphabetic, which lifts each line about
-          0.4em — measured at 5.8px on a 14px label — while Blink inherits it and
-          looks correct. That is the whole reason node names read as sitting too
-          high in Safari and fine in Chrome. */}
+      {/* Repeated per tspan: see CustomText — WebKit resolves the baseline per
+          positioning run, and each of these carries its own `y`. */}
       {displayLines.map((line, i) => (
         <tspan
           key={i}
