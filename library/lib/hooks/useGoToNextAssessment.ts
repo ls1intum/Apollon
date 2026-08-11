@@ -1,9 +1,14 @@
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
-import { usePopoverStore, useAssessmentSelectionStore } from "@/store/context"
+import {
+  usePopoverStore,
+  useAssessmentSelectionStore,
+  useMetadataStore,
+} from "@/store/context"
 import { useMemo } from "react"
 import { useReactFlow } from "@xyflow/react"
 import { assessedIdsFor, hasAssessmentToShow } from "@/utils/assessmentPresence"
+import { ApollonMode } from "@/typings"
 
 export type AssessmentNavigationDirection = "previous" | "next"
 
@@ -33,19 +38,35 @@ export const useAssessmentNavigation = (elementId: string) => {
   const setPopOverElementId = usePopoverStore(
     useShallow((state) => state.setPopOverElementId)
   )
+  const { diagramMode, readonly } = useMetadataStore(
+    useShallow((state) => ({
+      diagramMode: state.mode,
+      readonly: state.readonly,
+    }))
+  )
+  const isGivingFeedback = diagramMode === ApollonMode.Assessment && !readonly
 
-  // Only assessed elements are worth stepping through. Walking every node and
-  // edge meant "next assessment" mostly landed on things nobody had graded, and
-  // the reader had to keep pressing to find the next one that said anything.
-  // The element the reader is on stays in the list even when it is still
-  // unassessed, so a tutor writing feedback never loses their place mid-edit.
+  // What is worth stepping through depends on who is stepping — the same split
+  // `PopoverManager` already makes when it decides whether to open a popover at
+  // all.
+  //
+  // A tutor is grading: every element is a target, including the ones nobody has
+  // touched yet, because those are precisely the ones still needing feedback.
+  // Filtering to assessed elements left a fresh submission with a list of one —
+  // the element the tutor happened to open — so navigation disappeared exactly
+  // when it was most useful, at the start of an assessment.
+  //
+  // A reader is reading: an element nobody graded has nothing to say, so walking
+  // onto it is a dead end. Only elements with something to show are listed, plus
+  // the current one so the reader never loses their place.
   const elements = useMemo(() => {
     const all = [...nodes, ...edges]
+    if (isGivingFeedback) return all
     return all.filter((element) => {
       if (element.id === elementId) return true
       return hasAssessmentToShow(element.id, nodes, getAssessment)
     })
-  }, [nodes, edges, elementId, getAssessment])
+  }, [nodes, edges, elementId, getAssessment, isGivingFeedback])
   const currentIndex = elements.findIndex((element) => element.id === elementId)
   const total = elements.length
 
