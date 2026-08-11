@@ -8,7 +8,7 @@ import {
   getDistributedHandleOffsets,
   reduceVisibleArcCountForZoom,
 } from "@/utils"
-import { Handle, Position, useStore } from "@xyflow/react"
+import { Handle, Position, useNodeConnections, useStore } from "@xyflow/react"
 import { type CSSProperties, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
@@ -135,30 +135,20 @@ export function DefaultNodeWrapper({
     })
   )
   const isDiagramModifiable = useDiagramModifiable()
-  // Which of this node's handles an edge is actually anchored to, as a stable
-  // string so the selector only fires when the set changes rather than on every
-  // edge mutation. These must stay mounted whatever the zoom: React Flow derives
-  // an edge's endpoint from its handle's measured geometry, so unmounting one
-  // strands the edge.
-  const connectedHandleKey = useStore((state) => {
-    const ids: string[] = []
-    for (const edge of state.edges) {
-      if (edge.source === elementId && edge.sourceHandle)
-        ids.push(edge.sourceHandle)
-      if (edge.target === elementId && edge.targetHandle)
-        ids.push(edge.targetHandle)
+  // React Flow derives an edge's endpoint from its handle's measured geometry, so
+  // a handle an edge points at has to stay mounted. `useNodeConnections` reads the
+  // store's per-node connection map, which stays O(1) as the diagram grows.
+  const connections = useNodeConnections({ id: elementId })
+  const connectedHandleIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const connection of connections) {
+      if (connection.source === elementId && connection.sourceHandle)
+        ids.add(connection.sourceHandle)
+      if (connection.target === elementId && connection.targetHandle)
+        ids.add(connection.targetHandle)
     }
-    return ids.sort().join("\u0000")
-  })
-  const connectedHandleIds = useMemo(
-    () => new Set(connectedHandleKey ? connectedHandleKey.split("\u0000") : []),
-    [connectedHandleKey]
-  )
-  // While a connection is being dragged every anchor has to exist, so the drag can
-  // land on one that is not currently drawn.
-  const connectionInProgress = useStore(
-    (state) => state.connection?.inProgress === true
-  )
+    return ids
+  }, [connections, elementId])
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
@@ -187,10 +177,8 @@ export function DefaultNodeWrapper({
     transition: "opacity 120ms ease",
     overflow: "visible",
     boxSizing: "border-box" as const,
-    // `--arc-scale` is consumed by the arc ::before pseudo-element (see app.css)
-    // and published once for the whole canvas by `ArcScalePublisher`. It is
-    // deliberately not written here: doing so made every node subscribe to the
-    // zoom and re-render on every frame of a gesture.
+    // `--arc-scale` is published canvas-wide by `ArcScalePublisher`, deliberately
+    // not per node: writing it here subscribes every node to the zoom.
   } as CSSProperties
 
   // Each side carries nine grid-aligned offsets (slots 0..8). The five
@@ -222,10 +210,8 @@ export function DefaultNodeWrapper({
   //   visibleArcCount = 3 → arcs at slots 0, 4, 8 (corners + middle).
   //   visibleArcCount = 1 → arc at slot 4 only (centre).
   //
-  // The zoom is read through the reduction rather than on its own: the result is
-  // one of 1 | 3 | 5, so a node re-renders only when the count actually changes —
-  // a couple of times across a whole gesture — instead of on every frame, which
-  // is what selecting `transform[2]` directly used to cost on every node.
+  // Zoom is read through the reduction: the result is 1 | 3 | 5, so a node
+  // re-renders when the count changes rather than on every frame.
   const widthPlan = useMemo(() => getAxisHandlePlan(nodeWidth), [nodeWidth])
   const widthArcs = useStore((state) =>
     reduceVisibleArcCountForZoom(
@@ -612,30 +598,17 @@ export function DefaultNodeWrapper({
                 return null
               }
 
-              // Only the handles that are drawn, the ones an edge is anchored to,
-              // and — while a connection is in flight — all of them. A node
-              // otherwise mounted all 36 anchors regardless of how many were
-              // drawn, and at 45 nodes that was 2583 elements in the viewport,
-              // every one of them repainted at a new scale on each frame of a
-              // zoom. The rest exist only so a saved edge can resolve its anchor,
-              // which the connected set already covers.
-              // Only the handles that are drawn, the ones an edge is anchored to,
-              // and — while a connection is in flight — all of them. The rest exist
-              // only so a saved edge can resolve its anchor, which the connected set
-              // already covers.
-              //
-              // Mounting is deliberately NOT gated on hover: the arcs sit on the
-              // node's edge, which is where the pointer arrives, so a press can beat
-              // React's mount and start a drag instead of a connection. Hiding the
-              // idle ones is left to CSS, which is synchronous with the pointer.
+              // A node draws a fixed set of anchors but can address many more, and
+              // the rest exist only so a saved edge can resolve the one it points
+              // at. Mounting just those two sets keeps roughly two thirds of the
+              // handles off the canvas, which is the bulk of the per-frame React
+              // work on a large diagram.
               if (
-                !connectionInProgress &&
                 !visibleHandleIds.has(handle.id) &&
                 !connectedHandleIds.has(handle.id)
               ) {
                 return null
               }
-              const isAnchored = connectedHandleIds.has(handle.id)
 
               const isPrimaryHandle = visibleHandleIds.has(handle.id)
               const isGuidanceSourceHandle =
@@ -649,7 +622,6 @@ export function DefaultNodeWrapper({
                   id={handle.id}
                   className={[
                     handle.className,
-                    isAnchored ? "apollon-handle--anchored" : "",
                     isGuidanceSourceHandle
                       ? "apollon-connection-guidance-source"
                       : "",

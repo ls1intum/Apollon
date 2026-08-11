@@ -12,11 +12,10 @@ import {
   type NodeResizerProps,
 } from "@xyflow/react"
 
-// React Flow's corner handles default to 5x5, which is a very small thing to hit
-// with a mouse. 10x10 stays in the range diagram editors actually draw (Figma and
-// Excalidraw sit around 8, draw.io a little under) while being noticeably easier
-// to aim at; the grab area is widened separately below, since drawing a handle
-// large enough to satisfy a pointer target would dominate the node it belongs to.
+// React Flow's corner handles default to 5x5, too small to aim at. Drawn at
+// 10x10; the pointer target is widened separately in app.css.
+// The drawn corner square. `app.css` widens it to `--apollon-grab-target` from
+// this same size, so the two have to move together.
 const HANDLE_STYLE = { width: 10, height: 10 }
 
 // Marks every edge line so app.css can lift it over node content and widen its
@@ -56,13 +55,8 @@ const isAxisLocked = (min?: number, max?: number): boolean =>
  * looks and works resizable on the axis it can change, and no cursor anywhere
  * points a direction the drag won't go.
  *
- * Controls are additionally shown only while their node is selected. Call sites
- * pass `isVisible={isDiagramModifiable}`, which answers "may this diagram be
- * edited at all" — on its own that painted four corner handles and four edge
- * lines around every node on the canvas at once, permanently. Selection is the
- * conventional gate (React Flow documents a "NodeResizer when selected" example,
- * and every comparable editor behaves that way), and putting it here rather than
- * at the call sites keeps all forty of them unchanged.
+ * Controls also require the node to be selected. Gating here rather than at the
+ * call sites keeps every `isVisible={isDiagramModifiable}` site unchanged.
  */
 export function NodeResizer(props: NodeResizerProps) {
   const {
@@ -78,9 +72,7 @@ export function NodeResizer(props: NodeResizerProps) {
     ...resizeParams
   } = props
 
-  // `nodeId` is explicit at a couple of call sites and comes from context at the
-  // rest. Undefined when the resizer is rendered outside a node, where there is
-  // no selection to consult and so nothing to gate on.
+  // Undefined outside a node, where there is no selection to gate on.
   const contextNodeId = useNodeId()
   const nodeId = props.nodeId ?? contextNodeId
   const isNodeSelected = useStore((state) =>

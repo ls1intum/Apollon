@@ -709,28 +709,6 @@
   background-color: transparent;
 }
 
-/* An arc is transparent until its node is hovered or selected (see the reveal
-   rules further down), so on an idle canvas every one of them is an element that
-   is laid out and painted on every frame of a pan or zoom without ever being
-   seen. `display: none` takes them out of layout and paint entirely, and CSS
-   flips it back synchronously with the pointer — mounting them from JS instead
-   raced the press that starts a connection, because the arcs sit on the node's
-   edge, which is exactly where the pointer arrives.
-
-   Anchored handles are exempt: React Flow measures a handle's geometry to place
-   the edge attached to it, and `display: none` has no geometry. Guidance mode
-   drives handles directly, so it is exempt too. */
-.react-flow__node:not(:hover):not(.selected)
-  .react-flow__handle:not(.apollon-handle--anchored):not(.connectionindicator),
-.react-flow__node:not(:hover):not(.selected)
-  .react-flow__handle.apollon-arc-handle:not(.apollon-handle--anchored) {
-  display: none;
-}
-
-.apollon-editor--connection-guidance .react-flow__handle {
-  display: block;
-}
-
 .react-flow__handle.apollon-arc-handle::before {
   content: "";
   position: absolute;
@@ -805,38 +783,37 @@
 }
 
 /* ── Grab targets ─────────────────────────────────────────────────────────
-   Canvas affordances are drawn small so they do not swamp the diagram, and are
-   grabbed through a larger invisible area. Two sizes, and only two, so the
-   resizer does not offer a generous corner beside a hairline edge:
-
    `--apollon-grab-target` (24px) is a point target — a corner handle. WCAG 2.2
-   SC 2.5.8 (AA) asks for 24x24 CSS pixels and measures the region that accepts
-   the pointer, not the ink, which is exactly what these ::before boxes widen.
+   SC 2.5.8 (AA) asks for 24x24 CSS pixels and measures the region accepting the
+   pointer, not the ink, which is what these ::before boxes widen.
 
-   `--apollon-grab-band` (14px) is for an affordance that runs along an edge. It
-   matches `--arc-short`, the connection arc that sits at the same edge's
-   midpoint, so the two edge-anchored affordances present the same thickness;
-   z-index (arc 10, line 9) decides which wins where they meet. A full 24px band
-   is deliberately not used here: it would reach past the corner handles' own
-   24px targets and swallow them. */
+   `--apollon-grab-band` (14px) is for an affordance running along an edge, and
+   matches `--arc-short` so the arc at that edge's midpoint reads the same
+   thickness; z-index (arc 10, line 9) decides overlaps. A full 24px band would
+   reach past the corner handles' own targets and swallow them.
+
+   Both are on-screen sizes, but they get there differently: React Flow counter-
+   scales the corner handles for us (`autoScale` applies to its handle variant
+   only, never the line variant), so the band has to carry `--arc-scale` itself
+   at the point of use — the variable is published on the React Flow root, so a
+   `var()` in a token declared above it would resolve to the fallback. */
 .apollon-editor {
   --apollon-grab-target: 24px;
   --apollon-grab-band: 14px;
 }
 
-/* React Flow draws the edge lines 1px wide, a hair-thin grab target. Widen the
-   hit area without moving the visible border, the same way the connection arcs
-   get a usable target. Hover-gated via the base rule below, because it overhangs
-   the node edge onto whatever sits beneath. */
+/* React Flow draws the edge lines 1px wide. Widen the hit area without moving the
+   visible border; hover-gated below, because it overhangs onto whatever sits
+   beneath the node. */
 .apollon-resize-line::before {
   content: "";
   position: absolute;
-  inset: calc((1px - var(--apollon-grab-band)) / 2);
+  inset: calc((1px - var(--apollon-grab-band) * var(--arc-scale, 1)) / 2);
 }
 
-/* Same trick for the corner handles, which are a point target rather than a band:
-   the handle stays the 10x10 square set in NodeResizer while the ::before grows
-   it to the full 24x24. */
+/* Corner handles are a point target rather than a band: the drawn square stays,
+   the ::before grows the target to 24x24. The 10px is `HANDLE_STYLE` in
+   `NodeResizer.tsx`; the two have to move together. */
 .apollon-resize-handle::before {
   content: "";
   position: absolute;
@@ -1281,10 +1258,8 @@
    amber read as two unrelated things. Blue stays what it always was — selected
    for EDITING.
 
-   Scoped to the assessment editor like every other amber rule above. Leaving it
-   unscoped is what let the marking escape into modelling: the focus class is
-   driven by whichever popover is open, so an unscoped rule ringed elements amber
-   in the submission editor too. */
+   Assessment-scoped: the focus class follows whichever popover is open, and a
+   popover exists in every mode. */
 .apollon-editor--assessment .react-flow__node.apollon-assessment-focus {
   box-shadow: 0 0 0 2px var(--apollon-interactive-selection, #f39c12);
 }
@@ -1299,7 +1274,6 @@
     drop-shadow(0 0 2px var(--apollon-edge-highlight));
 }
 
-/* Assessment-scoped for the same reason as the node rule above. */
 .apollon-editor--assessment
   .react-flow__edge.apollon-assessment-focus
   .react-flow__edge-path,
