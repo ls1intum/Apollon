@@ -70,6 +70,20 @@ const CANVAS_RECT = {
   toJSON: () => {},
 } as DOMRect
 
+// The palette draws each element smaller than it drops (160x100 here), which is
+// the whole reason the grab point travels as a fraction rather than as pixels.
+const PREVIEW_RECT = {
+  left: 0,
+  top: 0,
+  right: 80,
+  bottom: 50,
+  width: 80,
+  height: 50,
+  x: 0,
+  y: 0,
+  toJSON: () => {},
+} as DOMRect
+
 let canvas: HTMLDivElement
 
 beforeEach(() => {
@@ -95,7 +109,9 @@ const mountGhost = () => {
       <div data-testid="entry">entry</div>
     </DraggableGhost>
   )
-  return getByRole("button")
+  const wrapper = getByRole("button")
+  wrapper.getBoundingClientRect = () => PREVIEW_RECT
+  return wrapper
 }
 
 // setNodes now takes a functional updater; run it against the current nodes.
@@ -155,7 +171,10 @@ describe("palette tap-to-place", () => {
 
   it("a drag drops at the pointer, unselected, and swallows the trailing click", () => {
     const wrapper = mountGhost()
-    fireEvent.pointerDown(wrapper, { clientX: 30, clientY: 30 })
+    // A quarter across and 30% down an 80x50 preview, so the node should land
+    // holding that same relative point of its 160x100 drop size: 40px and 30px
+    // in, both already on the 5px grid.
+    fireEvent.pointerDown(wrapper, { clientX: 20, clientY: 15 })
     fireEvent.pointerMove(document, { clientX: 400, clientY: 300 })
     fireEvent.pointerUp(document, { clientX: 400, clientY: 300 })
     fireEvent.click(wrapper) // the click a real drag also emits
@@ -163,7 +182,7 @@ describe("palette tap-to-place", () => {
     expect(setNodes).toHaveBeenCalledTimes(1) // click was swallowed
     const placed = placedNodes()
     // Pointer (400,300) backed out by the grabbed-point offset (30/0.8 → 35).
-    expect(placed[0].position).toEqual({ x: 365, y: 265 })
+    expect(placed[0].position).toEqual({ x: 360, y: 270 })
     expect(placed[0].selected).toBe(false)
     expect(setSelectedElementsId).not.toHaveBeenCalled()
   })

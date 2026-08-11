@@ -45,19 +45,15 @@ interface DraggableGhostProps {
    * Visual scale of the palette preview.
    * Used to convert pointer offsets into node-placement offsets.
    */
-  previewScale?: number
 }
 
 export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   children,
   dropElementConfig,
-  previewScale = DROPS.SIDEBAR_PREVIEW_SCALE,
 }) => {
   const { getViewport } = useReactFlow()
-  const { dropAtPointer, placeAtViewportCenter } = usePalettePlacement(
-    dropElementConfig,
-    previewScale
-  )
+  const { dropAtPointer, placeAtViewportCenter } =
+    usePalettePlacement(dropElementConfig)
   const { addElementLabel, nodeTypeLabel } = useMetadataStore(
     useShallow((state) => ({
       addElementLabel: state.labels.addElement,
@@ -96,7 +92,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   const pointerTypeRef = useRef<string>("mouse")
   // Cursor offset within the PREVIEW shape, backed out on drop so the grabbed
   // point stays under the pointer.
-  const clickOffsetRef = useRef<XYPosition>({ x: 0, y: 0 })
+  const grabFractionRef = useRef<XYPosition>({ x: 0, y: 0 })
   // True once a press has turned into a drag, so the trailing click is ignored.
   const draggedRef = useRef(false)
 
@@ -123,20 +119,18 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    clickOffsetRef.current = {
-      x: event.clientX - previewRect.left,
-      y: event.clientY - previewRect.top,
-    }
-
-    // Where the cursor sits inside the shape, as a fraction of it. The ghost is
-    // drawn at a different size from the palette preview, so a pixel offset taken
-    // here would not line up; a fraction does, at any zoom.
+    // Where the cursor sits inside the preview, as a fraction of it. The ghost and
+    // the dropped node are both drawn at sizes the palette preview does not share,
+    // so a pixel offset taken here would not line up with either; a fraction does,
+    // at any zoom. The drop reads this same fraction, so the ghost cannot end up
+    // anchored to a different point than the node it turns into.
     const grabX = previewRect.width
       ? (event.clientX - previewRect.left) / previewRect.width
       : 0
     const grabY = previewRect.height
       ? (event.clientY - previewRect.top) / previewRect.height
       : 0
+    grabFractionRef.current = { x: grabX, y: grabY }
 
     // Draw the ghost at the on-screen size the node will have at this zoom. The
     // drop size is used rather than the palette size so an element that drops
@@ -212,7 +206,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         : DROPS.TAP_SLOP_MOUSE_PX
     const placed =
       maxTravelRef.current >= slop &&
-      dropRef.current(event, clickOffsetRef.current)
+      dropRef.current(event, grabFractionRef.current)
     if (placed) suppressTrailingClick()
     else draggedRef.current = false
   }
