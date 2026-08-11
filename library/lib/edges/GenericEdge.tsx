@@ -42,8 +42,13 @@ export const getHandleScreenScale = (zoom: number): number => {
   return 1 / Math.min(safeZoom, 1)
 }
 
+// The reduction runs INSIDE the selector so Zustand compares the scale rather than
+// the raw zoom. The scale is exactly 1 for every zoom >= 1, so zooming in stops
+// re-rendering these handles entirely; selecting `transform[2]` and reducing
+// outside re-rendered every edge's handles on every frame of every gesture, which
+// is the bulk of what made zooming heavy on a diagram with edges.
 const useHandleScreenScale = (): number =>
-  getHandleScreenScale(useStore((state) => state.transform[2]))
+  useStore((state) => getHandleScreenScale(state.transform[2]))
 
 export type BaseEdgeProps = ExtendedEdgeProps
 const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44

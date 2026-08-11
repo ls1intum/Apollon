@@ -17,6 +17,7 @@ import {
 // `constants → components → solver → edgeAnchoring` import cycle that leaves module
 // constants undefined at init. The direct path keeps the solver out of the barrel.
 import { ConnectionPreviewLine } from "@/components/ConnectionPreviewLine"
+import { ArcScalePublisher } from "@/components/ArcScalePublisher"
 import { OverlayLayer } from "@/overlay/OverlayLayer"
 import "@xyflow/react/dist/style.css"
 // Shared, embed-safe @tumaet/ui primitives + --apollon-/--home- design tokens
@@ -306,6 +307,7 @@ function App({
             }
           >
             <CustomBackground />
+            <ArcScalePublisher />
             <AlignmentGuides />
             <AssessmentSelectionDebug />
             <EdgeGeometrySolver />

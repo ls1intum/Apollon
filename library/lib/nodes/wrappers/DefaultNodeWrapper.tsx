@@ -8,7 +8,6 @@ import {
   getDistributedHandleOffsets,
   reduceVisibleArcCountForZoom,
 } from "@/utils"
-import { CANVAS } from "@/constants"
 import { Handle, Position, useStore } from "@xyflow/react"
 import { type CSSProperties, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
@@ -136,19 +135,6 @@ export function DefaultNodeWrapper({
     })
   )
   const isDiagramModifiable = useDiagramModifiable()
-  // Connection indicators keep a usable minimum on-screen size when zoomed out
-  // and grow with the node when zoomed in (matching the edge handles):
-  //   scale = 1 / min(zoom, 1)  — constant on-screen for zoom<=1, natural >1.
-  const zoom = useStore((state) => state.transform[2])
-  const handleScreenScale =
-    1 /
-    Math.min(
-      Math.max(
-        Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
-        CANVAS.MIN_SCALE_TO_ZOOM_OUT
-      ),
-      1
-    )
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
@@ -177,9 +163,10 @@ export function DefaultNodeWrapper({
     transition: "opacity 120ms ease",
     overflow: "visible",
     boxSizing: "border-box" as const,
-    // Consumed by the arc ::before pseudo-element (see app.css) to keep the
-    // visible indicator a predictable on-screen size across zoom.
-    "--arc-scale": handleScreenScale,
+    // `--arc-scale` is consumed by the arc ::before pseudo-element (see app.css)
+    // and published once for the whole canvas by `ArcScalePublisher`. It is
+    // deliberately not written here: doing so made every node subscribe to the
+    // zoom and re-render on every frame of a gesture.
   } as CSSProperties
 
   // Each side carries nine grid-aligned offsets (slots 0..8). The five
@@ -210,22 +197,30 @@ export function DefaultNodeWrapper({
   //   visibleArcCount = 5 → arcs at slots 0, 2, 4, 6, 8 (every even slot).
   //   visibleArcCount = 3 → arcs at slots 0, 4, 8 (corners + middle).
   //   visibleArcCount = 1 → arc at slot 4 only (centre).
-  const widthArcs = useMemo(() => {
-    const plan = getAxisHandlePlan(nodeWidth)
-    return reduceVisibleArcCountForZoom(
-      plan.offsets,
-      plan.visibleArcCount,
-      zoom
+  //
+  // The zoom is read through the reduction rather than on its own: the result is
+  // one of 1 | 3 | 5, so a node re-renders only when the count actually changes —
+  // a couple of times across a whole gesture — instead of on every frame, which
+  // is what selecting `transform[2]` directly used to cost on every node.
+  const widthPlan = useMemo(() => getAxisHandlePlan(nodeWidth), [nodeWidth])
+  const widthArcs = useStore((state) =>
+    reduceVisibleArcCountForZoom(
+      widthPlan.offsets,
+      widthPlan.visibleArcCount,
+      state.transform[2]
     )
-  }, [nodeWidth, zoom])
-  const heightArcs = useMemo(() => {
-    const plan = getAxisHandlePlan(connectionHeight)
-    return reduceVisibleArcCountForZoom(
-      plan.offsets,
-      plan.visibleArcCount,
-      zoom
+  )
+  const heightPlan = useMemo(
+    () => getAxisHandlePlan(connectionHeight),
+    [connectionHeight]
+  )
+  const heightArcs = useStore((state) =>
+    reduceVisibleArcCountForZoom(
+      heightPlan.offsets,
+      heightPlan.visibleArcCount,
+      state.transform[2]
     )
-  }, [connectionHeight, zoom])
+  )
 
   const hiddenHandleSet = useMemo(
     () => (hiddenHandles === true ? null : new Set<string>(hiddenHandles)),

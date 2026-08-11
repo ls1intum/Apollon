@@ -1,4 +1,4 @@
-import { NodeProps, useStore, type Node } from "@xyflow/react"
+import { NodeProps, useStoreApi, type Node } from "@xyflow/react"
 import { useRef } from "react"
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor"
 import { DefaultNodeWrapper, NodeResizer } from "../wrappers"
@@ -37,7 +37,11 @@ function LaneResizeHandles({
   data: ActivitySwimlaneProps
 }) {
   const t = useLabels()
-  const zoom = useStore((state) => state.transform[2])
+  // Read imperatively at drag time, not subscribed. The zoom is only needed to
+  // convert a pointer delta into flow units while a divider is being dragged, so
+  // subscribing re-rendered every swimlane on every frame of every zoom gesture
+  // for a value nothing in the render output uses.
+  const store = useStoreApi()
   const setNodes = useDiagramStore(useShallow((state) => state.setNodes))
   const drag = useRef<{
     index: number
@@ -66,7 +70,7 @@ function LaneResizeHandles({
     if (!drag.current) return
     const { index, start, origLanes, primaryExtent } = drag.current
     const deltaScreen = (isVertical ? e.clientX : e.clientY) - start
-    const deltaPx = deltaScreen / (zoom || 1)
+    const deltaPx = deltaScreen / (store.getState().transform[2] || 1)
     const next = resizeLaneDivider(
       origLanes,
       index,
