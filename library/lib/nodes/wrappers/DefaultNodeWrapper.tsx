@@ -619,6 +619,15 @@ export function DefaultNodeWrapper({
               // every one of them repainted at a new scale on each frame of a
               // zoom. The rest exist only so a saved edge can resolve its anchor,
               // which the connected set already covers.
+              // Only the handles that are drawn, the ones an edge is anchored to,
+              // and — while a connection is in flight — all of them. The rest exist
+              // only so a saved edge can resolve its anchor, which the connected set
+              // already covers.
+              //
+              // Mounting is deliberately NOT gated on hover: the arcs sit on the
+              // node's edge, which is where the pointer arrives, so a press can beat
+              // React's mount and start a drag instead of a connection. Hiding the
+              // idle ones is left to CSS, which is synchronous with the pointer.
               if (
                 !connectionInProgress &&
                 !visibleHandleIds.has(handle.id) &&
@@ -626,6 +635,7 @@ export function DefaultNodeWrapper({
               ) {
                 return null
               }
+              const isAnchored = connectedHandleIds.has(handle.id)
 
               const isPrimaryHandle = visibleHandleIds.has(handle.id)
               const isGuidanceSourceHandle =
@@ -639,6 +649,7 @@ export function DefaultNodeWrapper({
                   id={handle.id}
                   className={[
                     handle.className,
+                    isAnchored ? "apollon-handle--anchored" : "",
                     isGuidanceSourceHandle
                       ? "apollon-connection-guidance-source"
                       : "",

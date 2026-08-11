@@ -709,6 +709,28 @@
   background-color: transparent;
 }
 
+/* An arc is transparent until its node is hovered or selected (see the reveal
+   rules further down), so on an idle canvas every one of them is an element that
+   is laid out and painted on every frame of a pan or zoom without ever being
+   seen. `display: none` takes them out of layout and paint entirely, and CSS
+   flips it back synchronously with the pointer — mounting them from JS instead
+   raced the press that starts a connection, because the arcs sit on the node's
+   edge, which is exactly where the pointer arrives.
+
+   Anchored handles are exempt: React Flow measures a handle's geometry to place
+   the edge attached to it, and `display: none` has no geometry. Guidance mode
+   drives handles directly, so it is exempt too. */
+.react-flow__node:not(:hover):not(.selected)
+  .react-flow__handle:not(.apollon-handle--anchored):not(.connectionindicator),
+.react-flow__node:not(:hover):not(.selected)
+  .react-flow__handle.apollon-arc-handle:not(.apollon-handle--anchored) {
+  display: none;
+}
+
+.apollon-editor--connection-guidance .react-flow__handle {
+  display: block;
+}
+
 .react-flow__handle.apollon-arc-handle::before {
   content: "";
   position: absolute;
