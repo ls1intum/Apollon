@@ -62,7 +62,7 @@ export const EdgeMiddleLabels = ({
         x={x}
         y={y}
         textAnchor="middle"
-        dominantBaseline="middle"
+        dominantBaseline="central"
         transform={`rotate(${rotation} ${x} ${y})`}
         style={{
           fontSize: "12px",

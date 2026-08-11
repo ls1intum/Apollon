@@ -4,6 +4,9 @@ import { CustomText } from "./CustomText"
 import { LAYOUT } from "@/constants"
 import { stereotypeLabel } from "@/utils"
 
+/** Half the gap between the stereotype line and the name, in SVG user units. */
+const STEREOTYPE_HALF_GAP = 9
+
 interface HeaderSectionProps {
   showStereotype: boolean
   stereotype?: ClassStereotype
@@ -40,20 +43,36 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
       <CustomText
         x={width / 2}
         y={headerHeight / 2}
-        dominantBaseline="middle"
+        dominantBaseline="central"
         textAnchor="middle"
         fontWeight="bold"
         textDecoration={isUnderlined ? "underline" : "normal"}
         fill={textColor}
       >
+        {/* `dominantBaseline` is repeated on each tspan rather than inherited from
+            the <text>. An `x` starts a new positioning run, and WebKit resolves the
+            baseline per run — it drops the parent's value and falls back to
+            alphabetic, lifting these titles about 5px, while Blink inherits it and
+            looks right. That is why the header names read as sitting high in Safari
+            only.
+
+            The two lines are also placed symmetrically about the centre. `dy` is
+            relative, so -9 then +18 leaves them at -9 and +9; the previous -8/+18
+            landed at -8 and +10, putting the pair's midpoint a pixel low. */}
         {showStereotype && stereotype && (
-          <tspan x={width / 2} dy="-8" fontSize="85%">
+          <tspan
+            x={width / 2}
+            dy={`-${STEREOTYPE_HALF_GAP}`}
+            dominantBaseline="central"
+            fontSize="85%"
+          >
             {stereotypeLabel(stereotype)}
           </tspan>
         )}
         <tspan
           x={width / 2}
-          dy={showStereotype && stereotype ? "18" : "0"}
+          dy={showStereotype && stereotype ? `${STEREOTYPE_HALF_GAP * 2}` : "0"}
+          dominantBaseline="central"
           fontStyle={isAbstract ? "italic" : "normal"}
         >
           {name}
