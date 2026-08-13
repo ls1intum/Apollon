@@ -878,10 +878,9 @@ export const dropElementConfigs: Readonly<
   ],
 })
 
-// Appended to every palette, whatever the diagram type — the general UML note (a
-// rectangle with a folded corner), nothing to do with colour. The
-// `colorDescription` type stays: it is serialised into saved diagrams and renaming
-// it would strand them.
+// Appended to every palette whatever the diagram type. This is the general UML
+// note, nothing to do with colour; the `colorDescription` type string stays
+// because it is in the published schema and in saved diagrams.
 export const ColorDescriptionConfig: DropElementConfig = Object.freeze({
   type: "colorDescription",
   width: 160,

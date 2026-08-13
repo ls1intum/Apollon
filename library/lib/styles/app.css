@@ -725,8 +725,8 @@
   pointer-events: all;
   cursor: crosshair;
 
-  /* --arc-scale is set by DefaultNodeWrapper to 1/zoom so the indicator keeps
-     a predictable on-screen size at any zoom (defaults to 1 if unset). */
+  /* --arc-scale counter-scales the arc so it holds an on-screen size across
+     zoom. Published on the React Flow root by ArcScalePublisher; 1 if unset. */
   --arc-long: calc(28px * var(--arc-scale, 1));
   --arc-short: calc(14px * var(--arc-scale, 1));
   --arc-radius: calc(14px * var(--arc-scale, 1));
@@ -948,9 +948,6 @@
   pointer-events: none;
 }
 
-/* Assessment is a reading/feedback surface, not a connection canvas. Keep the
-   React Flow handles mounted for edge geometry, but remove their visual and
-   pointer affordance so node selection is not polluted by connection circles. */
 /* Assessment is a reading/feedback surface, not a connection canvas. The handles
    stay mounted because edge geometry is measured from them, but they must be
    invisible AND inert. `pointer-events: none` on the handle is not enough: the
@@ -1224,10 +1221,8 @@
    along the same path and must win; assessment has no such handles, so widen
    the invisible ribbon to React Flow's own forgiving size. */
 .apollon-editor--assessment .edge-overlay {
-  /* Hit target only — it must never paint. The rules above already blank it on
-     hover and selection, and the coloured selection lives on the edge path, so
-     widening this only widens where a click lands. `opacity: 0` keeps it
-     hit-testable, and pointerEvents="stroke" does not need visible paint. */
+  /* Hit target only: the overlay carries no `stroke`, so widening it widens
+     only where a click lands. The colour lives on the edge path. */
   stroke-width: 32px;
 }
 
@@ -2178,10 +2173,6 @@ svg.react-flow__connectionline {
   color: var(--apollon-primary, #3e8acc);
 }
 
-/* Scroll lock. Centred over the canvas, no card: this is a caption explaining a
-   gesture the editor just declined, not an object to interact with. Same idiom
-   as an embedded map. Pointer-transparent throughout, so the gesture that
-   triggers it is never itself blocked by it. */
 /* Scroll lock. Centred over the canvas, no card: a caption explaining a gesture
    the editor just declined, not an object to interact with — the same idiom as
    an embedded map. Pointer-transparent throughout, so the very gesture that
@@ -2223,14 +2214,4 @@ svg.react-flow__connectionline {
   /* The veil is translucent, so the ink needs its own separation from whatever
      part of the diagram happens to sit behind it. */
   text-shadow: 0 1px 4px rgb(0 0 0 / 45%);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
 }

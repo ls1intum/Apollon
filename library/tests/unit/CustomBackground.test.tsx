@@ -69,10 +69,7 @@ describe("CustomBackground grid spacing", () => {
     gaps.length = 0
     render(<CustomBackground />)
 
-    // The finest visible grid line must coincide with the snap step: a
-    // grid-snapped node position or connection point always lands on a line.
     expect(Math.min(...gaps)).toBe(CANVAS.SNAP_TO_GRID_PX)
-    // A coarser major grid (10x) stays for readability.
     expect(gaps).toContain(CANVAS.SNAP_TO_GRID_PX * 10)
   })
 })

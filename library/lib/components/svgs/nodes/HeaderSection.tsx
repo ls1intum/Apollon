@@ -49,11 +49,7 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
         textDecoration={isUnderlined ? "underline" : "normal"}
         fill={textColor}
       >
-        {/* Baseline repeated per tspan: see CustomText — each carries its own `x`,
-            which starts a new positioning run.
-
-            `dy` is relative, so -HALF then +2*HALF places the two lines
-            symmetrically about the centre. */}
+        {/* Baseline repeated per tspan — each carries its own `x`. See CustomText. */}
         {showStereotype && stereotype && (
           <tspan
             x={width / 2}

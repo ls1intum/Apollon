@@ -12,10 +12,9 @@ import {
   type NodeResizerProps,
 } from "@xyflow/react"
 
-// React Flow's corner handles default to 5x5, too small to aim at. Drawn at
-// 10x10; the pointer target is widened separately in app.css.
-// The drawn corner square. `app.css` widens it to `--apollon-grab-target` from
-// this same size, so the two have to move together.
+// The drawn corner square (React Flow's own default is 5x5, too small to aim
+// at). `app.css` widens the ::before from this size to `--apollon-grab-target`,
+// so the two have to move together.
 const HANDLE_STYLE = { width: 10, height: 10 }
 
 // Marks every edge line so app.css can lift it over node content and widen its

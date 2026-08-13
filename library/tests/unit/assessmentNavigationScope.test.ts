@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { ApollonMode } from "@/typings"
 
-// A viewport that accepts the centring call without needing a real canvas.
 vi.mock("@xyflow/react", () => ({
   useReactFlow: () => ({ setCenter: vi.fn(), getZoom: () => 1 }),
 }))

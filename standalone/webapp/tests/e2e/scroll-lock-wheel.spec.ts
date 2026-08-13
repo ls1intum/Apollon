@@ -45,7 +45,7 @@ async function wheelOverCanvas(page: Page, modifier?: "Control") {
   if (modifier) await page.keyboard.up(modifier)
 }
 
-/** Whether a wheel over the canvas leaves its default action for the page. */
+/** True when the canvas swallows the wheel's default action. */
 async function wheelIsPrevented(page: Page) {
   return page.evaluate(() => {
     const pane = document.querySelector(".react-flow__pane")!

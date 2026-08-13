@@ -190,7 +190,6 @@ export function DefaultNodeWrapper({
     backgroundColor: "transparent",
     border: "none",
     zIndex: 10,
-    transition: "opacity 120ms ease",
     overflow: "visible",
     boxSizing: "border-box" as const,
     // `--arc-scale` is published canvas-wide by `ArcScalePublisher`, deliberately

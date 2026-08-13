@@ -14,7 +14,6 @@ export const ArcScalePublisher = () => {
   const domNode = useStore((state) => state.domNode)
   const scale = useStore((state) => getHandleScreenScale(state.transform[2]))
 
-  // Layout effect: this is a style the same frame paints with.
   useLayoutEffect(() => {
     domNode?.style.setProperty("--arc-scale", String(scale))
   }, [domNode, scale])

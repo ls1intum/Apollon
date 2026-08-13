@@ -140,8 +140,7 @@ export const MultilineText: FC<Props> = ({
       pointerEvents={pointerEvents}
       {...rest}
     >
-      {/* Repeated per tspan: see CustomText — WebKit resolves the baseline per
-          positioning run, and each of these carries its own `y`. */}
+      {/* Repeated per tspan — each carries its own `y`. See CustomText. */}
       {displayLines.map((line, i) => (
         <tspan
           key={i}

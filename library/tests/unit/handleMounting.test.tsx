@@ -32,7 +32,6 @@ import { DefaultNodeWrapper } from "@/nodes/wrappers/DefaultNodeWrapper"
 
 const NODE_ID = "node-1"
 
-/** Seeds the React Flow store so the wrapper has a real node and edge set to read. */
 const Seed = ({
   edges,
 }: {

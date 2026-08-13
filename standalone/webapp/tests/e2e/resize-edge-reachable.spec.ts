@@ -76,3 +76,34 @@ test("a swimlane's top edge is grabbable, not just its corners", async ({
 
   expect(await topEdgeHitsResizeLine(page, SWIMLANE_ID)).toBe(true)
 })
+
+/**
+ * The corner's drawn square is 10x10 but its pointer target is widened to
+ * `--apollon-grab-target` (24px, WCAG 2.2 SC 2.5.8) by a ::before with a
+ * negative inset. Only hit-testing can tell a widened target from a collapsed
+ * one: both are invisible, and the CSS reads the same either way.
+ */
+test("a corner is grabbable beyond its drawn square", async ({ page }) => {
+  await openFixtureInLocalEditor(page, MODEL as Record<string, unknown>)
+  await waitForCanvasReady(page)
+
+  const swimlane = page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`)
+  await swimlane.click()
+  await expect(swimlane).toHaveClass(/selected/)
+  const box = (await swimlane.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+
+  // 7px diagonally outside the bottom-right corner: inside the 24px target,
+  // outside the 10px square it is drawn as.
+  const hit = await page.evaluate(
+    ([x, y]) =>
+      Boolean(
+        document
+          .elementFromPoint(x, y)
+          ?.closest(".react-flow__resize-control.handle")
+      ),
+    [box.x + box.width + 7, box.y + box.height + 7]
+  )
+
+  expect(hit, "the corner's widened pointer target is not reachable").toBe(true)
+})

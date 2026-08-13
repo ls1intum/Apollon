@@ -66,10 +66,8 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   const assessmentNavigationState = useAssessmentNavigation(assessmentElementId)
   const navigation = assessmentNavigation ? assessmentNavigationState : null
 
-  // Mod is what makes this usable: the popover is mostly a points field and a
-  // comment box, so a bare arrow key belongs to the caret. Mod+Arrow is free in
-  // both, which lets a tutor finish a comment and move on without reaching for
-  // the mouse or tabbing out of the field first.
+  // The popover is mostly a points field and a comment box, so a bare arrow key
+  // belongs to the caret; Mod+Arrow is free in both.
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (!navigation?.canNavigate) return
     if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {

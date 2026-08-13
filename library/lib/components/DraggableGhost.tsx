@@ -32,7 +32,7 @@ const enableScroll = () => {
   document.body.style.touchAction = savedBodyTouchAction
 }
 
-/** The palette's painted theme, carried onto the `<body>`-portaled ghost. */
+/** The palette's painted theme, carried onto the portaled ghost. */
 interface GhostTheme {
   vars: React.CSSProperties
   dataTheme?: string
@@ -41,10 +41,6 @@ interface GhostTheme {
 interface DraggableGhostProps {
   children: React.ReactNode
   dropElementConfig: DropElementConfig
-  /**
-   * Visual scale of the palette preview.
-   * Used to convert pointer offsets into node-placement offsets.
-   */
 }
 
 export const DraggableGhost: React.FC<DraggableGhostProps> = ({
@@ -68,17 +64,13 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
 
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
-  // Cursor offset within the ENTRY, which is what the ghost renders. Differs from
-  // the preview offset because the entry flex-centres its preview; positioning
-  // the ghost by the preview offset would re-apply that centring and jump.
+  // Where the cursor sits inside the GHOST, so the grabbed point stays under the
+  // pointer as it moves.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
-  // Drawn at the node's final on-screen size rather than drawn small and scaled: a
-  // CSS transform rasterises the SVG at preview size and stretches the bitmap, so
-  // the ghost comes off the palette pixelated and worse the further the canvas is
-  // zoomed. Captured on grab; zoom cannot change mid palette-drag.
+  // Captured on grab; zoom cannot change mid palette-drag.
   const [ghostRender, setGhostRender] = useState({ scale: 1 })
-  // The theme the palette entry was painted under, captured on grab. The ghost
-  // portals to `document.body`, leaving the subtree that scopes `--apollon-*`.
+  // The theme the palette entry was painted under, captured on grab: the ghost
+  // portals out of the subtree that scopes `--apollon-*`.
   // Both halves are needed: the resolved token VALUES cover a mount themed by
   // inline custom properties or by a host stylesheet (VS Code), and `data-theme`
   // re-matches the attribute selectors in the editor's own CSS. A drag is
@@ -90,8 +82,10 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   const startRef = useRef<XYPosition | null>(null)
   const maxTravelRef = useRef(0)
   const pointerTypeRef = useRef<string>("mouse")
-  // Cursor offset within the PREVIEW shape, backed out on drop so the grabbed
-  // point stays under the pointer.
+  // Where the cursor grabbed the preview, as a FRACTION of its box; backed out on
+  // drop so that same point stays under the pointer. A pixel offset would not
+  // work: the ghost and the dropped node are drawn at sizes the preview does not
+  // share, so only a fraction lines up at any zoom.
   const grabFractionRef = useRef<XYPosition>({ x: 0, y: 0 })
   // True once a press has turned into a drag, so the trailing click is ignored.
   const draggedRef = useRef(false)
@@ -119,11 +113,6 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    // Where the cursor sits inside the preview, as a fraction of it. The ghost and
-    // the dropped node are both drawn at sizes the palette preview does not share,
-    // so a pixel offset taken here would not line up with either; a fraction does,
-    // at any zoom. The drop reads this same fraction, so the ghost cannot end up
-    // anchored to a different point than the node it turns into.
     const grabX = previewRect.width
       ? (event.clientX - previewRect.left) / previewRect.width
       : 0
@@ -239,10 +228,9 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     placeAtViewportCenter()
   }
 
-  // `fixed`, not `absolute`: the ghost portals into document.body and is
-  // positioned with viewport coordinates (clientX/clientY). `absolute` resolves
-  // against the document, so any page scroll would shift the ghost off the
-  // cursor when the editor is embedded below the fold; `fixed` matches clientX/Y.
+  // `fixed`, not `absolute`: the ghost is positioned in viewport coordinates
+  // (clientX/clientY), and `absolute` resolves against the document, so page
+  // scroll would shift it off the cursor when the editor sits below the fold.
   const ghostElement = (
     <div
       data-draggable-preview

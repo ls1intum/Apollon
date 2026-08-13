@@ -129,8 +129,7 @@ export const AssessmentSelectableWrapper: React.FC<
   }
 
   if (!showAssessmentInteraction) {
-    // No host highlight is the hot path (99% of renders): return a zero-box
-    // Fragment so ordinary modelling/editing pays no extra DOM/layout cost.
+    // Nothing to draw — render children bare so ordinary modelling adds no DOM.
     if (!highlightColor) return <>{children}</>
     if (asElement == "g") {
       return (

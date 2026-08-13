@@ -114,7 +114,7 @@ const mountGhost = () => {
   return wrapper
 }
 
-// setNodes now takes a functional updater; run it against the current nodes.
+// setNodes takes a functional updater; run it against the current nodes.
 const placedNodes = (): Node[] => {
   const updater = setNodes.mock.calls[0][0] as (prev: Node[]) => Node[]
   return updater(nodes)
@@ -181,7 +181,6 @@ describe("palette tap-to-place", () => {
 
     expect(setNodes).toHaveBeenCalledTimes(1) // click was swallowed
     const placed = placedNodes()
-    // Pointer (400,300) backed out by the grabbed-point offset (30/0.8 → 35).
     expect(placed[0].position).toEqual({ x: 360, y: 270 })
     expect(placed[0].selected).toBe(false)
     expect(setSelectedElementsId).not.toHaveBeenCalled()

@@ -67,7 +67,6 @@ test.describe("assessment mode has no connection affordance", () => {
     for (const h of handles) {
       expect(h.pointerEvents).toBe("none")
       expect(h.cursor).not.toBe("crosshair")
-      // The arc's hit area is the part that used to keep capturing.
       expect(h.beforePointerEvents).toBe("none")
       expect(h.beforeBackground).toBe("rgba(0, 0, 0, 0)")
     }

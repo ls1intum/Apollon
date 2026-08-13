@@ -14,7 +14,6 @@ import { ApollonMode, ApollonView } from "@/typings"
 import { FC } from "react"
 import { useShallow } from "zustand/shallow"
 
-// Assessment selectable wrapper for SVG elements
 interface AssessmentSelectableElementProps {
   elementId: string
   width: number
@@ -168,9 +167,6 @@ export const AssessmentSelectableElement: FC<
       onMouseLeave={handleElementMouseLeave}
     >
       {children}
-      {/* Content, then decoration, then badge. SVG paints in document order and
-          has no z-index, so this is the only way to get a tint that covers the
-          row it marks without covering the badge that says why it is marked. */}
       {(isSelected || isHighlighted) && (
         <rect
           x={0}

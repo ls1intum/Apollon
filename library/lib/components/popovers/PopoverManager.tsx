@@ -422,12 +422,10 @@ export const PopoverManager = ({
   } else if (isGivingFeedback) {
     Component = giveFeedbackPopovers[type] ?? null
   } else if (isSeeingFeedback) {
-    // A reader gets a popover only where there is something to read. A tutor
-    // still gets an empty form everywhere — that is how feedback is written —
-    // but for a student an element nobody graded has nothing to say, and
-    // answering every click with "Not graded" is noise. Members count: the
-    // popover lists a class's attributes and methods, so a class that is
-    // ungraded itself is still the only way to reach feedback on them.
+    // A reader gets a popover only where there is something to read; a tutor gets
+    // one everywhere, since that is how feedback is written. A class counts as
+    // having something to read when its attributes or methods are graded — the
+    // popover is the only way to reach their feedback.
     Component = hasAssessmentToShow(elementId, nodes, getAssessment)
       ? (seeFeedbackPopovers[type] ?? null)
       : null

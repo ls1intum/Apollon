@@ -110,7 +110,6 @@ describe("ApollonEditor.revealAssessment", () => {
         .edges.filter((edge) => edge.selected)
         .map((edge) => edge.id)
     ).toEqual(["edge-ab"])
-    // Selecting the edge must not leave a node selected alongside it.
     expect(
       internals.diagramStore.getState().nodes.some((node) => node.selected)
     ).toBe(false)

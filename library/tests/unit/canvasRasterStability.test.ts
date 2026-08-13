@@ -40,7 +40,6 @@ describe("canvas raster stability", () => {
   })
 
   it("keeps the glass blur token off by default", () => {
-    // The token is the single seam a host can flip; the default must be inert.
     const tokens = fs.readFileSync(
       path.join(
         __dirname,

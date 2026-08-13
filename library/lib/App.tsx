@@ -298,8 +298,8 @@ function App({
             // Flow's built-in handler listens on document and would otherwise
             // delete a selection while the user is elsewhere on the host page.
             deleteKeyCode={null}
-            // Arrow-key node nudging + Enter/Escape selection a11y are React
-            // Flow's; disable them together with the rest when shortcuts are off.
+            // Arrow-key nudging and Enter/Escape selection are React Flow's own
+            // document-level a11y keys; scope them with the rest.
             disableKeyboardA11y={!keyboardScopeActive}
             // React Flow implements these modifier keys with window/document
             // listeners. Mount them only while this editor owns the interaction,
