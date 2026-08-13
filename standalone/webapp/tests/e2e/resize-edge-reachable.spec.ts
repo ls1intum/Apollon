@@ -67,7 +67,10 @@ test("a swimlane's top edge is grabbable, not just its corners", async ({
 
   const swimlane = page.locator(`.react-flow__node[data-id="${SWIMLANE_ID}"]`)
   const box = (await swimlane.boundingBox())!
-  // Resize controls arm (and become hit-testable) only while the node is hovered.
+  // Resize controls exist only on a selected node, and arm (become hit-testable)
+  // only while it is also hovered.
+  await swimlane.click()
+  await expect(swimlane).toHaveClass(/selected/)
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.waitForTimeout(150)
 

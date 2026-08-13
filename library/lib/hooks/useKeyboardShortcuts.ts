@@ -142,9 +142,19 @@ export const useKeyboardShortcuts = (
     if (!enabled) return
     const editorRoot = editorRootRef.current
     if (!editorRoot) return
-    const onKeyDown = (event: KeyboardEvent) =>
+    // Listens on the document, then filters by containment, rather than on the
+    // root itself: React delegates its own listeners to the container it was
+    // mounted into, which is an ANCESTOR of this root. A listener on the root
+    // would therefore run BEFORE React's, see `defaultPrevented` still false,
+    // and act on keys an element had already handled — Delete on a waypoint
+    // would take the whole edge with it. Containment keeps the scope the same.
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target
+      if (!(target instanceof Node) || !editorRoot.contains(target)) return
       handleShortcutKeydown(event, depsRef.current)
-    editorRoot.addEventListener("keydown", onKeyDown)
-    return () => editorRoot.removeEventListener("keydown", onKeyDown)
+    }
+    const ownerDocument = editorRoot.ownerDocument
+    ownerDocument.addEventListener("keydown", onKeyDown)
+    return () => ownerDocument.removeEventListener("keydown", onKeyDown)
   }, [editorRootRef, enabled])
 }

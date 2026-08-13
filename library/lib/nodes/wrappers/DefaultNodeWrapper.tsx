@@ -8,8 +8,14 @@ import {
   getDistributedHandleOffsets,
   reduceVisibleArcCountForZoom,
 } from "@/utils"
-import { Handle, Position, useNodeConnections, useStore } from "@xyflow/react"
-import { type CSSProperties, useMemo } from "react"
+import {
+  Handle,
+  Position,
+  useNodeConnections,
+  useStore,
+  useUpdateNodeInternals,
+} from "@xyflow/react"
+import { type CSSProperties, useEffect, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
 // Handle IDs label the 9 connection points distributed across each side. The
@@ -149,6 +155,16 @@ export function DefaultNodeWrapper({
     }
     return ids
   }, [connections, elementId])
+
+  // A handle an edge points at is often not one this node draws, so it mounts
+  // only once that edge exists. React Flow measures a node's handles once and
+  // keeps that result for the life of the node, so a handle appearing later has
+  // no geometry, and the edge needing it resolves no endpoint and does not
+  // render at all. Re-measuring when the set changes is the supported way back.
+  const updateNodeInternals = useUpdateNodeInternals()
+  useEffect(() => {
+    updateNodeInternals(elementId)
+  }, [connectedHandleIds, elementId, updateNodeInternals])
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,

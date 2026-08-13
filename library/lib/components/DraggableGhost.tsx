@@ -245,6 +245,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // cursor when the editor is embedded below the fold; `fixed` matches clientX/Y.
   const ghostElement = (
     <div
+      data-draggable-preview
       data-theme={ghostTheme.dataTheme}
       style={{
         ...ghostTheme.vars,

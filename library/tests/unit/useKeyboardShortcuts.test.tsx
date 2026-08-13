@@ -69,8 +69,10 @@ describe("useKeyboardShortcuts", () => {
 
   it("keeps one listener across re-renders and drops it on unmount", () => {
     const editorRoot = createEditorRoot()
-    const add = vi.spyOn(editorRoot, "addEventListener")
-    const remove = vi.spyOn(editorRoot, "removeEventListener")
+    // Bound on the document and filtered by containment, so that React — which
+    // delegates from an ancestor of this root — gets its turn first.
+    const add = vi.spyOn(document, "addEventListener")
+    const remove = vi.spyOn(document, "removeEventListener")
 
     const { rerender, unmount, diagramStore } = mount(true, editorRoot)
     const registrations = () =>
@@ -90,6 +92,17 @@ describe("useKeyboardShortcuts", () => {
 
     add.mockRestore()
     remove.mockRestore()
+  })
+
+  it("ignores a key pressed outside its own editor", () => {
+    const { editorRoot } = mount(true)
+    const outside = document.createElement("div")
+    document.body.append(outside)
+
+    // Listening on the document would otherwise answer for the whole page and
+    // for sibling editors; containment is what keeps the scope.
+    expect(selectAll(outside)).toBe(true)
+    expect(selectAll(editorRoot.firstElementChild!)).toBe(false)
   })
 
   it("binds nothing when the host turns shortcuts off", () => {
