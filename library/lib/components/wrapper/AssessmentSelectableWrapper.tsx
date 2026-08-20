@@ -198,7 +198,7 @@ export const AssessmentSelectableWrapper: React.FC<
   }
   return (
     <div
-      className="nodrag nopan"
+      className={`nodrag nopan ${highlightClass}`}
       data-apollon-element-id={elementId}
       style={combinedStyle}
       onPointerDown={handleElementClick}

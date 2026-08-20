@@ -712,6 +712,7 @@
 .react-flow__handle.apollon-arc-handle::before {
   content: "";
   position: absolute;
+
   /* Transparent until the node is hovered or selected; the reveal rules below
      supply the colour. Alpha lives in the colour, not in `opacity`. */
   background-color: transparent;
@@ -888,6 +889,7 @@
 .react-flow__node:hover .react-flow__resize-control {
   pointer-events: all;
 }
+
 .react-flow__node:hover .react-flow__resize-control.handle,
 .react-flow__node.selected .react-flow__resize-control.handle {
   background-color: var(--apollon-primary, #3e8acc);
@@ -908,20 +910,31 @@
   pointer-events: none;
 }
 
+/* Assessment is a reading/feedback surface, not a connection canvas. The handles
+   stay mounted because edge geometry is measured from them, but they must be
+   invisible AND inert. `pointer-events: none` on the handle is not enough: the
+   arc's ::before sets `pointer-events: all` when its node is hovered, and a
+   descendant that opts back in is hit-testable even inside a `none` parent — so
+   it kept swallowing the pointer and showing a crosshair over a diagram nobody
+   can connect. The lower-specificity rules come before the ordinary hover rules;
+   the assessment-hover overrides follow them below. */
+.apollon-editor--assessment .react-flow__handle.apollon-arc-handle::before {
+  background-color: transparent !important;
+  pointer-events: none !important;
+}
+
+.apollon-editor--assessment .react-flow__handle,
+.apollon-editor--assessment .react-flow__handle.connectionindicator {
+  border-color: transparent !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
 .react-flow__node:hover .react-flow__handle,
 .apollon-editor--connection-guidance .react-flow__handle.connectionindicator,
 .react-flow__node:hover .react-flow__handle.connectionindicator {
   pointer-events: all;
-}
-
-/* Arcs are armed on their own hit area (see the base rule above). A selected
-   node is lifted above its neighbours (elevateNodesOnSelect), so its protruding
-   arcs, if armed, would cover clicks meant for an overlapping node beneath it.
-   Disarm them while the node is selected but not hovered; hovering re-arms them,
-   so an arc on the node you're pointing at stays grabbable. */
-.react-flow__node.selected:not(:hover)
-  .react-flow__handle.apollon-arc-handle::before {
-  pointer-events: none;
 }
 
 .react-flow__node:hover .react-flow__handle {
@@ -942,20 +955,16 @@
   background-color: transparent;
 }
 
-.apollon-editor--connection-guidance
+/* Arcs are armed on their own hit area (see the base rule above). A selected
+   node is lifted above its neighbours (elevateNodesOnSelect), so its protruding
+   arcs, if armed, would cover clicks meant for an overlapping node beneath it.
+   Disarm them while the node is selected but not hovered; hovering re-arms them,
+   so an arc on the node you're pointing at stays grabbable. */
+.react-flow__node.selected:not(:hover)
   .react-flow__handle.apollon-arc-handle::before {
-  background-color: transparent;
   pointer-events: none;
 }
 
-/* Assessment is a reading/feedback surface, not a connection canvas. The handles
-   stay mounted because edge geometry is measured from them, but they must be
-   invisible AND inert. `pointer-events: none` on the handle is not enough: the
-   arc's ::before sets `pointer-events: all` when its node is hovered, and a
-   descendant that opts back in is hit-testable even inside a `none` parent — so
-   it kept swallowing the pointer and showing a crosshair over a diagram nobody
-   can connect. Disarm the pseudo-element too, and take the cursor back. */
-.apollon-editor--assessment .react-flow__handle.apollon-arc-handle::before,
 .apollon-editor--assessment
   .react-flow__node:hover
   .react-flow__handle.apollon-arc-handle::before {
@@ -963,13 +972,17 @@
   pointer-events: none !important;
 }
 
-.apollon-editor--assessment .react-flow__handle,
-.apollon-editor--assessment .react-flow__node:hover .react-flow__handle,
-.apollon-editor--assessment .react-flow__handle.connectionindicator {
+.apollon-editor--assessment .react-flow__node:hover .react-flow__handle {
   border-color: transparent !important;
   background-color: transparent !important;
   pointer-events: none !important;
   cursor: default !important;
+}
+
+.apollon-editor--connection-guidance
+  .react-flow__handle.apollon-arc-handle::before {
+  background-color: transparent;
+  pointer-events: none;
 }
 
 /* Coarse-pointer fallback for the hover-gated rules above. Touch devices never
@@ -987,6 +1000,25 @@
     .react-flow__handle.apollon-arc-handle::before {
     pointer-events: all;
   }
+}
+
+.react-flow__node {
+  /* A ring drawn as a box-shadow, reserved transparent so hovering only changes
+     its colour and never its geometry — a `border` here used to nudge nodes by a
+     pixel.
+
+     box-shadow rather than outline, deliberately: an outline is painted last in
+     its element's paint order, ON TOP of every descendant, so it cut across the
+     assessment badges (check / cross / alert) that sit at the node's edge. An
+     outer box-shadow paints with the element's background, underneath its
+     content, so the badges stay legible. */
+  box-shadow: 0 0 0 2px transparent;
+  z-index: 9998;
+}
+
+.react-flow__node:hover,
+.react-flow__node.selected {
+  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
 }
 
 /* During connection guidance, lift only the source and target nodes (and their
@@ -1147,6 +1179,17 @@
   cursor: grabbing !important;
 }
 
+/* Assessment needs the edge to be EASY TO HIT, nothing more — its selected and
+   highlighted look stays the wrapper's own inherited stroke, exactly as before.
+   Edit mode keeps the narrow 15px overlay because bend and endpoint handles sit
+   along the same path and must win; assessment has no such handles, so widen
+   the invisible ribbon to React Flow's own forgiving size. */
+.apollon-editor--assessment .edge-overlay {
+  /* Hit target only: the overlay carries no `stroke`, so widening it widens
+     only where a click lands. The colour lives on the edge path. */
+  stroke-width: 32px;
+}
+
 .react-flow__edge:hover .edge-overlay {
   opacity: 0;
 }
@@ -1158,6 +1201,21 @@
      clicking a selected edge's body must still land on it rather than fall through to
      the pane and deselect. At ±7.5px it never reaches a co-located neighbour's handle. */
   opacity: 0;
+}
+
+/* Host highlight on an edge: glow the drawn stroke, never the whole group. The
+   group also contains the edge's assessment badge, and an SVG filter applies to
+   every descendant — filtering the group tinted that badge with the highlight
+   colour, so a green "correct" check read as orange. */
+.apollon-edge-highlight .react-flow__edge-path,
+.apollon-edge-highlight [data-inline-marker] {
+  filter: drop-shadow(0 0 2px var(--apollon-edge-highlight))
+    drop-shadow(0 0 2px var(--apollon-edge-highlight));
+}
+
+.apollon-highlight--selected .react-flow__edge-path,
+.apollon-highlight--highlighted .react-flow__edge-path {
+  stroke-width: 3px;
 }
 
 .react-flow__edge:hover .react-flow__edge-path,
@@ -1215,35 +1273,6 @@
   box-shadow: 0 0 0 2px var(--apollon-interactive-selection, #f39c12);
 }
 
-/* Assessment needs the edge to be EASY TO HIT, nothing more — its selected and
-   highlighted look stays the wrapper's own inherited stroke, exactly as before.
-   Edit mode keeps the narrow 15px overlay because bend and endpoint handles sit
-   along the same path and must win; assessment has no such handles, so widen
-   the invisible ribbon to React Flow's own forgiving size. */
-.apollon-editor--assessment .edge-overlay {
-  /* Hit target only: the overlay carries no `stroke`, so widening it widens
-     only where a click lands. The colour lives on the edge path. */
-  stroke-width: 32px;
-}
-
-.react-flow__node {
-  /* A ring drawn as a box-shadow, reserved transparent so hovering only changes
-     its colour and never its geometry — a `border` here used to nudge nodes by a
-     pixel.
-
-     box-shadow rather than outline, deliberately: an outline is painted last in
-     its element's paint order, ON TOP of every descendant, so it cut across the
-     assessment badges (check / cross / alert) that sit at the node's edge. An
-     outer box-shadow paints with the element's background, underneath its
-     content, so the badges stay legible. */
-  box-shadow: 0 0 0 2px transparent;
-}
-
-.react-flow__node:hover,
-.react-flow__node.selected {
-  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
-}
-
 /* The element being assessed stays marked for as long as its feedback form is
    open — hovering elsewhere, or the popover taking focus, must not make the
    reader lose track of what they are looking at.
@@ -1257,16 +1286,6 @@
    popover exists in every mode. */
 .apollon-editor--assessment .react-flow__node.apollon-assessment-focus {
   box-shadow: 0 0 0 2px var(--apollon-interactive-selection, #f39c12);
-}
-
-/* Host highlight on an edge: glow the drawn stroke, never the whole group. The
-   group also contains the edge's assessment badge, and an SVG filter applies to
-   every descendant — filtering the group tinted that badge with the highlight
-   colour, so a green "correct" check read as orange. */
-.apollon-edge-highlight .react-flow__edge-path,
-.apollon-edge-highlight [data-inline-marker] {
-  filter: drop-shadow(0 0 2px var(--apollon-edge-highlight))
-    drop-shadow(0 0 2px var(--apollon-edge-highlight));
 }
 
 .apollon-editor--assessment
@@ -1321,11 +1340,6 @@
   stroke: var(--apollon-highlight-color);
 }
 
-.apollon-highlight--selected .react-flow__edge-path,
-.apollon-highlight--highlighted .react-flow__edge-path {
-  stroke-width: 3px;
-}
-
 /* The picker alone tints the edge's hit ribbon, at its own narrow width. The
    assessment ribbon is widened for reach, so painting it there would draw a
    slab across the diagram rather than mark a line. */
@@ -1337,10 +1351,6 @@
 
 .react-flow__edges {
   z-index: 9999;
-}
-
-.react-flow__node {
-  z-index: 9998;
 }
 
 /* Connection line shown when dragging from a node handle to create a new edge.
@@ -1807,6 +1817,7 @@ svg.react-flow__connectionline {
 .apollon-popover__content {
   box-sizing: border-box;
   min-height: 0;
+
   /* Keep Base UI/shadcn focus rings inside the scroll viewport instead of
      letting the scroll container clip their outer ring. The negative margin
      preserves the popover's original visual inset. */
@@ -2204,6 +2215,7 @@ svg.react-flow__connectionline {
   text-align: center;
   text-wrap: balance;
   color: var(--apollon-scroll-lock-text, #fff);
+
   /* Big enough to read at a glance from anywhere on the canvas. Flat rather than
      viewport- or container-relative: this hint appears over editors of wildly
      different heights (a full-page canvas, a short embedded tile), and a
@@ -2211,6 +2223,7 @@ svg.react-flow__connectionline {
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.4;
+
   /* The veil is translucent, so the ink needs its own separation from whatever
      part of the diagram happens to sit behind it. */
   text-shadow: 0 1px 4px rgb(0 0 0 / 45%);

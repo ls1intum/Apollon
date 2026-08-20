@@ -220,7 +220,7 @@
      foreground would invert to a white wash in dark mode. Public so a host can
      retint it; the hint's ink is paired with it. */
   --apollon-scroll-lock-veil: color-mix(in srgb, #12161f 45%, transparent);
-  --apollon-scroll-lock-text: #ffffff;
+  --apollon-scroll-lock-text: #fff;
   --apollon-gray-variant: var(--primitive-gray-700);
   --apollon-danger: var(--primitive-danger-color);
   --apollon-guide-vertical: var(--primitive-guide-vertical);
@@ -548,6 +548,7 @@
   );
   --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
   --apollon-chrome-accent-contrast: var(--apollon-primary-foreground, #fff);
+
   /* Without the blur above, the tint alone has to keep chrome text legible over
      a busy diagram, so it matches the solid variant rather than the old 80% that
      relied on the blur to do the rest. */
@@ -737,7 +738,7 @@
 
   /* The canvas is already dark, so the veil leans further down to stay legible
      as a dim rather than a haze. */
-  --apollon-scroll-lock-veil: color-mix(in srgb, #000000 58%, transparent);
+  --apollon-scroll-lock-veil: color-mix(in srgb, #000 58%, transparent);
   --apollon-danger: var(--primitive-danger-color);
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
