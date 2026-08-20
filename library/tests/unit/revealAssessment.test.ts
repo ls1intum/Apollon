@@ -48,7 +48,25 @@ const MODEL = {
       data: { points: [] },
     },
   ],
-  assessments: {},
+  assessments: {
+    "node-b": {
+      modelElementId: "node-b",
+      elementType: "class",
+      score: 1,
+    },
+    "edge-ab": {
+      modelElementId: "edge-ab",
+      elementType: "ClassUnidirectional",
+      score: 0,
+      feedback: "Edge feedback",
+    },
+    "attr-a1": {
+      modelElementId: "attr-a1",
+      elementType: "classAttribute",
+      score: 0,
+      feedback: "Attribute feedback",
+    },
+  },
 }
 
 describe("ApollonEditor.revealAssessment", () => {
@@ -170,12 +188,13 @@ describe("ApollonEditor.revealAssessment", () => {
     ).toEqual(["node-a"])
   })
 
-  it("falls back to the id itself when nothing owns it", () => {
+  it("does not leave a popover target for ungraded read-only feedback", () => {
+    editor.revealAssessment("node-b")
     expect(() => editor.revealAssessment("ghost-id")).not.toThrow()
     const internals = editor as unknown as {
       popoverStore: { getState: () => { popoverElementId: string | null } }
     }
-    expect(internals.popoverStore.getState().popoverElementId).toBe("ghost-id")
+    expect(internals.popoverStore.getState().popoverElementId).toBeNull()
   })
 
   it("selects without opening editing UI outside assessment mode", () => {

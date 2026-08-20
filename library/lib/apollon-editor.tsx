@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom/client"
-import { assessedIdsFor } from "@/utils/assessmentPresence"
+import { assessedIdsFor, hasAssessmentToShow } from "@/utils/assessmentPresence"
 import type { CSSProperties } from "react"
 // Must be imported FIRST (before ./utils, the stores and overlay modules) so the
 // editor render tree — and the node/edge component registries it pulls in —
@@ -1144,7 +1144,8 @@ export class ApollonEditor {
     elementId: string | null,
     options?: { reveal?: boolean }
   ): void {
-    const { nodes, edges, setLocalSelection } = this.diagramStore.getState()
+    const { nodes, edges, getAssessment, setLocalSelection } =
+      this.diagramStore.getState()
 
     if (elementId === null) {
       setLocalSelection([])
@@ -1176,13 +1177,13 @@ export class ApollonEditor {
     this.assessmentSelectionStore
       .getState()
       .selectMultipleElements(assessedIdsFor(elementId, nodes))
+    const { mode, readonly } = this.metadataStore.getState()
+    const canOpenFeedback =
+      mode === Apollon.ApollonMode.Assessment &&
+      (!readonly || hasAssessmentToShow(targetId, nodes, getAssessment))
     this.popoverStore
       .getState()
-      .setPopOverElementId(
-        this.metadataStore.getState().mode === Apollon.ApollonMode.Assessment
-          ? targetId
-          : null
-      )
+      .setPopOverElementId(canOpenFeedback ? targetId : null)
 
     if (options?.reveal === false || !isTopLevel) return
 
