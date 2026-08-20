@@ -1,5 +1,5 @@
 import { usePopoverStore } from "@/store/context"
-import { useMetadataStore } from "@/store"
+import { useDiagramStore, useMetadataStore } from "@/store"
 import { ApollonMode } from "@/typings"
 import {
   NodeMouseHandler,
@@ -12,10 +12,19 @@ import { useShallow } from "zustand/shallow"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { isElementInOverlay } from "@/keyboard"
 import { useCallback } from "react"
+import { hasAssessmentToShow } from "@/utils/assessmentPresence"
 
 export const useElementInteractions = () => {
   const isDiagramModifiable = useDiagramModifiable()
-  const mode = useMetadataStore((state) => state.mode)
+  const { mode, readonly } = useMetadataStore(
+    useShallow((state) => ({ mode: state.mode, readonly: state.readonly }))
+  )
+  const { nodes, getAssessment } = useDiagramStore(
+    useShallow((state) => ({
+      nodes: state.nodes,
+      getAssessment: state.getAssessment,
+    }))
+  )
   const { setPopOverElementId } = usePopoverStore(
     useShallow((state) => ({
       setPopOverElementId: state.setPopOverElementId,
@@ -59,18 +68,38 @@ export const useElementInteractions = () => {
 
   const onNodeClick: NodeMouseHandler<Node> = useCallback(
     (_event, node) => {
-      if (!canOpenAssessmentPopover) return
+      if (
+        !canOpenAssessmentPopover ||
+        (readonly && !hasAssessmentToShow(node.id, nodes, getAssessment))
+      )
+        return
       setPopOverElementId(node.id)
     },
-    [canOpenAssessmentPopover, setPopOverElementId]
+    [
+      canOpenAssessmentPopover,
+      getAssessment,
+      nodes,
+      readonly,
+      setPopOverElementId,
+    ]
   )
 
   const onEdgeClick: EdgeMouseHandler<Edge> = useCallback(
     (_event, edge) => {
-      if (!canOpenAssessmentPopover) return
+      if (
+        !canOpenAssessmentPopover ||
+        (readonly && !hasAssessmentToShow(edge.id, nodes, getAssessment))
+      )
+        return
       setPopOverElementId(edge.id)
     },
-    [canOpenAssessmentPopover, setPopOverElementId]
+    [
+      canOpenAssessmentPopover,
+      getAssessment,
+      nodes,
+      readonly,
+      setPopOverElementId,
+    ]
   )
   return {
     onBeforeDelete,

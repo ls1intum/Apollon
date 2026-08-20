@@ -3,8 +3,14 @@ import type { ReactNode } from "react"
 import { renderHook } from "@testing-library/react"
 import { createMetadataStore } from "@/store/metadataStore"
 import { createPopoverStore } from "@/store/popoverStore"
-import { MetadataStoreContext, PopoverStoreContext } from "@/store/context"
+import { createDiagramStore } from "@/store/diagramStore"
+import {
+  DiagramStoreContext,
+  MetadataStoreContext,
+  PopoverStoreContext,
+} from "@/store/context"
 import { useElementInteractions } from "@/hooks/useElementInteractions"
+import * as Y from "yjs"
 
 /**
  * `onBeforeDelete` is the one gate every React Flow deletion funnels through.
@@ -12,13 +18,18 @@ import { useElementInteractions } from "@/hooks/useElementInteractions"
  * over the canvas — React Flow's delete listener is document-level, so without
  * this a dialog's Delete would remove the selection behind it.
  */
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <MetadataStoreContext value={createMetadataStore()}>
-    <PopoverStoreContext value={createPopoverStore()}>
-      {children}
-    </PopoverStoreContext>
-  </MetadataStoreContext>
-)
+const wrapper = ({ children }: { children: ReactNode }) => {
+  const ydoc = new Y.Doc()
+  return (
+    <DiagramStoreContext value={createDiagramStore(ydoc)}>
+      <MetadataStoreContext value={createMetadataStore(ydoc)}>
+        <PopoverStoreContext value={createPopoverStore()}>
+          {children}
+        </PopoverStoreContext>
+      </MetadataStoreContext>
+    </DiagramStoreContext>
+  )
+}
 
 const onBeforeDelete = () =>
   renderHook(() => useElementInteractions(), { wrapper }).result.current
@@ -34,10 +45,13 @@ describe("useElementInteractions.onBeforeDelete", () => {
   it("keeps React Flow callback identities stable across parent renders", () => {
     const metadata = createMetadataStore()
     const popover = createPopoverStore()
+    const diagram = createDiagramStore(new Y.Doc())
     const stableWrapper = ({ children }: { children: ReactNode }) => (
-      <MetadataStoreContext value={metadata}>
-        <PopoverStoreContext value={popover}>{children}</PopoverStoreContext>
-      </MetadataStoreContext>
+      <DiagramStoreContext value={diagram}>
+        <MetadataStoreContext value={metadata}>
+          <PopoverStoreContext value={popover}>{children}</PopoverStoreContext>
+        </MetadataStoreContext>
+      </DiagramStoreContext>
     )
     const hook = renderHook(() => useElementInteractions(), {
       wrapper: stableWrapper,

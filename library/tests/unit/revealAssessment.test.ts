@@ -208,6 +208,8 @@ describe("ApollonEditor.revealAssessment", () => {
       model: MODEL,
     })
 
+    const selectionChanges: string[][] = []
+    editor.subscribeToSelectionChange((ids) => selectionChanges.push(ids))
     editor.revealAssessment("edge-ab")
 
     const internals = editor as unknown as {
@@ -222,6 +224,7 @@ describe("ApollonEditor.revealAssessment", () => {
     expect(internals.diagramStore.getState().selectedElementIds).toEqual([
       "edge-ab",
     ])
+    expect(selectionChanges).toEqual([["edge-ab"]])
     expect(getEdgesMap(internals.ydoc).get("edge-ab")?.selected).toBeUndefined()
     expect(internals.diagramStore.getState().undoManager?.undoStack).toEqual([])
   })
