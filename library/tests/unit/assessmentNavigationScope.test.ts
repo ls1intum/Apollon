@@ -2,14 +2,23 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 import { ApollonMode } from "@/typings"
 
+const { setCenter } = vi.hoisted(() => ({ setCenter: vi.fn() }))
+
 vi.mock("@xyflow/react", () => ({
-  useReactFlow: () => ({ setCenter: vi.fn(), getZoom: () => 1 }),
+  useReactFlow: () => ({ setCenter, getZoom: () => 1 }),
 }))
 
 type Assessment = { score?: number; feedback?: string }
 
 const nodes = [
-  { id: "graded", position: { x: 0, y: 0 }, width: 10, height: 10 },
+  { id: "parent", position: { x: 100, y: 200 }, width: 200, height: 200 },
+  {
+    id: "graded",
+    parentId: "parent",
+    position: { x: 10, y: 20 },
+    width: 10,
+    height: 10,
+  },
   { id: "ungraded-a", position: { x: 50, y: 0 }, width: 10, height: 10 },
   { id: "ungraded-b", position: { x: 100, y: 0 }, width: 10, height: 10 },
 ]
@@ -86,5 +95,11 @@ describe("assessment navigation scope", () => {
     act(() => result.current.navigate("next"))
 
     expect(setLocalSelection).toHaveBeenCalledWith(["relationship"])
+    // The graded endpoint is nested at absolute (110,220), so its centre is
+    // (115,225); the other endpoint's centre is (55,5).
+    expect(setCenter).toHaveBeenCalledWith(85, 115, {
+      duration: 220,
+      zoom: 1,
+    })
   })
 })

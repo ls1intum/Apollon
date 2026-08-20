@@ -15,6 +15,7 @@ import {
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
+  getPositionOnCanvas,
   getElementIdsByTag,
   resolveTagConfig,
   applyElementTags,
@@ -1201,10 +1202,13 @@ export class ApollonEditor {
     if (anchors.length === 0) return
 
     const centre = anchors.reduce(
-      (accumulator, node) => ({
-        x: accumulator.x + node.position.x + (node.width ?? 0) / 2,
-        y: accumulator.y + node.position.y + (node.height ?? 0) / 2,
-      }),
+      (accumulator, node) => {
+        const position = getPositionOnCanvas(node, nodes)
+        return {
+          x: accumulator.x + position.x + (node.width ?? 0) / 2,
+          y: accumulator.y + position.y + (node.height ?? 0) / 2,
+        }
+      },
       { x: 0, y: 0 }
     )
     // Zoom is the reader's, not ours: pan only.

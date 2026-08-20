@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest"
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonMode, UMLDiagramType } from "@/typings"
 import { getEdgesMap } from "@/sync/ydoc"
@@ -19,7 +19,7 @@ const MODEL = {
     {
       id: "node-a",
       type: "class",
-      position: { x: 0, y: 0 },
+      position: { x: 100, y: 200 },
       width: 160,
       height: 100,
       data: {
@@ -31,6 +31,7 @@ const MODEL = {
     {
       id: "node-b",
       type: "class",
+      parentId: "node-a",
       position: { x: 400, y: 0 },
       width: 160,
       height: 100,
@@ -116,6 +117,25 @@ describe("ApollonEditor.revealAssessment", () => {
     expect(
       internals.assessmentSelectionStore.getState().selectedElementIds
     ).toEqual(["node-b"])
+  })
+
+  it("pans to a nested node's absolute canvas position", () => {
+    const setCenter = vi.fn()
+    const internals = editor as unknown as {
+      reactFlowInstance: {
+        setCenter: typeof setCenter
+        getZoom: () => number
+      } | null
+    }
+    internals.reactFlowInstance = { setCenter, getZoom: () => 1.25 }
+
+    editor.revealAssessment("node-b")
+
+    // Parent (100,200) + local child (400,0) + half size (80,50).
+    expect(setCenter).toHaveBeenCalledWith(580, 250, {
+      duration: 220,
+      zoom: 1.25,
+    })
   })
 
   it("selects an edge, which has no position of its own", () => {

@@ -8,6 +8,7 @@ import {
 import { useMemo } from "react"
 import { useReactFlow } from "@xyflow/react"
 import { assessedIdsFor, hasAssessmentToShow } from "@/utils/assessmentPresence"
+import { getPositionOnCanvas } from "@/utils"
 import { ApollonMode } from "@/typings"
 
 export type AssessmentNavigationDirection = "previous" | "next"
@@ -71,10 +72,13 @@ export const useAssessmentNavigation = (elementId: string) => {
       .filter((node): node is (typeof nodes)[number] => node !== undefined)
     if (focusNodes.length > 0) {
       const center = focusNodes.reduce(
-        (accumulator, node) => ({
-          x: accumulator.x + node.position.x + (node.width ?? 0) / 2,
-          y: accumulator.y + node.position.y + (node.height ?? 0) / 2,
-        }),
+        (accumulator, node) => {
+          const position = getPositionOnCanvas(node, nodes)
+          return {
+            x: accumulator.x + position.x + (node.width ?? 0) / 2,
+            y: accumulator.y + position.y + (node.height ?? 0) / 2,
+          }
+        },
         { x: 0, y: 0 }
       )
       const divisor = focusNodes.length
