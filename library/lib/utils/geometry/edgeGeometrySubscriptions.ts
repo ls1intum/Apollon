@@ -47,6 +47,52 @@ const registryRouteBounds = (route: IPoint[]): GeometryRect => {
   return result
 }
 
+type DisplayedRouteChange = {
+  id: string
+  before: IPoint[] | undefined
+  after: IPoint[] | undefined
+}
+
+// Every rendered edge owns a selector, but all selectors observe the same
+// geometry-store transition. Cache that transition's changed display routes
+// once so a preview write costs O(route count + subscribers * changed routes),
+// rather than making every edge diff the complete route registry independently.
+const displayedRouteChangesCache = new WeakMap<
+  Readonly<Record<string, IPoint[]>>,
+  WeakMap<
+    Readonly<Record<string, IPoint[]>>,
+    WeakMap<Readonly<Record<string, IPoint[]>>, DisplayedRouteChange[]>
+  >
+>()
+
+const displayedRouteChanges = (
+  geometryById: Readonly<Record<string, IPoint[]>>,
+  previousPreview: Readonly<Record<string, IPoint[]>>,
+  nextPreview: Readonly<Record<string, IPoint[]>>
+): DisplayedRouteChange[] => {
+  let byPrevious = displayedRouteChangesCache.get(geometryById)
+  if (!byPrevious) {
+    byPrevious = new WeakMap()
+    displayedRouteChangesCache.set(geometryById, byPrevious)
+  }
+  let byNext = byPrevious.get(previousPreview)
+  if (!byNext) {
+    byNext = new WeakMap()
+    byPrevious.set(previousPreview, byNext)
+  }
+  const cached = byNext.get(nextPreview)
+  if (cached) return cached
+
+  const changes: DisplayedRouteChange[] = []
+  for (const [id, exact] of Object.entries(geometryById)) {
+    const before = previousPreview[id] ?? exact
+    const after = nextPreview[id] ?? exact
+    if (before !== after) changes.push({ id, before, after })
+  }
+  byNext.set(nextPreview, changes)
+  return changes
+}
+
 /**
  * Broad-phase route selection. It deliberately permits boundary-touching false
  * positives; downstream jump/label geometry retains its exact intersection
@@ -133,6 +179,22 @@ export const createDisplayedRouteEntriesSelector = (
   return (geometryById, previewById) => {
     if (geometryById === previousGeometry && previewById === previousPreview)
       return previousSelection
+    if (geometryById === previousGeometry && previousPreview) {
+      const relevantRouteChanged = displayedRouteChanges(
+        geometryById,
+        previousPreview,
+        previewById
+      ).some(
+        ({ id, before, after }) =>
+          id !== excludeId &&
+          ((before && mayIntersect(query, registryRouteBounds(before))) ||
+            (after && mayIntersect(query, registryRouteBounds(after))))
+      )
+      if (!relevantRouteChanged) {
+        previousPreview = previewById
+        return previousSelection
+      }
+    }
     previousGeometry = geometryById
     previousPreview = previewById
     previousSelection = selectDisplayedRouteEntriesIntersectingRect(
