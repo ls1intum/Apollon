@@ -27,9 +27,9 @@ export interface ApollonLabels {
    * Apple hardware, "Ctrl" elsewhere) so the sentence reads naturally in any
    * language without the host having to detect the platform itself.
    */
-  scrollLockHint: (modifier: string) => string
+  scrollLockHint?: (modifier: string) => string
   /** Same situation, but for a touch device, where there is no modifier key. */
-  scrollLockHintTouch: string
+  scrollLockHintTouch?: string
   /**
    * Accessible name for an authored straight-edge waypoint handle.
    * Optional so a complete dictionary written against an older library release
@@ -71,7 +71,8 @@ export interface ApollonLabels {
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   assessmentFor: (type: string) => string
-  previousAssessment: string
+  /** Optional for dictionaries authored before assessment navigation existed. */
+  previousAssessment?: string
   nextAssessment: string
   noComment: string
   notGraded: string

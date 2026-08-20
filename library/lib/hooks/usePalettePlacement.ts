@@ -130,7 +130,7 @@ export function usePalettePlacement(dropElementConfig: DropElementConfig) {
   const dropAtPointer = useCallback(
     (
       event: { clientX: number; clientY: number },
-      grabFraction: XYPosition
+      grabOffset: XYPosition
     ): boolean => {
       const canvas = getCanvas()
       if (!canvas) {
@@ -146,14 +146,6 @@ export function usePalettePlacement(dropElementConfig: DropElementConfig) {
         event.clientY > bounds.bottom
       if (outside) return false
 
-      // The grabbed fraction maps straight onto the drop size, so the cursor stays
-      // over the same relative point of the node it becomes. Taking it from the
-      // preview's pixel height instead would be wrong for the elements whose
-      // preview reserves a label band the shape itself does not have.
-      const dropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
-      const dropHeight =
-        dropElementConfig.dropHeight ?? dropElementConfig.height
-
       // Parent is hit-tested at the snapped cursor (where the ghost is
       // anchored); the node's top-left is the cursor backed out by the offset.
       const parent = findDropParent(
@@ -166,8 +158,8 @@ export function usePalettePlacement(dropElementConfig: DropElementConfig) {
         x: event.clientX,
         y: event.clientY,
       })
-      absolute.x -= Math.floor((grabFraction.x * dropWidth) / snapPx) * snapPx
-      absolute.y -= Math.floor((grabFraction.y * dropHeight) / snapPx) * snapPx
+      absolute.x -= Math.floor(grabOffset.x / snapPx) * snapPx
+      absolute.y -= Math.floor(grabOffset.y / snapPx) * snapPx
 
       let position = absolute
       if (parent) {

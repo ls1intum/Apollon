@@ -82,11 +82,9 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   const startRef = useRef<XYPosition | null>(null)
   const maxTravelRef = useRef(0)
   const pointerTypeRef = useRef<string>("mouse")
-  // Where the cursor grabbed the preview, as a FRACTION of its box; backed out on
-  // drop so that same point stays under the pointer. A pixel offset would not
-  // work: the ghost and the dropped node are drawn at sizes the preview does not
-  // share, so only a fraction lines up at any zoom.
-  const grabFractionRef = useRef<XYPosition>({ x: 0, y: 0 })
+  // Where the cursor grabbed the preview in the dropped node's flow-space units;
+  // the same offset positions both the ghost and the committed node.
+  const grabOffsetRef = useRef<XYPosition>({ x: 0, y: 0 })
   // True once a press has turned into a drag, so the trailing click is ignored.
   const draggedRef = useRef(false)
 
@@ -113,13 +111,19 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    const grabX = previewRect.width
-      ? (event.clientX - previewRect.left) / previewRect.width
-      : 0
-    const grabY = previewRect.height
-      ? (event.clientY - previewRect.top) / previewRect.height
-      : 0
-    grabFractionRef.current = { x: grabX, y: grabY }
+    // Sidebar previews scale uniformly. Recover the grab point in their
+    // unscaled painted coordinates from the horizontal scale (the vertical
+    // extent may include a label band), then map each axis onto the drop size.
+    const previewScale = previewRect.width / dropElementConfig.width || 1
+    const grabOffset = {
+      x:
+        ((event.clientX - previewRect.left) / previewScale) *
+        (ghostDropWidth / dropElementConfig.width),
+      y:
+        ((event.clientY - previewRect.top) / previewScale) *
+        (ghostDropHeight / dropElementConfig.height),
+    }
+    grabOffsetRef.current = grabOffset
 
     // Draw the ghost at the on-screen size the node will have at this zoom. The
     // drop size is used rather than the palette size so an element that drops
@@ -129,12 +133,13 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const zoom = getViewport().zoom
     setGhostRender({ scale: zoom })
 
-    const ghostWidth = ghostDropWidth * zoom
-    const ghostHeight = ghostDropHeight * zoom
-    setGhostOffset({ x: grabX * ghostWidth, y: grabY * ghostHeight })
+    setGhostOffset({
+      x: grabOffset.x * zoom,
+      y: grabOffset.y * zoom,
+    })
     setGhostPosition({
-      x: event.clientX - grabX * ghostWidth,
-      y: event.clientY - grabY * ghostHeight,
+      x: event.clientX - grabOffset.x * zoom,
+      y: event.clientY - grabOffset.y * zoom,
     })
 
     setIsDragging(true)
@@ -195,7 +200,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         : DROPS.TAP_SLOP_MOUSE_PX
     const placed =
       maxTravelRef.current >= slop &&
-      dropRef.current(event, grabFractionRef.current)
+      dropRef.current(event, grabOffsetRef.current)
     if (placed) suppressTrailingClick()
     else draggedRef.current = false
   }

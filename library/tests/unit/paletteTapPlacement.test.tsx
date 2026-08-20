@@ -103,14 +103,17 @@ beforeEach(() => {
 
 afterEach(() => canvas.remove())
 
-const mountGhost = () => {
+const mountGhost = (
+  dropConfig: DropElementConfig = config,
+  previewRect: DOMRect = PREVIEW_RECT
+) => {
   const { getByRole } = render(
-    <DraggableGhost dropElementConfig={config}>
+    <DraggableGhost dropElementConfig={dropConfig}>
       <div data-testid="entry">entry</div>
     </DraggableGhost>
   )
   const wrapper = getByRole("button")
-  wrapper.getBoundingClientRect = () => PREVIEW_RECT
+  wrapper.getBoundingClientRect = () => previewRect
   return wrapper
 }
 
@@ -184,6 +187,36 @@ describe("palette tap-to-place", () => {
     expect(placed[0].position).toEqual({ x: 360, y: 270 })
     expect(placed[0].selected).toBe(false)
     expect(setSelectedElementsId).not.toHaveBeenCalled()
+  })
+
+  it("preserves a grab inside a preview label band for the ghost and drop", () => {
+    const labelConfig = {
+      ...config,
+      width: 60,
+      height: 60,
+    } as DropElementConfig
+    const labelPreviewRect = {
+      ...PREVIEW_RECT,
+      right: 60,
+      bottom: 90,
+      width: 60,
+      height: 90,
+    } as DOMRect
+    const wrapper = mountGhost(labelConfig, labelPreviewRect)
+
+    // The preview includes a 30px label band below its 60px node body. Its
+    // painted midpoint is therefore 45px down, not 30px down.
+    fireEvent.pointerDown(wrapper, { clientX: 30, clientY: 45 })
+    fireEvent.pointerMove(document, { clientX: 400, clientY: 300 })
+
+    const ghost = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-draggable-preview]")
+    ).find((element) => element.style.position === "fixed")
+    expect(ghost?.style.left).toBe("370px")
+    expect(ghost?.style.top).toBe("255px")
+
+    fireEvent.pointerUp(document, { clientX: 400, clientY: 300 })
+    expect(placedNodes()[0].position).toEqual({ x: 370, y: 255 })
   })
 
   it("a wobble that releases off-canvas places nothing on drop, then centres on the click", () => {
