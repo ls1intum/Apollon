@@ -21,6 +21,29 @@ const MODEL = {
   ],
 }
 
+test("playground exposes its editor workspace as fullscreen", async ({
+  page,
+}) => {
+  await page.goto("/playground")
+
+  const surface = page.getByTestId("playground-fullscreen-surface")
+  await page.getByTestId("playground-enter-fullscreen").click()
+
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (document.fullscreenElement as HTMLElement | null)?.dataset.testid
+      )
+    )
+    .toBe("playground-fullscreen-surface")
+  await expect(surface.locator(".playground-apollon-editor")).toBeVisible()
+
+  await page.evaluate(() => document.exitFullscreen())
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement))
+    .toBeNull()
+})
+
 test("keeps editor-owned floating surfaces inside subtree fullscreen", async ({
   page,
 }) => {

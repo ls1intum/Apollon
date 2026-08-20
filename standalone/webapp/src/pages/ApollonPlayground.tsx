@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
   Apollon,
   ApollonMode,
@@ -50,6 +50,7 @@ const UMLDiagramTypes = Object.values(UMLDiagramType)
 
 export const ApollonPlayground: React.FC = () => {
   const { setEditor } = useEditorContext()
+  const fullscreenSurfaceRef = useRef<HTMLDivElement>(null)
   const [assessmentSelectedElements, setAssessmentSelectedElements] = useState<
     string[]
   >([])
@@ -278,6 +279,17 @@ export const ApollonPlayground: React.FC = () => {
               and enable this test there to exchange live cursors.
             </FieldDescription>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="playground-enter-fullscreen"
+            onClick={() =>
+              void fullscreenSurfaceRef.current?.requestFullscreen()
+            }
+          >
+            Enter editor fullscreen
+          </Button>
         </FieldGroup>
 
         {mode === ApollonMode.Assessment && !readonly && !seeFeedback && (
@@ -320,7 +332,11 @@ export const ApollonPlayground: React.FC = () => {
         )}
       </CollapsibleSidebar>
 
-      <div className="flex h-full min-w-0 flex-1">
+      <div
+        ref={fullscreenSurfaceRef}
+        className="bg-background flex h-full min-w-0 flex-1"
+        data-testid="playground-fullscreen-surface"
+      >
         <Apollon
           key={mountKey}
           className="playground-apollon-editor"
