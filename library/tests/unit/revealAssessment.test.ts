@@ -73,7 +73,10 @@ describe("ApollonEditor.revealAssessment", () => {
 
     const internals = editor as unknown as {
       diagramStore: {
-        getState: () => { nodes: { id: string; selected?: boolean }[] }
+        getState: () => {
+          nodes: { id: string; selected?: boolean }[]
+          selectedElementIds: string[]
+        }
       }
       popoverStore: { getState: () => { popoverElementId: string | null } }
       assessmentSelectionStore: {
@@ -86,6 +89,9 @@ describe("ApollonEditor.revealAssessment", () => {
       .map((node) => node.id)
 
     expect(selected).toEqual(["node-b"])
+    expect(internals.diagramStore.getState().selectedElementIds).toEqual([
+      "node-b",
+    ])
     expect(internals.popoverStore.getState().popoverElementId).toBe("node-b")
     expect(
       internals.assessmentSelectionStore.getState().selectedElementIds
@@ -121,7 +127,12 @@ describe("ApollonEditor.revealAssessment", () => {
     editor.revealAssessment(null)
 
     const internals = editor as unknown as {
-      diagramStore: { getState: () => { nodes: { selected?: boolean }[] } }
+      diagramStore: {
+        getState: () => {
+          nodes: { selected?: boolean }[]
+          selectedElementIds: string[]
+        }
+      }
       popoverStore: { getState: () => { popoverElementId: string | null } }
       assessmentSelectionStore: {
         getState: () => { selectedElementIds: string[] }
@@ -130,6 +141,7 @@ describe("ApollonEditor.revealAssessment", () => {
     expect(
       internals.diagramStore.getState().nodes.some((node) => node.selected)
     ).toBe(false)
+    expect(internals.diagramStore.getState().selectedElementIds).toEqual([])
     expect(internals.popoverStore.getState().popoverElementId).toBeNull()
     expect(
       internals.assessmentSelectionStore.getState().selectedElementIds
@@ -162,5 +174,28 @@ describe("ApollonEditor.revealAssessment", () => {
       popoverStore: { getState: () => { popoverElementId: string | null } }
     }
     expect(internals.popoverStore.getState().popoverElementId).toBe("ghost-id")
+  })
+
+  it("selects without opening editing UI outside assessment mode", () => {
+    editor.destroy()
+    editor = new ApollonEditor(container, {
+      mode: ApollonMode.Modelling,
+      model: MODEL,
+    })
+
+    editor.revealAssessment("node-b")
+
+    const internals = editor as unknown as {
+      diagramStore: {
+        getState: () => {
+          selectedElementIds: string[]
+        }
+      }
+      popoverStore: { getState: () => { popoverElementId: string | null } }
+    }
+    expect(internals.diagramStore.getState().selectedElementIds).toEqual([
+      "node-b",
+    ])
+    expect(internals.popoverStore.getState().popoverElementId).toBeNull()
   })
 })

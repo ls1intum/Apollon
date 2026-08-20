@@ -1144,11 +1144,13 @@ export class ApollonEditor {
     elementId: string | null,
     options?: { reveal?: boolean }
   ): void {
-    const { nodes, edges, setNodes, setEdges } = this.diagramStore.getState()
+    const { nodes, edges, setNodes, setEdges, setSelectedElementsId } =
+      this.diagramStore.getState()
 
     if (elementId === null) {
       setNodes((current) => current.map((n) => ({ ...n, selected: false })))
       setEdges((current) => current.map((e) => ({ ...e, selected: false })))
+      setSelectedElementsId([])
       this.assessmentSelectionStore.getState().selectMultipleElements([])
       this.popoverStore.getState().setPopOverElementId(null)
       return
@@ -1173,6 +1175,7 @@ export class ApollonEditor {
     setEdges((current) =>
       current.map((edge) => ({ ...edge, selected: edge.id === targetId }))
     )
+    setSelectedElementsId([targetId])
     // Selection follows what the caller asked for, not what had to be opened to
     // show it. Asking for a class selects the class and its members, so a host
     // list marks the whole group; asking for one method selects that method
@@ -1182,7 +1185,13 @@ export class ApollonEditor {
     this.assessmentSelectionStore
       .getState()
       .selectMultipleElements(assessedIdsFor(elementId, nodes))
-    this.popoverStore.getState().setPopOverElementId(targetId)
+    this.popoverStore
+      .getState()
+      .setPopOverElementId(
+        this.metadataStore.getState().mode === Apollon.ApollonMode.Assessment
+          ? targetId
+          : null
+      )
 
     if (options?.reveal === false || !isTopLevel) return
 
