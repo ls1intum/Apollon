@@ -15,7 +15,6 @@ import {
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
-  getPositionOnCanvas,
   getElementIdsByTag,
   resolveTagConfig,
   applyElementTags,
@@ -72,6 +71,7 @@ import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
 import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
+import { getAssessmentElementCenter } from "./utils/assessmentFocus"
 
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
@@ -1166,7 +1166,6 @@ export class ApollonEditor {
     const element =
       nodes.find((node) => node.id === targetId) ??
       edges.find((edge) => edge.id === targetId)
-    const isTopLevel = element !== undefined
 
     setLocalSelection([targetId])
     // Selection follows what the caller asked for, not what had to be opened to
@@ -1186,33 +1185,18 @@ export class ApollonEditor {
       .getState()
       .setPopOverElementId(canOpenFeedback ? targetId : null)
 
-    if (options?.reveal === false || !isTopLevel) return
+    if (options?.reveal === false || !element) return
 
     const rf = this.reactFlowInstance
     if (!rf) return
-    // An edge has no position of its own; centre on the midpoint of the nodes it
-    // joins, which is where its label and badge sit.
-    const anchorIds =
-      element && "source" in element
-        ? [element.source, element.target]
-        : [targetId]
-    const anchors = anchorIds
-      .map((id) => nodes.find((node) => node.id === id))
-      .filter((node): node is (typeof nodes)[number] => node !== undefined)
-    if (anchors.length === 0) return
-
-    const centre = anchors.reduce(
-      (accumulator, node) => {
-        const position = getPositionOnCanvas(node, nodes)
-        return {
-          x: accumulator.x + position.x + (node.width ?? 0) / 2,
-          y: accumulator.y + position.y + (node.height ?? 0) / 2,
-        }
-      },
-      { x: 0, y: 0 }
+    const centre = getAssessmentElementCenter(
+      element,
+      nodes,
+      this.edgeGeometryStore.getState()
     )
+    if (!centre) return
     // Zoom is the reader's, not ours: pan only.
-    rf.setCenter(centre.x / anchors.length, centre.y / anchors.length, {
+    rf.setCenter(centre.x, centre.y, {
       duration: 220,
       zoom: rf.getZoom(),
     })

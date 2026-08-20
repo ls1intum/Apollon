@@ -3,19 +3,21 @@ import { useShallow } from "zustand/shallow"
 import {
   usePopoverStore,
   useAssessmentSelectionStore,
+  useEdgeGeometryStoreApi,
   useMetadataStore,
 } from "@/store/context"
 import { useMemo } from "react"
 import { useReactFlow } from "@xyflow/react"
 import { assessedIdsFor, hasAssessmentToShow } from "@/utils/assessmentPresence"
-import { getPositionOnCanvas } from "@/utils"
 import { ApollonMode } from "@/typings"
+import { getAssessmentElementCenter } from "@/utils/assessmentFocus"
 
 export type AssessmentNavigationDirection = "previous" | "next"
 
 /** Shared navigation state for the assessment popover footer. */
 export const useAssessmentNavigation = (elementId: string) => {
   const { setCenter, getZoom } = useReactFlow()
+  const edgeGeometryStore = useEdgeGeometryStoreApi()
   const { nodes, edges, setLocalSelection, getAssessment } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
@@ -63,26 +65,13 @@ export const useAssessmentNavigation = (elementId: string) => {
     const nextIndex = (currentIndex + offset + total) % total
     const nextElement = elements[nextIndex]
 
-    const focusNodeIds =
-      "source" in nextElement
-        ? [nextElement.source, nextElement.target]
-        : [nextElement.id]
-    const focusNodes = focusNodeIds
-      .map((id) => nodes.find((node) => node.id === id))
-      .filter((node): node is (typeof nodes)[number] => node !== undefined)
-    if (focusNodes.length > 0) {
-      const center = focusNodes.reduce(
-        (accumulator, node) => {
-          const position = getPositionOnCanvas(node, nodes)
-          return {
-            x: accumulator.x + position.x + (node.width ?? 0) / 2,
-            y: accumulator.y + position.y + (node.height ?? 0) / 2,
-          }
-        },
-        { x: 0, y: 0 }
-      )
-      const divisor = focusNodes.length
-      setCenter(center.x / divisor, center.y / divisor, {
+    const center = getAssessmentElementCenter(
+      nextElement,
+      nodes,
+      edgeGeometryStore.getState()
+    )
+    if (center) {
+      setCenter(center.x, center.y, {
         duration: 220,
         zoom: getZoom(),
       })

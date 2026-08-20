@@ -162,6 +162,40 @@ describe("ApollonEditor.revealAssessment", () => {
     expect(internals.popoverStore.getState().popoverElementId).toBe("edge-ab")
   })
 
+  it("pans a routed edge to its displayed assessment anchor", () => {
+    const setCenter = vi.fn()
+    const internals = editor as unknown as {
+      reactFlowInstance: {
+        setCenter: typeof setCenter
+        getZoom: () => number
+      } | null
+      edgeGeometryStore: {
+        getState: () => {
+          setPreviewGeometry: (
+            geometry: Record<string, { x: number; y: number }[]>
+          ) => void
+        }
+      }
+    }
+    internals.reactFlowInstance = { setCenter, getZoom: () => 1.25 }
+    internals.edgeGeometryStore.getState().setPreviewGeometry({
+      "edge-ab": [
+        { x: 260, y: 250 },
+        { x: 260, y: 50 },
+        { x: 700, y: 50 },
+        { x: 700, y: 250 },
+        { x: 500, y: 250 },
+      ],
+    })
+
+    editor.revealAssessment("edge-ab")
+
+    expect(setCenter).toHaveBeenCalledWith(580, 50, {
+      duration: 220,
+      zoom: 1.25,
+    })
+  })
+
   it("clears the selection and closes the popover for null", () => {
     editor.revealAssessment("node-a")
     editor.revealAssessment(null)

@@ -4,6 +4,11 @@ import { ApollonMode } from "@/typings"
 
 const { setCenter } = vi.hoisted(() => ({ setCenter: vi.fn() }))
 
+const edgeGeometryState = {
+  geometryById: {} as Record<string, { x: number; y: number }[]>,
+  previewById: {} as Record<string, { x: number; y: number }[]>,
+}
+
 vi.mock("@xyflow/react", () => ({
   useReactFlow: () => ({ setCenter, getZoom: () => 1 }),
 }))
@@ -46,6 +51,7 @@ vi.mock("@/store/context", () => ({
     select({ selectMultipleElements: vi.fn() }),
   useMetadataStore: (select: (state: unknown) => unknown) =>
     select({ mode, readonly }),
+  useEdgeGeometryStoreApi: () => ({ getState: () => edgeGeometryState }),
 }))
 
 import { useAssessmentNavigation } from "@/hooks/useGoToNextAssessment"
@@ -58,6 +64,8 @@ describe("assessment navigation scope", () => {
     // Module-level and mutated by the reader cases; reset so order cannot matter.
     for (const key of Object.keys(assessments)) delete assessments[key]
     assessments.graded = { score: 1 }
+    edgeGeometryState.geometryById = {}
+    edgeGeometryState.previewById = {}
   })
 
   it("steps through every element while a tutor is giving feedback", () => {
@@ -98,6 +106,23 @@ describe("assessment navigation scope", () => {
     // The graded endpoint is nested at absolute (110,220), so its centre is
     // (115,225); the other endpoint's centre is (55,5).
     expect(setCenter).toHaveBeenCalledWith(85, 115, {
+      duration: 220,
+      zoom: 1,
+    })
+  })
+
+  it("pans an edge to the displayed route midpoint", () => {
+    edgeGeometryState.previewById.relationship = [
+      { x: 115, y: 225 },
+      { x: 215, y: 225 },
+      { x: 215, y: 5 },
+      { x: 55, y: 5 },
+    ]
+    const { result } = renderHook(() => useAssessmentNavigation("ungraded-b"))
+
+    act(() => result.current.navigate("next"))
+
+    expect(setCenter).toHaveBeenCalledWith(215, 85, {
       duration: 220,
       zoom: 1,
     })
