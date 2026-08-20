@@ -790,9 +790,9 @@ function getNodeOverflowBoundsFromDOM(
  * Above- and below-`y` glyph extents as a fraction of font-size, by the SVG
  * `dominant-baseline` that places the `<text>` `y` anchor.
  *
- * - `middle` (use-case `<<include>>`/`<<extend>>`, communication messages): `y`
- *   sits at the glyph center, so the box is symmetric. Inter's cap+ascender
- *   half-height is ~0.6em; 0.75 over-includes safely.
+ * - `middle`/`central` (use-case `<<include>>`/`<<extend>>`, communication
+ *   messages): `y` sits at the glyph center, so the box is symmetric. Inter's
+ *   cap+ascender half-height is ~0.6em; 0.75 over-includes safely.
  * - alphabetic/`auto`/absent (association role + multiplicity end-labels): `y`
  *   IS the baseline, so the box is ASYMMETRIC — ascenders/caps rise ~0.9em
  *   ABOVE `y` and descenders drop ~0.3em BELOW it. A symmetric ±0.75em would
@@ -874,9 +874,10 @@ function mergeEdgeTextBoundsFromAttributes(
     anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x
   const right = left + width
 
+  const dominantBaseline =
+    textEl.getAttribute("dominant-baseline") || textEl.style.dominantBaseline
   const baseline =
-    (textEl.getAttribute("dominant-baseline") ||
-      textEl.style.dominantBaseline) === "middle"
+    dominantBaseline === "middle" || dominantBaseline === "central"
       ? "middle"
       : "alphabetic"
   const { up, down } = BASELINE_EXTENTS[baseline]
@@ -1292,6 +1293,7 @@ const SVG_STYLE_TO_ATTRIBUTE = [
   "font-weight",
   "font-family",
   "font-style",
+  "dominant-baseline",
 ] as const
 
 /**
@@ -1445,30 +1447,50 @@ const BASELINE_SHIFT_EM: Record<string, number> = {
 }
 
 /**
- * Resolve `dominant-baseline` to an explicit baseline `y` — non-browser engines
- * draw every label at the alphabetic baseline (too high) otherwise. Runs after
+ * Resolve `dominant-baseline` to an explicit alphabetic-baseline `y` for every
+ * positioned text run. Non-browser engines otherwise disagree about whether a
+ * child `<tspan>` inherits or applies its own baseline. Runs after
  * resolveTspanDy so tspan `y` is already absolute.
+ *
+ * Positioned tspans deliberately repeat the parent's baseline for WebKit. The
+ * compat pass must therefore consume and remove the baseline on the tspan too;
+ * shifting its y while leaving `dominant-baseline` behind applies the centring
+ * twice in renderers such as resvg.
  */
 function resolveDominantBaseline(svg: Element): void {
   svg.querySelectorAll("text").forEach((textEl) => {
-    const baseline = textEl.getAttribute("dominant-baseline")
-    const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
-    if (shiftEm === undefined) return
-
+    const parentBaseline = textEl.getAttribute("dominant-baseline")
     const textFontSize =
       parseFloat(textEl.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
-    const shift = (el: Element, fallbackY: number) => {
+    const shift = (el: Element, fallbackY: number, baseline: string | null) => {
+      const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
+      if (shiftEm === undefined) return
+
       const fontSize =
         parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
-      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+      const parsedY = parseFloat(el.getAttribute("y") ?? "")
+      const y = Number.isFinite(parsedY) ? parsedY : fallbackY
       el.setAttribute("y", `${y + shiftEm * fontSize}`)
+      el.removeAttribute("dominant-baseline")
     }
 
     const tspans = Array.from(textEl.querySelectorAll("tspan"))
-    const textY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
-    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
-    else shift(textEl, 0)
-    textEl.removeAttribute("dominant-baseline")
+    const parsedTextY = parseFloat(textEl.getAttribute("y") ?? "")
+    const textY = Number.isFinite(parsedTextY) ? parsedTextY : 0
+    if (tspans.length) {
+      tspans.forEach((tspan) =>
+        shift(
+          tspan,
+          textY,
+          tspan.getAttribute("dominant-baseline") ?? parentBaseline
+        )
+      )
+      if (parentBaseline && BASELINE_SHIFT_EM[parentBaseline] !== undefined) {
+        textEl.removeAttribute("dominant-baseline")
+      }
+    } else {
+      shift(textEl, 0, parentBaseline)
+    }
   })
 }
 

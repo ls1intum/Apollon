@@ -171,6 +171,13 @@ function assertNoCSSVariables(svg: string, diagramName: string) {
   expect(svg, `${diagramName}: SVG contains context-fill`).not.toContain(
     "context-fill"
   )
+
+  // Baselines must be fully converted to explicit y coordinates. Leaving one
+  // on a positioned tspan applies centring twice in baseline-aware renderers.
+  expect(
+    svg,
+    `${diagramName}: SVG contains an unresolved text baseline`
+  ).not.toMatch(/dominant-baseline=/)
 }
 
 // ---------------------------------------------------------------------------
