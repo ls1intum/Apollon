@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest"
 import type { ReactNode } from "react"
-import { renderHook } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import { createMetadataStore } from "@/store/metadataStore"
 import { createPopoverStore } from "@/store/popoverStore"
 import { createDiagramStore } from "@/store/diagramStore"
@@ -42,7 +42,7 @@ afterEach(() => {
 })
 
 describe("useElementInteractions.onBeforeDelete", () => {
-  it("keeps React Flow callback identities stable across parent renders", () => {
+  it("keeps React Flow callback identities stable across parent renders and diagram changes", () => {
     const metadata = createMetadataStore()
     const popover = createPopoverStore()
     const diagram = createDiagramStore(new Y.Doc())
@@ -61,8 +61,19 @@ describe("useElementInteractions.onBeforeDelete", () => {
     hook.rerender()
 
     expect(hook.result.current.onBeforeDelete).toBe(first.onBeforeDelete)
+    expect(hook.result.current.onNodeClick).toBe(first.onNodeClick)
+    expect(hook.result.current.onEdgeClick).toBe(first.onEdgeClick)
     expect(hook.result.current.onNodeDoubleClick).toBe(first.onNodeDoubleClick)
     expect(hook.result.current.onEdgeDoubleClick).toBe(first.onEdgeDoubleClick)
+
+    act(() =>
+      diagram
+        .getState()
+        .setNodes([{ id: "node", position: { x: 0, y: 0 }, data: {} }])
+    )
+
+    expect(hook.result.current.onNodeClick).toBe(first.onNodeClick)
+    expect(hook.result.current.onEdgeClick).toBe(first.onEdgeClick)
   })
 
   it("allows deletion on a modifiable diagram with the canvas focused", async () => {

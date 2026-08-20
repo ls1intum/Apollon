@@ -3,17 +3,13 @@ import { act, renderHook } from "@testing-library/react"
 import { ApollonMode } from "@/typings"
 
 const setPopOverElementId = vi.fn()
-const nodes = [{ id: "node", data: {} }]
 const assessments: Record<string, { score?: number; feedback?: string }> = {}
 
 vi.mock("@/store", () => ({
   useMetadataStore: (select: (state: unknown) => unknown) =>
     select({ mode: ApollonMode.Assessment, readonly: true }),
   useDiagramStore: (select: (state: unknown) => unknown) =>
-    select({
-      nodes,
-      getAssessment: (id: string) => assessments[id],
-    }),
+    select({ getAssessment: (id: string) => assessments[id] }),
 }))
 
 vi.mock("@/store/context", () => ({

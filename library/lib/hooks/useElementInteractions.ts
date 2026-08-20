@@ -19,12 +19,7 @@ export const useElementInteractions = () => {
   const { mode, readonly } = useMetadataStore(
     useShallow((state) => ({ mode: state.mode, readonly: state.readonly }))
   )
-  const { nodes, getAssessment } = useDiagramStore(
-    useShallow((state) => ({
-      nodes: state.nodes,
-      getAssessment: state.getAssessment,
-    }))
-  )
+  const getAssessment = useDiagramStore((state) => state.getAssessment)
   const { setPopOverElementId } = usePopoverStore(
     useShallow((state) => ({
       setPopOverElementId: state.setPopOverElementId,
@@ -68,38 +63,21 @@ export const useElementInteractions = () => {
 
   const onNodeClick: NodeMouseHandler<Node> = useCallback(
     (_event, node) => {
-      if (
-        !canOpenAssessmentPopover ||
-        (readonly && !hasAssessmentToShow(node.id, nodes, getAssessment))
-      )
+      if (!canOpenAssessmentPopover) return
+      if (readonly && !hasAssessmentToShow(node.id, [node], getAssessment))
         return
       setPopOverElementId(node.id)
     },
-    [
-      canOpenAssessmentPopover,
-      getAssessment,
-      nodes,
-      readonly,
-      setPopOverElementId,
-    ]
+    [canOpenAssessmentPopover, getAssessment, readonly, setPopOverElementId]
   )
 
   const onEdgeClick: EdgeMouseHandler<Edge> = useCallback(
     (_event, edge) => {
-      if (
-        !canOpenAssessmentPopover ||
-        (readonly && !hasAssessmentToShow(edge.id, nodes, getAssessment))
-      )
-        return
+      if (!canOpenAssessmentPopover) return
+      if (readonly && !hasAssessmentToShow(edge.id, [], getAssessment)) return
       setPopOverElementId(edge.id)
     },
-    [
-      canOpenAssessmentPopover,
-      getAssessment,
-      nodes,
-      readonly,
-      setPopOverElementId,
-    ]
+    [canOpenAssessmentPopover, getAssessment, readonly, setPopOverElementId]
   )
   return {
     onBeforeDelete,
