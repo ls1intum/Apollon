@@ -1,6 +1,8 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest"
 import { ApollonEditor } from "@/apollon-editor"
 import { ApollonMode, UMLDiagramType } from "@/typings"
+import { getEdgesMap } from "@/sync/ydoc"
+import type * as Y from "yjs"
 
 /**
  * `revealAssessment` is what lets a host's feedback list drive the canvas: an
@@ -197,5 +199,30 @@ describe("ApollonEditor.revealAssessment", () => {
       "node-b",
     ])
     expect(internals.popoverStore.getState().popoverElementId).toBeNull()
+  })
+
+  it("keeps revealed edge selection out of Yjs and undo history", () => {
+    editor.destroy()
+    editor = new ApollonEditor(container, {
+      mode: ApollonMode.Modelling,
+      model: MODEL,
+    })
+
+    editor.revealAssessment("edge-ab")
+
+    const internals = editor as unknown as {
+      ydoc: Y.Doc
+      diagramStore: {
+        getState: () => {
+          selectedElementIds: string[]
+          undoManager: { undoStack: unknown[] } | null
+        }
+      }
+    }
+    expect(internals.diagramStore.getState().selectedElementIds).toEqual([
+      "edge-ab",
+    ])
+    expect(getEdgesMap(internals.ydoc).get("edge-ab")?.selected).toBeUndefined()
+    expect(internals.diagramStore.getState().undoManager?.undoStack).toEqual([])
   })
 })

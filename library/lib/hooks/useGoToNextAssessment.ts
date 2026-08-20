@@ -18,16 +18,16 @@ export const useAssessmentNavigation = (elementId: string) => {
   const {
     nodes,
     edges,
-    setNodes,
-    setEdges,
+    onNodesChange,
+    onEdgesChange,
     setSelectedElementsId,
     getAssessment,
   } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
       edges: state.edges,
-      setNodes: state.setNodes,
-      setEdges: state.setEdges,
+      onNodesChange: state.onNodesChange,
+      onEdgesChange: state.onEdgesChange,
       setSelectedElementsId: state.setSelectedElementsId,
       getAssessment: state.getAssessment,
     }))
@@ -93,15 +93,17 @@ export const useAssessmentNavigation = (elementId: string) => {
       })
     }
 
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => ({
-        ...node,
+    onNodesChange(
+      nodes.map((node) => ({
+        type: "select",
+        id: node.id,
         selected: node.id === nextElement.id,
       }))
     )
-    setEdges((currentEdges) =>
-      currentEdges.map((edge) => ({
-        ...edge,
+    onEdgesChange(
+      edges.map((edge) => ({
+        type: "select",
+        id: edge.id,
         selected: edge.id === nextElement.id,
       }))
     )

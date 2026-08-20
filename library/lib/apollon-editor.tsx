@@ -1144,12 +1144,21 @@ export class ApollonEditor {
     elementId: string | null,
     options?: { reveal?: boolean }
   ): void {
-    const { nodes, edges, setNodes, setEdges, setSelectedElementsId } =
-      this.diagramStore.getState()
+    const {
+      nodes,
+      edges,
+      onNodesChange,
+      onEdgesChange,
+      setSelectedElementsId,
+    } = this.diagramStore.getState()
 
     if (elementId === null) {
-      setNodes((current) => current.map((n) => ({ ...n, selected: false })))
-      setEdges((current) => current.map((e) => ({ ...e, selected: false })))
+      onNodesChange(
+        nodes.map((node) => ({ type: "select", id: node.id, selected: false }))
+      )
+      onEdgesChange(
+        edges.map((edge) => ({ type: "select", id: edge.id, selected: false }))
+      )
       setSelectedElementsId([])
       this.assessmentSelectionStore.getState().selectMultipleElements([])
       this.popoverStore.getState().setPopOverElementId(null)
@@ -1169,11 +1178,19 @@ export class ApollonEditor {
       edges.find((edge) => edge.id === targetId)
     const isTopLevel = element !== undefined
 
-    setNodes((current) =>
-      current.map((node) => ({ ...node, selected: node.id === targetId }))
+    onNodesChange(
+      nodes.map((node) => ({
+        type: "select",
+        id: node.id,
+        selected: node.id === targetId,
+      }))
     )
-    setEdges((current) =>
-      current.map((edge) => ({ ...edge, selected: edge.id === targetId }))
+    onEdgesChange(
+      edges.map((edge) => ({
+        type: "select",
+        id: edge.id,
+        selected: edge.id === targetId,
+      }))
     )
     setSelectedElementsId([targetId])
     // Selection follows what the caller asked for, not what had to be opened to
