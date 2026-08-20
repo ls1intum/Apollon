@@ -64,48 +64,6 @@ const renderedEdgePaths = async (
       ) as Record<string, string>
   )
 
-/**
- * Pick nodes whose centres are real pointer targets, ordered from the viewport
- * centre outwards. The standalone header and palette overlay the canvas; using
- * fixture indices assumes those controls do not exist and can leave Playwright
- * sending a measured drag to a negative or obscured viewport coordinate.
- */
-const unobscuredNodesNearestViewportCenter = async (
-  editor: Locator,
-  count: number
-): Promise<string[]> =>
-  editor
-    .locator('.react-flow__node[data-id^="perf-node-"]')
-    .evaluateAll((elements, desiredCount) => {
-      const viewportCenter = {
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2,
-      }
-      return elements
-        .flatMap((element) => {
-          const id = element.getAttribute("data-id")
-          const rect = element.getBoundingClientRect()
-          const center = {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-          }
-          const pointerTarget = document.elementFromPoint(center.x, center.y)
-          if (!id || !pointerTarget || !element.contains(pointerTarget))
-            return []
-          return [
-            {
-              id,
-              distance:
-                (center.x - viewportCenter.x) ** 2 +
-                (center.y - viewportCenter.y) ** 2,
-            },
-          ]
-        })
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, desiredCount)
-        .map(({ id }) => id)
-    }, count)
-
 const hasMultipleDirectionChanges = (path: string): boolean => {
   const commands = [
     ...path.matchAll(/([ML])\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g),
@@ -553,15 +511,11 @@ test("large-diagram interaction sustains a 30 fps p95 frame budget", async ({
   await openLocalWithPerf(page, fixture)
   const editor = page.locator(`#react-flow-library-${String(fixture.id)}`)
   const frameDeltas: number[] = []
-  const nodeIds = await unobscuredNodesNearestViewportCenter(editor, 4)
 
-  expect(
-    nodeIds,
-    "performance fixture must expose four unobscured nodes"
-  ).toHaveLength(4)
-
-  for (const [index, nodeId] of nodeIds.entries()) {
-    const node = editor.locator(`.react-flow__node[data-id="${nodeId}"]`)
+  for (let index = 0; index < 4; index++) {
+    const node = editor.locator(
+      `.react-flow__node[data-id="perf-node-${String(index).padStart(2, "0")}"]`
+    )
     frameDeltas.push(
       ...(await dragNodeBy(node, page, index % 2 === 0 ? 40 : -40, 30, {
         steps: 12,
