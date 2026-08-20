@@ -227,6 +227,14 @@ export const getSVG = (
   return mainSVG.outerHTML
 }
 
+// Browser baseline shift (em) per `dominant-baseline` value, measured against
+// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
+const BASELINE_SHIFT_EM: Record<string, number> = {
+  middle: 0.25,
+  central: 0.35,
+  hanging: 0.75,
+}
+
 /**
  * Extract all coordinate points from an SVG path string.
  * This includes endpoints AND control points for bezier curves,
@@ -1293,7 +1301,6 @@ const SVG_STYLE_TO_ATTRIBUTE = [
   "font-weight",
   "font-family",
   "font-style",
-  "dominant-baseline",
 ] as const
 
 /**
@@ -1438,14 +1445,6 @@ function resolveTspanDy(svg: Element): void {
   })
 }
 
-// Browser baseline shift (em) per `dominant-baseline` value, measured against
-// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
-const BASELINE_SHIFT_EM: Record<string, number> = {
-  middle: 0.25,
-  central: 0.35,
-  hanging: 0.75,
-}
-
 /**
  * Resolve `dominant-baseline` to an explicit alphabetic-baseline `y` for every
  * positioned text run. Non-browser engines otherwise disagree about whether a
@@ -1462,35 +1461,27 @@ function resolveDominantBaseline(svg: Element): void {
     const parentBaseline = textEl.getAttribute("dominant-baseline")
     const textFontSize =
       parseFloat(textEl.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
-    const shift = (el: Element, fallbackY: number, baseline: string | null) => {
+    const shift = (el: Element, fallbackY: number) => {
+      const baseline = el.getAttribute("dominant-baseline") ?? parentBaseline
       const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
       if (shiftEm === undefined) return
 
       const fontSize =
         parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
       const parsedY = parseFloat(el.getAttribute("y") ?? "")
-      const y = Number.isFinite(parsedY) ? parsedY : fallbackY
+      const y = isNaN(parsedY) ? fallbackY : parsedY
       el.setAttribute("y", `${y + shiftEm * fontSize}`)
       el.removeAttribute("dominant-baseline")
     }
 
     const tspans = Array.from(textEl.querySelectorAll("tspan"))
-    const parsedTextY = parseFloat(textEl.getAttribute("y") ?? "")
-    const textY = Number.isFinite(parsedTextY) ? parsedTextY : 0
+    const textY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
     if (tspans.length) {
-      tspans.forEach((tspan) =>
-        shift(
-          tspan,
-          textY,
-          tspan.getAttribute("dominant-baseline") ?? parentBaseline
-        )
-      )
-      if (parentBaseline && BASELINE_SHIFT_EM[parentBaseline] !== undefined) {
-        textEl.removeAttribute("dominant-baseline")
-      }
+      tspans.forEach((tspan) => shift(tspan, textY))
     } else {
-      shift(textEl, 0, parentBaseline)
+      shift(textEl, 0)
     }
+    textEl.removeAttribute("dominant-baseline")
   })
 }
 

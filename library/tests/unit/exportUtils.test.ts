@@ -406,15 +406,6 @@ describe("convertStyleToAttributes", () => {
     expect(rect.getAttribute("opacity")).toBe("1")
   })
 
-  it("promotes dominant-baseline so the compatibility pass can resolve it", () => {
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text")
-    text.setAttribute("style", "dominant-baseline: central")
-
-    convertStyleToAttributes(text)
-    expect(text.getAttribute("dominant-baseline")).toBe("central")
-    expect(text.hasAttribute("style")).toBe(false)
-  })
-
   it("does not overwrite existing attribute with style value", () => {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
     path.setAttribute("stroke", "red")
