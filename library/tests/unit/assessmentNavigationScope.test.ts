@@ -15,9 +15,7 @@ const nodes = [
 ]
 const edges = [{ id: "relationship", source: "graded", target: "ungraded-a" }]
 const assessments: Record<string, Assessment> = { graded: { score: 1 } }
-const onNodesChange = vi.fn()
-const onEdgesChange = vi.fn()
-const setSelectedElementsId = vi.fn()
+const setLocalSelection = vi.fn()
 
 let mode: ApollonMode = ApollonMode.Assessment
 let readonly = false
@@ -27,9 +25,7 @@ vi.mock("@/store", () => ({
     select({
       nodes,
       edges,
-      onNodesChange,
-      onEdgesChange,
-      setSelectedElementsId,
+      setLocalSelection,
       getAssessment: (id: string) => assessments[id],
     }),
 }))
@@ -84,17 +80,11 @@ describe("assessment navigation scope", () => {
     expect(result.current.canNavigate).toBe(false)
   })
 
-  it("selects an edge through the local-only React Flow change path", () => {
+  it("selects an edge through the local-only store path", () => {
     const { result } = renderHook(() => useAssessmentNavigation("ungraded-b"))
 
     act(() => result.current.navigate("next"))
 
-    expect(onEdgesChange).toHaveBeenCalledWith([
-      { type: "select", id: "relationship", selected: true },
-    ])
-    expect(onNodesChange).toHaveBeenCalledWith(
-      nodes.map((node) => ({ type: "select", id: node.id, selected: false }))
-    )
-    expect(setSelectedElementsId).toHaveBeenCalledWith(["relationship"])
+    expect(setLocalSelection).toHaveBeenCalledWith(["relationship"])
   })
 })

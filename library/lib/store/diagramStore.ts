@@ -163,6 +163,7 @@ export type DiagramStore = {
   setSelectedElementsId: (
     payload: string[] | ((edges: string[]) => string[])
   ) => void
+  setLocalSelection: (elementIds: string[]) => void
   getAssessment: (id: string) => Assessment | undefined
   setAssessments: (
     assessments:
@@ -248,27 +249,6 @@ export const createDiagramStore = (
             // and the per-element `selected` flags — when it is popped.
             // `stack-item-popped` fires after the undo transaction's observers,
             // so `applySelection` runs last and wins over the doc resync.
-            const applySelection = (ids: string[]) => {
-              const idSet = new Set(ids)
-              set(
-                (state) => ({
-                  selectedElementIds: ids,
-                  nodes: state.nodes.map((node) =>
-                    (node.selected ?? false) === idSet.has(node.id)
-                      ? node
-                      : { ...node, selected: idSet.has(node.id) }
-                  ),
-                  edges: state.edges.map((edge) =>
-                    (edge.selected ?? false) === idSet.has(edge.id)
-                      ? edge
-                      : { ...edge, selected: idSet.has(edge.id) }
-                  ),
-                }),
-                undefined,
-                "undo-restore-selection"
-              )
-            }
-
             // Capture on both add and update: a merged edit (captureTimeout
             // folds it into the existing item via "stack-item-updated") must
             // refresh the stashed selection, else it keeps the first edit's.
@@ -285,7 +265,7 @@ export const createDiagramStore = (
 
             undoManager.on("stack-item-popped", ({ stackItem }) => {
               const ids = stackItem.meta.get("selectedElementIds")
-              if (Array.isArray(ids)) applySelection(ids)
+              if (Array.isArray(ids)) get().setLocalSelection(ids)
               get().updateUndoRedoState()
             })
 
@@ -368,6 +348,27 @@ export const createDiagramStore = (
                 : payload
 
             set({ selectedElementIds }, undefined, "setSelectedElementsId")
+          },
+
+          setLocalSelection: (elementIds) => {
+            const selectedIds = new Set(elementIds)
+            set(
+              (state) => ({
+                selectedElementIds: elementIds,
+                nodes: state.nodes.map((node) =>
+                  (node.selected ?? false) === selectedIds.has(node.id)
+                    ? node
+                    : { ...node, selected: selectedIds.has(node.id) }
+                ),
+                edges: state.edges.map((edge) =>
+                  (edge.selected ?? false) === selectedIds.has(edge.id)
+                    ? edge
+                    : { ...edge, selected: selectedIds.has(edge.id) }
+                ),
+              }),
+              undefined,
+              "setLocalSelection"
+            )
           },
 
           setLastPlacedElementId: (id) => {

@@ -15,20 +15,11 @@ export type AssessmentNavigationDirection = "previous" | "next"
 /** Shared navigation state for the assessment popover footer. */
 export const useAssessmentNavigation = (elementId: string) => {
   const { setCenter, getZoom } = useReactFlow()
-  const {
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    setSelectedElementsId,
-    getAssessment,
-  } = useDiagramStore(
+  const { nodes, edges, setLocalSelection, getAssessment } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
       edges: state.edges,
-      onNodesChange: state.onNodesChange,
-      onEdgesChange: state.onEdgesChange,
-      setSelectedElementsId: state.setSelectedElementsId,
+      setLocalSelection: state.setLocalSelection,
       getAssessment: state.getAssessment,
     }))
   )
@@ -93,21 +84,7 @@ export const useAssessmentNavigation = (elementId: string) => {
       })
     }
 
-    onNodesChange(
-      nodes.map((node) => ({
-        type: "select",
-        id: node.id,
-        selected: node.id === nextElement.id,
-      }))
-    )
-    onEdgesChange(
-      edges.map((edge) => ({
-        type: "select",
-        id: edge.id,
-        selected: edge.id === nextElement.id,
-      }))
-    )
-    setSelectedElementsId([nextElement.id])
+    setLocalSelection([nextElement.id])
     // The highlight is painted from the assessment store, not from React Flow's
     // selection — without this the mark stayed on the element you came from
     // while the popover showed the next one.

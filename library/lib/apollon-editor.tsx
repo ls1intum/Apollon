@@ -1144,22 +1144,10 @@ export class ApollonEditor {
     elementId: string | null,
     options?: { reveal?: boolean }
   ): void {
-    const {
-      nodes,
-      edges,
-      onNodesChange,
-      onEdgesChange,
-      setSelectedElementsId,
-    } = this.diagramStore.getState()
+    const { nodes, edges, setLocalSelection } = this.diagramStore.getState()
 
     if (elementId === null) {
-      onNodesChange(
-        nodes.map((node) => ({ type: "select", id: node.id, selected: false }))
-      )
-      onEdgesChange(
-        edges.map((edge) => ({ type: "select", id: edge.id, selected: false }))
-      )
-      setSelectedElementsId([])
+      setLocalSelection([])
       this.assessmentSelectionStore.getState().selectMultipleElements([])
       this.popoverStore.getState().setPopOverElementId(null)
       return
@@ -1178,21 +1166,7 @@ export class ApollonEditor {
       edges.find((edge) => edge.id === targetId)
     const isTopLevel = element !== undefined
 
-    onNodesChange(
-      nodes.map((node) => ({
-        type: "select",
-        id: node.id,
-        selected: node.id === targetId,
-      }))
-    )
-    onEdgesChange(
-      edges.map((edge) => ({
-        type: "select",
-        id: edge.id,
-        selected: edge.id === targetId,
-      }))
-    )
-    setSelectedElementsId([targetId])
+    setLocalSelection([targetId])
     // Selection follows what the caller asked for, not what had to be opened to
     // show it. Asking for a class selects the class and its members, so a host
     // list marks the whole group; asking for one method selects that method
