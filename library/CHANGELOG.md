@@ -1,5 +1,19 @@
 # @tumaet/apollon
 
+## 5.3.0
+
+### Minor Changes
+
+- [#834](https://github.com/ls1intum/Apollon/pull/834) [`dc7f071`](https://github.com/ls1intum/Apollon/commit/dc7f071a1998cdab30f33a15db5ee4400c341732) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Shape diagonal connections by hand just like orthogonal ones. Use-case, syntax-tree,
+  and petri-net connections now have filled circular waypoints: drag the handle on a
+  segment to add one, drag an existing point to reshape the route, and double-click,
+  press Delete, or drag it magnetically back onto the line to remove it. Shift-drag locks
+  to familiar 15-degree angles, endpoint reconnection preserves the custom route, and a
+  single reset clears all hand-authored routing.
+
+- [#841](https://github.com/ls1intum/Apollon/pull/841) [`8e88cb2`](https://github.com/ls1intum/Apollon/commit/8e88cb2988a8ad6c9b3dedd763e0fd03f31af5c4) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Embed Apollon reliably in host pages: fullscreen overlays stay visible, scrolling and shortcuts remain host-safe, assessment feedback is easier to open and navigate through `revealAssessment(id)`, host controls gain a labeled chrome action, exports no longer expand the page, and diagram interactions remain aligned, sharp, and responsive.
+  Labels now also stay vertically centered in SVG, PNG, and PDF exports exactly as they appear in the editor.
+
 ## 5.2.0
 
 ### Minor Changes

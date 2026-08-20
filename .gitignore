@@ -87,3 +87,4 @@ docs/.snippet-typecheck/
 
 # Live-update publish artifacts (built by scripts/build-live-update.mjs)
 **/live-updates-dist/
+/jetbrains-plugin/.gradle/
