@@ -7,15 +7,24 @@ import {
   NodeResizer as ReactFlowNodeResizer,
   NodeResizeControl,
   ResizeControlVariant,
+  useNodeId,
+  useStore,
   type NodeResizerProps,
 } from "@xyflow/react"
 
-// React Flow's corner handles default to 5x5; every Apollon node wants 8x8.
-const HANDLE_STYLE = { width: 8, height: 8 }
+// The drawn corner square (React Flow's own default is 5x5, too small to aim
+// at). `app.css` widens the ::before from this size to `--apollon-grab-target`,
+// so the two have to move together.
+const HANDLE_STYLE = { width: 10, height: 10 }
 
 // Marks every edge line so app.css can lift it over node content and widen its
 // 1px grab area.
 const LINE_CLASS = "apollon-resize-line"
+
+// Marks every corner handle so app.css can widen its grab area to the 24x24 CSS
+// pixels WCAG 2.2 asks of a pointer target (SC 2.5.8, AA) without inflating the
+// 10x10 square that is actually drawn.
+const HANDLE_CLASS = "apollon-resize-handle"
 
 const CORNERS = [
   "top-left",
@@ -44,6 +53,9 @@ const isAxisLocked = (min?: number, max?: number): boolean =>
  * corner--*` in app.css) to that axis. The result: a content-sized node still
  * looks and works resizable on the axis it can change, and no cursor anywhere
  * points a direction the drag won't go.
+ *
+ * Controls also require the node to be selected. Gating here rather than at the
+ * call sites keeps every `isVisible={isDiagramModifiable}` site unchanged.
  */
 export function NodeResizer(props: NodeResizerProps) {
   const {
@@ -59,9 +71,17 @@ export function NodeResizer(props: NodeResizerProps) {
     ...resizeParams
   } = props
 
+  // Undefined outside a node, where there is no selection to gate on.
+  const contextNodeId = useNodeId()
+  const nodeId = props.nodeId ?? contextNodeId
+  const isNodeSelected = useStore((state) =>
+    nodeId ? !!state.nodeLookup.get(nodeId)?.selected : undefined
+  )
+
   // `isVisible` exists only on NodeResizerProps — NodeResizeControl has no such
-  // prop, so this early return is the only thing enforcing it on the locked path.
+  // prop, so these early returns are the only thing enforcing it on the locked path.
   if (!isVisible) return null
+  if (isNodeSelected === false) return null
 
   const widthLocked = isAxisLocked(minWidth, maxWidth)
   const heightLocked = isAxisLocked(minHeight, maxHeight)
@@ -71,6 +91,9 @@ export function NodeResizer(props: NodeResizerProps) {
       <ReactFlowNodeResizer
         {...props}
         handleStyle={handleStyle ?? HANDLE_STYLE}
+        handleClassName={[HANDLE_CLASS, handleClassName]
+          .filter(Boolean)
+          .join(" ")}
         lineClassName={[LINE_CLASS, lineClassName].filter(Boolean).join(" ")}
       />
     )
@@ -107,7 +130,9 @@ export function NodeResizer(props: NodeResizerProps) {
           position={position}
           variant={ResizeControlVariant.Handle}
           resizeDirection={freeAxis}
-          className={[cornerClass, handleClassName].filter(Boolean).join(" ")}
+          className={[HANDLE_CLASS, cornerClass, handleClassName]
+            .filter(Boolean)
+            .join(" ")}
           style={{ ...HANDLE_STYLE, ...handleStyle }}
           {...shared}
         />

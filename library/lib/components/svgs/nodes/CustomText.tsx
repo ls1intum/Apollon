@@ -9,6 +9,20 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   noY?: boolean
 }
 
+/**
+ * `central` centres on the em box; `middle` centres on the x-height, which sits
+ * roughly half a cap-height lower — so passing a true centre (`height / 2`, a row
+ * centre) to `middle` renders the text visibly high.
+ *
+ * Do not override with `middle`, and do not reach for `alignment-baseline`: that
+ * property applies to inline content inside a `<text>`, not to the `<text>`
+ * element itself, so it is silently ignored here and the label falls back to the
+ * alphabetic baseline.
+ *
+ * WebKit resolves `dominant-baseline` per positioning run, so any tspan carrying
+ * its own `x`/`y`/`dy` must repeat it or it falls back to alphabetic there while
+ * Blink inherits.
+ */
 export const CustomText: FC<Props> = ({
   children,
   fill = "var(--apollon-foreground, #000000)",

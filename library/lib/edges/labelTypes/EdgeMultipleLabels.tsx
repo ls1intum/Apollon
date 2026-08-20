@@ -73,7 +73,7 @@ export const EdgeMultipleLabels = ({
             index * group.stackStep.y
           }
           textAnchor={group.textAnchor}
-          dominantBaseline="middle"
+          dominantBaseline="central"
           style={{
             fontSize: "14px",
             fill: textColor,

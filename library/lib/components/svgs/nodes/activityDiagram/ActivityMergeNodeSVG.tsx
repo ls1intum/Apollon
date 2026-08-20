@@ -82,7 +82,7 @@ export const ActivityMergeNodeSVG: React.FC<Props> = ({
             textAnchor="middle"
             fontSize={LABEL_FONT_SIZE}
             fontWeight={LABEL_FONT_WEIGHT}
-            dominantBaseline="middle"
+            dominantBaseline="central"
             fill={textColor}
           >
             {layout.lines.map((line, index) => (
@@ -90,6 +90,8 @@ export const ActivityMergeNodeSVG: React.FC<Props> = ({
                 key={index}
                 x={centerX}
                 y={centerY + layout.lineOffsets[index]}
+                // Repeated per tspan: see CustomText.
+                dominantBaseline="central"
               >
                 {line.text}
               </tspan>

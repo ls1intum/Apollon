@@ -4,6 +4,7 @@ import { createPortal } from "react-dom"
 import { useReactFlow, type XYPosition } from "@xyflow/react"
 import { useMetadataStore } from "@/store/context"
 import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 import { useShallow } from "zustand/shallow"
 import { usePalettePlacement } from "@/hooks/usePalettePlacement"
 
@@ -31,7 +32,7 @@ const enableScroll = () => {
   document.body.style.touchAction = savedBodyTouchAction
 }
 
-/** The palette's painted theme, carried onto the `<body>`-portaled ghost. */
+/** The palette's painted theme, carried onto the portaled ghost. */
 interface GhostTheme {
   vars: React.CSSProperties
   dataTheme?: string
@@ -40,42 +41,36 @@ interface GhostTheme {
 interface DraggableGhostProps {
   children: React.ReactNode
   dropElementConfig: DropElementConfig
-  /**
-   * Visual scale of the palette preview.
-   * Used to convert pointer offsets into node-placement offsets.
-   */
-  previewScale?: number
 }
 
 export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   children,
   dropElementConfig,
-  previewScale = DROPS.SIDEBAR_PREVIEW_SCALE,
 }) => {
   const { getViewport } = useReactFlow()
-  const { dropAtPointer, placeAtViewportCenter } = usePalettePlacement(
-    dropElementConfig,
-    previewScale
-  )
+  const { dropAtPointer, placeAtViewportCenter } =
+    usePalettePlacement(dropElementConfig)
   const { addElementLabel, nodeTypeLabel } = useMetadataStore(
     useShallow((state) => ({
       addElementLabel: state.labels.addElement,
       nodeTypeLabel: state.labels.nodeTypeLabel,
     }))
   )
+  const portalContainer = useApollonPortalContainer()
+
+  const ghostDropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
+  const ghostDropHeight =
+    dropElementConfig.dropHeight ?? dropElementConfig.height
 
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
-  // Cursor offset within the ENTRY, which is what the ghost renders. Differs from
-  // the preview offset because the entry flex-centres its preview; positioning
-  // the ghost by the preview offset would re-apply that centring and jump.
+  // Where the cursor sits inside the GHOST, so the grabbed point stays under the
+  // pointer as it moves.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
-  // `zoom / previewScale`, folded per-axis with the drop/preview size ratio, so
-  // the ghost is exactly as large on screen as the node it will become. Captured
-  // on grab; zoom cannot change mid palette-drag.
-  const [ghostScale, setGhostScale] = useState({ x: 1, y: 1 })
-  // The theme the palette entry was painted under, captured on grab. The ghost
-  // portals to `document.body`, leaving the subtree that scopes `--apollon-*`.
+  // Captured on grab; zoom cannot change mid palette-drag.
+  const [ghostRender, setGhostRender] = useState({ scale: 1 })
+  // The theme the palette entry was painted under, captured on grab: the ghost
+  // portals out of the subtree that scopes `--apollon-*`.
   // Both halves are needed: the resolved token VALUES cover a mount themed by
   // inline custom properties or by a host stylesheet (VS Code), and `data-theme`
   // re-matches the attribute selectors in the editor's own CSS. A drag is
@@ -87,9 +82,9 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   const startRef = useRef<XYPosition | null>(null)
   const maxTravelRef = useRef(0)
   const pointerTypeRef = useRef<string>("mouse")
-  // Cursor offset within the PREVIEW shape, backed out on drop so the grabbed
-  // point stays under the pointer.
-  const clickOffsetRef = useRef<XYPosition>({ x: 0, y: 0 })
+  // Where the cursor grabbed the preview in the dropped node's flow-space units;
+  // the same offset positions both the ghost and the committed node.
+  const grabOffsetRef = useRef<XYPosition>({ x: 0, y: 0 })
   // True once a press has turned into a drag, so the trailing click is ignored.
   const draggedRef = useRef(false)
 
@@ -116,35 +111,35 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const previewRect = (
       previewElement ?? event.currentTarget
     ).getBoundingClientRect()
-    clickOffsetRef.current = {
-      x: event.clientX - previewRect.left,
-      y: event.clientY - previewRect.top,
+    // Sidebar previews scale uniformly. Recover the grab point in their
+    // unscaled painted coordinates from the horizontal scale (the vertical
+    // extent may include a label band), then map each axis onto the drop size.
+    const previewScale = previewRect.width / dropElementConfig.width || 1
+    const grabOffset = {
+      x:
+        ((event.clientX - previewRect.left) / previewScale) *
+        (ghostDropWidth / dropElementConfig.width),
+      y:
+        ((event.clientY - previewRect.top) / previewScale) *
+        (ghostDropHeight / dropElementConfig.height),
     }
+    grabOffsetRef.current = grabOffset
 
-    // Ghost offset: cursor relative to the ENTRY's top-left, so the entry — and
-    // its flex-centred preview — stays exactly where it sat in the palette and
-    // never jumps out from under the cursor.
-    const entry = (event.currentTarget.firstElementChild ??
-      event.currentTarget) as HTMLElement
-    const entryRect = entry.getBoundingClientRect()
-    const ghostX = event.clientX - entryRect.left
-    const ghostY = event.clientY - entryRect.top
-    setGhostOffset({ x: ghostX, y: ghostY })
-    setGhostPosition({ x: event.clientX - ghostX, y: event.clientY - ghostY })
-
-    // Scale the ghost to the on-screen size the node will have at this zoom,
-    // folding in the drop/preview ratio so an element that drops larger than it
-    // previews (a swimlane: 160×100 → 400×240) renders at its true dropped size.
+    // Draw the ghost at the on-screen size the node will have at this zoom. The
+    // drop size is used rather than the palette size so an element that drops
+    // larger than it previews (a swimlane: 160×100 → 400×240) is shown at its
+    // true dropped size, and the SVG lays its content out for that size instead
+    // of having a smaller rendering stretched over it.
     const zoom = getViewport().zoom
-    const ratioX =
-      (dropElementConfig.dropWidth ?? dropElementConfig.width) /
-      dropElementConfig.width
-    const ratioY =
-      (dropElementConfig.dropHeight ?? dropElementConfig.height) /
-      dropElementConfig.height
-    setGhostScale({
-      x: (ratioX * zoom) / previewScale,
-      y: (ratioY * zoom) / previewScale,
+    setGhostRender({ scale: zoom })
+
+    setGhostOffset({
+      x: grabOffset.x * zoom,
+      y: grabOffset.y * zoom,
+    })
+    setGhostPosition({
+      x: event.clientX - grabOffset.x * zoom,
+      y: event.clientY - grabOffset.y * zoom,
     })
 
     setIsDragging(true)
@@ -205,7 +200,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         : DROPS.TAP_SLOP_MOUSE_PX
     const placed =
       maxTravelRef.current >= slop &&
-      dropRef.current(event, clickOffsetRef.current)
+      dropRef.current(event, grabOffsetRef.current)
     if (placed) suppressTrailingClick()
     else draggedRef.current = false
   }
@@ -238,12 +233,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     placeAtViewportCenter()
   }
 
-  // `fixed`, not `absolute`: the ghost portals into document.body and is
-  // positioned with viewport coordinates (clientX/clientY). `absolute` resolves
-  // against the document, so any page scroll would shift the ghost off the
-  // cursor when the editor is embedded below the fold; `fixed` matches clientX/Y.
+  // `fixed`, not `absolute`: the ghost is positioned in viewport coordinates
+  // (clientX/clientY), and `absolute` resolves against the document, so page
+  // scroll would shift it off the cursor when the editor sits below the fold.
   const ghostElement = (
     <div
+      data-draggable-preview
       data-theme={ghostTheme.dataTheme}
       style={{
         ...ghostTheme.vars,
@@ -253,13 +248,17 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         pointerEvents: "none",
         zIndex: ZINDEX.DRAGGABLE_ELEMENT,
         opacity: 0.8,
-        // Pivot the scale on the grabbed point so it never shifts the shape out
-        // from under the cursor.
-        transform: `scale(${ghostScale.x}, ${ghostScale.y})`,
-        transformOrigin: `${ghostOffset.x}px ${ghostOffset.y}px`,
       }}
     >
-      {children}
+      {/* Rendered at the drop size so the SVG lays out for it, instead of reusing
+          the palette's preview element. */}
+      {React.createElement(dropElementConfig.svg, {
+        width: ghostDropWidth,
+        height: ghostDropHeight,
+        ...dropElementConfig.defaultData,
+        data: dropElementConfig.defaultData,
+        SIDEBAR_PREVIEW_SCALE: ghostRender.scale,
+      })}
     </div>
   )
 
@@ -281,7 +280,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       >
         {children}
       </button>
-      {isDragging && createPortal(ghostElement, document.body)}
+      {isDragging && createPortal(ghostElement, portalContainer)}
     </>
   )
 }

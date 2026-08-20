@@ -1,5 +1,5 @@
 import { usePopoverStore } from "@/store/context"
-import { useMetadataStore } from "@/store"
+import { useDiagramStore, useMetadataStore } from "@/store"
 import { ApollonMode } from "@/typings"
 import {
   NodeMouseHandler,
@@ -12,28 +12,30 @@ import { useShallow } from "zustand/shallow"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { isElementInOverlay } from "@/keyboard"
 import { useCallback } from "react"
+import { hasAssessmentToShow } from "@/utils/assessmentPresence"
 
 export const useElementInteractions = () => {
   const isDiagramModifiable = useDiagramModifiable()
   const { mode, readonly } = useMetadataStore(
-    useShallow((state) => ({
-      mode: state.mode,
-      readonly: state.readonly,
-    }))
+    useShallow((state) => ({ mode: state.mode, readonly: state.readonly }))
   )
+  const getAssessment = useDiagramStore((state) => state.getAssessment)
   const { setPopOverElementId } = usePopoverStore(
     useShallow((state) => ({
       setPopOverElementId: state.setPopOverElementId,
     }))
   )
-  const canOpenAssessmentPopover = mode === ApollonMode.Assessment && !readonly
+  // Both halves of assessment open a popover on click: a tutor gets the editable
+  // feedback form, a student the read-only one PopoverManager already builds for
+  // `Assessment + readonly`. Gating this on `!readonly` left that student popover
+  // implemented but unreachable, so an assessed diagram could show a score badge
+  // on an element while offering no way to read what it was for.
+  const canOpenAssessmentPopover = mode === ApollonMode.Assessment
   const canOpenPopover = isDiagramModifiable || canOpenAssessmentPopover
 
   const onBeforeDelete: OnBeforeDelete = useCallback(() => {
-    // React Flow's Delete listener is document-level, so a Delete pressed while
-    // focus is in a dialog or menu over the canvas would otherwise remove the
-    // selection behind it. Block that here — the one place every RF deletion
-    // funnels through — the same way the editor's own shortcuts stand down.
+    // Keep the deletion funnel defensive for toolbar/API calls as well as the
+    // scoped keyboard path: an overlay over the canvas owns the interaction.
     if (isElementInOverlay(document.activeElement)) {
       return Promise.resolve(false)
     }
@@ -42,21 +44,45 @@ export const useElementInteractions = () => {
 
   const onNodeDoubleClick: NodeMouseHandler<Node> = useCallback(
     (_event, node) => {
-      if (!canOpenPopover) return
+      // Assessment has no separate selection/editing step: a single click
+      // opens its feedback editor. Keep double-click for editable diagrams,
+      // where the first click still belongs to normal React Flow selection.
+      if (!canOpenPopover || canOpenAssessmentPopover) return
       setPopOverElementId(node.id)
     },
-    [canOpenPopover, setPopOverElementId]
+    [canOpenAssessmentPopover, canOpenPopover, setPopOverElementId]
   )
 
   const onEdgeDoubleClick: EdgeMouseHandler<Edge> = useCallback(
     (_event, edge) => {
-      if (!canOpenPopover) return
+      if (!canOpenPopover || canOpenAssessmentPopover) return
       setPopOverElementId(edge.id)
     },
-    [canOpenPopover, setPopOverElementId]
+    [canOpenAssessmentPopover, canOpenPopover, setPopOverElementId]
+  )
+
+  const onNodeClick: NodeMouseHandler<Node> = useCallback(
+    (_event, node) => {
+      if (!canOpenAssessmentPopover) return
+      if (readonly && !hasAssessmentToShow(node.id, [node], getAssessment))
+        return
+      setPopOverElementId(node.id)
+    },
+    [canOpenAssessmentPopover, getAssessment, readonly, setPopOverElementId]
+  )
+
+  const onEdgeClick: EdgeMouseHandler<Edge> = useCallback(
+    (_event, edge) => {
+      if (!canOpenAssessmentPopover) return
+      if (readonly && !hasAssessmentToShow(edge.id, [], getAssessment)) return
+      setPopOverElementId(edge.id)
+    },
+    [canOpenAssessmentPopover, getAssessment, readonly, setPopOverElementId]
   )
   return {
     onBeforeDelete,
+    onNodeClick,
+    onEdgeClick,
     onNodeDoubleClick,
     onEdgeDoubleClick,
   }

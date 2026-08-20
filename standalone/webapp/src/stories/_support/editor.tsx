@@ -236,7 +236,7 @@ export function ApollonAssessable({
 /**
  * The full editor opened on the INTERACTIVE-ELEMENT picker (the "Highlight"
  * view) — the surface where an author marks elements interactive for an
- * exam/quiz. Drives the editor with the same INIT-only props the host uses:
+ * exam. Drives the editor with the same INIT-only props the host uses:
  * `defaultView={Highlight}` opens directly in the picker and `availableViews`
  * exposes the Modelling↔Highlight toggle. `defaultView`/`availableViews` are
  * snapshotted on mount, so re-key the story to change them.

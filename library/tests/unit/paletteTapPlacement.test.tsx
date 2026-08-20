@@ -50,6 +50,12 @@ const config = {
   width: 160,
   height: 100,
   defaultData: {},
+  // The ghost renders the config's own SVG at the drop size rather than reusing the
+  // palette preview, so a stub is required even though these tests assert nothing
+  // about the shape itself.
+  svg: ({ width, height }: { width: number; height: number }) => (
+    <svg data-testid="ghost-svg" width={width} height={height} />
+  ),
 } as unknown as DropElementConfig
 
 const CANVAS_RECT = {
@@ -59,6 +65,20 @@ const CANVAS_RECT = {
   bottom: 600,
   width: 800,
   height: 600,
+  x: 0,
+  y: 0,
+  toJSON: () => {},
+} as DOMRect
+
+// The palette draws each element smaller than it drops (160x100 here), which is
+// the whole reason the grab point travels as a fraction rather than as pixels.
+const PREVIEW_RECT = {
+  left: 0,
+  top: 0,
+  right: 80,
+  bottom: 50,
+  width: 80,
+  height: 50,
   x: 0,
   y: 0,
   toJSON: () => {},
@@ -83,16 +103,21 @@ beforeEach(() => {
 
 afterEach(() => canvas.remove())
 
-const mountGhost = () => {
+const mountGhost = (
+  dropConfig: DropElementConfig = config,
+  previewRect: DOMRect = PREVIEW_RECT
+) => {
   const { getByRole } = render(
-    <DraggableGhost dropElementConfig={config}>
+    <DraggableGhost dropElementConfig={dropConfig}>
       <div data-testid="entry">entry</div>
     </DraggableGhost>
   )
-  return getByRole("button")
+  const wrapper = getByRole("button")
+  wrapper.getBoundingClientRect = () => previewRect
+  return wrapper
 }
 
-// setNodes now takes a functional updater; run it against the current nodes.
+// setNodes takes a functional updater; run it against the current nodes.
 const placedNodes = (): Node[] => {
   const updater = setNodes.mock.calls[0][0] as (prev: Node[]) => Node[]
   return updater(nodes)
@@ -149,17 +174,49 @@ describe("palette tap-to-place", () => {
 
   it("a drag drops at the pointer, unselected, and swallows the trailing click", () => {
     const wrapper = mountGhost()
-    fireEvent.pointerDown(wrapper, { clientX: 30, clientY: 30 })
+    // A quarter across and 30% down an 80x50 preview, so the node should land
+    // holding that same relative point of its 160x100 drop size: 40px and 30px
+    // in, both already on the 5px grid.
+    fireEvent.pointerDown(wrapper, { clientX: 20, clientY: 15 })
     fireEvent.pointerMove(document, { clientX: 400, clientY: 300 })
     fireEvent.pointerUp(document, { clientX: 400, clientY: 300 })
     fireEvent.click(wrapper) // the click a real drag also emits
 
     expect(setNodes).toHaveBeenCalledTimes(1) // click was swallowed
     const placed = placedNodes()
-    // Pointer (400,300) backed out by the grabbed-point offset (30/0.8 → 35).
-    expect(placed[0].position).toEqual({ x: 365, y: 265 })
+    expect(placed[0].position).toEqual({ x: 360, y: 270 })
     expect(placed[0].selected).toBe(false)
     expect(setSelectedElementsId).not.toHaveBeenCalled()
+  })
+
+  it("preserves a grab inside a preview label band for the ghost and drop", () => {
+    const labelConfig = {
+      ...config,
+      width: 60,
+      height: 60,
+    } as DropElementConfig
+    const labelPreviewRect = {
+      ...PREVIEW_RECT,
+      right: 60,
+      bottom: 90,
+      width: 60,
+      height: 90,
+    } as DOMRect
+    const wrapper = mountGhost(labelConfig, labelPreviewRect)
+
+    // The preview includes a 30px label band below its 60px node body. Its
+    // painted midpoint is therefore 45px down, not 30px down.
+    fireEvent.pointerDown(wrapper, { clientX: 30, clientY: 45 })
+    fireEvent.pointerMove(document, { clientX: 400, clientY: 300 })
+
+    const ghost = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-draggable-preview]")
+    ).find((element) => element.style.position === "fixed")
+    expect(ghost?.style.left).toBe("370px")
+    expect(ghost?.style.top).toBe("255px")
+
+    fireEvent.pointerUp(document, { clientX: 400, clientY: 300 })
+    expect(placedNodes()[0].position).toEqual({ x: 370, y: 255 })
   })
 
   it("a wobble that releases off-canvas places nothing on drop, then centres on the click", () => {

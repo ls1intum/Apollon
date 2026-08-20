@@ -366,14 +366,14 @@ export const THEME_GROUPS: ThemeGroup[] = [
     label: "Highlight",
     tier: "feature",
     reveal: "highlight",
-    blurb: "Accents for interactive (quiz-pickable) elements and drop targets.",
+    blurb: "Accents for highlighted elements and drop targets.",
     tokens: [
       {
         cssVar: "--apollon-interactive-selection",
         label: "Interactive selection",
         type: "color",
         default: "#f39c12",
-        hint: "Ring/fill marking interactive (quiz-pickable) elements.",
+        hint: "Ring/fill marking highlighted elements.",
       },
       {
         cssVar: "--apollon-dropzone-accent",

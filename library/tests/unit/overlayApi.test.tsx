@@ -452,6 +452,23 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
       global.ResizeObserver = original
     }
   })
+
+  it("stretches and centers the bottom-center region within its grid track", () => {
+    const { container } = renderBands([
+      {
+        id: "explanation",
+        region: "bottom-center",
+        render: () => <span>explanation</span>,
+      },
+    ])
+
+    const region = container.querySelector<HTMLElement>(
+      '[data-apollon-region="bottom-center"]'
+    )
+    expect(region).not.toBeNull()
+    expect(region!.style.justifySelf).toBe("stretch")
+    expect(region!.style.justifyContent).toBe("center")
+  })
 })
 
 // `useKeyboardInset` (inside OverlayLayer) mirrors the visual viewport's bottom

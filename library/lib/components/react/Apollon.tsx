@@ -70,8 +70,9 @@ export interface ApollonProps {
   scrollLock?: boolean
   /**
    * Answer the editor's keyboard shortcuts (see `APOLLON_SHORTCUTS`), including
-   * React Flow's delete and arrow-key moving. Set `false` where the host binds
-   * those keys itself, or mounts more than one editor. Default `true`.
+   * delete and React Flow's arrow-key moving. Shortcuts are scoped to the
+   * editor that owns focus; set `false` where the host binds those keys itself.
+   * Default `true`.
    */
   keyboardShortcuts?: boolean
   /** Override the editor's own strings for i18n. See {@link ApollonEditor.setLabels}. */

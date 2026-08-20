@@ -159,11 +159,7 @@ export const Sidebar = () => {
   ) => {
     const extraPreviewHeight = previewExtraHeight(config.type)
     return (
-      <DraggableGhost
-        key={keyValue}
-        dropElementConfig={config}
-        previewScale={previewScale}
-      >
+      <DraggableGhost key={keyValue} dropElementConfig={config}>
         <div
           className="apollon-palette__entry prevent-select"
           style={cellStyle}

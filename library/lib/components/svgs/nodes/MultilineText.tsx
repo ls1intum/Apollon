@@ -14,7 +14,7 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
    * Anchor y coordinate (meaning depends on `verticalAnchor`).
    *
    * For every anchor mode we treat `y` as if it were the `y` of a single-line
-   * `<text>` with `dominantBaseline="middle"`: the first line (or the only
+   * `<text>` with `dominantBaseline="central"`: the first line (or the only
    * line) renders at exactly that visual position, and additional lines grow in
    * the natural direction (down for `top`, up for `bottom`, split either way
    * for `middle`).
@@ -100,7 +100,7 @@ export const MultilineText: FC<Props> = ({
   const n = displayLines.length
 
   // Anchor semantics: treat `y` as if for a single-line <text> with
-  // dominantBaseline="middle". First/last/middle line's visual center lands
+  // dominantBaseline="central". First/last/middle line's visual center lands
   // exactly on `y`, extra lines grow in the natural direction.
   let firstLineCenterY: number
   if (verticalAnchor === "top") {
@@ -131,7 +131,7 @@ export const MultilineText: FC<Props> = ({
       x={x}
       y={y}
       textAnchor={textAnchor}
-      dominantBaseline="middle"
+      dominantBaseline="central"
       fontSize={fontSize}
       fontWeight={fontWeight}
       fontFamily={fontFamily}
@@ -140,11 +140,13 @@ export const MultilineText: FC<Props> = ({
       pointerEvents={pointerEvents}
       {...rest}
     >
+      {/* Repeated per tspan — each carries its own `y`. See CustomText. */}
       {displayLines.map((line, i) => (
         <tspan
           key={i}
           x={x}
           y={firstLineCenterY + i * resolvedLineHeight}
+          dominantBaseline="central"
           aria-hidden="true"
         >
           {line}

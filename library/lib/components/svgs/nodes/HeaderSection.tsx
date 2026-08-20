@@ -4,6 +4,9 @@ import { CustomText } from "./CustomText"
 import { LAYOUT } from "@/constants"
 import { stereotypeLabel } from "@/utils"
 
+/** Half the gap between the stereotype line and the name, in SVG user units. */
+const STEREOTYPE_HALF_GAP = 9
+
 interface HeaderSectionProps {
   showStereotype: boolean
   stereotype?: ClassStereotype
@@ -40,20 +43,27 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
       <CustomText
         x={width / 2}
         y={headerHeight / 2}
-        dominantBaseline="middle"
+        dominantBaseline="central"
         textAnchor="middle"
         fontWeight="bold"
         textDecoration={isUnderlined ? "underline" : "normal"}
         fill={textColor}
       >
+        {/* Baseline repeated per tspan — each carries its own `x`. See CustomText. */}
         {showStereotype && stereotype && (
-          <tspan x={width / 2} dy="-8" fontSize="85%">
+          <tspan
+            x={width / 2}
+            dy={`-${STEREOTYPE_HALF_GAP}`}
+            dominantBaseline="central"
+            fontSize="85%"
+          >
             {stereotypeLabel(stereotype)}
           </tspan>
         )}
         <tspan
           x={width / 2}
-          dy={showStereotype && stereotype ? "18" : "0"}
+          dy={showStereotype && stereotype ? `${STEREOTYPE_HALF_GAP * 2}` : "0"}
+          dominantBaseline="central"
           fontStyle={isAbstract ? "italic" : "normal"}
         >
           {name}

@@ -83,7 +83,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         fontWeight="bold"
         fill="var(--apollon-foreground, #000000)"
         textAnchor="middle"
-        alignmentBaseline="middle"
+        dominantBaseline="central"
       >
         {title}
       </text>

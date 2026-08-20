@@ -46,6 +46,15 @@ const MODEL = {
  * blanket a border's full width, so `elementFromPoint` there reports whichever
  * of two stacked elements wins — which is not what this is asking about.
  */
+const selectNodeNamed = async (page: Page, name: string) => {
+  const node = page
+    .locator(".react-flow__node")
+    .filter({ hasText: name })
+    .first()
+  await node.click()
+  await expect(node).toHaveClass(/selected/)
+}
+
 const resizeCursorsIn = (page: Page, name: string) =>
   page.evaluate((nodeName) => {
     const host = [...document.querySelectorAll(".react-flow__node")].find((n) =>
@@ -63,6 +72,7 @@ test("a class only ever exposes a horizontal resize cursor", async ({
   await openFixtureInLocalEditor(page, MODEL as Record<string, unknown>)
   await waitForCanvasReady(page)
 
+  await selectNodeNamed(page, "Locked")
   const cursors = await resizeCursorsIn(page, "Locked")
 
   // Its height is content-sized, so only width can change: the side lines and
@@ -80,6 +90,7 @@ test("a package still exposes resize cursors on every border", async ({
 
   // Guards the opposite error: suppressing the cursor everywhere would also
   // silence issue #629, and would be the worse bug.
+  await selectNodeNamed(page, "Free")
   const cursors = await resizeCursorsIn(page, "Free")
 
   expect(cursors).toContain("ns-resize")

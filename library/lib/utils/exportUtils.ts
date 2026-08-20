@@ -227,6 +227,14 @@ export const getSVG = (
   return mainSVG.outerHTML
 }
 
+// Browser baseline shift (em) per `dominant-baseline` value, measured against
+// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
+const BASELINE_SHIFT_EM: Record<string, number> = {
+  middle: 0.25,
+  central: 0.35,
+  hanging: 0.75,
+}
+
 /**
  * Extract all coordinate points from an SVG path string.
  * This includes endpoints AND control points for bezier curves,
@@ -790,9 +798,9 @@ function getNodeOverflowBoundsFromDOM(
  * Above- and below-`y` glyph extents as a fraction of font-size, by the SVG
  * `dominant-baseline` that places the `<text>` `y` anchor.
  *
- * - `middle` (use-case `<<include>>`/`<<extend>>`, communication messages): `y`
- *   sits at the glyph center, so the box is symmetric. Inter's cap+ascender
- *   half-height is ~0.6em; 0.75 over-includes safely.
+ * - `middle`/`central` (use-case `<<include>>`/`<<extend>>`, communication
+ *   messages): `y` sits at the glyph center, so the box is symmetric. Inter's
+ *   cap+ascender half-height is ~0.6em; 0.75 over-includes safely.
  * - alphabetic/`auto`/absent (association role + multiplicity end-labels): `y`
  *   IS the baseline, so the box is ASYMMETRIC — ascenders/caps rise ~0.9em
  *   ABOVE `y` and descenders drop ~0.3em BELOW it. A symmetric ±0.75em would
@@ -874,9 +882,10 @@ function mergeEdgeTextBoundsFromAttributes(
     anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x
   const right = left + width
 
+  const dominantBaseline =
+    textEl.getAttribute("dominant-baseline") || textEl.style.dominantBaseline
   const baseline =
-    (textEl.getAttribute("dominant-baseline") ||
-      textEl.style.dominantBaseline) === "middle"
+    dominantBaseline === "middle" || dominantBaseline === "central"
       ? "middle"
       : "alphabetic"
   const { up, down } = BASELINE_EXTENTS[baseline]
@@ -1436,38 +1445,42 @@ function resolveTspanDy(svg: Element): void {
   })
 }
 
-// Browser baseline shift (em) per `dominant-baseline` value, measured against
-// the bundled Inter. `middle` centres on `y`; `hanging` puts the text top near it.
-const BASELINE_SHIFT_EM: Record<string, number> = {
-  middle: 0.25,
-  central: 0.35,
-  hanging: 0.75,
-}
-
 /**
- * Resolve `dominant-baseline` to an explicit baseline `y` — non-browser engines
- * draw every label at the alphabetic baseline (too high) otherwise. Runs after
+ * Resolve `dominant-baseline` to an explicit alphabetic-baseline `y` for every
+ * positioned text run. Non-browser engines otherwise disagree about whether a
+ * child `<tspan>` inherits or applies its own baseline. Runs after
  * resolveTspanDy so tspan `y` is already absolute.
+ *
+ * Positioned tspans deliberately repeat the parent's baseline for WebKit. The
+ * compat pass must therefore consume and remove the baseline on the tspan too;
+ * shifting its y while leaving `dominant-baseline` behind applies the centring
+ * twice in renderers such as resvg.
  */
 function resolveDominantBaseline(svg: Element): void {
   svg.querySelectorAll("text").forEach((textEl) => {
-    const baseline = textEl.getAttribute("dominant-baseline")
-    const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
-    if (shiftEm === undefined) return
-
+    const parentBaseline = textEl.getAttribute("dominant-baseline")
     const textFontSize =
       parseFloat(textEl.getAttribute("font-size") ?? "") || DEFAULT_FONT_SIZE
     const shift = (el: Element, fallbackY: number) => {
+      const baseline = el.getAttribute("dominant-baseline") ?? parentBaseline
+      const shiftEm = baseline ? BASELINE_SHIFT_EM[baseline] : undefined
+      if (shiftEm === undefined) return
+
       const fontSize =
         parseFloat(el.getAttribute("font-size") ?? "") || textFontSize
-      const y = parseFloat(el.getAttribute("y") ?? "") || fallbackY
+      const parsedY = parseFloat(el.getAttribute("y") ?? "")
+      const y = isNaN(parsedY) ? fallbackY : parsedY
       el.setAttribute("y", `${y + shiftEm * fontSize}`)
+      el.removeAttribute("dominant-baseline")
     }
 
     const tspans = Array.from(textEl.querySelectorAll("tspan"))
     const textY = parseFloat(textEl.getAttribute("y") ?? "0") || 0
-    if (tspans.length) tspans.forEach((tspan) => shift(tspan, textY))
-    else shift(textEl, 0)
+    if (tspans.length) {
+      tspans.forEach((tspan) => shift(tspan, textY))
+    } else {
+      shift(textEl, 0)
+    }
     textEl.removeAttribute("dominant-baseline")
   })
 }

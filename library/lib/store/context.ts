@@ -88,6 +88,12 @@ export const useEdgeGeometryStore = <T>(
   return useStore(store, selector)
 }
 
+export const useEdgeGeometryStoreApi = (): StoreApi<EdgeGeometryStore> => {
+  const store = useContext(EdgeGeometryStoreContext)
+  if (!store) throw new Error("EdgeGeometryStoreContext not provided")
+  return store
+}
+
 export const useOverlayStore = <T>(selector: (state: OverlayStore) => T): T => {
   const store = useContext(OverlayStoreContext)
   if (!store) throw new Error("OverlayStoreContext not provided")

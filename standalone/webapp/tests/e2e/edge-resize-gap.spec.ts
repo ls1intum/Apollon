@@ -45,6 +45,8 @@ async function rightSideGap(page: Page): Promise<number> {
 
 async function resizePkgWider(page: Page): Promise<void> {
   const node = page.locator('.react-flow__node[data-id="pkgA"]')
+  // Resize controls exist only on a selected node, and arm only while hovered.
+  await node.click()
   await node.hover()
   await page.waitForTimeout(150)
   const handle = node.locator(".react-flow__resize-control.handle.bottom.right")

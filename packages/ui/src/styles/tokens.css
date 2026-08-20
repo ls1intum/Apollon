@@ -214,6 +214,13 @@
   --apollon-background-variant: var(--primitive-gray-50);
   --apollon-gray: var(--primitive-gray-100);
   --apollon-grid: var(--primitive-grid);
+
+  /* Scroll lock veil. Always DARKENS, in both themes: it has to read as the
+     canvas being dimmed behind a message, and a veil derived from the
+     foreground would invert to a white wash in dark mode. Public so a host can
+     retint it; the hint's ink is paired with it. */
+  --apollon-scroll-lock-veil: color-mix(in srgb, #12161f 45%, transparent);
+  --apollon-scroll-lock-text: #fff;
   --apollon-gray-variant: var(--primitive-gray-700);
   --apollon-danger: var(--primitive-danger-color);
   --apollon-guide-vertical: var(--primitive-guide-vertical);
@@ -304,8 +311,20 @@
   --apollon-chrome-inset-hairline: 0 0 0 0 transparent;
 
   /* Backdrop blur for floating glass chrome (structural — theme-independent;
-     the glass tint colors themselves are in the `:root, .apollon-editor` rule). */
-  --apollon-chrome-glass-blur: saturate(180%) blur(20px);
+     the glass tint colors themselves are in the `:root, .apollon-editor` rule).
+
+     `none`, deliberately. A backdrop-filter makes Chrome composite the element
+     AND render everything painted beneath it into a backdrop surface to sample.
+     The editor's chrome floats over `.react-flow__viewport`, so that surface is
+     the zoomed canvas — and Chrome rasterises it at the scale it had when the
+     surface was built, not the live one. Zoom in and the nodes stay sharp until
+     the next composite reuses that stale raster, at which point they turn
+     pixelated and stay that way until a pan forces a re-raster. Chrome reports
+     the layers as `compositingReasonIds: [BackdropFilter]`.
+
+     A host that knows its chrome never overlaps a transformed canvas can set
+     this token to re-enable the blur. */
+  --apollon-chrome-glass-blur: none;
 
   /* Motion tokens: short, decelerated. */
   --apollon-chrome-duration-hover: 120ms;
@@ -529,9 +548,13 @@
   );
   --apollon-chrome-accent: var(--apollon-primary, #3e8acc);
   --apollon-chrome-accent-contrast: var(--apollon-primary-foreground, #fff);
+
+  /* Without the blur above, the tint alone has to keep chrome text legible over
+     a busy diagram, so it matches the solid variant rather than the old 80% that
+     relied on the blur to do the rest. */
   --apollon-chrome-glass: color-mix(
     in srgb,
-    var(--apollon-background, #fff) 80%,
+    var(--apollon-background, #fff) 92%,
     transparent
   );
   --apollon-chrome-glass-solid: color-mix(
@@ -712,6 +735,10 @@
   --apollon-secondary: var(--primitive-slate-500);
   --apollon-alert-warning-yellow: var(--primitive-warning-yellow);
   --apollon-grid: var(--primitive-grid);
+
+  /* The canvas is already dark, so the veil leans further down to stay legible
+     as a dim rather than a haze. */
+  --apollon-scroll-lock-veil: color-mix(in srgb, #000 58%, transparent);
   --apollon-danger: var(--primitive-danger-color);
   --apollon-guide-vertical: var(--primitive-guide-vertical);
   --apollon-guide-horizontal: var(--primitive-guide-horizontal);
@@ -768,10 +795,5 @@
 @media (pointer: coarse) {
   :root {
     --apollon-chrome-pad: 4px;
-
-    /* A 20px blur under a full-height rail is re-rasterized on every pan frame,
-       which is the dominant chrome cost on a phone GPU — and the effect is least
-       visible at phone sizes. Halve the radius and drop the saturate pass. */
-    --apollon-chrome-glass-blur: blur(10px);
   }
 }

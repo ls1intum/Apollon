@@ -198,13 +198,14 @@ regions, the `<ApollonControl>` React component, and the "make room" model.
 
 ### Assessment
 
-| Member                              | Type                                                              | Purpose                                                                                                                                                                                                                                                                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `addOrUpdateAssessment(assessment)` | `(Assessment) => void`                                            | Attach or update a score/feedback assessment on an element.                                                                                                                                                                                                                                                                      |
-| `setElementHighlights(highlights)`  | `(Map<string, string> \| Record<string, string> \| null) => void` | Paint a translucent highlight overlay over the given element ids (id → CSS color) — e.g. to flag elements missing feedback or carrying suggestions. Host-driven and ephemeral: never written to the model, serialized, or shared with collaborators. Each call replaces the previous set; pass `null` or an empty map to clear.  |
-| `getElementHighlights()`            | `() => Record<string, string>`                                    | The current highlight map (element id → CSS color).                                                                                                                                                                                                                                                                              |
-| `getElementIdsByTag(tag)`           | `(string) => string[]`                                            | Ids of every element carrying the host-defined `tag` — a node, or one of its members (class attribute, method, SFC action row). Exact and case-sensitive apart from surrounding whitespace; `[]` for an unknown or blank tag. Pair with `setElementHighlights` to color a group — see [Element tags](/library/api/element-tags). |
-| `getInteractiveForSerialization()`  | `InteractiveElements \| undefined`                                | Interactive-element flags for inclusion in a saved model.                                                                                                                                                                                                                                                                        |
+| Member                              | Type                                                              | Purpose                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addOrUpdateAssessment(assessment)` | `(Assessment) => void`                                            | Attach or update a score/feedback assessment on an element.                                                                                                                                                                                                                                                                                                                                  |
+| `setElementHighlights(highlights)`  | `(Map<string, string> \| Record<string, string> \| null) => void` | Ring the given element ids (id → CSS color) — e.g. to flag elements missing feedback or carrying suggestions. Drawn as an outline, never a fill, so an element's own text and its assessment badge stay legible. Host-driven and ephemeral: never written to the model, serialized, or shared with collaborators. Each call replaces the previous set; pass `null` or an empty map to clear. |
+| `revealAssessment(id, options?)`    | `(string \| null, { reveal?: boolean }) => void`                  | Select one element, open its feedback popover, and pan the canvas to it at the current zoom. Lets a host's feedback list drive the canvas — click an entry, the diagram answers where it applies. `null` clears the selection and closes the popover; `{ reveal: false }` skips the pan. The popover only opens in assessment mode.                                                          |
+| `getElementHighlights()`            | `() => Record<string, string>`                                    | The current highlight map (element id → CSS color).                                                                                                                                                                                                                                                                                                                                          |
+| `getElementIdsByTag(tag)`           | `(string) => string[]`                                            | Ids of every element carrying the host-defined `tag` — a node, or one of its members (class attribute, method, SFC action row). Exact and case-sensitive apart from surrounding whitespace; `[]` for an unknown or blank tag. Pair with `setElementHighlights` to color a group — see [Element tags](/library/api/element-tags).                                                             |
+| `getInteractiveForSerialization()`  | `InteractiveElements \| undefined`                                | Interactive-element flags for inclusion in a saved model.                                                                                                                                                                                                                                                                                                                                    |
 
 ## Subscriptions
 
@@ -267,7 +268,11 @@ SVG/PNG/PDF over HTTP via the standalone server.
 
 `Mod` is Ctrl on Windows/Linux and Cmd on macOS; combos marked _view_ work on
 read-only diagrams too. Nothing fires while the user is typing in a field or
-while a dialog or menu is open.
+while a dialog or menu is open. Shortcuts belong to the editor that has focus:
+click or tap the canvas to activate it, then move focus outside the editor to
+return every shortcut to the surrounding page. Pointer-acquired canvas focus is
+released when the pointer leaves, so browser zoom remains available around an
+embedded editor. Keyboard users keep ownership until they move focus normally.
 
 | Combo                          | Action                                   |
 | ------------------------------ | ---------------------------------------- |
@@ -286,17 +291,18 @@ whose keys produce a printable character fails
 [WCAG 2.1.4](https://www.w3.org/WAI/WCAG21/Understanding/character-key-shortcuts)
 unless it can be turned off, remapped, or scoped to focus.
 
-Pass `keyboardShortcuts: false` to keep the editor's hands off every key above —
-for a host that binds them itself, or that mounts more than one editor (they
-listen on `document`, so two would both answer).
+Pass `keyboardShortcuts: false` to keep the editor's hands off every key above
+when the host binds them itself. Multiple editors need no special coordination:
+only the focused editor answers.
 
 `APOLLON_SHORTCUTS` is the list the editor runs, so a host can render a sheet
 that tracks it, or check it before binding a key of its own. Each entry's
 **first** combo is the primary one — a sheet should render only that; the rest
 are aliases (`Mod+Y` redo, layout variants of `Mod+=`). Entries flagged
-`canvasHandled` are React Flow's, not the editor's own handler. `shortcutKeyName`
-turns a combo into the key it names, so a sheet renders "1" rather than the
-`Digit1` code that combo matches on.
+`canvasHandled` are handled directly by React Flow on a focused canvas element,
+not by the editor-root dispatcher. `shortcutKeyName` turns a combo into
+the key it names, so a sheet renders "1" rather than the `Digit1` code that combo
+matches on.
 
 `matchesShortcutCombo`, `isTypingTarget` and `isInsideOverlay` are the
 primitives that handler matches and stands down with, exported so a host's own

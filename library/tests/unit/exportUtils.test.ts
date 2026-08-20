@@ -782,6 +782,45 @@ describe("resolveDominantBaseline", () => {
     expect(name.getAttribute("y")).toBe("39") // 35 + 0.25 * 16
   })
 
+  it("resolves a repeated tspan baseline exactly once", () => {
+    const svg = el("svg")
+    const text = el("text", {
+      y: "50",
+      "font-size": "16px",
+      "dominant-baseline": "central",
+    })
+    const line = el("tspan", {
+      y: "50",
+      "dominant-baseline": "central",
+    })
+    text.appendChild(line)
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(line.getAttribute("y")).toBe("55.6")
+    expect(text.hasAttribute("dominant-baseline")).toBe(false)
+    expect(line.hasAttribute("dominant-baseline")).toBe(false)
+
+    // The compat transform is safe to run again and cannot move the run twice.
+    __testing.resolveDominantBaseline(svg)
+    expect(line.getAttribute("y")).toBe("55.6")
+  })
+
+  it("resolves a tspan's own baseline without a parent baseline", () => {
+    const svg = el("svg")
+    const text = el("text", { y: "10", "font-size": "20px" })
+    const line = el("tspan", {
+      y: "0",
+      "dominant-baseline": "middle",
+    })
+    text.appendChild(line)
+    svg.appendChild(text)
+
+    __testing.resolveDominantBaseline(svg)
+    expect(line.getAttribute("y")).toBe("5")
+    expect(line.hasAttribute("dominant-baseline")).toBe(false)
+  })
+
   it("leaves text without dominant-baseline untouched", () => {
     const svg = el("svg")
     const text = el("text", { y: "10" })

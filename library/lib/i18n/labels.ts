@@ -22,6 +22,15 @@ export interface ApollonLabels {
   multiSelection: string
   multiSelectionHint: string
   /**
+   * Shown over the canvas when a scroll-locked editor swallows a wheel gesture.
+   * Receives the platform's zoom modifier already rendered as a key cap ("⌘" on
+   * Apple hardware, "Ctrl" elsewhere) so the sentence reads naturally in any
+   * language without the host having to detect the platform itself.
+   */
+  scrollLockHint?: (modifier: string) => string
+  /** Same situation, but for a touch device, where there is no modifier key. */
+  scrollLockHintTouch?: string
+  /**
    * Accessible name for an authored straight-edge waypoint handle.
    * Optional so a complete dictionary written against an older library release
    * remains assignable; {@link mergeLabels} always fills the English default.
@@ -62,6 +71,8 @@ export interface ApollonLabels {
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   assessmentFor: (type: string) => string
+  /** Optional for dictionaries authored before assessment navigation existed. */
+  previousAssessment?: string
   nextAssessment: string
   noComment: string
   notGraded: string
@@ -319,6 +330,9 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   redoHint: "Redo (Ctrl+Y or Ctrl+Shift+Z)",
   multiSelection: "Select multiple elements",
   multiSelectionHint: "Select multiple: click elements to add or remove",
+  scrollLockHint: (modifier) =>
+    `Hold ${modifier} and scroll to zoom the diagram`,
+  scrollLockHintTouch: "Use two fingers to move the diagram",
   moveEdgeWaypoint:
     "Waypoint: drag to move, double-click or press Delete to remove",
   miniMap: "Mini map",
@@ -349,6 +363,7 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   assessmentFor: (type) => `Assessment for ${type}`,
+  previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",
   noComment: "No comment",
   notGraded: "Not graded",

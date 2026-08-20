@@ -109,7 +109,7 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
         y={height + labelHeight / 2}
         textAnchor="middle"
         fontWeight="600"
-        dominantBaseline="middle"
+        dominantBaseline="central"
         fill={textColor}
       >
         {name}

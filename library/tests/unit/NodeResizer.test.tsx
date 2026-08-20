@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
-import { ReactFlowProvider } from "@xyflow/react"
+import { ReactFlowProvider, useStoreApi } from "@xyflow/react"
 import { NodeResizer } from "@/nodes/wrappers"
 
 // React Flow's resize controls read their store from the provider context.
@@ -49,12 +49,32 @@ describe("<NodeResizer>", () => {
     )
   })
 
-  it("sizes corner handles to 8px without the caller asking", () => {
+  it("sizes corner handles to 10px without the caller asking", () => {
     const { container } = renderResizer({ minWidth: 50, minHeight: 50 })
 
     expect(container.querySelector<HTMLElement>(".handle")?.style.width).toBe(
-      "8px"
+      "10px"
     )
+  })
+
+  // The handle class carries the grab-area widening (app.css) that takes the
+  // pointer target to the 24x24 CSS pixels WCAG 2.2 SC 2.5.8 asks for, without
+  // enlarging the drawn square. Every corner needs it, free path and locked path
+  // alike — React Flow renders the two through different components.
+  it("marks every corner handle with the hit-area class", () => {
+    const free = renderResizer({ minWidth: 50, minHeight: 50 })
+    expect(
+      free.container.querySelectorAll(".handle.apollon-resize-handle")
+    ).toHaveLength(4)
+
+    const locked = renderResizer({
+      minWidth: 100,
+      minHeight: 60,
+      maxHeight: 60,
+    })
+    expect(
+      locked.container.querySelectorAll(".handle.apollon-resize-handle")
+    ).toHaveLength(4)
   })
 
   // The line class carries the z-index lift + widened hit area (app.css) that
@@ -169,5 +189,46 @@ describe("<NodeResizer>", () => {
     })
 
     expect(controlClasses(container)).toEqual([])
+  })
+
+  // Call sites pass `isVisible={isDiagramModifiable}`, which only answers "may
+  // this diagram be edited". Without the selection gate that painted handles and
+  // lines around every node on the canvas at once, permanently.
+  describe("selection gate", () => {
+    // Seeds the store so the resizer has a real node to read `selected` from;
+    // `nodeId` is passed explicitly because the node-id context React Flow reads
+    // through `useNodeId` is not exported for tests to provide.
+    const renderForNode = (selected: boolean) => {
+      const Seed = () => {
+        const store = useStoreApi()
+        store.getState().setNodes([
+          {
+            id: "n1",
+            position: { x: 0, y: 0 },
+            data: {},
+            selected,
+          },
+        ])
+        return null
+      }
+      return render(
+        <ReactFlowProvider>
+          <Seed />
+          <NodeResizer nodeId="n1" minWidth={50} minHeight={50} />
+        </ReactFlowProvider>
+      )
+    }
+
+    it("renders nothing while its node is unselected", () => {
+      const { container } = renderForNode(false)
+
+      expect(controlClasses(container)).toEqual([])
+    })
+
+    it("renders the controls once its node is selected", () => {
+      const { container } = renderForNode(true)
+
+      expect(controlClasses(container)).not.toEqual([])
+    })
   })
 })

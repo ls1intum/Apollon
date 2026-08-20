@@ -156,25 +156,27 @@ drop shadow, and a few state tints. They are **not** on `ApollonTheme` (the type
 surface stays focused on color), but the names are part of the public contract —
 set them directly through `style` or a stylesheet rule.
 
-| CSS variable                         | Used for                                                                             |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| `--apollon-radius-sm`                | Small radius — node hover/selection rings, chips, pills (default `4px`).             |
-| `--apollon-radius-md`                | Control radius — inputs, toggles. Routes through `--apollon-radius` (default `6px`). |
-| `--apollon-radius-lg`                | Panel / popover / menu radius (default `8px`).                                       |
-| `--apollon-shadow`                   | Drop shadow for floating surfaces — menus, popovers, select listboxes.               |
-| `--apollon-interactive-selection`    | Accent ring/fill marking interactive (quiz-pickable) elements (default amber).       |
-| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-foreground`.           |
-| `--apollon-dropzone-accent`          | Ring/stroke shown on an assessment feedback drop target on hover (default blue).     |
-| `--apollon-dropzone-accent-fill`     | Translucent fill (40% of `--apollon-dropzone-accent`) outlining box/div targets.     |
-| `--apollon-on-collaboration-cursor`  | Ink drawn on a collaborator's colored cursor/avatar (default white).                 |
-| `--apollon-assessment-positive-text` | Glyph/text for a positive (rewarded) score — popover pill AND on-canvas badge.       |
-| `--apollon-assessment-positive-bg`   | Soft tint behind a positive score (popover pill + canvas badge).                     |
-| `--apollon-assessment-negative-text` | Glyph/text for a negative (penalty) score.                                           |
-| `--apollon-assessment-negative-bg`   | Soft tint behind a negative score.                                                   |
-| `--apollon-assessment-zero-text`     | Glyph/text for a zero score.                                                         |
-| `--apollon-assessment-zero-bg`       | Soft tint behind a zero score.                                                       |
-| `--apollon-assessment-ungraded-text` | Text for the "Not graded" pill (popover only — ungraded elements get no badge).      |
-| `--apollon-assessment-ungraded-bg`   | Soft tint behind the "Not graded" pill.                                              |
+| CSS variable                         | Used for                                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `--apollon-radius-sm`                | Small radius — node hover/selection rings, chips, pills (default `4px`).                             |
+| `--apollon-radius-md`                | Control radius — inputs, toggles. Routes through `--apollon-radius` (default `6px`).                 |
+| `--apollon-radius-lg`                | Panel / popover / menu radius (default `8px`).                                                       |
+| `--apollon-shadow`                   | Drop shadow for floating surfaces — menus, popovers, select listboxes.                               |
+| `--apollon-interactive-selection`    | Accent ring/fill marking highlighted elements — the picker and assessment (default amber).           |
+| `--apollon-scroll-lock-veil`         | Veil over the canvas while a scroll-locked editor explains the zoom gesture. Darkens in both themes. |
+| `--apollon-scroll-lock-text`         | Ink for that message, paired with the veil above.                                                    |
+| `--apollon-hover-neutral`            | Neutral hover wash for quiet controls, derived off `--apollon-foreground`.                           |
+| `--apollon-dropzone-accent`          | Ring/stroke shown on an assessment feedback drop target on hover (default blue).                     |
+| `--apollon-dropzone-accent-fill`     | Translucent fill (40% of `--apollon-dropzone-accent`) outlining box/div targets.                     |
+| `--apollon-on-collaboration-cursor`  | Ink drawn on a collaborator's colored cursor/avatar (default white).                                 |
+| `--apollon-assessment-positive-text` | Glyph/text for a positive (rewarded) score — popover pill AND on-canvas badge.                       |
+| `--apollon-assessment-positive-bg`   | Soft tint behind a positive score (popover pill + canvas badge).                                     |
+| `--apollon-assessment-negative-text` | Glyph/text for a negative (penalty) score.                                                           |
+| `--apollon-assessment-negative-bg`   | Soft tint behind a negative score.                                                                   |
+| `--apollon-assessment-zero-text`     | Glyph/text for a zero score.                                                                         |
+| `--apollon-assessment-zero-bg`       | Soft tint behind a zero score.                                                                       |
+| `--apollon-assessment-ungraded-text` | Text for the "Not graded" pill (popover only — ungraded elements get no badge).                      |
+| `--apollon-assessment-ungraded-bg`   | Soft tint behind the "Not graded" pill.                                                              |
 
 ```css
 /* Sharpen the editor's corners and lift its menus a touch more. */

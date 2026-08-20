@@ -878,10 +878,13 @@ export const dropElementConfigs: Readonly<
   ],
 })
 
+// Appended to every palette whatever the diagram type. This is the general UML
+// note, nothing to do with colour; the `colorDescription` type string stays
+// because it is in the published schema and in saved diagrams.
 export const ColorDescriptionConfig: DropElementConfig = Object.freeze({
   type: "colorDescription",
   width: 160,
   height: 50,
-  defaultData: { name: "Color Description" },
+  defaultData: { name: "Description" },
   svg: ColorDescriptionSVG,
 })

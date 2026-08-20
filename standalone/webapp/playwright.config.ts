@@ -131,6 +131,10 @@ export default defineConfig({
             use: {
               ...devices["Desktop Firefox"],
               viewport: { width: 1280, height: 720 },
+              // Trace screenshots run after every Playwright action and compete
+              // with the rAF probe for paint time. A performance project must
+              // measure the application, not continuous diagnostic capture.
+              trace: "off",
             },
           },
         ]
@@ -152,6 +156,9 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 720 },
+        // Keep the timing probe isolated from per-action trace screenshots.
+        // Failure screenshots and the HTML report remain available globally.
+        trace: "off",
       },
     },
   ],

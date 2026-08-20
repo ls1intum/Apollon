@@ -5,6 +5,7 @@ import {
 } from "@/store/context"
 import { ApollonMode } from "@/typings"
 import { useShallow } from "zustand/shallow"
+import { hasAssessmentToShow } from "@/utils/assessmentPresence"
 import {
   ClassEditPopover,
   ClassGiveFeedbackPopover,
@@ -364,9 +365,10 @@ export const PopoverManager = ({
   type,
 }: PopoverManagerProps) => {
   const viewportCenter = useViewportCenter()
-  const { nodes } = useDiagramStore(
+  const { nodes, getAssessment } = useDiagramStore(
     useShallow((state) => ({
       nodes: state.nodes,
+      getAssessment: state.getAssessment,
     }))
   )
 
@@ -420,7 +422,13 @@ export const PopoverManager = ({
   } else if (isGivingFeedback) {
     Component = giveFeedbackPopovers[type] ?? null
   } else if (isSeeingFeedback) {
-    Component = seeFeedbackPopovers[type] ?? null
+    // A reader gets a popover only where there is something to read; a tutor gets
+    // one everywhere, since that is how feedback is written. A class counts as
+    // having something to read when its attributes or methods are graded — the
+    // popover is the only way to reach their feedback.
+    Component = hasAssessmentToShow(elementId, nodes, getAssessment)
+      ? (seeFeedbackPopovers[type] ?? null)
+      : null
   }
 
   return Component ? (
@@ -432,6 +440,7 @@ export const PopoverManager = ({
       transformOrigin={popoverOrigin.transformOrigin}
       maxHeight={500}
       maxWidth={isEditing ? 278 : 400}
+      assessmentNavigation={isGivingFeedback || isSeeingFeedback}
     >
       <Component elementId={elementId} />
     </GenericPopover>

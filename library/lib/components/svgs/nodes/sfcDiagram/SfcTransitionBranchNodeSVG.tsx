@@ -51,7 +51,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
           x={cx}
           y={height + labelHeight / 2}
           textAnchor="middle"
-          dominantBaseline="middle"
+          dominantBaseline="central"
         >
           {name}
         </CustomText>

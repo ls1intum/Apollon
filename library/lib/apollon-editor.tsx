@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client"
+import { assessedIdsFor, hasAssessmentToShow } from "@/utils/assessmentPresence"
 import type { CSSProperties } from "react"
 // Must be imported FIRST (before ./utils, the stores and overlay modules) so the
 // editor render tree — and the node/edge component registries it pulls in —
@@ -70,6 +71,7 @@ import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
 import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
+import { getAssessmentElementCenter } from "./utils/assessmentFocus"
 
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
@@ -596,9 +598,18 @@ export class ApollonEditor {
     container.style.height = "4000px"
     container.style.zIndex = "-1000"
     container.style.top = "0"
-    container.style.position = "absolute"
-    container.style.left = "-99px"
+    // Keep the large measurement surface out of the host document's scroll
+    // geometry. An absolutely positioned 4000x4000 mount still expands the
+    // body's scrollWidth/scrollHeight while an async export is running, even
+    // when visibility:hidden. Fixed positioning is viewport-relative and
+    // strict containment prevents its internal React Flow layout from leaking
+    // size or paint effects into an embedding application.
+    container.style.position = "fixed"
+    container.style.left = "0"
+    container.style.contain = "strict"
+    container.style.pointerEvents = "none"
     container.style.visibility = "hidden"
+    container.setAttribute("aria-hidden", "true")
 
     document.body.appendChild(container)
 
@@ -1111,6 +1122,84 @@ export class ApollonEditor {
             highlights instanceof Map ? highlights : Object.entries(highlights)
           )
     this.assessmentSelectionStore.getState().setElementHighlights(record)
+  }
+
+  /**
+   * Bring one element's assessment into view: select it, open its feedback
+   * popover, and pan the canvas to it without changing the zoom.
+   *
+   * This is what a host's feedback list needs. Assessed elements carry a score
+   * badge, but a list beside the canvas has no way to say "this entry is about
+   * THAT box" other than making the canvas answer — so without this, such a list
+   * can only be read, never navigated. Pass `null` to close the popover and drop
+   * the selection again.
+   *
+   * The popover only opens in {@link Apollon.ApollonMode.Assessment}; in other
+   * modes this still selects and reveals the element, which is the meaningful
+   * part of the gesture there.
+   *
+   * @param elementId id of a node or edge, or `null` to clear.
+   * @param options.reveal pan the canvas to the element. Default `true`.
+   */
+  public revealAssessment(
+    elementId: string | null,
+    options?: { reveal?: boolean }
+  ): void {
+    const { nodes, edges, getAssessment, setLocalSelection } =
+      this.diagramStore.getState()
+
+    if (elementId === null) {
+      setLocalSelection([])
+      this.assessmentSelectionStore.getState().selectMultipleElements([])
+      this.popoverStore.getState().setPopOverElementId(null)
+      return
+    }
+
+    // A member (a class attribute, an SFC action row) is assessable but is not
+    // clickable on the canvas: its feedback is shown by the popover of the node
+    // that owns it. Resolve to that owner so a host's list entry for a member
+    // still opens something.
+    const owner = nodes.find((node) =>
+      assessedIdsFor(node.id, nodes).includes(elementId)
+    )
+    const targetId = owner?.id ?? elementId
+    const element =
+      nodes.find((node) => node.id === targetId) ??
+      edges.find((edge) => edge.id === targetId)
+
+    setLocalSelection([targetId])
+    // Selection follows what the caller asked for, not what had to be opened to
+    // show it. Asking for a class selects the class and its members, so a host
+    // list marks the whole group; asking for one method selects that method
+    // alone, even though the class's popover is what opens. Keying this off
+    // `targetId` instead made every member look selected whichever one you
+    // picked.
+    this.assessmentSelectionStore
+      .getState()
+      .selectMultipleElements(assessedIdsFor(elementId, nodes))
+    const { mode, readonly } = this.metadataStore.getState()
+    const canOpenFeedback =
+      mode === Apollon.ApollonMode.Assessment &&
+      (!readonly || hasAssessmentToShow(targetId, nodes, getAssessment))
+    this.popoverStore
+      .getState()
+      .setPopOverElementId(canOpenFeedback ? targetId : null)
+
+    if (options?.reveal === false || !element) return
+
+    const rf = this.reactFlowInstance
+    if (!rf) return
+    const centre = getAssessmentElementCenter(
+      element,
+      nodes,
+      this.edgeGeometryStore.getState()
+    )
+    if (!centre) return
+    // Zoom is the reader's, not ours: pan only.
+    rf.setCenter(centre.x, centre.y, {
+      duration: 220,
+      zoom: rf.getZoom(),
+    })
   }
 
   /** Returns a copy of the current highlight record (id -> CSS color). */

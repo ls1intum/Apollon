@@ -13,6 +13,7 @@ import {
   useMetadataStore,
   useOverlayStore,
 } from "@/store/context"
+import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { insetAwareFitView } from "@/overlay/fitView"
 import { ariaKeyshortcuts } from "@/keyboard"
 import { Tooltip } from "@/components/ui"
@@ -34,7 +35,8 @@ export interface ZoomControlsProps {
 export function ZoomControls({ history = true }: ZoomControlsProps) {
   const rf = useReactFlow()
   const t = useLabels()
-  const zoomLevelPercent = Math.round(useStore((s) => s.transform[2]) * 100)
+  // Rounded inside the selector so it re-renders at whole percents, not per frame.
+  const zoomLevelPercent = useStore((s) => Math.round(s.transform[2] * 100))
   const insets = useOverlayStore((s) => s.insets)
   const safeArea = useOverlayStore((s) => s.safeArea)
 
@@ -48,6 +50,7 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
     }))
   )
 
+  const isDiagramModifiable = useDiagramModifiable()
   const { multiSelectionMode, setMultiSelectionMode } = useMetadataStore(
     useShallow((state) => ({
       multiSelectionMode: state.multiSelectionMode,
@@ -113,17 +116,22 @@ export function ZoomControls({ history = true }: ZoomControlsProps) {
             <Maximize width={18} height={18} aria-hidden="true" />
           </button>
         </Tooltip>
-        <Tooltip title={t.multiSelectionHint}>
-          <button
-            type="button"
-            className="apollon-chrome-iconbtn apollon-chrome-iconbtn--toggle"
-            onClick={() => setMultiSelectionMode(!multiSelectionMode)}
-            aria-label={t.multiSelection}
-            aria-pressed={multiSelectionMode}
-          >
-            <SquareMousePointer width={18} height={18} aria-hidden="true" />
-          </button>
-        </Tooltip>
+        {/* Box-selecting a group is only useful if the group can then be moved
+            or deleted, so this stays out of read-only and assessment editors —
+            where it offered a mode that changed nothing. */}
+        {isDiagramModifiable && (
+          <Tooltip title={t.multiSelectionHint}>
+            <button
+              type="button"
+              className="apollon-chrome-iconbtn apollon-chrome-iconbtn--toggle"
+              onClick={() => setMultiSelectionMode(!multiSelectionMode)}
+              aria-label={t.multiSelection}
+              aria-pressed={multiSelectionMode}
+            >
+              <SquareMousePointer width={18} height={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
       {history && undoManagerExist && (

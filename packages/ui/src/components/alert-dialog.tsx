@@ -27,7 +27,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
       className={cn(
-        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 isolate z-50",
+        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/25 duration-100 fixed inset-0 isolate z-50",
         className
       )}
       {...props}
@@ -42,14 +42,20 @@ function AlertDialogContent({
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
-      <AlertDialogPrimitive.Popup
-        data-slot="alert-dialog-content"
-        className={cn(
-          "bg-popover data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm shadow-lg ring-1 duration-100 sm:max-w-sm fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
-          className
-        )}
-        {...props}
-      />
+      {/* Grid centring, not a 50% transform — see the note in dialog.tsx. */}
+      <div
+        data-slot="alert-dialog-positioner"
+        className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4"
+      >
+        <AlertDialogPrimitive.Popup
+          data-slot="alert-dialog-content"
+          className={cn(
+            "bg-popover ring-foreground/10 pointer-events-auto relative grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm shadow-lg ring-1 outline-none sm:max-w-sm",
+            className
+          )}
+          {...props}
+        />
+      </div>
     </AlertDialogPortal>
   )
 }

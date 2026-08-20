@@ -41,52 +41,55 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       edgeId={edgeId}
       x={position.x + EDGE_TOOLBAR_OFFSET_PX}
       y={position.y + EDGE_TOOLBAR_OFFSET_PX}
-      isVisible={isVisible}
+      isVisible
       className="apollon-element-toolbar-host"
       style={{
         zIndex: ZINDEX.TOOLTIP,
         pointerEvents: "none",
       }}
     >
-      <ButtonGroup
-        ref={anchorRef}
-        aria-label={t.selectionActions}
-        orientation="vertical"
-        className="apollon-element-toolbar nodrag nopan"
-      >
-        <IconButton
-          ariaLabel={t.deleteEdge}
-          tooltip={t.deleteEdge}
-          onClick={(event) => {
-            event.stopPropagation()
-            onDeleteClick(event)
-          }}
-        >
-          <Trash2 width={16} height={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          ariaLabel={t.editEdge}
-          tooltip={t.editEdge}
-          onClick={(event) => {
-            event.stopPropagation()
-            onEditClick(event)
-          }}
-        >
-          <Pencil width={16} height={16} aria-hidden="true" />
-        </IconButton>
-        {showResetRouting && (
-          <IconButton
-            ariaLabel={t.resetEdgeRouting}
-            tooltip={t.resetEdgeRouting}
-            onClick={(event) => {
-              event.stopPropagation()
-              onResetRoutingClick?.(event)
-            }}
+      <div ref={anchorRef}>
+        {isVisible && (
+          <ButtonGroup
+            aria-label={t.selectionActions}
+            orientation="vertical"
+            className="apollon-element-toolbar nodrag nopan"
           >
-            <RotateCcw width={16} height={16} aria-hidden="true" />
-          </IconButton>
+            <IconButton
+              ariaLabel={t.deleteEdge}
+              tooltip={t.deleteEdge}
+              onClick={(event) => {
+                event.stopPropagation()
+                onDeleteClick(event)
+              }}
+            >
+              <Trash2 width={16} height={16} aria-hidden="true" />
+            </IconButton>
+            <IconButton
+              ariaLabel={t.editEdge}
+              tooltip={t.editEdge}
+              onClick={(event) => {
+                event.stopPropagation()
+                onEditClick(event)
+              }}
+            >
+              <Pencil width={16} height={16} aria-hidden="true" />
+            </IconButton>
+            {showResetRouting && (
+              <IconButton
+                ariaLabel={t.resetEdgeRouting}
+                tooltip={t.resetEdgeRouting}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onResetRoutingClick?.(event)
+                }}
+              >
+                <RotateCcw width={16} height={16} aria-hidden="true" />
+              </IconButton>
+            )}
+          </ButtonGroup>
         )}
-      </ButtonGroup>
+      </div>
     </EdgeToolbar>
   )
 }

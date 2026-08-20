@@ -53,7 +53,7 @@ export const SfcJumpNodeSVG: React.FC<Props> = ({
         x={diamondX + diamondSize + padding}
         y={diamondY + diamondHalfSize}
         style={{ fontWeight: 600 }}
-        dominantBaseline="middle"
+        dominantBaseline="central"
       >
         {name}
       </text>

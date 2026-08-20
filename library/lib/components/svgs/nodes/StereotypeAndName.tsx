@@ -146,7 +146,7 @@ export const StereotypeAndName: FC<Props> = ({
           y={stereotypeCenterY}
           textAnchor="middle"
           fontWeight={String(fontWeight)}
-          dominantBaseline="middle"
+          dominantBaseline="central"
           fill={fill}
           fontSize="0.8em"
         >

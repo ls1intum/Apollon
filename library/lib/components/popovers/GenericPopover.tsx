@@ -2,6 +2,9 @@ import React, { ReactNode } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
+import { AssessmentNavigationFooter } from "./AssessmentNavigationFooter"
+import { useAssessmentNavigation } from "@/hooks"
 
 interface GenericPopoverProps {
   id: string
@@ -14,6 +17,7 @@ interface GenericPopoverProps {
   maxWidth?: number
   minWidth?: number
   style?: React.CSSProperties
+  assessmentNavigation?: boolean
 }
 
 // `transformOrigin` is the popover's own corner, so it dictates growth
@@ -50,12 +54,33 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   maxWidth = 278,
   minWidth = 200,
   style,
+  assessmentNavigation = false,
 }) => {
   const popoverThemeVars = usePortalThemeVars(
     anchorEl instanceof Element ? anchorEl : null
   )
+  const portalContainer = useApollonPortalContainer()
 
   const { side, align } = toSideAlign(transformOrigin)
+  const assessmentElementId = id.replace(/^popover-/, "")
+  const assessmentNavigationState = useAssessmentNavigation(assessmentElementId)
+  const navigation = assessmentNavigation ? assessmentNavigationState : null
+
+  // The popover is mostly a points field and a comment box, so a bare arrow key
+  // belongs to the caret; Mod+Arrow is free in both.
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (!navigation?.canNavigate) return
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+      return
+    }
+    if (event.key === "ArrowLeft") {
+      event.preventDefault()
+      navigation.navigate("previous")
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault()
+      navigation.navigate("next")
+    }
+  }
 
   if (!anchorEl && open) return null
 
@@ -66,7 +91,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
         if (!next) onClose()
       }}
     >
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer}>
         {anchorEl && (
           <Popover.Positioner
             anchor={anchorEl}
@@ -85,11 +110,17 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
                 maxHeight,
                 maxWidth,
                 minWidth,
-                overflowY: "auto",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
                 ...style,
               }}
+              onKeyDown={handleKeyDown}
             >
-              {children}
+              <div className="apollon-popover__content">{children}</div>
+              {assessmentNavigation && (
+                <AssessmentNavigationFooter elementId={assessmentElementId} />
+              )}
             </Popover.Popup>
           </Popover.Positioner>
         )}

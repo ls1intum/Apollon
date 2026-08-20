@@ -112,6 +112,24 @@ describe("selectRouteEntriesIntersectingRect", () => {
 
     expect(before).toEqual(["near", near])
     expect(shallow(before, after)).toBe(true)
+    expect(after).toBe(before)
+  })
+
+  it("recomputes a displayed-route selection when a preview enters or leaves the query", () => {
+    const far = [p(500, 0), p(500, 100)]
+    const entering = [p(80, 0), p(80, 100)]
+    const exact = { route: far }
+    const select = createDisplayedRouteEntriesSelector(query)
+
+    const outside = select(exact, { route: far })
+    const inside = select(exact, { route: entering })
+    const left = select(exact, { route: [p(510, 0), p(510, 100)] })
+
+    expect(outside).toEqual([])
+    expect(inside).toEqual(["route", entering])
+    expect(left).toEqual([])
+    expect(inside).not.toBe(outside)
+    expect(left).not.toBe(inside)
   })
 
   it("changes when a route enters, changes within, or leaves the query", () => {

@@ -146,6 +146,7 @@ describe("handleShortcutKeydown", () => {
     actions = {
       "select-all": vi.fn(),
       "clear-selection": vi.fn(),
+      delete: vi.fn(),
       copy: vi.fn(),
       cut: vi.fn(),
       paste: vi.fn(),
@@ -171,14 +172,13 @@ describe("handleShortcutKeydown", () => {
     expect(actions.duplicate).toHaveBeenCalledOnce()
   })
 
-  it("leaves Delete, Backspace and the arrows to React Flow", () => {
-    // A second delete path would race React Flow's own `deleteKeyCode`.
-    for (const key of ["Delete", "Backspace", "ArrowUp"]) {
-      expect(dispatch({ key }).defaultPrevented).toBe(false)
+  it("handles deletion and leaves focused-node movement to React Flow", () => {
+    for (const key of ["Delete", "Backspace"]) {
+      expect(dispatch({ key }).defaultPrevented).toBe(true)
     }
-    for (const action of Object.values(actions)) {
-      expect(action).not.toHaveBeenCalled()
-    }
+    expect(actions.delete).toHaveBeenCalledTimes(2)
+
+    expect(dispatch({ key: "ArrowUp" }).defaultPrevented).toBe(false)
   })
 
   it("ignores keys from text fields, from open overlays, and events already claimed", () => {

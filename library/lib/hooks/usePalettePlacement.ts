@@ -28,10 +28,7 @@ import { log } from "../logger"
  * Both build nodes through `buildPaletteNode` and nest through the same
  * `findDropParent`, so a tap can never create a nesting a drag forbids.
  */
-export function usePalettePlacement(
-  dropElementConfig: DropElementConfig,
-  previewScale: number
-) {
+export function usePalettePlacement(dropElementConfig: DropElementConfig) {
   const snapPx = CANVAS.SNAP_TO_GRID_PX
   const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
   const {
@@ -133,7 +130,7 @@ export function usePalettePlacement(
   const dropAtPointer = useCallback(
     (
       event: { clientX: number; clientY: number },
-      clickOffset: XYPosition
+      grabOffset: XYPosition
     ): boolean => {
       const canvas = getCanvas()
       if (!canvas) {
@@ -149,16 +146,6 @@ export function usePalettePlacement(
         event.clientY > bounds.bottom
       if (outside) return false
 
-      // The drop/preview ratio maps the grabbed point's fraction of the preview
-      // onto the (possibly larger) drop size, so the cursor stays over the same
-      // relative point of the dropped node. Ratio is 1 when they match.
-      const ratioX =
-        (dropElementConfig.dropWidth ?? dropElementConfig.width) /
-        dropElementConfig.width
-      const ratioY =
-        (dropElementConfig.dropHeight ?? dropElementConfig.height) /
-        dropElementConfig.height
-
       // Parent is hit-tested at the snapped cursor (where the ghost is
       // anchored); the node's top-left is the cursor backed out by the offset.
       const parent = findDropParent(
@@ -171,10 +158,8 @@ export function usePalettePlacement(
         x: event.clientX,
         y: event.clientY,
       })
-      absolute.x -=
-        Math.floor(((clickOffset.x / previewScale) * ratioX) / snapPx) * snapPx
-      absolute.y -=
-        Math.floor(((clickOffset.y / previewScale) * ratioY) / snapPx) * snapPx
+      absolute.x -= Math.floor(grabOffset.x / snapPx) * snapPx
+      absolute.y -= Math.floor(grabOffset.y / snapPx) * snapPx
 
       let position = absolute
       if (parent) {
@@ -200,7 +185,6 @@ export function usePalettePlacement(
       dropElementConfig,
       findDropParent,
       screenToFlowPosition,
-      previewScale,
       snapPx,
       nodes,
       commitNode,

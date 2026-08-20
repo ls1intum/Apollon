@@ -39,6 +39,11 @@ export const RowBlockSection: FC<RowBlockSectionProps> = ({
             width={width}
             itemHeight={itemHeight}
             yOffset={y}
+            badge={
+              showAssessmentResults && typeof item.score === "number" ? (
+                <AssessmentIcon score={item.score} x={iconX} y={iconY} />
+              ) : undefined
+            }
           >
             <FeedbackDropzone elementId={item.id} elementType={itemElementType}>
               <rect
@@ -51,7 +56,7 @@ export const RowBlockSection: FC<RowBlockSectionProps> = ({
               <CustomText
                 x={padding}
                 y={15 + index * itemHeight}
-                dominantBaseline="middle"
+                dominantBaseline="central"
                 textAnchor="start"
                 fill={textColor}
                 fontStyle={item.isAbstract ? "italic" : "normal"}
@@ -59,9 +64,6 @@ export const RowBlockSection: FC<RowBlockSectionProps> = ({
                 {item.name}
               </CustomText>
             </FeedbackDropzone>
-            {showAssessmentResults && typeof item.score === "number" && (
-              <AssessmentIcon score={item.score} x={iconX} y={iconY} />
-            )}
           </AssessmentSelectableElement>
         )
       })}

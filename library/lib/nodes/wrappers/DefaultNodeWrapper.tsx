@@ -8,9 +8,14 @@ import {
   getDistributedHandleOffsets,
   reduceVisibleArcCountForZoom,
 } from "@/utils"
-import { CANVAS } from "@/constants"
-import { Handle, Position, useStore } from "@xyflow/react"
-import { type CSSProperties, useMemo } from "react"
+import {
+  Handle,
+  Position,
+  useNodeConnections,
+  useStore,
+  useUpdateNodeInternals,
+} from "@xyflow/react"
+import { type CSSProperties, useEffect, useMemo } from "react"
 import { useShallow } from "zustand/shallow"
 
 // Handle IDs label the 9 connection points distributed across each side. The
@@ -136,19 +141,30 @@ export function DefaultNodeWrapper({
     })
   )
   const isDiagramModifiable = useDiagramModifiable()
-  // Connection indicators keep a usable minimum on-screen size when zoomed out
-  // and grow with the node when zoomed in (matching the edge handles):
-  //   scale = 1 / min(zoom, 1)  — constant on-screen for zoom<=1, natural >1.
-  const zoom = useStore((state) => state.transform[2])
-  const handleScreenScale =
-    1 /
-    Math.min(
-      Math.max(
-        Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
-        CANVAS.MIN_SCALE_TO_ZOOM_OUT
-      ),
-      1
-    )
+  // React Flow derives an edge's endpoint from its handle's measured geometry, so
+  // a handle an edge points at has to stay mounted. `useNodeConnections` reads the
+  // store's per-node connection map, which stays O(1) as the diagram grows.
+  const connections = useNodeConnections({ id: elementId })
+  const connectedHandleIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const connection of connections) {
+      if (connection.source === elementId && connection.sourceHandle)
+        ids.add(connection.sourceHandle)
+      if (connection.target === elementId && connection.targetHandle)
+        ids.add(connection.targetHandle)
+    }
+    return ids
+  }, [connections, elementId])
+
+  // A handle an edge points at is often not one this node draws, so it mounts
+  // only once that edge exists. React Flow measures a node's handles once and
+  // keeps that result for the life of the node, so a handle appearing later has
+  // no geometry, and the edge needing it resolves no endpoint and does not
+  // render at all. Re-measuring when the set changes is the supported way back.
+  const updateNodeInternals = useUpdateNodeInternals()
+  useEffect(() => {
+    updateNodeInternals(elementId)
+  }, [connectedHandleIds, elementId, updateNodeInternals])
   const {
     connectionGuidanceActive,
     connectionGuidanceSourceNodeId,
@@ -174,12 +190,10 @@ export function DefaultNodeWrapper({
     backgroundColor: "transparent",
     border: "none",
     zIndex: 10,
-    transition: "opacity 120ms ease",
     overflow: "visible",
     boxSizing: "border-box" as const,
-    // Consumed by the arc ::before pseudo-element (see app.css) to keep the
-    // visible indicator a predictable on-screen size across zoom.
-    "--arc-scale": handleScreenScale,
+    // `--arc-scale` is published canvas-wide by `ArcScalePublisher`, deliberately
+    // not per node: writing it here subscribes every node to the zoom.
   } as CSSProperties
 
   // Each side carries nine grid-aligned offsets (slots 0..8). The five
@@ -210,22 +224,28 @@ export function DefaultNodeWrapper({
   //   visibleArcCount = 5 → arcs at slots 0, 2, 4, 6, 8 (every even slot).
   //   visibleArcCount = 3 → arcs at slots 0, 4, 8 (corners + middle).
   //   visibleArcCount = 1 → arc at slot 4 only (centre).
-  const widthArcs = useMemo(() => {
-    const plan = getAxisHandlePlan(nodeWidth)
-    return reduceVisibleArcCountForZoom(
-      plan.offsets,
-      plan.visibleArcCount,
-      zoom
+  //
+  // Zoom is read through the reduction: the result is 1 | 3 | 5, so a node
+  // re-renders when the count changes rather than on every frame.
+  const widthPlan = useMemo(() => getAxisHandlePlan(nodeWidth), [nodeWidth])
+  const widthArcs = useStore((state) =>
+    reduceVisibleArcCountForZoom(
+      widthPlan.offsets,
+      widthPlan.visibleArcCount,
+      state.transform[2]
     )
-  }, [nodeWidth, zoom])
-  const heightArcs = useMemo(() => {
-    const plan = getAxisHandlePlan(connectionHeight)
-    return reduceVisibleArcCountForZoom(
-      plan.offsets,
-      plan.visibleArcCount,
-      zoom
+  )
+  const heightPlan = useMemo(
+    () => getAxisHandlePlan(connectionHeight),
+    [connectionHeight]
+  )
+  const heightArcs = useStore((state) =>
+    reduceVisibleArcCountForZoom(
+      heightPlan.offsets,
+      heightPlan.visibleArcCount,
+      state.transform[2]
     )
-  }, [connectionHeight, zoom])
+  )
 
   const hiddenHandleSet = useMemo(
     () => (hiddenHandles === true ? null : new Set<string>(hiddenHandles)),
@@ -590,6 +610,18 @@ export function DefaultNodeWrapper({
           <>
             {handles.map((handle) => {
               if (isHandleHiddenByProp(handle.id)) {
+                return null
+              }
+
+              // A node draws a fixed set of anchors but can address many more, and
+              // the rest exist only so a saved edge can resolve the one it points
+              // at. Mounting just those two sets keeps roughly two thirds of the
+              // handles off the canvas, which is the bulk of the per-frame React
+              // work on a large diagram.
+              if (
+                !visibleHandleIds.has(handle.id) &&
+                !connectedHandleIds.has(handle.id)
+              ) {
                 return null
               }
 

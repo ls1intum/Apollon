@@ -23,27 +23,12 @@ import { Assessment } from "@/typings"
 import type { BendHandle } from "@/utils/geometry/bendHandles"
 import { getSegmentGhostHandles } from "@/utils/geometry/freeWaypoints"
 import { isFreeformEdgeAnchor } from "@/utils/edgeUtils"
-import { CANVAS, EDGES } from "@/constants"
+import { EDGES } from "@/constants"
 import { useLabels } from "@/i18n/useLabels"
-
-// Edge handles live inside the zoomed React Flow viewport. We want them to
-// keep a usable MINIMUM on-screen size when zoomed out (so they never shrink to
-// a few px), but to GROW with the edge when zoomed in (so they stay in
-// proportion to the thick edge instead of looking like a tiny dot on it).
-//
-//   scale = 1 / min(zoom, 1)   (zoom floored to the canvas minimum)
-//     zoom <= 1  → 1/zoom  → constant on-screen size (counter-scaled)
-//     zoom  > 1  → 1       → natural flow size → grows on-screen with zoom
-export const getHandleScreenScale = (zoom: number): number => {
-  const safeZoom = Math.max(
-    Number.isFinite(zoom) && zoom > 0 ? zoom : 1,
-    CANVAS.MIN_SCALE_TO_ZOOM_OUT
-  )
-  return 1 / Math.min(safeZoom, 1)
-}
+import { getHandleScreenScale } from "@/utils/geometry/scalar"
 
 const useHandleScreenScale = (): number =>
-  getHandleScreenScale(useStore((state) => state.transform[2]))
+  useStore((state) => getHandleScreenScale(state.transform[2]))
 
 export type BaseEdgeProps = ExtendedEdgeProps
 const FREEFORM_ENDPOINT_HIT_TARGET_SIZE = 44
@@ -801,15 +786,15 @@ export const StepEdgeBody = ({
         key={markerKey}
         id={id}
         path={currentPath}
-        pointerEvents="none"
-        // No fat React Flow interaction ribbon (default 20px): select/hover ride
-        // our own `.edge-overlay` stroke instead. RF's ribbon is a wider hit path
-        // that, on a dense diagram, paints OVER a neighbour edge's precise endpoint/
-        // bend handle and steals its pointer. `.edge-overlay` is narrower and never
-        // reaches a co-located neighbour's handle, so removing the ribbon fixes the
-        // theft by subtraction. Selection/hover fire on the wrapping `.react-flow__
-        // edge` group, not the ribbon, so nothing is lost.
-        interactionWidth={0}
+        // Editable diagrams use the narrow overlay so endpoint and bend handles
+        // retain priority in dense layouts. Assessment/read-only diagrams have no
+        // drag handles; use React Flow's route-following interaction ribbon as the
+        // reliable hit surface for automatically routed bends as well as straight
+        // segments. The visible overlay remains useful for hover/selection styling.
+        pointerEvents={isDiagramModifiable ? "none" : "stroke"}
+        // Assessment has no edit handles competing for the path, so give the
+        // native hit surface a forgiving width for routed segments at low zoom.
+        interactionWidth={isDiagramModifiable ? 0 : 32}
         style={{
           stroke: strokeColor,
           strokeDasharray: strokeDashArray,
@@ -900,6 +885,12 @@ export const CommonEdgeElements = ({
 }) => {
   const nodeScore = assessments[id]?.score
   const uiPosition = toolbarPosition ?? pathMiddlePosition
+  // `toolbarPosition` is placed clear of the line so the EDIT toolbar does not
+  // cover it. Assessment has no toolbar, so its badge and its popover anchor
+  // must sit on the edge itself — reusing the toolbar's offset left the badge
+  // floating in empty space and anchored the popover far enough off the line to
+  // land on top of the node the edge points at.
+  const assessmentPosition = pathMiddlePosition
   // The callback ref makes the framework toolbar's portal content available
   // as soon as it mounts, without reading `.current` during render.
   const [anchorEl, anchorRef] = usePopoverAnchor<HTMLDivElement>()
@@ -930,7 +921,7 @@ export const CommonEdgeElements = ({
       <CustomEdgeToolbar
         edgeId={id}
         anchorRef={anchorRef}
-        position={uiPosition}
+        position={isDiagramModifiable ? uiPosition : assessmentPosition}
         onEditClick={() => setPopOverElementId(id)}
         onDeleteClick={handleDelete}
         canResetRouting={isDiagramModifiable && hasManualRoute}
@@ -939,8 +930,8 @@ export const CommonEdgeElements = ({
 
       {!isDiagramModifiable && (
         <AssessmentIcon
-          x={uiPosition.x - 15}
-          y={uiPosition.y - 15}
+          x={assessmentPosition.x - 15}
+          y={assessmentPosition.y - 15}
           score={nodeScore}
         />
       )}

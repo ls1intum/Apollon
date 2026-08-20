@@ -3,6 +3,7 @@ import { Check, Plus, Tag, X } from "lucide-react"
 import { Popover } from "@base-ui/react/popover"
 import { IconButton, Tooltip } from "@/components/ui"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
+import { useApollonPortalContainer } from "@/components/ui/portalContainer"
 import { useLabels } from "@/i18n/useLabels"
 import { useTagConfig } from "@/hooks/useTagConfig"
 import { normalizeTags } from "@/utils"
@@ -68,6 +69,7 @@ export const TagPicker: React.FC<TagControlProps> = ({
   const [draft, setDraft] = useState("")
   const [trigger, setTrigger] = useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
+  const portalContainer = useApollonPortalContainer()
 
   if (!enabled) return null
 
@@ -105,7 +107,7 @@ export const TagPicker: React.FC<TagControlProps> = ({
           <Tag width={16} height={16} aria-hidden="true" />
         </Popover.Trigger>
       </Tooltip>
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer}>
         <Popover.Positioner sideOffset={6} align="start">
           <Popover.Popup
             data-slot="tag-picker-content"

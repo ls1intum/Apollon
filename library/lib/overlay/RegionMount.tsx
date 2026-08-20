@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useLayoutEffect, useRef } from "react"
 
 /**
  * Mounts a host-owned DOM node (returned by `editor.getRegionElement`) into an
@@ -9,7 +9,10 @@ import { useEffect, useRef } from "react"
  */
 export function RegionMount({ el }: { el: HTMLElement }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
+  // The overlay layer measures its regions in a parent layout effect. Attach
+  // host-owned content in the child's layout phase so that first measurement
+  // sees the real dimensions instead of the empty pass-through mount.
+  useLayoutEffect(() => {
     const host = hostRef.current
     if (!host) return
     host.appendChild(el)

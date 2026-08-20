@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
   Apollon,
   ApollonMode,
@@ -42,10 +42,15 @@ import { CollapsibleSidebar } from "@/components/playground/CollapsibleSidebar"
 import { connectPlaygroundCollaboration } from "@/components/playground/connectPlaygroundCollaboration"
 import { ThemeConfigurator } from "@/components/playground/theme/ThemeConfigurator"
 
+/** Sentinel for the Mode select: Assessment with `readonly`, i.e. the student's
+ * read-only feedback view. Not an ApollonMode — the library models it as a flag. */
+const SEE_FEEDBACK_MODE = "assessment-see-feedback"
+
 const UMLDiagramTypes = Object.values(UMLDiagramType)
 
 export const ApollonPlayground: React.FC = () => {
   const { setEditor } = useEditorContext()
+  const fullscreenSurfaceRef = useRef<HTMLDivElement>(null)
   const [assessmentSelectedElements, setAssessmentSelectedElements] = useState<
     string[]
   >([])
@@ -65,6 +70,7 @@ export const ApollonPlayground: React.FC = () => {
 
   const [mode, setMode] = useState<ApollonMode>(ApollonMode.Modelling)
   const [readonly, setReadonly] = useState(false)
+  const [seeFeedback, setSeeFeedback] = useState(false)
   const [scrollLock, setScrollLock] = useState(false)
   const [diagramType, setDiagramType] = useState<UMLDiagramType>(
     diagram.model.type as UMLDiagramType
@@ -175,8 +181,18 @@ export const ApollonPlayground: React.FC = () => {
           <Field>
             <FieldLabel htmlFor="playground-mode">Mode</FieldLabel>
             <Select
-              value={mode}
-              onValueChange={(value) => setMode(value as ApollonMode)}
+              value={seeFeedback ? SEE_FEEDBACK_MODE : mode}
+              onValueChange={(value) => {
+                // "See feedback" is Assessment + readonly — the state a student
+                // is in when reading a graded diagram back.
+                const isSeeFeedback = value === SEE_FEEDBACK_MODE
+                setSeeFeedback(isSeeFeedback)
+                setMode(
+                  isSeeFeedback
+                    ? ApollonMode.Assessment
+                    : (value as ApollonMode)
+                )
+              }}
             >
               <SelectTrigger
                 id="playground-mode"
@@ -188,7 +204,10 @@ export const ApollonPlayground: React.FC = () => {
               <SelectContent>
                 <SelectItem value={ApollonMode.Modelling}>Modelling</SelectItem>
                 <SelectItem value={ApollonMode.Assessment}>
-                  Assessment
+                  Assessment (give feedback)
+                </SelectItem>
+                <SelectItem value={SEE_FEEDBACK_MODE}>
+                  Assessment (see feedback)
                 </SelectItem>
                 <SelectItem value={ApollonMode.Exporting}>Exporting</SelectItem>
               </SelectContent>
@@ -260,9 +279,20 @@ export const ApollonPlayground: React.FC = () => {
               and enable this test there to exchange live cursors.
             </FieldDescription>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="playground-enter-fullscreen"
+            onClick={() =>
+              void fullscreenSurfaceRef.current?.requestFullscreen()
+            }
+          >
+            Enter editor fullscreen
+          </Button>
         </FieldGroup>
 
-        {mode === ApollonMode.Assessment && !readonly && (
+        {mode === ApollonMode.Assessment && !readonly && !seeFeedback && (
           <AssessmentScoreChips />
         )}
 
@@ -295,12 +325,18 @@ export const ApollonPlayground: React.FC = () => {
           </Button>
         </div>
 
-        <AssessmentDataBox
-          assessmentSelectedElements={assessmentSelectedElements}
-        />
+        {mode === ApollonMode.Assessment && (
+          <AssessmentDataBox
+            assessmentSelectedElements={assessmentSelectedElements}
+          />
+        )}
       </CollapsibleSidebar>
 
-      <div className="flex h-full min-w-0 flex-1">
+      <div
+        ref={fullscreenSurfaceRef}
+        className="bg-background flex h-full min-w-0 flex-1"
+        data-testid="playground-fullscreen-surface"
+      >
         <Apollon
           key={mountKey}
           className="playground-apollon-editor"
@@ -323,7 +359,7 @@ export const ApollonPlayground: React.FC = () => {
           }
           debug={debug}
           mode={mode}
-          readonly={readonly}
+          readonly={readonly || seeFeedback}
           scrollLock={scrollLock}
           style={{ display: "flex", flex: 1, minWidth: 0, height: "100%" }}
           onMount={(editor: ApollonEditor) => {

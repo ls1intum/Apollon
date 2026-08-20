@@ -273,6 +273,30 @@ function HostRail({ editor }) {
 }
 ```
 
+Host controls can use the same framework-agnostic chrome classes as Apollon's
+built-ins:
+
+```html no-check
+<div
+  class="apollon-glass apollon-chrome-cluster"
+  role="group"
+  aria-label="Editor actions"
+>
+  <button class="apollon-chrome-iconbtn" type="button" aria-label="Undo">
+    <!-- icon -->
+  </button>
+  <button class="apollon-chrome-actionbtn" type="button">
+    <!-- icon -->
+    <span>Fullscreen</span>
+  </button>
+</div>
+```
+
+Use `.apollon-chrome-iconbtn` only when the icon has an unambiguous accessible
+name. Use `.apollon-chrome-actionbtn` when a visible label makes a host action
+clearer. Both use neutral hover/active layers and the same 32px chrome geometry;
+reserve `.apollon-chrome-accent-btn` for a genuine primary action.
+
 `getRegionElement` registers a host control under the reserved id
 `apollon:host:<region>` with `inset: "auto"`, so the diagram makes room for
 whatever you mount. The host mount is pointer-transparent by default so empty
