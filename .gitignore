@@ -88,3 +88,11 @@ docs/.snippet-typecheck/
 # Live-update publish artifacts (built by scripts/build-live-update.mjs)
 **/live-updates-dist/
 /jetbrains-plugin/.gradle/
+
+# JetBrains plugin: Gradle's own state dir, the IntelliJ Platform Gradle
+# Plugin's cache/sandbox dir (downloaded platform metadata, the `runIde`
+# sandbox — regenerated on every build, never hand-edited), and the webview
+# bundle the Gradle build copies in at build time.
+jetbrains-plugin/.gradle/
+jetbrains-plugin/.intellijPlatform/
+jetbrains-plugin/src/main/resources/webview/
