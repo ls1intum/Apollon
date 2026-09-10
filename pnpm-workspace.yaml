@@ -4,6 +4,7 @@ packages:
   - "standalone/*"
   - "vscode-extension"
   - "vscode-extension/webview"
+  - "jetbrains-plugin"
   - "jetbrains-plugin/webview"
   - "docs"
 
