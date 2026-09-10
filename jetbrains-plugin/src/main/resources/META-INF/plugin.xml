@@ -1,0 +1,66 @@
+<idea-plugin>
+    <!-- Reverse-DNS, immutable after the first Marketplace upload — see the
+         plan's open question on Marketplace ID collisions before publishing. -->
+    <id>de.tum.cit.aet.apollon</id>
+    <name>Apollon - TUM</name>
+    <vendor url="https://aet.cit.tum.de/">TUM Applied Education Technologies</vendor>
+
+    <description><![CDATA[
+    Model UML diagrams directly in IntelliJ IDEA or WebStorm using the
+    <a href="https://github.com/ls1intum/Apollon">Apollon</a> editor. Diagrams are
+    stored as <code>.apollon</code> files so you can version them in Git alongside
+    your source.
+    ]]></description>
+
+    <!-- Platform-only: this is what makes one build install into both IntelliJ
+         IDEA and WebStorm (and every other JetBrains IDE). Do not add
+         com.intellij.modules.java here — that would silently exclude WebStorm. -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- `com.intellij.ui.jcef.*` (JBCefApp/JBCefBrowser/...) lives in a
+         separate V2 content module, not in what `com.intellij.modules.platform`
+         pulls in — omitting this throws NoClassDefFoundError at runtime the
+         moment ApollonFileEditor touches JBCefApp, even though it compiles
+         fine (the compile-time platform jar has no such split). Confirmed
+         against the platform's own module descriptors: the bundled Markdown
+         plugin's JCEF-based preview declares the same dependency. -->
+    <dependencies>
+        <module name="intellij.platform.ui.jcef" />
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.ApollonFileEditorProvider" />
+        <projectConfigurable
+            id="apollon.settings"
+            displayName="Apollon"
+            instance="de.tum.cit.aet.apollon.settings.ApollonConfigurable" />
+        <toolWindow
+            id="Apollon"
+            anchor="right"
+            factoryClass="de.tum.cit.aet.apollon.toolwindow.DiagramToolWindowFactory" />
+    </extensions>
+
+    <actions>
+        <group id="Apollon.MainMenu" text="Apollon" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last" />
+            <action
+                id="Apollon.NewDiagram"
+                class="de.tum.cit.aet.apollon.actions.NewDiagramAction"
+                text="New Apollon Diagram…"
+                description="Create a new .apollon diagram file" />
+            <action
+                id="Apollon.ExportDiagram"
+                class="de.tum.cit.aet.apollon.actions.ExportDiagramAction"
+                text="Export Apollon Diagram…"
+                description="Render the focused diagram to a sibling SVG or PNG file" />
+        </group>
+    </actions>
+
+    <!-- App-level only: `FileDocumentManagerListener` has no project-scoped
+         topic, so `ApollonSaveListener` itself walks every open project. -->
+    <applicationListeners>
+        <listener
+            class="de.tum.cit.aet.apollon.editor.ApollonSaveListener"
+            topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener" />
+    </applicationListeners>
+</idea-plugin>

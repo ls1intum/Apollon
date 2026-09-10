@@ -1,0 +1,60 @@
+{
+  "id": "5d07d74a-e6b9-4fd5-9b47-377d4f3296d6",
+  "version": "4.2.0",
+  "title": "diagram",
+  "type": "UseCaseDiagram",
+  "nodes": [
+    {
+      "id": "0fa036c9-3456-4c8b-972a-25fc0ffc38cf",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 535,
+        "y": -85
+      },
+      "data": {
+        "name": "Use Case"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "ef198847-82e6-49df-9b27-5889177d288e",
+      "width": 100,
+      "height": 150,
+      "type": "useCaseActor",
+      "position": {
+        "x": 1035,
+        "y": 105
+      },
+      "data": {
+        "name": "Actor"
+      },
+      "measured": {
+        "width": 100,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "aea062b9-3ad5-459f-b24a-d3843b1e43eb",
+      "source": "ef198847-82e6-49df-9b27-5889177d288e",
+      "target": "0fa036c9-3456-4c8b-972a-25fc0ffc38cf",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "bottom",
+      "data": {
+        "targetAnchor": {
+          "side": "bottom",
+          "ratio": 0.7232142857142854
+        },
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}
