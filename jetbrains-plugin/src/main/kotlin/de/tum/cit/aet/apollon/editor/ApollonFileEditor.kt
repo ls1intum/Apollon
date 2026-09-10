@@ -36,6 +36,7 @@ import de.tum.cit.aet.apollon.theme.toInjectionScript
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
+import org.cef.network.CefRequest
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import javax.swing.JComponent
@@ -90,10 +91,19 @@ class ApollonFileEditor(
 
             b.jbCefClient.addLoadHandler(
                 object : CefLoadHandlerAdapter() {
-                    override fun onLoadEnd(
+                    // The webview's `App` posts "ready" from a `useEffect` that fires
+                    // as soon as its module script runs — which happens well before
+                    // the `load` event, since `onLoadEnd` waits on every subresource
+                    // (fonts, the export WASM, workers). Injecting the bridge there
+                    // loses the race: `__apollonPostToHost` is still undefined when
+                    // "ready" fires, that post is a silent no-op (optional chaining
+                    // in `jcefBridge.ts`), and the canvas never leaves its loading
+                    // state. `onLoadStart` fires right after navigation commits, before
+                    // the new document's own scripts run, so inject it here instead.
+                    override fun onLoadStart(
                         cefBrowser: CefBrowser,
                         frame: CefFrame,
-                        httpStatusCode: Int,
+                        transitionType: CefRequest.TransitionType,
                     ) {
                         if (frame.isMain) {
                             cefBrowser.executeJavaScript(
@@ -103,6 +113,15 @@ class ApollonFileEditor(
                                 cefBrowser.url,
                                 0,
                             )
+                        }
+                    }
+
+                    override fun onLoadEnd(
+                        cefBrowser: CefBrowser,
+                        frame: CefFrame,
+                        httpStatusCode: Int,
+                    ) {
+                        if (frame.isMain) {
                             pushTheme()
                         }
                     }
