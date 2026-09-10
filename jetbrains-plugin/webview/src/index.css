@@ -1,0 +1,120 @@
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* The canvas sizes itself from its parent — a `flex: 1` child of a block parent
+   computes to zero height and the diagram renders invisible. */
+#root {
+  display: flex;
+}
+
+#root .apollon-jetbrains-editor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The auto-export indicator, in the editor's own floating-glass chrome
+   language so it reads as part of the canvas rather than bolted on. */
+.apollon-jetbrains-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border: none;
+  color: var(--apollon-chrome-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.apollon-jetbrains-status:focus-visible {
+  outline: 1px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+
+.apollon-jetbrains-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: currentcolor;
+  transition: background-color 150ms;
+}
+
+/* Shown instead of the canvas when the document holds no diagram — an empty
+   file waiting for a type, or one Apollon cannot read. `--apollon-*` tokens
+   are set on `<html>` by `ThemeBridge.kt` (or fall back to the library's own
+   defaults before that), so they resolve even though the editor itself —
+   and its usual `.apollon-editor` scope — is not mounted here. */
+.apollon-jetbrains-notice {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  overflow-y: auto;
+  text-align: center;
+  color: var(--apollon-foreground);
+  background-color: var(--apollon-background);
+  font-family: inherit;
+}
+
+.apollon-jetbrains-notice h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.apollon-jetbrains-notice p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--apollon-secondary, var(--apollon-foreground));
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.apollon-jetbrains-notice-hint {
+  font-style: italic;
+}
+
+.apollon-jetbrains-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 640px;
+  margin: 8px 0;
+}
+
+.apollon-jetbrains-choices button {
+  padding: 6px 14px;
+  border: 1px solid var(--apollon-border, transparent);
+  border-radius: 2px;
+  color: var(--apollon-foreground);
+  background-color: var(--apollon-surface, transparent);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.apollon-jetbrains-choices button:hover {
+  background-color: var(--apollon-surface-sunken, var(--apollon-surface));
+}
+
+.apollon-jetbrains-choices button:focus-visible {
+  outline: 1px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
