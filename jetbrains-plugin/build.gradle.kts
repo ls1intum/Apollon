@@ -34,6 +34,7 @@ val marketplaceToken = providers.environmentVariable("JETBRAINS_MARKETPLACE_TOKE
 dependencies {
     intellijPlatform {
         intellijIdea(libs.versions.intellijIdea)
+        bundledModule("intellij.platform.ui.jcef")
         bundledModule("intellij.libraries.jcef")
     }
     implementation(libs.kotlinx.serialization.json)
