@@ -58,7 +58,12 @@ class DocumentSync(
         }
 
     init {
-        document.addDocumentListener(listener)
+        // The single-arg overload is deprecated in favor of this one, which
+        // also unregisters the listener when parentDisposable is disposed —
+        // a safety net alongside dispose()'s own explicit
+        // removeDocumentListener() below, not a replacement for it: dispose()
+        // must still flush the pending write before detaching.
+        document.addDocumentListener(listener, parentDisposable)
     }
 
     /** The canvas produced a new model. It reaches the document on a debounce. */

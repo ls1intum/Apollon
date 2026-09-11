@@ -55,12 +55,7 @@ export const useRemoteDraggingNodes = (
   const [overlay, setOverlay] = useState<RemoteDraggingOverlay>(() => new Map())
 
   useEffect(() => {
-    if (!active) {
-      // Drop any lingering overlay when collaboration turns off so locally
-      // owned positions take over immediately.
-      setOverlay((prev) => (prev.size === 0 ? prev : new Map()))
-      return
-    }
+    if (!active) return
 
     const localClientId = awareness.getLocalAwarenessClientId()
     const rebuild = (states: Map<number, CollaborationState>) => {
@@ -72,7 +67,13 @@ export const useRemoteDraggingNodes = (
     }
 
     rebuild(awareness.getAwarenessStates())
-    return awareness.subscribeToAwarenessChanges(rebuild)
+    const unsubscribe = awareness.subscribeToAwarenessChanges(rebuild)
+    return () => {
+      unsubscribe()
+      // Drop any lingering overlay when collaboration turns off so locally
+      // owned positions take over immediately.
+      setOverlay((prev) => (prev.size === 0 ? prev : new Map()))
+    }
   }, [awareness, active])
 
   return overlay
