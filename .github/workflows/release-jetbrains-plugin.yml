@@ -236,11 +236,18 @@ jobs:
           JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
           JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-        # signPlugin/publishPlugin read these as env vars via the `signing {
-        # }`/`publishing { }` blocks in build.gradle.kts. buildPlugin already
-        # ran in the build job; Gradle re-resolves the existing ZIP rather
-        # than rebuilding since inputs haven't changed.
-        run: ./gradlew signPlugin publishPlugin --console=plain
+          ZIP_NAME: ${{ needs.build.outputs.zip-name }}
+        # signPlugin/publishPlugin read the credentials above as env vars via
+        # the `signing {}`/`publishing {}` blocks in build.gradle.kts. This
+        # runner has no webview/dist and no Gradle task history from the
+        # build job, so -PprebuiltPluginZip points signPlugin at the artifact
+        # downloaded above instead of letting it default to (and rebuild via)
+        # buildPlugin's output — see the comment on the `signPlugin` task in
+        # build.gradle.kts. That signs and publishes the exact bytes the
+        # build job already produced and attested, not a fresh rebuild.
+        run: |
+          ./gradlew signPlugin publishPlugin --console=plain \
+            "-PprebuiltPluginZip=build/distributions/${ZIP_NAME}"
 
   release:
     name: Tag + GitHub Release

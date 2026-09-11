@@ -1,7 +1,9 @@
 package de.tum.cit.aet.apollon.settings
 
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import de.tum.cit.aet.apollon.editor.ApollonFileEditor
 import de.tum.cit.aet.apollon.protocol.AutoExport
 import java.awt.BorderLayout
 import javax.swing.JComboBox
@@ -28,7 +30,14 @@ class ApollonConfigurable(private val project: Project) : Configurable {
     override fun isModified(): Boolean = combo?.selectedItem != ApollonSettings.getInstance(project).autoExport
 
     override fun apply() {
-        (combo?.selectedItem as? AutoExport)?.let { ApollonSettings.getInstance(project).autoExport = it }
+        val value = combo?.selectedItem as? AutoExport ?: return
+        ApollonSettings.getInstance(project).autoExport = value
+        // Persisting the setting doesn't reach already-open canvases on its
+        // own — push it so they reflect the change without needing to be
+        // reopened.
+        FileEditorManager.getInstance(project).allEditors
+            .filterIsInstance<ApollonFileEditor>()
+            .forEach { it.applyAutoExportSetting() }
     }
 
     override fun reset() {

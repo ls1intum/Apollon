@@ -2,6 +2,7 @@ package de.tum.cit.aet.apollon.theme
 
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import java.awt.Color
+import java.util.Locale
 import javax.swing.UIManager
 
 /**
@@ -58,7 +59,10 @@ fun currentThemeTokens(): ThemeTokens {
     )
 }
 
-private fun Color.toCss(): String = "rgba(%d, %d, %d, %.3f)".format(red, green, blue, alpha / 255.0)
+// Locale.ROOT, not the default locale: %f is locale-sensitive (e.g. a German
+// locale renders 1.0 as "1,000"), which would emit invalid CSS.
+private fun Color.toCss(): String =
+    String.format(Locale.ROOT, "rgba(%d, %d, %d, %.3f)", red, green, blue, alpha / 255.0)
 
 private fun ThemeTokens.toCssDeclarations(): Map<String, String> =
     linkedMapOf(
