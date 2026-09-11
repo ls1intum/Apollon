@@ -1,0 +1,324 @@
+name: Release JetBrains Plugin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - jetbrains-plugin/package.json
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build + verify only, skip publish/tag/release"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-jetbrains-plugin
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check for new version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+          # The parent commit too, to read the version this push replaced.
+          fetch-depth: 2
+
+      - id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./jetbrains-plugin/package.json').version")
+          if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
+            echo "::error::jetbrains-plugin version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # A release is a version change, and nothing else — same rationale as
+          # release-vscode-extension.yml's check job.
+          if [ "$EVENT_NAME" = "push" ]; then
+            BEFORE=$(git show "${GITHUB_SHA}^:jetbrains-plugin/package.json" 2>/dev/null \
+              | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "")
+            if [ "$BEFORE" = "$VERSION" ]; then
+              echo "::notice::jetbrains-plugin stays at $VERSION — the manifest changed, the version did not. Nothing to release."
+              echo "release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          TAG="@tumaet/jetbrains-plugin@${VERSION}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build + verify plugin
+    needs: [check]
+    if: needs.check.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      zip-name: ${{ steps.pack.outputs.name }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build library
+        run: pnpm run build:lib
+
+      - name: Build webview bundle
+        run: pnpm run build:jetbrains
+
+      - name: Render change notes for this version
+        id: notes
+        working-directory: jetbrains-plugin
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        # Empty when this version has no CHANGELOG.md section yet (e.g. a
+        # workflow_dispatch dry run against an unreleased version) —
+        # build.gradle.kts's pluginConfiguration.changeNotes falls back to a
+        # link to the changelog file in that case. extract-changelog.mjs
+        # renders Markdown (for the GitHub Release body); the Marketplace
+        # <change-notes> field is HTML, so headings/bullets/links get a quick
+        # inline conversion rather than showing up as literal "###"/"-".
+        run: |
+          set -euo pipefail
+          node ../scripts/extract-changelog.mjs "$VERSION" jetbrains-plugin > /tmp/changelog.md || true
+          node -e '
+            const fs = require("fs")
+            const md = fs.readFileSync("/tmp/changelog.md", "utf8")
+            const html = md
+              .split("\n")
+              .map((line) => {
+                const heading = line.match(/^(#{2,4}) (.*)/)
+                if (heading) return `<h${heading[1].length}>${heading[2]}</h${heading[1].length}>`
+                const bullet = line.match(/^- (.*)/)
+                if (bullet) return `<li>${bullet[1]}</li>`
+                return line
+              })
+              .join("\n")
+              .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href=\"$2\">$1</a>")
+            fs.writeFileSync("/tmp/changelog.html", html)
+          '
+          {
+            echo "notes<<NOTES_EOF"
+            cat /tmp/changelog.html
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify plugin project configuration
+        working-directory: jetbrains-plugin
+        run: ./gradlew verifyPluginProjectConfiguration --console=plain
+
+      - name: Run plugin unit tests
+        working-directory: jetbrains-plugin
+        run: ./gradlew test --console=plain
+
+      - name: Build plugin ZIP
+        working-directory: jetbrains-plugin
+        env:
+          NOTES: ${{ steps.notes.outputs.notes }}
+        run: ./gradlew buildPlugin --console=plain "-PpluginChangeNotes=${NOTES}"
+
+      - name: Verify plugin against recommended IDEs
+        working-directory: jetbrains-plugin
+        run: ./gradlew verifyPlugin --console=plain
+
+      - name: Locate built ZIP
+        id: pack
+        working-directory: jetbrains-plugin
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=( build/distributions/*.zip )
+          if [[ ${#files[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly 1 plugin ZIP, found ${#files[@]}: ${files[*]}"
+            exit 1
+          fi
+          echo "name=$(basename "${files[0]}")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: jetbrains-plugin-zip
+          path: jetbrains-plugin/build/distributions/${{ steps.pack.outputs.name }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Generate artifact attestation
+        if: ${{ !inputs.dry_run }}
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: jetbrains-plugin/build/distributions/${{ steps.pack.outputs.name }}
+
+  publish:
+    name: Publish to JetBrains Marketplace
+    needs: [check, build]
+    if: needs.check.outputs.release == 'true' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: jetbrains-marketplace
+    permissions:
+      contents: read
+    outputs:
+      published: ${{ steps.token-check.outputs.configured }}
+    steps:
+      - name: Check for a Marketplace token
+        id: token-check
+        env:
+          TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        # No Marketplace credentials exist yet for this plugin (it hasn't had
+        # its first manual upload/approval). Build+verify still runs and
+        # still cuts a GitHub Release with the ZIP attached; publishing turns
+        # on by adding the secrets, no workflow change required.
+        run: |
+          set -euo pipefail
+          if [ -n "${TOKEN:-}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::JETBRAINS_MARKETPLACE_TOKEN is not set — skipping Marketplace publish. The GitHub Release still ships the signed-or-unsigned ZIP for manual upload."
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        if: steps.token-check.outputs.configured == 'true'
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            jetbrains-plugin
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: steps.token-check.outputs.configured == 'true'
+        with:
+          name: jetbrains-plugin-zip
+          path: jetbrains-plugin/build/distributions/
+
+      - name: Set up JDK 21
+        if: steps.token-check.outputs.configured == 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Sign + publish to the Marketplace
+        if: steps.token-check.outputs.configured == 'true'
+        working-directory: jetbrains-plugin
+        env:
+          JETBRAINS_MARKETPLACE_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+          JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          ZIP_NAME: ${{ needs.build.outputs.zip-name }}
+        # signPlugin/publishPlugin read the credentials above as env vars via
+        # the `signing {}`/`publishing {}` blocks in build.gradle.kts. This
+        # runner has no webview/dist and no Gradle task history from the
+        # build job, so -PprebuiltPluginZip points signPlugin at the artifact
+        # downloaded above instead of letting it default to (and rebuild via)
+        # buildPlugin's output — see the comment on the `signPlugin` task in
+        # build.gradle.kts. That signs and publishes the exact bytes the
+        # build job already produced and attested, not a fresh rebuild.
+        run: |
+          ./gradlew signPlugin publishPlugin --console=plain \
+            "-PprebuiltPluginZip=build/distributions/${ZIP_NAME}"
+
+  release:
+    name: Tag + GitHub Release
+    needs: [check, build, publish]
+    # Backfill case: publish was skipped (no token yet) but the GitHub
+    # Release tag is missing — still cut the Release with the ZIP attached.
+    if: |
+      !cancelled() && !inputs.dry_run &&
+      needs.check.outputs.release == 'true' &&
+      needs.build.result == 'success' &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+          # Full history so extract-changelog.mjs can resolve each changelog
+          # entry's commit type (feat/fix/...) to group the release notes.
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: jetbrains-plugin-zip
+          path: ./
+
+      - name: Tag + Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.check.outputs.version }}
+          PUBLISHED: ${{ needs.publish.outputs.published }}
+        run: |
+          set -euo pipefail
+          TAG="@tumaet/jetbrains-plugin@${VERSION}"
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+          shopt -s nullglob
+          files=( ./*.zip )
+          if [[ ${#files[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly 1 plugin ZIP to attach, found ${#files[@]}: ${files[*]}"
+            exit 1
+          fi
+          ZIP="${files[0]}"
+
+          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" jetbrains-plugin)
+
+          if [ "${PUBLISHED:-}" = "true" ]; then
+            INSTALL_NOTE="Published to the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/de.tum.cit.aet.apollon). Install it from **Settings → Plugins → Marketplace** in IntelliJ IDEA or WebStorm, or ZIP-install the attached archive."
+          else
+            INSTALL_NOTE="Not yet on the JetBrains Marketplace (no publishing credentials configured). Install the attached ZIP via **Settings → Plugins → ⚙ → Install Plugin from Disk…**."
+          fi
+
+          {
+            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
+            echo "$INSTALL_NOTE"
+          } > release-notes.md
+
+          GENERATE=()
+          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --verify-tag \
+            --latest=false \
+            "${GENERATE[@]}" \
+            --notes-file release-notes.md \
+            "$ZIP"

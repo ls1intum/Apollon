@@ -7,3 +7,9 @@ exclude_paths:
   # (https://github.com/fastlane/fastlane) and updated by re-copying, not by
   # hand. We do not restyle it to local lint rules.
   - "standalone/webapp/ios/App/AppStoreScreenshots/SnapshotHelper.swift"
+
+  # The JetBrains plugin bundles its webview as a pre-built, minified Vite
+  # output committed to the repo (IntelliJ plugins have no build-time step
+  # to run it themselves) — same reasoning as the VS Code extension's own
+  # webview bundle. Not hand-authored, not restyled to local lint rules.
+  - "jetbrains-plugin/src/main/resources/webview/**"

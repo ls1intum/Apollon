@@ -1,0 +1,44 @@
+# The JVM-side analogue of `pnpm-workspace.yaml`'s `catalog:` — every pinned
+# version for this workspace's Gradle build lives here, not scattered across
+# build.gradle.kts. Versions verified against plugins.jetbrains.com/docs/intellij
+# and the IntelliJ Platform Gradle Plugin's own sources at pin time (2026-09);
+# re-check upstream before bumping.
+#
+# The Kotlin/Java pins below are NOT "use the newest of everything" — they thread
+# a specific compatibility triangle:
+#   - IntelliJ Platform Gradle Plugin 2.x's own stated floor is Gradle >= 9.0.0
+#     and Java Runtime >= 17 (the 8.13 floor some older migration guides quote
+#     applied to earlier 2.x releases, not the pinned 2.18.1).
+#   - `intellijIdeaCommunity(...)` (the split Community/Ultimate helper) is
+#     deprecated and only published for platform versions < 2025.3 (build
+#     253). 2025.3 unified Community/Ultimate into one distribution, resolved
+#     via the `intellijIdea(...)` helper instead — that's what's pinned below,
+#     matching `sinceBuild` in build.gradle.kts so the compile-time API
+#     surface matches the declared runtime floor. The Plugin Verifier
+#     (Phase 6 CI) still checks newer IDEs beyond this floor.
+#   - IntelliJ Platform 262 requires Java 25 and Kotlin language/API level 2.4
+#     at compile time — both floors come directly from
+#     `verifyPluginProjectConfiguration`'s own reported requirement for this
+#     platform version, not from picking "newest available". Re-check this
+#     task's output whenever `intellijIdea` is bumped again; it moves with the
+#     platform version, not with this file.
+[versions]
+kotlin = "2.4.20"
+kotlinApi = "2.4"
+javaTarget = "25"
+intellijPlatform = "2.18.1"
+intellijIdea = "2026.2"
+junit = "4.13.2"
+# Bundled by our plugin rather than assumed from the platform classpath: the
+# platform's own copy (if any) is an implementation detail of unrelated
+# JetBrains code, not a contract we can compile against. Kotlin plugin
+# classloaders are isolated per-plugin, so bundling our own risks no conflict.
+kotlinxSerializationJson = "1.11.0"
+
+[libraries]
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlatform" }

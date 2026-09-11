@@ -23,3 +23,13 @@ storybook-static/
 # Local-only scratch / nested worktrees
 .tmp/
 .claude/
+
+# IntelliJ Platform Gradle Plugin's cache/sandbox dir (downloaded platform
+# metadata, the `runIde` sandbox) — regenerated on every Gradle build, not
+# hand-formatted, and not covered by the `build/` rule above (different name).
+jetbrains-plugin/.intellijPlatform/
+
+# The built webview bundle, tracked in git but produced by Vite — not
+# hand-formatted, and not covered by the `dist/`/`build/` rules above
+# (Gradle's copyWebviewAssets names the destination `webview/`).
+jetbrains-plugin/src/main/resources/webview/

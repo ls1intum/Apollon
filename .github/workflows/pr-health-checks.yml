@@ -21,6 +21,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       library: ${{ steps.filter.outputs.library }}
       vscode: ${{ steps.filter.outputs.vscode }}
+      jetbrains: ${{ steps.filter.outputs.jetbrains }}
       should-skip: ${{ steps.skip-check.outputs.should_skip }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -40,6 +41,8 @@ jobs:
               - 'packages/**'
               - 'standalone/**'
               - 'vscode-extension/**'
+              - 'jetbrains-plugin/webview/**'
+              - 'jetbrains-plugin/package.json'
               - 'docs/**'
               - 'scripts/**'
               - 'package.json'
@@ -65,6 +68,18 @@ jobs:
               # api-extractor inlines @tumaet/ui into those declarations, so a
               # design-system change reaches the extension the same way.
               - 'vscode-extension/**'
+              - 'library/**'
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/pr-health-checks.yml'
+              - '.github/actions/**'
+            jetbrains:
+              # Same rationale as vscode above: the webview bundles the
+              # library, and the Gradle build copies the webview's built
+              # output into the plugin resources, so either side breaking
+              # breaks the whole plugin.
+              - 'jetbrains-plugin/**'
               - 'library/**'
               - 'packages/**'
               - 'pnpm-lock.yaml'
@@ -210,6 +225,57 @@ jobs:
 
       - name: Build extension host + webview
         run: pnpm --filter apollon-extension run build:all
+
+  # Gradle/Kotlin side is its own job for the same reason as vscode-extension-
+  # checks: it needs `library/dist` (the webview imports @tumaet/apollon) and
+  # a JDK the other jobs don't set up. verifyPlugin (IntelliJ Plugin Verifier
+  # against the recommended IDEs) runs here too, not just at release time —
+  # it is the only check that catches "compiles against 252 but breaks on the
+  # IDE build a user actually has".
+  jetbrains-plugin-checks:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.jetbrains == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup pnpm + Node + install
+        uses: ./.github/actions/setup
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build library
+        run: pnpm run build:lib
+
+      - name: Typecheck + lint webview
+        run: |
+          pnpm --filter @tumaet/jetbrains-webview run typecheck
+          pnpm --filter @tumaet/jetbrains-webview run lint
+
+      - name: Build webview bundle
+        run: pnpm run build:jetbrains
+
+      - name: Verify plugin project configuration
+        working-directory: jetbrains-plugin
+        run: ./gradlew verifyPluginProjectConfiguration --console=plain
+
+      - name: Run plugin unit tests
+        working-directory: jetbrains-plugin
+        run: ./gradlew test --console=plain
+
+      - name: Build plugin ZIP
+        working-directory: jetbrains-plugin
+        run: ./gradlew buildPlugin --console=plain
+
+      - name: Verify plugin against recommended IDEs
+        working-directory: jetbrains-plugin
+        run: ./gradlew verifyPlugin --console=plain
 
   # Root `pnpm run test` covers only the library. The server's vitest suite
   # (incl. the PDF-conversion regression test) spawns the compiled worker and
@@ -511,6 +577,7 @@ jobs:
         no-mui-emotion,
         lint-and-format-check,
         vscode-extension-checks,
+        jetbrains-plugin-checks,
         server-tests,
         library-node22-compat,
         e2e-tests,

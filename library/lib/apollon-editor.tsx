@@ -270,19 +270,15 @@ export class ApollonEditor {
     }
 
     this.root.render(
-      <DiagramStoreContext.Provider value={this.diagramStore}>
-        <MetadataStoreContext.Provider value={this.metadataStore}>
-          <PopoverStoreContext.Provider value={this.popoverStore}>
-            <AssessmentSelectionStoreContext.Provider
+      <DiagramStoreContext value={this.diagramStore}>
+        <MetadataStoreContext value={this.metadataStore}>
+          <PopoverStoreContext value={this.popoverStore}>
+            <AssessmentSelectionStoreContext
               value={this.assessmentSelectionStore}
             >
-              <AlignmentGuidesStoreContext.Provider
-                value={alignmentGuidesStore}
-              >
-                <EdgeGeometryStoreContext.Provider
-                  value={this.edgeGeometryStore}
-                >
-                  <OverlayStoreContext.Provider value={this.overlayStore}>
+              <AlignmentGuidesStoreContext value={alignmentGuidesStore}>
+                <EdgeGeometryStoreContext value={this.edgeGeometryStore}>
+                  <OverlayStoreContext value={this.overlayStore}>
                     <AppWithProvider
                       onReactFlowInit={this.setReactFlowInstance.bind(this)}
                       collaboration={collaboration}
@@ -304,13 +300,13 @@ export class ApollonEditor {
                           this.syncManager.getLocalAwarenessClientId,
                       }}
                     />
-                  </OverlayStoreContext.Provider>
-                </EdgeGeometryStoreContext.Provider>
-              </AlignmentGuidesStoreContext.Provider>
-            </AssessmentSelectionStoreContext.Provider>
-          </PopoverStoreContext.Provider>
-        </MetadataStoreContext.Provider>
-      </DiagramStoreContext.Provider>
+                  </OverlayStoreContext>
+                </EdgeGeometryStoreContext>
+              </AlignmentGuidesStoreContext>
+            </AssessmentSelectionStoreContext>
+          </PopoverStoreContext>
+        </MetadataStoreContext>
+      </DiagramStoreContext>
     )
   }
 
@@ -686,30 +682,26 @@ export class ApollonEditor {
       diagramStore.getState().setAssessments(model.assessments)
 
       svgRoot.render(
-        <DiagramStoreContext.Provider value={diagramStore}>
-          <MetadataStoreContext.Provider value={metadataStore}>
-            <PopoverStoreContext.Provider value={popoverStore}>
-              <AssessmentSelectionStoreContext.Provider
-                value={assessmentSelectionStore}
-              >
-                <AlignmentGuidesStoreContext.Provider
-                  value={alignmentGuidesStore}
-                >
-                  <EdgeGeometryStoreContext.Provider value={edgeGeometryStore}>
-                    <OverlayStoreContext.Provider value={overlayStore}>
+        <DiagramStoreContext value={diagramStore}>
+          <MetadataStoreContext value={metadataStore}>
+            <PopoverStoreContext value={popoverStore}>
+              <AssessmentSelectionStoreContext value={assessmentSelectionStore}>
+                <AlignmentGuidesStoreContext value={alignmentGuidesStore}>
+                  <EdgeGeometryStoreContext value={edgeGeometryStore}>
+                    <OverlayStoreContext value={overlayStore}>
                       <AppWithProvider
                         onReactFlowInit={setReactFlowInstance}
                         collaboration={disabledCollaboration}
                         awareness={noopCollaborationAwareness}
                         onlyRenderVisibleElements={false}
                       />
-                    </OverlayStoreContext.Provider>
-                  </EdgeGeometryStoreContext.Provider>
-                </AlignmentGuidesStoreContext.Provider>
-              </AssessmentSelectionStoreContext.Provider>
-            </PopoverStoreContext.Provider>
-          </MetadataStoreContext.Provider>
-        </DiagramStoreContext.Provider>
+                    </OverlayStoreContext>
+                  </EdgeGeometryStoreContext>
+                </AlignmentGuidesStoreContext>
+              </AssessmentSelectionStoreContext>
+            </PopoverStoreContext>
+          </MetadataStoreContext>
+        </DiagramStoreContext>
       )
 
       // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.

@@ -34,6 +34,7 @@ export default {
         "webapp",
         "vscode",
         "vscode-extension",
+        "jetbrains",
         "deps",
         "ci",
         "docker",

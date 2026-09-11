@@ -4,6 +4,8 @@ packages:
   - "standalone/*"
   - "vscode-extension"
   - "vscode-extension/webview"
+  - "jetbrains-plugin"
+  - "jetbrains-plugin/webview"
   - "docs"
 
 # Inject workspace deps as real packages, not symlinks, so `pnpm deploy`
