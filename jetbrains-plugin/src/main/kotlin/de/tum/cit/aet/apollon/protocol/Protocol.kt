@@ -1,5 +1,6 @@
 package de.tum.cit.aet.apollon.protocol
 
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -8,6 +9,14 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+
+/** Wire field names shared by more than one message on either side of [toJson]/[parseWebviewMessage]. */
+private const val FIELD_TYPE = "type"
+private const val FIELD_MODEL = "model"
+private const val FIELD_AUTO_EXPORT = "autoExport"
+private const val FIELD_REQUEST_ID = "requestId"
+private const val FIELD_FORMAT = "format"
+private const val FIELD_REASON = "reason"
 
 /**
  * Host <-> webview wire contract, hand-mirrored from the VS Code extension's
@@ -44,30 +53,30 @@ fun HostMessage.toJson(): JsonObject =
     when (this) {
         is HostMessage.Init ->
             buildJsonObject {
-                put("type", "init")
-                put("model", model ?: JsonNull)
-                put("autoExport", autoExport.name)
+                put(FIELD_TYPE, "init")
+                put(FIELD_MODEL, model ?: JsonNull)
+                put(FIELD_AUTO_EXPORT, autoExport.name)
             }
         is HostMessage.Invalid ->
             buildJsonObject {
-                put("type", "invalid")
-                put("reason", reason)
+                put(FIELD_TYPE, "invalid")
+                put(FIELD_REASON, reason)
             }
         is HostMessage.AutoExportChanged ->
             buildJsonObject {
-                put("type", "autoExportChanged")
-                put("autoExport", autoExport.name)
+                put(FIELD_TYPE, "autoExportChanged")
+                put(FIELD_AUTO_EXPORT, autoExport.name)
             }
         is HostMessage.ExternalUpdate ->
             buildJsonObject {
-                put("type", "externalUpdate")
-                put("model", model ?: JsonNull)
+                put(FIELD_TYPE, "externalUpdate")
+                put(FIELD_MODEL, model ?: JsonNull)
             }
         is HostMessage.Export ->
             buildJsonObject {
-                put("type", "export")
-                put("format", format.name)
-                put("requestId", requestId)
+                put(FIELD_TYPE, "export")
+                put(FIELD_FORMAT, format.name)
+                put(FIELD_REQUEST_ID, requestId)
             }
     }
 
@@ -98,17 +107,17 @@ fun parseWebviewMessage(text: String): WebviewMessage {
     val root =
         try {
             Json.parseToJsonElement(text)
-        } catch (e: Exception) {
+        } catch (e: SerializationException) {
             throw ProtocolException("malformed webview message: ${e.message}")
         }
     if (root !is JsonObject) {
         throw ProtocolException("webview message is not a JSON object")
     }
-    return when (val type = root["type"]?.jsonPrimitive?.content) {
+    return when (val type = root[FIELD_TYPE]?.jsonPrimitive?.content) {
         "ready" -> WebviewMessage.Ready
         "modelChanged" ->
             WebviewMessage.ModelChanged(
-                root["model"] as? JsonObject
+                root[FIELD_MODEL] as? JsonObject
                     ?: throw ProtocolException("modelChanged without a model"),
             )
         "create" ->
@@ -120,14 +129,14 @@ fun parseWebviewMessage(text: String): WebviewMessage {
         "configureAutoExport" -> WebviewMessage.ConfigureAutoExport
         "exportResult" ->
             WebviewMessage.ExportResult(
-                requestId = root.intField("requestId"),
-                format = ExportFormat.valueOf(root["format"]!!.jsonPrimitive.content),
+                requestId = root.intField(FIELD_REQUEST_ID),
+                format = ExportFormat.valueOf(root[FIELD_FORMAT]!!.jsonPrimitive.content),
                 payload = root["payload"]!!.jsonPrimitive.content,
             )
         "exportFailed" ->
             WebviewMessage.ExportFailed(
-                requestId = root.intField("requestId"),
-                reason = root["reason"]?.jsonPrimitive?.content ?: "unknown error",
+                requestId = root.intField(FIELD_REQUEST_ID),
+                reason = root[FIELD_REASON]?.jsonPrimitive?.content ?: "unknown error",
             )
         else -> throw ProtocolException("unknown webview message type: $type")
     }

@@ -5,6 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+private const val TYPE_FIELD = "type"
+
 class DiagramDocumentTest {
     @Test
     fun `empty text reads as empty`() {
@@ -17,7 +19,7 @@ class DiagramDocumentTest {
         val text = """{"version":"4.0.0","id":"x","title":"t","type":"ClassDiagram","nodes":[],"edges":[]}"""
         val state = readDocument(text)
         assertTrue(state is DocumentState.Model)
-        assertEquals("ClassDiagram", (state as DocumentState.Model).model["type"]!!.jsonPrimitive.content)
+        assertEquals("ClassDiagram", (state as DocumentState.Model).model[TYPE_FIELD]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -25,7 +27,7 @@ class DiagramDocumentTest {
         val text = """{"model":{"type":"ClassDiagram","nodes":[]},"other":"kept elsewhere"}"""
         val state = readDocument(text)
         assertTrue(state is DocumentState.Model)
-        assertEquals("ClassDiagram", (state as DocumentState.Model).model["type"]!!.jsonPrimitive.content)
+        assertEquals("ClassDiagram", (state as DocumentState.Model).model[TYPE_FIELD]!!.jsonPrimitive.content)
     }
 
     @Test

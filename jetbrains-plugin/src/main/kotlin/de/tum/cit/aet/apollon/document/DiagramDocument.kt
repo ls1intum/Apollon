@@ -1,5 +1,6 @@
 package de.tum.cit.aet.apollon.document
 
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -37,7 +38,7 @@ fun parseModel(text: String): JsonObject {
     val root =
         try {
             Json.parseToJsonElement(text)
-        } catch (e: Exception) {
+        } catch (e: SerializationException) {
             throw DiagramParseError("not valid JSON")
         }
     val candidate = if (isWrapped(root)) root.jsonObject[MODEL_KEY] else root

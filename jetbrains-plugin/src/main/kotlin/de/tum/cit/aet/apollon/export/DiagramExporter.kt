@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import de.tum.cit.aet.apollon.document.diagramTitle
 import de.tum.cit.aet.apollon.document.exportTargetPath
 import de.tum.cit.aet.apollon.protocol.ExportFormat
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Base64
@@ -51,13 +52,11 @@ class DiagramExporter {
             .orTimeout(RENDER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .whenComplete { payload, error ->
                 inFlight.remove(requestId)
-                if (error != null) {
-                    if (error !is CancellationException) {
-                        reportFailure(name, error.message ?: error.toString())
-                    }
-                    return@whenComplete
+                if (error == null) {
+                    writeSibling(filePath, format, payload, name, silent)
+                } else if (error !is CancellationException) {
+                    reportFailure(name, error.message ?: error.toString())
                 }
-                writeSibling(filePath, format, payload, name, silent)
             }
     }
 
@@ -103,7 +102,11 @@ class DiagramExporter {
                     Messages.showInfoMessage("Exported $name", "Apollon")
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
+            reportFailure(name, e.message ?: e.toString())
+        } catch (e: IllegalArgumentException) {
+            // Malformed base64 payload (Base64.getDecoder().decode) or an
+            // invalid sibling path (Path.of) both surface as this.
             reportFailure(name, e.message ?: e.toString())
         }
     }

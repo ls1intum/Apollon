@@ -234,7 +234,8 @@ class ApollonFileEditor(
 
     override fun getName(): String = "Diagram"
 
-    override fun setState(state: FileEditorState) {}
+    // Required FileEditor override; this editor has no state to restore beyond the file itself.
+    override fun setState(state: FileEditorState) = Unit
 
     override fun isModified(): Boolean = FileDocumentManager.getInstance().isFileModified(file)
 
