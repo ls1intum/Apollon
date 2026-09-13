@@ -1635,11 +1635,26 @@ svg.react-flow__connectionline {
 /* Give-feedback box's title field (GiveFeedbackAssessmentBox): a bold, single-line-
    growing headline next to the score pill, echoing the host's unified feedback title
    input. The compound selector (not just [data-field=...]) outweighs the shared
-   textarea's own [data-slot="textarea"] rule regardless of stylesheet order. */
+   textarea's own [data-slot="textarea"] rule regardless of stylesheet order.
+   Keeps field-sizing: content (inherited) so the field keeps auto-growing its HEIGHT
+   with wrapped lines instead of scrolling. The bug this used to have — a long unbroken
+   word stretching the field (and the row it shares with the score pill/delete button)
+   wider instead of wrapping — was the classic flex-item overflow: a flex item's
+   default min-width:auto floors its shrink at its content's min-content size, and
+   field-sizing:content makes that min-content size track the actual longest word.
+   min-width: 0 lifts that floor so the row can shrink the field to wrap instead. */
 [data-field="assessment-title"][data-slot="textarea"] {
   font-weight: 600;
   min-height: calc(1lh + 0.5rem) !important;
   resize: none;
+  min-width: 0;
+}
+
+/* The shared TextField's own wrapper <span> around the title textarea is itself a flex
+   item of the same row, and needs the same min-width: 0 lift — otherwise IT floors the
+   shrink instead, one level up. */
+span:has(> [data-field="assessment-title"]) {
+  min-width: 0;
 }
 
 /* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
