@@ -1657,6 +1657,19 @@ span:has(> [data-field="assessment-title"]) {
   min-width: 0;
 }
 
+/* Give-feedback box footer: marks an assessment that still mirrors an Athena feedback
+   suggestion the assessor hasn't written over (GiveFeedbackAssessmentBox). Text-only,
+   colored rather than boxed, matching the host's own footer-variant suggestion badge. */
+[data-slot="assessment-suggestion-badge"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--apollon-feedback-suggestion, #b54efe);
+}
+
 /* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
    the element it marks so it stays legible over any node fill. (Export inlines
    the assessment tokens via CSS_VARIABLE_FALLBACKS, not this rule.) */

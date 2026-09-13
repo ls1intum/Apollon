@@ -74,6 +74,10 @@ export interface ApollonLabels {
   positiveFeedback: string
   /** Default title placeholder for a negatively-scored box (score < 0). */
   needsRevision: string
+  /** Give-feedback footer badge shown while this assessment mirrors an unaccepted-as-is Athena suggestion. */
+  aiFeedbackSuggestion: string
+  /** Same badge, worded for a suggestion the assessor has since edited. */
+  adaptedAiFeedbackSuggestion: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   assessmentFor: (type: string) => string
@@ -370,6 +374,8 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   feedback: "Feedback",
   positiveFeedback: "Positive",
   needsRevision: "Needs Revision",
+  aiFeedbackSuggestion: "AI Feedback Suggestion",
+  adaptedAiFeedbackSuggestion: "Adapted AI Feedback Suggestion",
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   assessmentFor: (type) => `Assessment for ${type}`,

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Trash2 } from "lucide-react"
+import { Sparkles, Trash2 } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
@@ -176,6 +176,16 @@ export const GiveFeedbackAssessmentBox = ({
         placeholder={t.addComment}
         fullWidth
       />
+      {existing?.feedbackSuggestion && (
+        <div data-slot="assessment-suggestion-badge">
+          <Sparkles width={14} height={14} aria-hidden="true" />
+          <span>
+            {existing.feedbackSuggestion === "adapted"
+              ? t.adaptedAiFeedbackSuggestion
+              : t.aiFeedbackSuggestion}
+          </span>
+        </div>
+      )}
     </PopoverSection>
   )
 }

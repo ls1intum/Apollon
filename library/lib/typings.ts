@@ -227,6 +227,10 @@ export type Assessment = {
   label?: string
   labelColor?: string
   correctionStatus?: FeedbackCorrectionStatus
+  /** Set when this mirrors an Athena feedback suggestion (the host's Feedback.isFeedbackSuggestion)
+   *  the assessor hasn't accepted-as-is or has edited since. Drives the AI feedback suggestion badge
+   *  in the give-feedback popover. */
+  feedbackSuggestion?: "suggested" | "adapted"
 }
 
 export type ExportOptions = {
