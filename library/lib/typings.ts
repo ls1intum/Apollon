@@ -219,6 +219,9 @@ export type Assessment = {
   modelElementId: string
   elementType: string
   score: number
+  /** Short headline (the host's Feedback.text). Falls back to the element name when empty. */
+  title?: string
+  /** Longer explanation (the host's Feedback.detailText). */
   feedback?: string
   dropInfo?: unknown
   label?: string

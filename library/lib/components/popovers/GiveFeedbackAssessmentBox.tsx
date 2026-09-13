@@ -3,9 +3,14 @@ import { Trash2 } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { IconButton, TextField } from "../ui"
+import { IconButton, TextField, Typography } from "../ui"
 import { useLabels } from "@/i18n/useLabels"
-import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+import { PopoverSection } from "./PopoverLayout"
+import { AssessmentScoreInput, toneFor } from "./AssessmentScoreInput"
+import { defaultTitleFor } from "./assessmentTitle"
+
+/** Gap between controls within a row (reference chip, title/score/delete). */
+const ROW_GAP = 8
 
 /** The coarse category stored on an Assessment's `elementType`. */
 type ElementType = "node" | "attribute" | "method" | "edge"
@@ -29,6 +34,13 @@ interface Props {
 /** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
 const FEEDBACK_MAX_LENGTH = 500
 
+/**
+ * Title cap. No counter is shown (matches the host's unified feedback title
+ * field), but the host's own Feedback.text column caps at 500 — this stays
+ * well under it since a title is meant to stay a headline, not a paragraph.
+ */
+const TITLE_MAX_LENGTH = 100
+
 export const GiveFeedbackAssessmentBox = ({
   elementId,
   name,
@@ -43,6 +55,8 @@ export const GiveFeedbackAssessmentBox = ({
     method: t.method,
     edge: t.edge,
   }
+  const typeText = typeLabel ?? ELEMENT_TYPE_LABEL[elementType]
+
   const { assessments, setAssessments } = useDiagramStore(
     useShallow((state) => ({
       assessments: state.assessments,
@@ -52,10 +66,23 @@ export const GiveFeedbackAssessmentBox = ({
 
   const existing = assessments[elementId]
 
+  // `title` is the short headline (host: Feedback.text); `feedback` is the
+  // longer explanation (host: Feedback.detailText) — mirroring the host's
+  // unified feedback card, which shows an editable title next to the score
+  // pill and a separate detail box below, rather than one undifferentiated
+  // comment field.
+  const [title, setTitle] = useState(existing?.title ?? "")
   const [score, setScore] = useState(existing?.score?.toString() ?? "")
   const [feedback, setFeedback] = useState(existing?.feedback ?? "")
 
-  const updateAssessment = (newScore: string, newFeedback: string) => {
+  // Default title placeholder tracks the score's sign — see assessmentTitle.ts.
+  const defaultTitle = defaultTitleFor(toneFor(score), t)
+
+  const updateAssessment = (
+    newTitle: string,
+    newScore: string,
+    newFeedback: string
+  ) => {
     const parsedScore = parseFloat(newScore)
     const validScore = isNaN(parsedScore) ? 0 : parsedScore
 
@@ -63,6 +90,7 @@ export const GiveFeedbackAssessmentBox = ({
       modelElementId: elementId,
       elementType,
       score: newScore === "" ? 0 : validScore,
+      title: newTitle || undefined,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
     }
@@ -77,49 +105,73 @@ export const GiveFeedbackAssessmentBox = ({
       const { [elementId]: _, ...rest } = prev
       return rest
     })
+    setTitle("")
     setScore("")
     setFeedback("")
   }
 
   return (
     <PopoverSection divider={divider}>
-      <AssessmentHeader
-        type={typeLabel ?? ELEMENT_TYPE_LABEL[elementType]}
-        name={name}
-        action={
-          <IconButton
-            ariaLabel={t.deleteAssessmentFor(name)}
-            tooltip={t.deleteAssessment}
-            onClick={handleDelete}
-          >
-            <Trash2 width={16} height={16} aria-hidden="true" />
-          </IconButton>
-        }
-      />
-      <TextField
-        type="number"
-        label={t.points}
-        helperText={t.negativePointsAllowed}
-        value={score}
-        onChange={(e) => {
-          const value = e.target.value
-          setScore(value)
-          updateAssessment(value, feedback)
+      {/* Reference row: which element this box is about — separate from the
+          editable title below, same split as the host's unified feedback
+          reference chip vs. its title field. */}
+      <Typography
+        variant="caption"
+        style={{ opacity: 0.7, display: "flex", alignItems: "center", gap: 4 }}
+      >
+        {typeText}
+        <span data-slot="assessment-name-chip">{name}</span>
+      </Typography>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: ROW_GAP,
         }}
-        placeholder="0"
-        fullWidth
-      />
+      >
+        <TextField
+          multiline
+          minRows={1}
+          maxLength={TITLE_MAX_LENGTH}
+          value={title}
+          onChange={(e) => {
+            const value = e.target.value
+            setTitle(value)
+            updateAssessment(value, score, feedback)
+          }}
+          placeholder={defaultTitle}
+          aria-label={t.assessmentFor(typeText)}
+          data-field="assessment-title"
+          fullWidth
+        />
+        <AssessmentScoreInput
+          value={score}
+          onChange={(value) => {
+            setScore(value)
+            updateAssessment(title, value, feedback)
+          }}
+          ariaLabel={t.points}
+          placeholder="0"
+        />
+        <IconButton
+          ariaLabel={t.deleteAssessmentFor(name)}
+          tooltip={t.deleteAssessment}
+          onClick={handleDelete}
+        >
+          <Trash2 width={16} height={16} aria-hidden="true" />
+        </IconButton>
+      </div>
       <TextField
         multiline
         minRows={3}
         maxLength={FEEDBACK_MAX_LENGTH}
-        label={t.feedback}
+        aria-label={t.feedback}
         helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
         value={feedback}
         onChange={(e) => {
           const value = e.target.value
           setFeedback(value)
-          updateAssessment(score, value)
+          updateAssessment(title, score, value)
         }}
         placeholder={t.addComment}
         fullWidth

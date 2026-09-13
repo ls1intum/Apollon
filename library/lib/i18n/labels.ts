@@ -67,7 +67,13 @@ export interface ApollonLabels {
   addComment: string
   points: string
   negativePointsAllowed: string
+  decreasePoints: string
+  increasePoints: string
   feedback: string
+  /** Default title placeholder for a positively-scored box (score > 0). */
+  positiveFeedback: string
+  /** Default title placeholder for a negatively-scored box (score < 0). */
+  needsRevision: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   assessmentFor: (type: string) => string
@@ -359,7 +365,11 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   addComment: "Add a comment…",
   points: "Points",
   negativePointsAllowed: "Negative points are allowed.",
+  decreasePoints: "Decrease points",
+  increasePoints: "Increase points",
   feedback: "Feedback",
+  positiveFeedback: "Positive",
+  needsRevision: "Needs Revision",
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   assessmentFor: (type) => `Assessment for ${type}`,

@@ -1540,10 +1540,6 @@ svg.react-flow__connectionline {
   font-variant-numeric: tabular-nums;
 }
 
-[data-slot="assessment-score"] > svg {
-  flex: none;
-}
-
 /* Tone pairs read the --apollon-assessment-* ramp (light/dark deltas live in
    tokens.css). The var() fallbacks mirror the light values per this file's
    convention; the real source — and the dark theme — lives in tokens.css. */
@@ -1565,6 +1561,85 @@ svg.react-flow__connectionline {
 [data-slot="assessment-score"][data-tone="ungraded"] {
   color: var(--apollon-assessment-ungraded-text, #475569);
   background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
+}
+
+/* Editable counterpart of the score pill above (AssessmentScoreInput, used by the
+   give-feedback popover). Unlike the read-only pill, the fill AND the border stay
+   neutral (white surface, gray border) at every tone — only the score text itself
+   carries the sign, so the pill's own chrome never fights the assessor's typed
+   value. +/- steppers sit inside the same pill, mirroring the host's unified
+   feedback points control. */
+[data-slot="assessment-score-input"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--apollon-border, #cdd5df);
+  background-color: var(--apollon-surface, #fff);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot="assessment-score-input"] input {
+  border: none;
+  background: transparent;
+  width: 4ch;
+  padding: 0;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+[data-slot="assessment-score-input"] input::-webkit-outer-spin-button,
+[data-slot="assessment-score-input"] input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Fixed neutral color (not `inherit`/tone) — the +/- steppers are a control
+   affordance, not the graded value, so they stay legible and visually
+   constant while the pill's border/text swing across the tone ramp. */
+[data-slot="assessment-score-step"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--apollon-foreground, #000);
+  flex: none;
+}
+
+[data-slot="assessment-score-step"]:hover {
+  background-color: color-mix(in srgb, var(--apollon-foreground, #000) 16%, transparent);
+}
+
+[data-slot="assessment-score-input"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+}
+
+[data-slot="assessment-score-input"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+}
+
+[data-slot="assessment-score-input"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+}
+
+/* Give-feedback box's title field (GiveFeedbackAssessmentBox): a bold, single-line-
+   growing headline next to the score pill, echoing the host's unified feedback title
+   input. The compound selector (not just [data-field=...]) outweighs the shared
+   textarea's own [data-slot="textarea"] rule regardless of stylesheet order. */
+[data-field="assessment-title"][data-slot="textarea"] {
+  font-weight: 600;
+  min-height: calc(1lh + 0.5rem) !important;
+  resize: none;
 }
 
 /* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
