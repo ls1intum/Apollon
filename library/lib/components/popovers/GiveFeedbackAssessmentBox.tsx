@@ -93,6 +93,15 @@ export const GiveFeedbackAssessmentBox = ({
       title: newTitle || undefined,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
+      // A suggestion transitions to adapted the moment it is touched, mirroring the host's unified
+      // feedback card (see UnifiedFeedbackComponent.markAdaptedIfSuggestion) - a one-way, sticky
+      // transition that never reverts. Building `updated` fresh on every keystroke would otherwise
+      // silently drop this field and make the "AI Feedback Suggestion" badge vanish instead of
+      // turning into "Adapted AI Feedback Suggestion".
+      feedbackSuggestion:
+        existing?.feedbackSuggestion === "suggested"
+          ? "adapted"
+          : existing?.feedbackSuggestion,
     }
 
     setAssessments((prev) => ({
