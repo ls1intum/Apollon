@@ -2,14 +2,14 @@ package de.tum.cit.aet.apollon.puml
 
 /**
  * `<keyword> ("Name"|Name) [as alias] [{]` — the element-declaration grammar shared by
- * UseCase/Component/Deployment (plan §9). Unlike Class (where a bare identifier is both the
- * display name and the relation-matching key, so aliasing was out of scope entirely — see
- * [PlantUmlImporter]'s doc comment), these families' display names are routinely quoted, spaced
- * phrases (`usecase "Place Order" as UC1`), so `as <alias>` genuinely needs to round-trip: it's
- * what relation lines reference. [alias] is carried through [PumlResidual.elementAliases] the same
- * way `typeKeywords`/`arrowTokens` already carry per-id source facts. An explicit `<<stereotype>>`
- * on the declaration is still out of scope (these families have no stereotype field to hold it) —
- * [matchDeclaration] returns `null` for one, same conservative punt Class makes.
+ * UseCase/Component/Deployment (plan §9). These families' display names are routinely quoted,
+ * spaced phrases (`usecase "Place Order" as UC1`), so `as <alias>` has to round-trip: it's what
+ * relation lines reference. [alias] is carried through [PumlResidual.elementAliases] the same way
+ * `typeKeywords`/`arrowTokens` already carry per-id source facts.
+ *
+ * Class has the same shape but its own regex in [PlantUmlImporter], because only there does a
+ * declaration also carry `<<stereotype>>`s and a member body. [matchDeclaration] still returns
+ * `null` for a stereotype — these families have no carrier for one.
  */
 data class ParsedDeclaration(val keyword: String, val displayName: String, val alias: String?, val opensBody: Boolean)
 

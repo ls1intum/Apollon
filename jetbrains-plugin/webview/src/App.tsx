@@ -7,7 +7,7 @@ import {
   type UMLModel,
 } from "@tumaet/apollon"
 import { onHostMessage, postToHost } from "./jcefBridge"
-import { diagramTypeEntries } from "./shared/diagramTypes"
+import { DIAGRAM_TYPES, starterEntries } from "./shared/diagramTypes"
 import type {
   AutoExport,
   DocumentModel,
@@ -25,17 +25,22 @@ type ExportStatus = "idle" | "exporting" | "exported" | "failed"
 /** What the canvas shows, driven entirely by what the document holds. */
 type View =
   | { kind: "loading" }
-  | { kind: "empty" }
+  /** Starter ids the host will accept, not what the canvas can draw. */
+  | { kind: "empty"; types: string[] }
   | { kind: "invalid"; reason: string }
   | { kind: "editor"; initial: UMLModel }
 
-function DiagramPicker() {
+function DiagramPicker({ types }: { types: string[] }) {
+  const offered = starterEntries(types)
+  // A `.puml` gets a subset of the thirteen, so say why the list is short rather
+  // than leaving it looking like the others failed to load.
+  const isNarrowed = offered.length < Object.keys(DIAGRAM_TYPES).length
   return (
     <div className="apollon-jetbrains-notice">
       <h1>New diagram</h1>
       <p>This file is empty. Choose a diagram type to start drawing.</p>
       <div className="apollon-jetbrains-choices">
-        {diagramTypeEntries().map(([diagramType, label]) => (
+        {offered.map(([diagramType, label]) => (
           <button
             key={diagramType}
             type="button"
@@ -46,7 +51,9 @@ function DiagramPicker() {
         ))}
       </div>
       <p className="apollon-jetbrains-notice-hint">
-        Nothing is written until you save — undo returns the file to empty.
+        {isNarrowed
+          ? "These are the diagram types PlantUML can store. Undo returns the file to empty."
+          : "Nothing is written until you save — undo returns the file to empty."}
       </p>
     </div>
   )
@@ -55,11 +62,12 @@ function DiagramPicker() {
 function InvalidNotice({ reason }: { reason: string }) {
   return (
     <div className="apollon-jetbrains-notice">
-      <h1>This file is not a diagram Architect Studio can read</h1>
-      <p>
-        Architect Studio could not read it: {reason}. Open it as text to repair
-        the contents, then reopen it as a diagram.
-      </p>
+      {/* Deliberately not "this file is broken": the same notice covers a
+          PlantUML diagram family the canvas cannot edit yet, which renders
+          perfectly well in the View tab. The host sends a full sentence saying
+          which case it is. */}
+      <h1>Nothing to edit on the canvas</h1>
+      <p>{reason}</p>
       <div className="apollon-jetbrains-choices">
         <button
           type="button"
@@ -141,6 +149,14 @@ function App() {
   const lastSyncedJson = useRef("")
 
   /**
+   * What the picker may offer, as last stated by an `init`. Held in a ref, not
+   * state, because it is read while deciding the next view rather than
+   * rendered on its own — and it must outlive the model that arrived with it,
+   * so that a file emptied later still shows the right shortlist.
+   */
+  const offeredTypes = useRef<string[]>(Object.keys(DIAGRAM_TYPES))
+
+  /**
    * Mount the canvas on the first model, then keep it — later models arrive as
    * the reactive `model` prop, so the viewport and selection survive. A document
    * emptied out from under us (an undone scaffold) falls back to the picker.
@@ -149,7 +165,7 @@ function App() {
     lastSyncedJson.current = JSON.stringify(model)
     if (model === null) {
       setExternal(undefined)
-      setView({ kind: "empty" })
+      setView({ kind: "empty", types: offeredTypes.current })
       return
     }
     setExternal(model)
@@ -190,6 +206,8 @@ function App() {
       switch (message.type) {
         case "init":
           setAutoExport(message.autoExport)
+          offeredTypes.current =
+            message.diagramTypes ?? Object.keys(DIAGRAM_TYPES)
           applyModel(message.model)
           break
         case "invalid":
@@ -227,7 +245,7 @@ function App() {
     return null
   }
   if (view.kind === "empty") {
-    return <DiagramPicker />
+    return <DiagramPicker types={view.types} />
   }
   if (view.kind === "invalid") {
     return <InvalidNotice reason={view.reason} />

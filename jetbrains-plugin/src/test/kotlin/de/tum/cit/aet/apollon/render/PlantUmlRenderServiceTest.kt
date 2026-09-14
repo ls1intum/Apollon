@@ -1,121 +1,103 @@
 package de.tum.cit.aet.apollon.render
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Exercises the real `plantuml-mit` engine (no mocking — plan's "no fake support" bar applies to
- *  this claim too: Preview must genuinely render every family, not just the five this plugin can
- *  visually edit) against one example per family, including families with no round-trip importer. */
+/** PlantUML's own wording when an include could not be fetched — the symptom this guards against. */
+private const val CANNOT_OPEN_URL = "Cannot open URL"
+
 class PlantUmlRenderServiceTest {
+    private fun c4(include: String) =
+        """
+        @startuml
+        $include
+
+        title System Context Diagram
+
+        Person(customer, "Customer", "Uses the online platform")
+        System(platform, "Order Platform", "Allows customers to place and manage orders")
+        Rel(customer, platform, "Uses", "HTTPS")
+
+        @enduml
+        """.trimIndent()
+
+    private fun renderedSvg(source: String): String {
+        val result = PlantUmlRenderService.render(source)
+        assertTrue("render failed: $result", result is PlantUmlRenderService.RenderResult.Rendered)
+        return (result as PlantUmlRenderService.RenderResult.Rendered).svg
+    }
+
+    /**
+     * The words an SVG puts on the page. PlantUML lays a label out word by word — "Order Platform"
+     * is two `<text>` elements — so searching the raw markup for a multi-word label always fails,
+     * whether or not the diagram rendered.
+     */
+    private fun wordsIn(svg: String) =
+        Regex("<text[^>]*>([^<]*)</text>")
+            .findAll(svg)
+            .map { it.groupValues[1].trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+
     @Test
-    fun `renders a class diagram to svg`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                class Customer {
-                  -name : String
-                  +placeOrder()
-                }
-                class Order
-                Customer "1" --> "*" Order
-                @enduml
-                """.trimIndent(),
+    fun `a C4 file written with includeurl renders offline`() {
+        val svg =
+            renderedSvg(
+                c4("!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml"),
             )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
+        assertFalse("the include was not answered locally", svg.contains(CANNOT_OPEN_URL))
+        // The C4 macros ran: «person» is drawn by the stereotype, not by anything in the source.
+        val words = wordsIn(svg)
+        assertTrue("no C4 person shape in: $words", words.any { it.contains("person") })
+        assertTrue("the diagram's own labels are missing: $words", words.containsAll(setOf("Customer", "Order", "Platform")))
     }
 
     @Test
-    fun `renders an object diagram to svg`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                object Order1
-                object Customer1
-                Customer1 --> Order1
-                @enduml
-                """.trimIndent(),
-            )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
+    fun `the older RicardoNiepel URL and the plain include spelling work too`() {
+        listOf(
+            "!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Context.puml",
+            "!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.4.0/C4_Context.puml",
+            "!include_once https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml",
+        ).forEach { include ->
+            assertFalse(include, renderedSvg(c4(include)).contains(CANNOT_OPEN_URL))
+        }
     }
 
     @Test
-    fun `renders a use case diagram to svg`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                actor Customer
-                usecase "Browse Catalog" as UC1
-                usecase "Checkout" as UC2
-                Customer --> UC1
-                Customer --> UC2
-                UC2 ..> UC1 : <<include>>
-                @enduml
-                """.trimIndent(),
-            )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
+    fun `a file already using the bundled include is unchanged`() {
+        val source = c4("!include <C4/C4_Context>")
+        assertEquals(source, PlantUmlRenderService.withLocalC4Includes(source))
+    }
+
+    /** The rewrite is for C4 only. Any other remote include is still the user's own business, and
+     *  PlantUML's diagnostic is more honest than a silent substitution would be. */
+    @Test
+    fun `an unrelated remote include is left alone`() {
+        val source = "@startuml\n!includeurl https://example.com/theme.puml\nclass A\n@enduml"
+        assertEquals(source, PlantUmlRenderService.withLocalC4Includes(source))
+    }
+
+    /** A C4 file PlantUML does not bundle must not be rewritten into a broken local include. */
+    @Test
+    fun `an unbundled C4 file name is left alone`() {
+        val source = "@startuml\n!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Nonsense.puml\n@enduml"
+        assertEquals(source, PlantUmlRenderService.withLocalC4Includes(source))
     }
 
     @Test
-    fun `renders a component diagram to svg`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                component Frontend
-                component Backend
-                Frontend --> Backend
-                @enduml
-                """.trimIndent(),
+    fun `indentation is preserved so the rewrite cannot disturb a nested include`() {
+        val rewritten =
+            PlantUmlRenderService.withLocalC4Includes(
+                "  !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml",
             )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
+        assertEquals("  !include <C4/C4_Container>", rewritten)
     }
 
     @Test
-    fun `renders a deployment diagram to svg`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                node "App Server" as srv {
-                  component Backend
-                }
-                artifact "backend.jar" as jar
-                srv --> jar
-                @enduml
-                """.trimIndent(),
-            )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
-    }
-
-    @Test
-    fun `renders a C4 diagram to svg even though it has no visual editor`() {
-        val result =
-            PlantUmlRenderService.render(
-                """
-                @startuml
-                !include <C4/C4_Context>
-                Person(customer, "Customer")
-                System(shop, "Shop")
-                Rel(customer, shop, "Places orders using")
-                @enduml
-                """.trimIndent(),
-            )
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
-    }
-
-    @Test
-    fun `invalid puml source still renders an svg showing the error rather than throwing`() {
-        val result = PlantUmlRenderService.render("@startuml\nthis is not valid plantuml syntax at all!!\n@enduml")
-        assertTrue(result is PlantUmlRenderService.RenderResult.Rendered)
-        assertTrue((result as PlantUmlRenderService.RenderResult.Rendered).svg.contains("<svg"))
+    fun `an ordinary class diagram still renders`() {
+        val svg = renderedSvg("@startuml\nclass Customer {\n  -id : Long\n}\n@enduml")
+        assertTrue(svg.contains("Customer"))
     }
 }

@@ -1,4 +1,4 @@
-package de.tum.cit.aet.apollon.workspace
+package de.tum.cit.aet.apollon.document
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

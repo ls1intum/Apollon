@@ -16,7 +16,7 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.concurrency.AppExecutorUtil
-import de.tum.cit.aet.apollon.workspace.ArchitectStudioWorkspace
+import de.tum.cit.aet.apollon.puml.PLANT_UML_EXTENSIONS
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -75,13 +75,11 @@ class DiagramToolWindowFactory : ToolWindowFactory, DumbAware {
         // freezing the EDT.
         fun refresh() {
             ReadAction.nonBlocking<List<VirtualFile>> {
-                val workspace = ArchitectStudioWorkspace.getInstance(project)
-                FilenameIndex.getAllFilesByExt(project, "apollon", GlobalSearchScope.projectScope(project))
-                    // A PUML-backed diagram's working `.apollon` file under `.architect-studio/`
-                    // is an internal artefact, never something the user opens directly (spec §6) —
-                    // its `.puml` source is what belongs in this list, and it isn't a `.apollon`
-                    // file at all, so this list simply omits PUML-backed diagrams entirely for now.
-                    .filterNot { workspace.isWorkingFile(it) }
+                val scope = GlobalSearchScope.projectScope(project)
+                // PlantUML files list alongside native ones: both open on the same canvas now, so
+                // there is no reason for this to be an `.apollon`-only index.
+                (listOf("apollon") + PLANT_UML_EXTENSIONS)
+                    .flatMap { FilenameIndex.getAllFilesByExt(project, it, scope) }
                     .sortedBy { it.path }
             }
                 .finishOnUiThread(ModalityState.defaultModalityState()) { files ->

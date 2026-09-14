@@ -13,6 +13,7 @@ object PlantUmlObjectExporter {
         lines += residual.preamble
         diagram.objects.forEach { lines += renderObject(it, indent) }
         diagram.relations.forEach { lines += PumlRelationGrammar.renderRelationLine(it, it.arrowToken.ifBlank { "--" }) }
+        lines += PumlNotes.render(diagram.notes, indent, diagram.objects.map { it.name }.toSet())
         lines += residual.unsupported
         lines += residual.postamble
         lines += residual.endLine

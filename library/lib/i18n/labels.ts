@@ -204,6 +204,11 @@ export interface ApollonLabels {
   componentName: string
   subsystemName: string
   stereotypePlaceholder: string
+  details: string
+  technology: string
+  technologyPlaceholder: string
+  description: string
+  descriptionPlaceholder: string
 
   // Reachability graph
   isInitialMarking: string
@@ -472,6 +477,11 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   componentName: "Component name",
   subsystemName: "Subsystem name",
   stereotypePlaceholder: "e.g. «device»",
+  details: "Details",
+  technology: "Technology",
+  technologyPlaceholder: "e.g. Kotlin/Ktor",
+  description: "Description",
+  descriptionPlaceholder: "What this element is responsible for",
   isInitialMarking: "Is Initial Marking",
   actionTable: "Action Table",
   actions: "Actions",

@@ -15,14 +15,22 @@ sealed interface PumlParseResult {
     data class Parsed(val diagram: PumlDiagram, val residual: PumlResidual, val unsupportedCount: Int) : PumlParseResult
 }
 
+/**
+ * `<keyword> ("Name"|Name) [as alias] [<<stereotype>>…] [{]`, matching PlantUML's own order — a
+ * stereotype written *before* the alias is a syntax error there, so it is not accepted here either.
+ * The stereotype group repeats because a declaration may carry several, and its body is `[^>]*` so
+ * a parameterised one (`<<(D,orchid) Database>>`) matches too.
+ */
 private val TYPE_DECL =
     Regex(
-        """^(abstract\s+class|abstract|class|interface|enum|entity)\s+(?:"([^"]+)"|([A-Za-z_][\w.$]*))(\s+as\s+\S+)?(\s*<<[^>]*>>)?\s*(\{)?\s*$""",
+        """^(abstract\s+class|abstract|class|interface|enum|entity)\s+(?:"([^"]+)"|([A-Za-z_][\w.$]*))""" +
+            """(?:\s+as\s+([A-Za-z_][\w.$]*))?((?:\s*<<[^>]*>>)+)?\s*(\{)?\s*$""",
         RegexOption.IGNORE_CASE,
     )
 
+private val PACKAGE_DECL = declarationRegex("package")
+
 private val IDENT = Regex("""[A-Za-z_][\w.$]*""")
-private val SEPARATOR_LINE = Regex("""^[-.=_]{2,}.*""")
 private val TOKEN = Regex(""""[^"]*"|\S+""")
 
 private val TIER_A_PREFIXES =
@@ -49,14 +57,17 @@ object PlantUmlImporter {
         val body = lines.subList(startIdx + 1, endIdx)
 
         if (looksNonClass(body)) {
-            return PumlParseResult.Rejected("Architect Studio can currently edit PlantUML class diagrams only")
+            return PumlParseResult.Rejected("is not a PlantUML class diagram — Architect Studio can render it in View but cannot yet edit it visually")
         }
 
         val indent =
             body.firstNotNullOfOrNull { line -> Regex("^([ \t]+)\\S").find(line)?.groupValues?.get(1) } ?: "  "
 
         val types = mutableListOf<PumlType>()
-        val relations = mutableListOf<PumlRelation>()
+        // Each relation is kept next to the line it came from: an endpoint that turns out to be
+        // undeclarable (see `resolveRelations`) has to go back into the file exactly as written
+        // rather than disappear with the relation.
+        val relationLines = mutableListOf<Pair<PumlRelation, String>>()
         val preamble = mutableListOf<String>()
         val postamble = mutableListOf<String>()
         val unsupported = mutableListOf<String>()
@@ -64,6 +75,9 @@ object PlantUmlImporter {
 
         var openType: OpenType? = null
         var openBlockCloser: String? = null
+        var openPackage: String? = null
+        val packages = mutableListOf<PumlPackage>()
+        val noteReader = PumlNoteReader()
 
         fun flushPostambleAsUnsupported() {
             if (postamble.isNotEmpty()) {
@@ -76,14 +90,16 @@ object PlantUmlImporter {
             val trimmed = raw.trim()
 
             if (openType != null) {
-                when {
-                    trimmed == "}" -> {
-                        types += openType.toPumlType()
-                        openType = null
-                    }
-                    trimmed.isEmpty() -> {}
-                    SEPARATOR_LINE.matches(trimmed) -> unsupported += raw
-                    else -> {
+                if (trimmed == "}") {
+                    types += openType.toPumlType()
+                    openType = null
+                } else {
+                    // Everything inside the braces is kept verbatim, separators and blank lines
+                    // included. A separator used to go to `residual.unsupported`, which the
+                    // exporter writes *after* every type — so it was hoisted out of the class it
+                    // divided and landed at the bottom of the file.
+                    openType.bodyLines += trimmed
+                    if (trimmed.isNotEmpty() && !SEPARATOR_LINE.matches(trimmed)) {
                         val member = parseMemberText(trimmed)
                         val apollonMember = PumlMember(member.toApollonName(), member.isMethod, member.isAbstractModifier)
                         if (member.isMethod) openType.methods += apollonMember else openType.attributes += apollonMember
@@ -100,8 +116,31 @@ object PlantUmlImporter {
                 continue
             }
 
+            // Before every other branch: an open note body may hold a blank line, a comment or
+            // something that reads exactly like a declaration, and `N1 .. Order` is otherwise a
+            // perfectly good dashed relation.
+            if (noteReader.consume(trimmed)) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
+                continue
+            }
+
             if (trimmed.isEmpty() || isTierA(trimmed)) {
                 if (!sawMapped) preamble += raw else postamble += raw
+                continue
+            }
+
+            if (openPackage != null && trimmed == "}") {
+                openPackage = null
+                continue
+            }
+
+            val packageMatch = matchDeclaration(PACKAGE_DECL, trimmed)
+            if (packageMatch != null && packageMatch.opensBody && openPackage == null) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
+                packages += PumlPackage(packageMatch.displayName)
+                openPackage = packageMatch.displayName
                 continue
             }
 
@@ -110,17 +149,9 @@ object PlantUmlImporter {
                 flushPostambleAsUnsupported()
                 val keyword = typeMatch.groupValues[1].lowercase().replace(Regex("\\s+"), " ")
                 val name0 = typeMatch.groupValues[2].ifEmpty { typeMatch.groupValues[3] }
-                val hasAlias = typeMatch.groupValues[4].isNotEmpty()
-                val hasStereotype = typeMatch.groupValues[5].isNotEmpty()
+                val alias = typeMatch.groupValues[4].ifEmpty { null }
+                val stereotype = typeMatch.groupValues[5].trim().ifEmpty { null }
                 val opensBody = typeMatch.groupValues[6] == "{"
-                if (hasAlias || hasStereotype) {
-                    // Aliasing and explicit <<stereotypes>> are out of scope (plan §D1) —
-                    // preserved verbatim rather than misrepresented.
-                    flushPostambleAsUnsupported()
-                    unsupported += raw
-                    if (opensBody) openBlockCloser = "}"
-                    continue
-                }
                 sawMapped = true
                 val kind =
                     when (keyword) {
@@ -131,9 +162,9 @@ object PlantUmlImporter {
                         else -> PumlKind.CLASS
                     }
                 if (opensBody) {
-                    openType = OpenType(name0, kind, keyword)
+                    openType = OpenType(name0, kind, keyword, openPackage, alias, stereotype)
                 } else {
-                    types += PumlType(name0, kind, emptyList(), emptyList(), keyword)
+                    types += PumlType(name0, kind, emptyList(), emptyList(), keyword, openPackage, alias, stereotype)
                 }
                 continue
             }
@@ -142,20 +173,23 @@ object PlantUmlImporter {
             if (relation != null) {
                 flushPostambleAsUnsupported()
                 sawMapped = true
-                relations += relation
+                relationLines += relation to raw
                 continue
             }
 
             val lower = trimmed.lowercase()
+            // Note syntax [PumlNoteReader] did not recognise — `note over A, B`, a legend-style
+            // `note left :` with no anchor. Kept verbatim rather than guessed at.
             if (lower.startsWith("note") && !trimmed.contains(":")) {
                 flushPostambleAsUnsupported()
                 unsupported += raw
                 openBlockCloser = "end note"
                 continue
             }
-            if ((lower.startsWith("package ") || lower.startsWith("namespace ") || lower.startsWith("together")) &&
-                trimmed.endsWith("{")
-            ) {
+            // `namespace`/`together` still go through verbatim: the first has semantics (a name
+            // scope that qualifies the classes inside it) the canvas has no field for, and the
+            // second is a layout hint, not a container. Only `package` maps to a real node.
+            if ((lower.startsWith("namespace ") || lower.startsWith("together")) && trimmed.endsWith("{")) {
                 flushPostambleAsUnsupported()
                 unsupported += raw
                 openBlockCloser = "}"
@@ -168,6 +202,8 @@ object PlantUmlImporter {
 
         openType?.let { unsupported += "' Architect Studio: unterminated ${it.keyword} ${it.name}" }
 
+        val relations = resolveRelations(relationLines, types, packages, unsupported)
+
         val residual =
             PumlResidual(
                 startLine = startLine,
@@ -178,8 +214,49 @@ object PlantUmlImporter {
                 postamble = postamble,
                 unsupported = unsupported,
             )
-        val diagram = PumlDiagram(name, types, relations)
+        val diagram = PumlDiagram(name, types, relations, packages, noteReader.result())
         return PumlParseResult.Parsed(diagram, residual, unsupported.count { it.isNotBlank() })
+    }
+
+    /**
+     * Gives every relation two endpoints the canvas can actually draw, or gives up on the relation
+     * loudly rather than quietly.
+     *
+     * PlantUML declares a classifier implicitly the first time a relation names it — `Order -->
+     * Customer` on its own is a two-class diagram there — so an endpoint with no declaration of its
+     * own is added to [types] as a plain `class`. Before this the relation was parsed, found no
+     * node to attach to in [ApollonModelMapper], and was dropped from the model, the export and the
+     * validator's comparison all at once: the line vanished from the file with no warning.
+     *
+     * The one endpoint that cannot be declared is one whose name already appears inside a construct
+     * this parser kept verbatim — a `namespace` body, say — since declaring it again would collide
+     * with the copy the residual is about to write back. That relation's own line goes to
+     * [unsupported] instead, so it too survives untouched.
+     */
+    private fun resolveRelations(
+        relationLines: List<Pair<PumlRelation, String>>,
+        types: MutableList<PumlType>,
+        packages: List<PumlPackage>,
+        unsupported: MutableList<String>,
+    ): List<PumlRelation> {
+        if (relationLines.isEmpty()) return emptyList()
+        val declared = (types.map { it.refId } + packages.map { it.name }).toMutableSet()
+        val spokenFor = unsupported.flatMap { line -> IDENT.findAll(line).map { it.value } }.toSet()
+
+        val kept = mutableListOf<PumlRelation>()
+        relationLines.forEach { (relation, raw) ->
+            val missing = listOf(relation.sourceName, relation.targetName).filterNot { it in declared }
+            if (missing.any { it in spokenFor }) {
+                unsupported += raw
+                return@forEach
+            }
+            missing.distinct().forEach { name ->
+                types += PumlType(name, PumlKind.CLASS, emptyList(), emptyList(), "class")
+                declared += name
+            }
+            kept += relation
+        }
+        return kept
     }
 
     private fun looksNonClass(body: List<String>): Boolean {
@@ -272,9 +349,14 @@ private data class OpenType(
     val name: String,
     val kind: PumlKind,
     val keyword: String,
+    val parentName: String?,
+    val alias: String?,
+    val stereotype: String?,
     val attributes: MutableList<PumlMember> = mutableListOf(),
     val methods: MutableList<PumlMember> = mutableListOf(),
+    val bodyLines: MutableList<String> = mutableListOf(),
 ) {
-    fun toPumlType() = PumlType(name, kind, attributes.toList(), methods.toList(), keyword)
+    fun toPumlType() =
+        PumlType(name, kind, attributes.toList(), methods.toList(), keyword, parentName, alias, stereotype, bodyLines.toList())
 }
 

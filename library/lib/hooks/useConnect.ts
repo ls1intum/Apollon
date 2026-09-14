@@ -10,7 +10,7 @@ import {
 import { useCallback, useRef } from "react"
 import {
   generateUUID,
-  getDefaultEdgeType,
+  getEdgeTypeForConnection,
   getSideHandleIdForPosition,
   type FreeformEdgeAnchor,
 } from "@/utils"
@@ -104,7 +104,7 @@ const isSameNodeSameHandleArea = (
 export const useConnect = () => {
   const startEdge = useRef<Edge | null>(null)
   const connectionStartParams = useRef<OnConnectStartParams | null>(null)
-  const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
+  const { screenToFlowPosition, getIntersectingNodes, getNode } = useReactFlow()
   const resolveDropTarget = useFreeformDropTarget()
   const { setEdges, addEdge, edges } = useDiagramStore(
     useShallow((state) => ({
@@ -130,7 +130,13 @@ export const useConnect = () => {
   /** The id minted at drag start and shared with the preview; see `onConnectStart`. */
   const pendingConnectionId = useRef<string | null>(null)
 
-  const defaultEdgeType = getDefaultEdgeType(diagramType)
+  // Not a constant per diagram: a note attaches with a `NoteLink` whatever the
+  // diagram type, so the endpoints have a say (see getEdgeTypeForConnection).
+  const edgeTypeFor = useCallback(
+    (sourceNodeType?: string, targetNodeType?: string) =>
+      getEdgeTypeForConnection(diagramType, sourceNodeType, targetNodeType),
+    [diagramType]
+  )
 
   const getDropPosition = useCallback(
     (event: MouseEvent | TouchEvent) => {
@@ -207,13 +213,16 @@ export const useConnect = () => {
         // are settled by edge id, so a fresh id here would re-lane parallel
         // connections on release. Falls back to a new id if the gesture had none.
         id: pendingConnectionId.current ?? generateUUID(),
-        type: defaultEdgeType,
+        type: edgeTypeFor(
+          getNode(connection.source)?.type,
+          getNode(connection.target)?.type
+        ),
         selected: false,
       }
 
       addEdge(newEdge)
     },
-    [addEdge, defaultEdgeType, setPendingConnectionEdge]
+    [addEdge, edgeTypeFor, getNode, setPendingConnectionEdge]
   )
 
   const onConnectEnd: OnConnectEnd = useCallback(
@@ -313,7 +322,10 @@ export const useConnect = () => {
                 id: pendingConnectionId.current ?? generateUUID(),
                 source: sourceNodeId,
                 target: nodeOnTop.id,
-                type: defaultEdgeType,
+                type: edgeTypeFor(
+                  connectionState.fromNode?.type,
+                  nodeOnTop.type
+                ),
                 sourceHandle: sourceHandleId,
                 targetHandle,
                 data: pinned
@@ -335,7 +347,7 @@ export const useConnect = () => {
       }
     },
     [
-      defaultEdgeType,
+      edgeTypeFor,
       edges,
       getDropPosition,
       resolveDropTarget,

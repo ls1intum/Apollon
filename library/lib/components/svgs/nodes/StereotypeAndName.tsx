@@ -1,13 +1,19 @@
 import { FC, useMemo } from "react"
 import { CustomText } from "./CustomText"
 import { MultilineText } from "./MultilineText"
+import {
+  NodeSubtext,
+  countNodeSubtextLines,
+  hasNodeSubtext,
+  type NodeSubtextContent,
+} from "./NodeSubtext"
 import { LAYOUT } from "@/constants"
 import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
 import { stereotypeLabel } from "@/utils/stereotypeLabel"
 
 type VerticalAnchor = "center" | "top"
 
-type Props = {
+type Props = NodeSubtextContent & {
   name: string
   /** Optional UML stereotype like `"component"` or `"subsystem"`. */
   stereotype?: string
@@ -70,6 +76,8 @@ export const StereotypeAndName: FC<Props> = ({
   nameTextDecoration,
   fontWeight = "bold",
   fill,
+  technology,
+  description,
 }) => {
   // `LAYOUT` can't be read at module scope because `constants.ts` pulls in
   // every node SVG transitively — resolving the default here (at render
@@ -110,6 +118,47 @@ export const StereotypeAndName: FC<Props> = ({
     return Math.max(1, wrapped.lines.length)
   }, [name, nameMaxWidth, nameMaxLines, fontWeight])
 
+  // The subtext gets whatever vertical room the stereotype and the wrapped name
+  // leave behind — the name is the label that must never be truncated, so it
+  // claims its lines first and the description absorbs the shortfall.
+  const subtextMaxLines = useMemo(() => {
+    if (!hasNodeSubtext({ technology, description })) return 0
+    const used =
+      (showStereotype
+        ? LAYOUT.STEREOTYPE_LINE_HEIGHT + LAYOUT.STEREOTYPE_NAME_GAP
+        : 0) +
+      nameLineCount * LAYOUT.NAME_LINE_HEIGHT +
+      LAYOUT.SUBTEXT_NAME_GAP
+    const room =
+      (verticalAnchor === "top"
+        ? height - topAnchorY + LAYOUT.NAME_LINE_HEIGHT / 2
+        : height - 16) - used
+    return Math.max(0, Math.floor(room / LAYOUT.SUBTEXT_LINE_HEIGHT))
+  }, [
+    technology,
+    description,
+    showStereotype,
+    nameLineCount,
+    verticalAnchor,
+    height,
+    topAnchorY,
+  ])
+
+  const subtextLineCount = useMemo(
+    () =>
+      countNodeSubtextLines(
+        { technology, description },
+        nameMaxWidth,
+        subtextMaxLines
+      ),
+    [technology, description, nameMaxWidth, subtextMaxLines]
+  )
+
+  const subtextHeight =
+    subtextLineCount > 0
+      ? LAYOUT.SUBTEXT_NAME_GAP + subtextLineCount * LAYOUT.SUBTEXT_LINE_HEIGHT
+      : 0
+
   const { stereotypeCenterY, nameFirstLineCenterY } = (() => {
     if (verticalAnchor === "top") {
       return {
@@ -121,11 +170,12 @@ export const StereotypeAndName: FC<Props> = ({
           : topAnchorY,
       }
     }
-    const groupHeight = showStereotype
-      ? LAYOUT.STEREOTYPE_LINE_HEIGHT +
-        LAYOUT.STEREOTYPE_NAME_GAP +
-        nameLineCount * LAYOUT.NAME_LINE_HEIGHT
-      : nameLineCount * LAYOUT.NAME_LINE_HEIGHT
+    const groupHeight =
+      (showStereotype
+        ? LAYOUT.STEREOTYPE_LINE_HEIGHT + LAYOUT.STEREOTYPE_NAME_GAP
+        : 0) +
+      nameLineCount * LAYOUT.NAME_LINE_HEIGHT +
+      subtextHeight
     const groupTop = height / 2 - groupHeight / 2
     return {
       stereotypeCenterY: groupTop + LAYOUT.STEREOTYPE_LINE_HEIGHT / 2,
@@ -137,6 +187,14 @@ export const StereotypeAndName: FC<Props> = ({
         : groupTop + LAYOUT.NAME_LINE_HEIGHT / 2,
     }
   })()
+
+  // Below the name's last line, measured from that line's visual center.
+  const subtextFirstLineCenterY =
+    nameFirstLineCenterY +
+    (nameLineCount - 1) * LAYOUT.NAME_LINE_HEIGHT +
+    LAYOUT.NAME_LINE_HEIGHT / 2 +
+    LAYOUT.SUBTEXT_NAME_GAP +
+    LAYOUT.SUBTEXT_LINE_HEIGHT / 2
 
   return (
     <>
@@ -165,6 +223,15 @@ export const StereotypeAndName: FC<Props> = ({
         verticalAnchor="top"
         maxLines={nameMaxLines}
         textDecoration={nameTextDecoration}
+      />
+      <NodeSubtext
+        technology={technology}
+        description={description}
+        x={centerX}
+        y={subtextFirstLineCenterY}
+        maxWidth={nameMaxWidth}
+        maxLines={subtextMaxLines}
+        fill={fill}
       />
     </>
   )

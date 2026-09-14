@@ -2,7 +2,7 @@
 
 Model UML diagrams directly in IntelliJ IDEA or WebStorm using the [Apollon](https://github.com/ls1intum/Apollon) editor. Diagrams are stored as `.apollon` files so you can version them in Git alongside your source.
 
-> **Status: functional, not yet published.** This plugin reads and writes `.apollon` files, edits PlantUML class diagrams visually, follows the IDE theme, and exports SVG/PNG images. It isn't on the JetBrains Marketplace yet — see [`README.dev.md`](./README.dev.md) to build and run it from source.
+> **Status: functional, not yet published.** This plugin reads and writes `.apollon` files, opens PlantUML files with a render/canvas/source tab strip, follows the IDE theme, and exports SVG/PNG images. It isn't on the JetBrains Marketplace yet — see [`README.dev.md`](./README.dev.md) to build and run it from source.
 
 ## Install
 
@@ -14,17 +14,30 @@ Not yet published to the JetBrains Marketplace. See [`README.dev.md`](./README.d
 - Edits sync to the underlying `Document` (undo, save, and version control all work normally); the canvas updates in turn when the file changes externally.
 - The canvas follows the IDE's editor color scheme and Swing look-and-feel, live.
 - **Tools → Architect Studio → Export Diagram…** renders the focused diagram to a sibling SVG or PNG; auto-export on save is configurable per-project under **Settings → Tools → Architect Studio**.
-- The **Architect Studio** tool window lists every native `.apollon` file in the project for quick navigation.
+- The **Architect Studio** tool window lists every `.apollon` and PlantUML file in the project for quick navigation.
 
-## Edit a PlantUML class diagram visually
+## Open a PlantUML file
 
-Right-click a `.puml`/`.plantuml`/`.pu`/`.wsd` file in the Project tool window and choose **Architect Studio → Edit**. The diagram opens on the same canvas as a native `.apollon` diagram — same elements, same properties, same controls.
+Open any `.puml`/`.plantuml`/`.pu`/`.wsd` file and it comes up with three tabs along the bottom of the editor:
 
-- **Save** writes your canvas edits straight back to the `.puml` file. The `.puml` file is always the source of truth; the JSON Architect Studio uses internally to drive the canvas lives under a `.architect-studio/` directory it manages for you (added to `.gitignore` automatically) and is never something you open or edit directly.
-- **Scope (v1): class diagrams only** — classes, interfaces, enums, abstract classes, attributes, methods, visibility, and the standard relationships (inheritance, realization, association, aggregation, composition, dependency), with multiplicities and role labels where PlantUML expresses them the same way Apollon does.
-- **Nothing is silently discarded.** PlantUML syntax this version doesn't understand (notes, packages, aliases, non-class diagram types, …) is left exactly as it was in the file and reported rather than guessed at.
-- If the `.puml` file changes outside Architect Studio while its canvas is open, you're warned before a save would overwrite that external change.
+| Tab      | What it is                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **View** | The diagram rendered by PlantUML's own engine. Read-only, and it works for _every_ PlantUML diagram type — including the ones the canvas can't edit yet. This is the tab a file opens on. |
+| **Edit** | The Apollon canvas — same elements, properties and controls as a native `.apollon` diagram.                                                                                               |
+| **Text** | The PlantUML source, in the normal IntelliJ editor.                                                                                                                                       |
+
+All three are views of the one file, so an edit on the canvas is already there when you switch to **Text**, and typing a new class into **Text** puts it on the canvas. Undo, save, and version control behave exactly as they do for any other file — there is no hidden copy and nothing to keep in sync by hand.
+
+- **Editable diagram types:** class, object, use case, component, deployment, activity, sequence, and C4. Every other type still renders in **View**; the **Edit** tab tells you which one it found rather than guessing at it.
+  - A **C4** model is drawn out of deployment elements, with the C4 abstraction as each box's stereotype. Technology and description are on the canvas too — under a box's name, and under an arrow's label — so `Rel(spa, api, "makes calls to", "JSON/HTTPS")` reads on the canvas the way it reads in the file; edit either and it goes back into the macro argument it came from. Every element's `$sprite`, `$tags` and `$link` are kept in the file but edited in **Text**. The usual `!includeurl https://…/C4-PlantUML/…` header renders as-is: **View** answers it from the C4 macros PlantUML already ships with, so a C4 file drawn anywhere else works here offline and with no edit. Nothing is fetched — the renderer has no network access by design.
+  - A **sequence** diagram opens as a communication diagram — UML's other view of the same interaction, and the one Apollon can draw. Message order lives in the `1:`/`2:` numbers, so renumbering a message on the canvas reorders the sequence diagram.
+    A sequence file's `box` swimlanes, activation bars, `alt`/`else` fragments, dividers and notes have no place on a communication diagram, so they aren't drawn — but they stay exactly where you wrote them, and a save that didn't touch them changes nothing. One thing to know: they stay anchored to the message they follow, so if you reorder messages on the canvas an `alt` may end up bracketing a different span. It's visible in **Text**.
+  - An **activity** file's control flow all reaches the canvas: `if`/`elseif`/`else`, `switch`/`case`, `fork` and `split`, `while` and `repeat` loops, `detach`, and the arrow labels on each branch. A `while` comes back as a `while` and a three-way `switch` as a `switch`, because the shape of the flow says which it was. Swimlanes, notes and colour directives aren't drawn — they stay where you wrote them, and so do `partition`/`group` blocks, which close around whichever of their steps are left if you delete some. Anything else this version has never seen is kept the same way rather than costing the file its **Edit** tab; a file is only declined when its block structure doesn't add up, such as an `if` with no `endif`.
+  - A **class** diagram keeps its file the way you wrote it. `class "Order Line" as OL <<entity>>` comes onto the canvas as `Order Line`, and the relations that reference `OL` come with it. A class body is written back untouched — the order you interleaved attributes and methods in, the `--` compartment separators, and each member's own spacing — until you actually edit one of its members. A relation to a class you never declared works the way it does in PlantUML: `Order --> Customer` on its own is a two-class diagram.
+- **Nothing is silently discarded.** PlantUML syntax this version doesn't model (`skinparam`, `namespace`, C4 tags, …) is preserved verbatim in the file and reported, not dropped. Note that on the first canvas edit those lines are gathered together below the diagram's elements rather than left where they were. Where the canvas can hold something the file cannot — a description on a plain deployment node, a technology on a C4 boundary — the save is refused and says so, rather than writing a file that has quietly lost it.
+- **Notes are real elements.** A note in the source comes onto the canvas as a description box joined to whatever it annotates, and goes back as a PlantUML `note`. Activity and sequence diagrams are the exception — their notes attach positionally rather than to a named element, so there is no element for one to hang off. Those files still open for editing and their notes are kept exactly where you wrote them; it's only adding a note _on the canvas_ that refuses the save, rather than dropping it quietly.
+- **Layout is committed alongside the diagram.** PlantUML has no syntax for positions, so the canvas writes them to a sibling `orders.puml.layout.json`. Commit it and your teammates open the diagram arranged the way you drew it; delete it and the canvas falls back to an automatic layout. Renaming an element in the source drops its saved position, since nothing connects the old name to the new one.
 
 ## Use
 
-Supported diagram types match the [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) library: class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and sequential function chart. PlantUML round-trip editing (above) currently covers class diagrams only.
+Supported diagram types match the [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) library: class, object, activity, use case, communication, component, deployment, Petri net, reachability graph, syntax tree, flowchart, BPMN, and sequential function chart. PlantUML round-trip editing (above) covers seven of them, plus C4 models.

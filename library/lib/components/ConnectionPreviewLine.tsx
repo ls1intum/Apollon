@@ -18,7 +18,7 @@ import {
 } from "@/store/context"
 import { useFreeformDropTarget } from "@/hooks/useFreeformDropTarget"
 import {
-  getDefaultEdgeType,
+  getEdgeTypeForConnection,
   getSideHandleIdForPosition,
   routeOrthogonalPath,
 } from "@/utils/edgeUtils"
@@ -96,7 +96,11 @@ export const ConnectionPreviewLine = ({
   const nodeLookup = useStore((state) => state.nodeLookup)
   const connectionMode = useStore((state) => state.connectionMode)
   const diagramType = useMetadataStore((state) => state.diagramType)
-  const previewEdgeType = getDefaultEdgeType(diagramType)
+  const previewEdgeType = getEdgeTypeForConnection(
+    diagramType,
+    fromNode?.type,
+    toNode?.type
+  )
   const previewEnableStraightPath =
     STRAIGHT_PATH_STEP_EDGE_TYPES.has(previewEdgeType)
   const setPendingConnectionEdge = useMetadataStore(

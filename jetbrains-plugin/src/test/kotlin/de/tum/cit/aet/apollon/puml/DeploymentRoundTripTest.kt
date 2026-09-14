@@ -1,6 +1,12 @@
 package de.tum.cit.aet.apollon.puml
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -89,5 +95,85 @@ class DeploymentRoundTripTest {
             parsed.residual.copy(typeKeywords = mapped.typeKeywords, arrowTokens = mapped.arrowTokens, elementAliases = mapped.elementAliases)
         val exported = PlantUmlDiagramExporter.render(mapped.model, residual)
         assertEquals(null, RoundTripValidator.validate(exported.text, mapped.model))
+    }
+
+    /**
+     * The deployment palette's boxes can now carry a technology and a description, but plain
+     * PlantUML deployment syntax is `node "X" { ... }` and has nowhere to put either — only C4 does.
+     * So the save is refused with something to act on, rather than the text disappearing the next
+     * time the file is written.
+     */
+    @Test
+    fun `a description typed onto a plain deployment node is refused rather than dropped`() {
+        val parsed = PlantUmlDeploymentImporter.parse(serverPuml) as PumlDeploymentParseResult.Parsed
+        val mapped = DeploymentModelMapper.toApollonModel(parsed.diagram, null, "server")
+        val residual =
+            parsed.residual.copy(typeKeywords = mapped.typeKeywords, arrowTokens = mapped.arrowTokens, elementAliases = mapped.elementAliases)
+        val described =
+            JsonObject(
+                mapped.model.toMutableMap().apply {
+                    put(
+                        "nodes",
+                        buildJsonArray {
+                            (mapped.model["nodes"] as JsonArray).map { it as JsonObject }.forEach { node ->
+                                val data = node["data"] as JsonObject
+                                val withDescription =
+                                    if (textOf(data["name"]) != "Application Server") {
+                                        node
+                                    } else {
+                                        JsonObject(
+                                            node.toMutableMap().apply {
+                                                put("data", JsonObject(data.toMutableMap().apply { put("description", JsonPrimitive("Runs the app")) }))
+                                            },
+                                        )
+                                    }
+                                add(withDescription as JsonElement)
+                            }
+                        },
+                    )
+                },
+            )
+        val exported = PlantUmlDiagramExporter.render(described, residual)
+        val refusal = RoundTripValidator.validate(exported.text, described)
+        assertNotNull(refusal)
+        assertTrue(refusal!!.contains("Application Server"))
+    }
+
+    /** The same hole on the relationship side: `app ..> war : deploys` can carry a label, but
+     *  nothing after it. */
+    @Test
+    fun `a technology typed onto a plain deployment relationship is refused rather than dropped`() {
+        val parsed = PlantUmlDeploymentImporter.parse(serverPuml) as PumlDeploymentParseResult.Parsed
+        val mapped = DeploymentModelMapper.toApollonModel(parsed.diagram, null, "server")
+        val residual =
+            parsed.residual.copy(typeKeywords = mapped.typeKeywords, arrowTokens = mapped.arrowTokens, elementAliases = mapped.elementAliases)
+        val described =
+            JsonObject(
+                mapped.model.toMutableMap().apply {
+                    put(
+                        "edges",
+                        buildJsonArray {
+                            (mapped.model["edges"] as JsonArray).map { it as JsonObject }.forEachIndexed { index, edge ->
+                                val withTechnology =
+                                    if (index != 0) {
+                                        edge
+                                    } else {
+                                        JsonObject(
+                                            edge.toMutableMap().apply {
+                                                val data = edge["data"] as JsonObject
+                                                put("data", JsonObject(data.toMutableMap().apply { put("technology", JsonPrimitive("HTTPS")) }))
+                                            },
+                                        )
+                                    }
+                                add(withTechnology as JsonElement)
+                            }
+                        },
+                    )
+                },
+            )
+        val exported = PlantUmlDiagramExporter.render(described, residual)
+        val refusal = RoundTripValidator.validate(exported.text, described)
+        assertNotNull(refusal)
+        assertTrue(refusal!!.contains("connection"))
     }
 }

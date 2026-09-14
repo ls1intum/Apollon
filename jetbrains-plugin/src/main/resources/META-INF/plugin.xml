@@ -7,11 +7,13 @@
 
     <description><![CDATA[
     Draw UML diagrams directly in IntelliJ IDEA or WebStorm with Architect Studio.
-    Right-click a PlantUML (<code>.puml</code>) file and choose
-    <b>Architect Studio &gt; Edit</b> to edit it visually — saving writes your
-    changes straight back to the PlantUML source. Native diagrams are versioned
-    in Git alongside your code. Built on the
-    <a href="https://github.com/ls1intum/Apollon">Apollon</a> UML editor.
+    Open a PlantUML (<code>.puml</code>) file and it comes up with three tabs:
+    <b>View</b> renders it with PlantUML's own engine, <b>Edit</b> puts it on a
+    visual canvas, and <b>Text</b> is the PlantUML source — all three are the
+    same file, so an edit in one shows up in the others. Native
+    <code>.apollon</code> diagrams are versioned in Git alongside your code.
+    Built on the <a href="https://github.com/ls1intum/Apollon">Apollon</a> UML
+    editor.
     ]]></description>
 
     <!-- Platform-only: this is what makes one build install into both IntelliJ
@@ -32,7 +34,13 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.ApollonFileEditorProvider" />
+        <!-- The three tabs a `.puml` file opens with. Both are
+             PLACE_BEFORE_DEFAULT_EDITOR, so they sort ahead of the platform's own
+             text editor; among themselves the platform orders them by
+             WeighedFileEditorProvider.getWeight(), giving View, Edit, Text. The
+             first tab is also the one a file with no remembered choice opens on. -->
         <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PlantUmlPreviewFileEditorProvider" />
+        <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PumlCanvasFileEditorProvider" />
         <projectConfigurable
             id="apollon.settings"
             displayName="Architect Studio"
@@ -42,7 +50,6 @@
             anchor="right"
             factoryClass="de.tum.cit.aet.apollon.toolwindow.DiagramToolWindowFactory" />
         <notificationGroup id="Architect Studio" displayType="BALLOON" />
-        <editorTabTitleProvider implementation="de.tum.cit.aet.apollon.editor.ArchitectStudioTabTitleProvider" />
     </extensions>
 
     <actions>
@@ -59,25 +66,7 @@
                 text="Export Diagram…"
                 description="Render the focused diagram to a sibling SVG or PNG file" />
         </group>
-        <group
-            id="ArchitectStudio.ProjectViewPopup"
-            class="de.tum.cit.aet.apollon.actions.ArchitectStudioGroup"
-            text="Architect Studio"
-            popup="true">
-            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="EditSource" />
-            <action
-                id="ArchitectStudio.EditPuml"
-                class="de.tum.cit.aet.apollon.actions.EditPumlDiagramAction"
-                text="Edit"
-                description="Open this PlantUML diagram on the Architect Studio canvas" />
-        </group>
     </actions>
-
-    <projectListeners>
-        <listener
-            class="de.tum.cit.aet.apollon.editor.PumlSourceWatcher"
-            topic="com.intellij.openapi.vfs.newvfs.BulkFileListener" />
-    </projectListeners>
 
     <!-- App-level only: `FileDocumentManagerListener` has no project-scoped
          topic, so `ApollonSaveListener` itself walks every open project. -->

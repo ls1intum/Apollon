@@ -313,6 +313,7 @@
         "DeploymentRequiredQuarterInterface",
         "DeploymentRequiredThreeQuarterInterface",
         "FlowChartFlowline",
+        "NoteLink",
         "ObjectLink",
         "PetriNetArc",
         "ReachabilityGraphArc",

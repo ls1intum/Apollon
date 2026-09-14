@@ -31,8 +31,9 @@ export type ConnectionMode =
 // oval renders full handles but isn't a rectangle, so it gets `ellipse`. Only
 // the exceptions are listed here.
 const MODE_OVERRIDES: Record<string, ConnectionMode> = {
-  // Not connectable — legends / annotations / partition containers.
-  colorDescription: "none",
+  // Not connectable — legends / partition containers. The general UML note
+  // (`colorDescription`) is deliberately NOT here: it attaches to the element it
+  // annotates through a `NoteLink`, so it connects like any other box.
   titleAndDesctiption: "none",
   bpmnAnnotation: "none",
   activitySwimlane: "none",

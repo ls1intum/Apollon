@@ -28,6 +28,7 @@ object PlantUmlDeploymentImporter {
 
         var openContainer: String? = null
         var unsupportedDepth = 0
+        val noteReader = PumlNoteReader()
 
         fun flushPostambleAsUnsupported() {
             if (postamble.isNotEmpty()) {
@@ -50,6 +51,15 @@ object PlantUmlDeploymentImporter {
 
             if (openContainer != null && trimmed == "}") {
                 openContainer = null
+                continue
+            }
+
+            // Before every other branch: an open note body may hold a blank line, a comment or
+            // something that reads exactly like a declaration, and `N1 .. Order` is otherwise a
+            // perfectly good dashed relation.
+            if (noteReader.consume(trimmed)) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
                 continue
             }
 
@@ -123,7 +133,7 @@ object PlantUmlDeploymentImporter {
 
         if (openContainer != null) unsupported += "' Architect Studio: unterminated node $openContainer"
 
-        if (!sawMapped) return PumlDeploymentParseResult.Rejected("no node/component/artifact declarations found")
+        if (!sawMapped) return PumlDeploymentParseResult.Rejected("contains no node, component or artifact declarations")
 
         val residual =
             PumlResidual(
@@ -135,6 +145,6 @@ object PlantUmlDeploymentImporter {
                 postamble = postamble,
                 unsupported = unsupported,
             )
-        return PumlDeploymentParseResult.Parsed(PumlDeploymentDiagram(name, elements, relations), residual, unsupported.count { it.isNotBlank() })
+        return PumlDeploymentParseResult.Parsed(PumlDeploymentDiagram(name, elements, relations, noteReader.result()), residual, unsupported.count { it.isNotBlank() })
     }
 }

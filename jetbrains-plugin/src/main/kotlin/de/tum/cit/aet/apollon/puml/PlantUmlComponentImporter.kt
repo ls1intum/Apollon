@@ -27,6 +27,7 @@ object PlantUmlComponentImporter {
 
         var openContainer: String? = null
         var unsupportedDepth = 0
+        val noteReader = PumlNoteReader()
 
         fun flushPostambleAsUnsupported() {
             if (postamble.isNotEmpty()) {
@@ -49,6 +50,15 @@ object PlantUmlComponentImporter {
 
             if (openContainer != null && trimmed == "}") {
                 openContainer = null
+                continue
+            }
+
+            // Before every other branch: an open note body may hold a blank line, a comment or
+            // something that reads exactly like a declaration, and `N1 .. Order` is otherwise a
+            // perfectly good dashed relation.
+            if (noteReader.consume(trimmed)) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
                 continue
             }
 
@@ -104,7 +114,7 @@ object PlantUmlComponentImporter {
 
         if (openContainer != null) unsupported += "' Architect Studio: unterminated package $openContainer"
 
-        if (!sawMapped) return PumlComponentParseResult.Rejected("no component/package declarations found")
+        if (!sawMapped) return PumlComponentParseResult.Rejected("contains no component or package declarations")
 
         val residual =
             PumlResidual(
@@ -116,6 +126,6 @@ object PlantUmlComponentImporter {
                 postamble = postamble,
                 unsupported = unsupported,
             )
-        return PumlComponentParseResult.Parsed(PumlComponentDiagram(name, elements, relations), residual, unsupported.count { it.isNotBlank() })
+        return PumlComponentParseResult.Parsed(PumlComponentDiagram(name, elements, relations, noteReader.result()), residual, unsupported.count { it.isNotBlank() })
     }
 }

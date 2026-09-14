@@ -1,4 +1,4 @@
-package de.tum.cit.aet.apollon.workspace
+package de.tum.cit.aet.apollon.document
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.AtomicMoveNotSupportedException
@@ -7,12 +7,13 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 /**
- * Writes [text] to [target] via a temp file + atomic rename, so a crash mid-write can never
- * leave a half-written internal artefact — the precedent already set by
- * `export/DiagramExporter.kt`'s sibling-image write, made atomic (spec §12). For files the user
- * edits directly (the `.puml` source, `.gitignore`), the workspace instead goes through the IDE's
- * `Document` layer (see `ArchitectStudioWorkspace`); this helper is only for internal artefacts
- * under `.architect-studio` that the user never opens directly.
+ * Writes [text] to [target] via a temp file + atomic rename, so a crash mid-write can never leave a
+ * half-written file behind — the precedent already set by `export/DiagramExporter.kt`'s
+ * sibling-image write.
+ *
+ * For a file the user edits directly (the `.puml` source itself) the plugin goes through the IDE's
+ * `Document` layer instead, so that undo, dirty state and save all behave normally. This helper is
+ * for generated siblings the user reads but never types into — the layout sidecar, exported images.
  */
 fun writeAtomically(
     target: Path,

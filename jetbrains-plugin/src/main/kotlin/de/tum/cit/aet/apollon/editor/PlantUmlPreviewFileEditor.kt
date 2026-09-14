@@ -22,13 +22,11 @@ import javax.swing.JLabel
 import javax.swing.SwingConstants
 
 /**
- * A read-only "Preview" tab for any `.puml`/`.plantuml` file (plan §9/§21): renders through
+ * The read-only **View** tab for any `.puml`/`.plantuml` file: renders through
  * [PlantUmlRenderService], the real `plantuml-mit` engine, so it works for every diagram family —
- * including the ones [de.tum.cit.aet.apollon.puml.PlantUmlDiagramImporter] can't put on the visual
- * canvas (Activity, C4, Sequence, State, Communication). Deliberately a separate tab on the `.puml`
- * file itself rather than folded into [ApollonFileEditor]: the visual canvas only ever opens the
- * derived working `.apollon` file for families with a real importer, so a family this plugin can't
- * edit still needs some way to see it rendered.
+ * including the ones [de.tum.cit.aet.apollon.puml.PlantUmlDiagramImporter] can't put on the
+ * [PumlCanvasFileEditor] canvas (Activity, C4, Sequence, State, Communication). That coverage is
+ * why this, and not Edit, is the tab a `.puml` opens on.
  */
 class PlantUmlPreviewFileEditor(
     private val project: Project,
@@ -98,7 +96,7 @@ class PlantUmlPreviewFileEditor(
 
     override fun getPreferredFocusedComponent(): JComponent = component
 
-    override fun getName(): String = "Preview"
+    override fun getName(): String = "View"
 
     override fun setState(state: FileEditorState) {}
 

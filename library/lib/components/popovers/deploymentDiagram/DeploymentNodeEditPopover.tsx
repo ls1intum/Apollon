@@ -7,6 +7,7 @@ import { TextField } from "@/components/ui"
 import { HeaderSwitchElement } from "@/components/styleEditor"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
+import { DescribedNodeSection } from "./DescribedNodeSection"
 
 export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -76,6 +77,7 @@ export const DeploymentNodeEditPopover: React.FC<PopoverProps> = ({
           fullWidth
         />
       </PopoverSection>
+      <DescribedNodeSection elementId={elementId} />
     </DefaultNodeEditPopover>
   )
 }

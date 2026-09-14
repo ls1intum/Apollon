@@ -6,6 +6,7 @@ import { PopoverProps } from "../types"
 import { HeaderSwitchElement } from "@/components"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "../PopoverLayout"
+import { DescribedNodeSection } from "./DescribedNodeSection"
 
 export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -50,6 +51,7 @@ export const DeploymentComponentEditPopover: React.FC<PopoverProps> = ({
           stereotypeLabel={t.componentWord}
         />
       </PopoverSection>
+      <DescribedNodeSection elementId={elementId} />
     </DefaultNodeEditPopover>
   )
 }

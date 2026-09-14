@@ -13,6 +13,7 @@ import { ReachabilityGraphEdge } from "./edgeTypes/ReachabilityGraphArc"
 import { CommunicationDiagramEdge } from "./edgeTypes/CommunicationDiagramEdge"
 import { BPMNDiagramEdge } from "./edgeTypes/BPMNDiagramEdge"
 import { PetriNetEdge } from "./edgeTypes/PetriNetEdge"
+import { NoteEdge } from "./edgeTypes/NoteEdge"
 
 export const diagramEdgeTypes = {
   ClassAggregation: ClassDiagramEdge,
@@ -22,6 +23,8 @@ export const diagramEdgeTypes = {
   ClassBidirectional: ClassDiagramEdge,
   ClassUnidirectional: ClassDiagramEdge,
   ClassDependency: ClassDiagramEdge,
+
+  NoteLink: NoteEdge,
 
   ActivityControlFlow: ActivityDiagramEdge,
 
@@ -72,6 +75,9 @@ export const edgeConfig = {
   ClassBidirectional: { allowMidpointDragging: true },
   ClassUnidirectional: { allowMidpointDragging: true },
   ClassDependency: { allowMidpointDragging: true },
+
+  // Note anchor - available in every diagram type, like the note it attaches
+  NoteLink: { allowMidpointDragging: true },
 
   // Activity edges - allow midpoint dragging
   ActivityControlFlow: { allowMidpointDragging: true },
@@ -130,7 +136,10 @@ export const edgeConfig = {
   },
   DeploymentDependency: {
     allowMidpointDragging: true,
-    showRelationshipLabels: false,
+    // A UML dependency carries a label as legitimately as an association does
+    // (`app ..> war : deploys`), and every C4 relation has one. Off, the text was
+    // stored and round-tripped but never drawn.
+    showRelationshipLabels: true,
   },
   DeploymentProvidedInterface: {
     allowMidpointDragging: true,

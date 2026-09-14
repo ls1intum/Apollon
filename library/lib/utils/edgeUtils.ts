@@ -261,7 +261,11 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
         strokeDashArray: "10",
         offset: 8,
       }
+    // NoteLink is a UML note anchor: dashed like an association flow, and
+    // arrowless because it points at nothing — it says "this text belongs to
+    // that element".
     case "BPMNAssociationFlow":
+    case "NoteLink":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "10",
@@ -3648,6 +3652,25 @@ export const getDefaultEdgeType = (
       return "ClassUnidirectional"
   }
 }
+
+/** Node types that carry free text about another element rather than modelling one. */
+export const isNoteNodeType = (nodeType?: string): boolean =>
+  nodeType === "colorDescription"
+
+/**
+ * The edge type a NEW connection between these two nodes should get. A note is
+ * in every palette, whatever the diagram type, and attaches with the same
+ * dashed anchor everywhere — so it overrides the diagram's default edge rather
+ * than the diagram deciding per family.
+ */
+export const getEdgeTypeForConnection = (
+  diagramType: UMLDiagramType,
+  sourceNodeType?: string,
+  targetNodeType?: string
+): DiagramEdgeType =>
+  isNoteNodeType(sourceNodeType) || isNoteNodeType(targetNodeType)
+    ? "NoteLink"
+    : getDefaultEdgeType(diagramType)
 
 /**
  * Determines the appropriate connection line type based on the diagram type

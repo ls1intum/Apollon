@@ -1,23 +1,14 @@
 package de.tum.cit.aet.apollon.editor
 
-import com.intellij.ide.ui.LafManagerListener
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.colors.EditorColorsListener
-import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.jcef.JBCefApp
-import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.JBCefBrowserBase
-import com.intellij.ui.jcef.JBCefJSQuery
 import de.tum.cit.aet.apollon.document.DocumentState
 import de.tum.cit.aet.apollon.document.DocumentSync
 import de.tum.cit.aet.apollon.document.diagramTitle
@@ -28,20 +19,11 @@ import de.tum.cit.aet.apollon.protocol.HostMessage
 import de.tum.cit.aet.apollon.protocol.ProtocolException
 import de.tum.cit.aet.apollon.protocol.WebviewMessage
 import de.tum.cit.aet.apollon.protocol.parseWebviewMessage
-import de.tum.cit.aet.apollon.protocol.toJsonString
 import de.tum.cit.aet.apollon.settings.ApollonConfigurable
 import de.tum.cit.aet.apollon.settings.ApollonSettings
-import de.tum.cit.aet.apollon.theme.currentThemeTokens
-import de.tum.cit.aet.apollon.theme.toInjectionScript
-import org.cef.browser.CefBrowser
-import org.cef.browser.CefFrame
-import org.cef.handler.CefLoadHandlerAdapter
-import org.cef.network.CefRequest
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.SwingConstants
 
 private val LOG = Logger.getInstance(ApollonFileEditor::class.java)
 
@@ -61,94 +43,19 @@ class ApollonFileEditor(
     private val changeSupport = PropertyChangeSupport(this)
     private val exporter = DiagramExporter()
     private var sync: DocumentSync? = null
-    private val browser: JBCefBrowser?
-    private val component: JComponent
+    private val host =
+        ApollonCanvasHost(
+            this,
+            "This IDE was built without JCEF support, so the Architect Studio canvas cannot render.",
+            ::onWebviewMessage,
+        )
 
     init {
-        if (!JBCefApp.isSupported()) {
-            browser = null
-            component =
-                JLabel(
-                    "This IDE was built without JCEF support, so the Architect Studio canvas cannot render.",
-                    SwingConstants.CENTER,
-                )
-        } else {
-            val b = JBCefBrowser()
-            Disposer.register(this, b)
-            browser = b
-
-            b.jbCefClient.addRequestHandler(ApollonWebviewRequestHandler(this), b.cefBrowser)
-
-            // Synchronous, fire-and-forget: `onQuery` always answers `success("")`
-            // immediately, so a real reply (the export round trip) travels back
-            // through `postToWebview`/`requestId`, not through this call's return.
-            val toHost = JBCefJSQuery.create(b as JBCefBrowserBase)
-            toHost.addHandler { request ->
-                // Runs on the CEF handler thread, not the EDT.
-                ApplicationManager.getApplication().invokeLater { onWebviewMessage(request) }
-                null
-            }
-
-            b.jbCefClient.addLoadHandler(
-                object : CefLoadHandlerAdapter() {
-                    // The webview's `App` posts "ready" from a `useEffect` that fires
-                    // as soon as its module script runs — which happens well before
-                    // the `load` event, since `onLoadEnd` waits on every subresource
-                    // (fonts, the export WASM, workers). Injecting the bridge there
-                    // loses the race: `__apollonPostToHost` is still undefined when
-                    // "ready" fires, that post is a silent no-op (optional chaining
-                    // in `jcefBridge.ts`), and the canvas never leaves its loading
-                    // state. `onLoadStart` fires right after navigation commits, before
-                    // the new document's own scripts run, so inject it here instead.
-                    override fun onLoadStart(
-                        cefBrowser: CefBrowser,
-                        frame: CefFrame,
-                        transitionType: CefRequest.TransitionType,
-                    ) {
-                        if (frame.isMain) {
-                            cefBrowser.executeJavaScript(
-                                "window.__apollonPostToHost = function(payload) {" +
-                                    toHost.inject("payload") +
-                                    "};",
-                                cefBrowser.url,
-                                0,
-                            )
-                        }
-                    }
-
-                    override fun onLoadEnd(
-                        cefBrowser: CefBrowser,
-                        frame: CefFrame,
-                        httpStatusCode: Int,
-                    ) {
-                        if (frame.isMain) {
-                            pushTheme()
-                        }
-                    }
-                },
-                b.cefBrowser,
-            )
-
-            ApplicationManager.getApplication().messageBus.connect(this).apply {
-                subscribe(
-                    LafManagerListener.TOPIC,
-                    LafManagerListener { ApplicationManager.getApplication().invokeLater { pushTheme() } },
-                )
-                subscribe(
-                    EditorColorsManager.TOPIC,
-                    EditorColorsListener { ApplicationManager.getApplication().invokeLater { pushTheme() } },
-                )
-            }
-
-            b.loadURL(WEBVIEW_URL)
-            component = b.component
-        }
-
         FileDocumentManager.getInstance().getDocument(file)?.let { document ->
             val documentSync = DocumentSync(project, document, this)
             documentSync.onExternalChange = { state ->
                 if (state !is DocumentState.Invalid) {
-                    postToWebview(
+                    host.post(
                         HostMessage.ExternalUpdate(if (state is DocumentState.Model) state.model else null),
                     )
                 }
@@ -169,9 +76,15 @@ class ApollonFileEditor(
         when (message) {
             is WebviewMessage.Ready ->
                 when (val state = readDocument(document.text)) {
-                    is DocumentState.Empty -> postToWebview(HostMessage.Init(null, autoExportSetting()))
-                    is DocumentState.Model -> postToWebview(HostMessage.Init(state.model, autoExportSetting()))
-                    is DocumentState.Invalid -> postToWebview(HostMessage.Invalid(state.reason))
+                    is DocumentState.Empty -> host.post(HostMessage.Init(null, autoExportSetting()))
+                    is DocumentState.Model -> host.post(HostMessage.Init(state.model, autoExportSetting()))
+                    is DocumentState.Invalid ->
+                        host.post(
+                            HostMessage.Invalid(
+                                "Architect Studio could not read this file: ${state.reason}. Open it as text to " +
+                                    "repair the contents, then come back to the canvas.",
+                            ),
+                        )
                 }
             is WebviewMessage.Create -> {
                 // Route the scaffold through the normal edit path, not a direct
@@ -181,7 +94,7 @@ class ApollonFileEditor(
                     return
                 }
                 val model = scaffoldModel(message.diagramType, diagramTitle(file.path))
-                postToWebview(HostMessage.Init(model, autoExportSetting()))
+                host.post(HostMessage.Init(model, autoExportSetting()))
                 sync?.onCanvasModel(model)
             }
             is WebviewMessage.ModelChanged -> sync?.onCanvasModel(message.model)
@@ -196,27 +109,11 @@ class ApollonFileEditor(
 
     private fun autoExportSetting() = ApollonSettings.getInstance(project).autoExport
 
-    private fun pushTheme() {
-        val cefBrowser = browser?.cefBrowser ?: return
-        cefBrowser.executeJavaScript(currentThemeTokens().toInjectionScript(), cefBrowser.url, 0)
-    }
-
-    private fun postToWebview(message: HostMessage) {
-        val cefBrowser = browser?.cefBrowser ?: return
-        // The message is already valid JSON, which is always a valid JS
-        // expression — no string-escaping needed to splice it into the call.
-        cefBrowser.executeJavaScript(
-            "window.__apollonReceiveFromHost && window.__apollonReceiveFromHost(${message.toJsonString()});",
-            cefBrowser.url,
-            0,
-        )
-    }
-
     /** Flush a pending canvas edit before a save persists the document. */
     fun flushForSave() = sync?.flushForSave()
 
     /** Push the current auto-export setting to this canvas, e.g. after it changes in Settings. */
-    fun applyAutoExportSetting() = postToWebview(HostMessage.AutoExportChanged(autoExportSetting()))
+    fun applyAutoExportSetting() = host.post(HostMessage.AutoExportChanged(autoExportSetting()))
 
     /** Render the diagram in this editor's canvas, for the export action/auto-export. */
     fun export(
@@ -224,13 +121,13 @@ class ApollonFileEditor(
         silent: Boolean,
     ) {
         exporter.write(file.path, format, silent) { requestId ->
-            postToWebview(HostMessage.Export(format, requestId))
+            host.post(HostMessage.Export(format, requestId))
         }
     }
 
-    override fun getComponent(): JComponent = component
+    override fun getComponent(): JComponent = host.component
 
-    override fun getPreferredFocusedComponent(): JComponent = component
+    override fun getPreferredFocusedComponent(): JComponent = host.component
 
     override fun getName(): String = "Diagram"
 
@@ -254,12 +151,5 @@ class ApollonFileEditor(
     override fun dispose() {
         exporter.cancelAll()
         sync?.dispose()
-    }
-
-    companion object {
-        /** `TextEditorProvider.getInstance().getEditorTypeId()` — a long-stable
-         *  platform constant, referenced by id rather than by class because the
-         *  class itself is not on this plugin's compile-time platform classpath. */
-        private const val TEXT_EDITOR_TYPE_ID = "text-editor"
     }
 }

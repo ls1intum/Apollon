@@ -23,4 +23,5 @@ data class PumlComponentDiagram(
     val name: String?,
     val elements: List<PumlComponentElement>,
     val relations: List<PumlRelation>,
+    val notes: List<PumlNote> = emptyList(),
 )

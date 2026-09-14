@@ -144,14 +144,27 @@ object ObjectModelMapper {
                 }
         }
 
+        // Notes last: they anchor to elements by the identifier the source refers to them by, so
+        // every element needs an id and a rectangle before a note can be placed beside one.
+        val notesOrigin = Point(60, (rectById.values.maxOfOrNull { it.y + it.height } ?: originY) + 120)
+        val (noteNodes, noteEdges) =
+            PumlNotes.emit(
+                notes = diagram.notes,
+                anchorIdOf = { ref -> idByName[ref] },
+                rectById = rectById,
+                previousNote = { noteText -> prevIdByName[noteText]?.let { prevNodeById[it] } },
+                previousAnchorEdge = { noteText, anchor -> prevEdgesByKey["$noteText|$anchor"]?.firstOrNull() },
+                fallbackOrigin = notesOrigin,
+            )
+
         val model =
             buildJsonObject {
                 put("version", MODEL_SCHEMA_VERSION)
                 put("id", textOf(previous?.get("id")) ?: UUID.randomUUID().toString())
                 put("title", title)
                 put("type", "ObjectDiagram")
-                put("nodes", JsonArray(newNodes))
-                put("edges", JsonArray(newEdges))
+                put("nodes", JsonArray(newNodes + noteNodes))
+                put("edges", JsonArray(newEdges + noteEdges))
                 put("assessments", objOf(previous?.get("assessments")) ?: buildJsonObject {})
             }
         return MappedModel(model, emptyMap(), arrowTokens)
@@ -161,7 +174,7 @@ object ObjectModelMapper {
         model: JsonObject,
         residual: PumlResidual,
     ): ObjectPumlExport {
-        val nodes = arrOf(model["nodes"])
+        val nodes = arrOf(model["nodes"]).filterNot { isAnnotationNode(textOf(it["type"])) || textOf(it["type"]) == NOTE_NODE_TYPE }
         val edges = arrOf(model["edges"])
         val nameById = mutableMapOf<String, String>()
         val arrowTokens = mutableMapOf<String, String>()
@@ -170,7 +183,7 @@ object ObjectModelMapper {
             nodes.map { node ->
                 val id = textOf(node["id"]) ?: UUID.randomUUID().toString()
                 val data = objOf(node["data"]) ?: JsonObject(emptyMap())
-                val name = textOf(data["name"]) ?: "Unnamed"
+                val name = PumlName.forPuml(textOf(data["name"]))
                 nameById[id] = name
                 val fields = arrOfElement(data["attributes"]).mapNotNull { fieldFromJson(it) }
                 PumlObjectInstance(name, fields)
@@ -197,18 +210,18 @@ object ObjectModelMapper {
                 )
             }
 
-        return ObjectPumlExport(PumlObjectDiagram(null, objects, relations), emptyMap(), arrowTokens)
+        return ObjectPumlExport(PumlObjectDiagram(null, objects, relations, PumlNotes.fromModel(model, nameById)), emptyMap(), arrowTokens)
     }
 
     /** Object-name set + `(source,target)` link-pair multiset — the Object-diagram input to
      *  [RoundTripValidator]. */
     fun signature(model: JsonObject): Pair<Set<String>, List<Triple<String, String, String>>> {
-        val nodes = arrOf(model["nodes"])
+        val nodes = arrOf(model["nodes"]).filterNot { isAnnotationNode(textOf(it["type"])) || textOf(it["type"]) == NOTE_NODE_TYPE }
         val nameById = mutableMapOf<String, String>()
         val names =
             nodes.mapNotNull { node ->
                 val id = textOf(node["id"]) ?: return@mapNotNull null
-                val name = textOf(objOf(node["data"])?.get("name")) ?: return@mapNotNull null
+                val name = PumlName.forPuml(textOf(objOf(node["data"])?.get("name")))
                 nameById[id] = name
                 name
             }.toSet()

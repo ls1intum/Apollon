@@ -1,4 +1,4 @@
-import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
+import type { UMLModel } from "@tumaet/apollon"
 
 /**
  * Host <-> webview wire contract. Mirrored by hand from the VS Code
@@ -20,7 +20,20 @@ export type DocumentModel = UMLModel | null
 
 /** Host -> webview. */
 export type HostMessage =
-  | { type: "init"; model: DocumentModel; autoExport: AutoExport }
+  | {
+      type: "init"
+      model: DocumentModel
+      autoExport: AutoExport
+      /**
+       * Narrows the empty-file picker to the types the host can write back, and
+       * only meaningful when `model` is `null`. Absent means "every type" — a
+       * `.apollon` file, which serialises whatever the canvas draws. A `.puml`
+       * sends the five families with a PlantUML exporter, since the rest could
+       * be drawn but never saved.
+       */
+      /** Starter ids, not necessarily `UMLDiagramType`s — see `STARTER_LABELS`. */
+      diagramTypes?: string[]
+    }
   /** Non-empty, but not a diagram. The canvas offers to reopen it as text. */
   | { type: "invalid"; reason: string }
   | { type: "autoExportChanged"; autoExport: AutoExport }
@@ -33,7 +46,7 @@ export type WebviewMessage =
   | { type: "ready" }
   | { type: "modelChanged"; model: UMLModel }
   /** The picker's choice for an empty document. The host writes the scaffold. */
-  | { type: "create"; diagramType: UMLDiagramType }
+  | { type: "create"; diagramType: string }
   | { type: "reopenAsText" }
   | { type: "configureAutoExport" }
   /**

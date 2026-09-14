@@ -33,6 +33,7 @@ object PlantUmlUseCaseImporter {
 
         var openContainer: String? = null
         var unsupportedDepth = 0
+        val noteReader = PumlNoteReader()
 
         fun flushPostambleAsUnsupported() {
             if (postamble.isNotEmpty()) {
@@ -55,6 +56,15 @@ object PlantUmlUseCaseImporter {
 
             if (openContainer != null && trimmed == "}") {
                 openContainer = null
+                continue
+            }
+
+            // Before every other branch: an open note body may hold a blank line, a comment or
+            // something that reads exactly like a declaration, and `N1 .. Order` is otherwise a
+            // perfectly good dashed relation.
+            if (noteReader.consume(trimmed)) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
                 continue
             }
 
@@ -121,7 +131,7 @@ object PlantUmlUseCaseImporter {
 
         if (openContainer != null) unsupported += "' Architect Studio: unterminated rectangle $openContainer"
 
-        if (!sawMapped) return PumlUseCaseParseResult.Rejected("no actor/usecase declarations found")
+        if (!sawMapped) return PumlUseCaseParseResult.Rejected("contains no actor or use case declarations")
 
         val residual =
             PumlResidual(
@@ -133,6 +143,6 @@ object PlantUmlUseCaseImporter {
                 postamble = postamble,
                 unsupported = unsupported,
             )
-        return PumlUseCaseParseResult.Parsed(PumlUseCaseDiagram(name, elements, relations), residual, unsupported.count { it.isNotBlank() })
+        return PumlUseCaseParseResult.Parsed(PumlUseCaseDiagram(name, elements, relations, noteReader.result()), residual, unsupported.count { it.isNotBlank() })
     }
 }

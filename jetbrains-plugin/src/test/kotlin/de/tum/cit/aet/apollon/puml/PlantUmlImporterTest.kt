@@ -123,35 +123,125 @@ class PlantUmlImporterTest {
     }
 
     @Test
-    fun `aliased or stereotyped type declarations are preserved as unsupported, not misread`() {
+    fun `an alias and a stereotype are read off the declaration, not banished to the residual`() {
         val text =
             """
             @startuml
-            class Foo as F
-            class Bar <<entity>>
+            class "Order Line" as OL <<entity>>
+            class Bar <<(D,orchid) Database>>
+            OL --> Bar
             @enduml
             """.trimIndent()
         val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
-        assertTrue(result.diagram.types.isEmpty())
-        assertEquals(2, result.unsupportedCount)
-        assertTrue(result.residual.unsupported.any { it.contains("Foo as F") })
-        assertTrue(result.residual.unsupported.any { it.contains("Bar <<entity>>") })
+        assertEquals(0, result.unsupportedCount)
+
+        val orderLine = result.diagram.types[0]
+        assertEquals("Order Line", orderLine.name)
+        assertEquals("OL", orderLine.alias)
+        // The alias, not the display name, is what the relation below names it by.
+        assertEquals("OL", orderLine.refId)
+        assertEquals("<<entity>>", orderLine.stereotype)
+
+        val bar = result.diagram.types[1]
+        assertEquals(null, bar.alias)
+        assertEquals("Bar", bar.refId)
+        assertEquals("<<(D,orchid) Database>>", bar.stereotype)
+
+        // The whole point: before this the two declarations went to `unsupported`, and the
+        // relation between them was then dropped for having no endpoints — silently, from the
+        // model, the export and the round-trip check alike.
+        val relation = result.diagram.relations.single()
+        assertEquals("OL", relation.sourceName)
+        assertEquals("Bar", relation.targetName)
+    }
+
+    /** PlantUML declares a classifier the first time a relation names it, so a file that is
+     *  nothing but relations is still a diagram — and used to import as an empty canvas. */
+    @Test
+    fun `a relation to an undeclared name declares it`() {
+        val text = "@startuml\nOrder --> Customer\n@enduml"
+        val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
+        assertEquals(listOf("Order", "Customer"), result.diagram.types.map { it.name })
+        assertTrue(result.diagram.types.all { it.keyword == "class" })
+        assertEquals(1, result.diagram.relations.size)
+        assertEquals(0, result.unsupportedCount)
+    }
+
+    /** The exception: a name this parser already kept verbatim inside something it does not model
+     *  must not be declared a second time, or the export would emit both copies. */
+    @Test
+    fun `a relation into a namespace body is kept verbatim instead`() {
+        val text =
+            """
+            @startuml
+            namespace domain {
+              class Order
+            }
+            class Customer
+            Order --> Customer
+            @enduml
+            """.trimIndent()
+        val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
+        assertEquals(listOf("Customer"), result.diagram.types.map { it.name })
+        assertTrue(result.diagram.relations.isEmpty())
+        assertTrue(result.residual.unsupported.any { it.contains("Order --> Customer") })
+    }
+
+    /** A separator divides the compartments of the class it is written in. Emitting it from the
+     *  residual put it at the bottom of the file instead, outside every class. */
+    @Test
+    fun `a separator stays inside the class body it divides`() {
+        val text =
+            """
+            @startuml
+            class A {
+              -id : Long
+              --
+              +save()
+            }
+            @enduml
+            """.trimIndent()
+        val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
+        assertEquals(0, result.unsupportedCount)
+        assertEquals(listOf("-id : Long", "--", "+save()"), result.diagram.types.single().bodySource)
     }
 
     @Test
-    fun `a note block is preserved verbatim between its markers`() {
+    fun `a note block becomes a note anchored to its element`() {
         val text =
             """
             @startuml
             class A
             note left of A
               some text
+              and more
             end note
             @enduml
             """.trimIndent()
         val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
-        assertTrue(result.residual.unsupported.any { it.contains("note left of A") })
-        assertTrue(result.residual.unsupported.any { it.contains("some text") })
+        val note = result.diagram.notes.single()
+        assertEquals("some text\nand more", note.text)
+        assertEquals(listOf("A"), note.attachments)
+        assertEquals(NoteSide.LEFT, note.side)
+        assertEquals(0, result.unsupportedCount)
+    }
+
+    @Test
+    fun `note syntax this parser does not model is still preserved verbatim`() {
+        val text =
+            """
+            @startuml
+            class A
+            class B
+            note over A, B
+              spans two elements
+            end note
+            @enduml
+            """.trimIndent()
+        val result = PlantUmlImporter.parse(text) as PumlParseResult.Parsed
+        assertTrue(result.diagram.notes.isEmpty())
+        assertTrue(result.residual.unsupported.any { it.contains("note over A, B") })
+        assertTrue(result.residual.unsupported.any { it.contains("spans two elements") })
         assertTrue(result.residual.unsupported.any { it.contains("end note") })
     }
 

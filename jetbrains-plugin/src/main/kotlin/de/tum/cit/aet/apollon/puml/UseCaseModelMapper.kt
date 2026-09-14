@@ -229,14 +229,27 @@ object UseCaseModelMapper {
                 }
         }
 
+        // Notes last: they anchor to elements by the identifier the source refers to them by, so
+        // every element needs an id and a rectangle before a note can be placed beside one.
+        val notesOrigin = Point(60, (rectById.values.maxOfOrNull { it.y + it.height } ?: originY) + 120)
+        val (noteNodes, noteEdges) =
+            PumlNotes.emit(
+                notes = diagram.notes,
+                anchorIdOf = { ref -> idByRefId[ref] },
+                rectById = rectById,
+                previousNote = { noteText -> prevIdByName[noteText]?.let { prevNodeById[it] } },
+                previousAnchorEdge = { noteText, anchor -> prevEdgesByKey["$noteText|$anchor|$NOTE_EDGE_TYPE"]?.firstOrNull() },
+                fallbackOrigin = notesOrigin,
+            )
+
         val model =
             buildJsonObject {
                 put("version", MODEL_SCHEMA_VERSION)
                 put("id", textOf(previous?.get("id")) ?: UUID.randomUUID().toString())
                 put("title", title)
                 put("type", "UseCaseDiagram")
-                put("nodes", buildJsonArray { newNodes.forEach { add(it) } })
-                put("edges", buildJsonArray { newEdges.forEach { add(it) } })
+                put("nodes", buildJsonArray { (newNodes + noteNodes).forEach { add(it) } })
+                put("edges", buildJsonArray { (newEdges + noteEdges).forEach { add(it) } })
                 put("assessments", objOf(previous?.get("assessments")) ?: buildJsonObject {})
             }
         return MappedModel(model, emptyMap(), arrowTokens, elementAliases)
@@ -246,7 +259,7 @@ object UseCaseModelMapper {
         model: JsonObject,
         residual: PumlResidual,
     ): UseCasePumlExport {
-        val nodes = arrOf(model["nodes"])
+        val nodes = arrOf(model["nodes"]).filterNot { isAnnotationNode(textOf(it["type"])) || textOf(it["type"]) == NOTE_NODE_TYPE }
         val edges = arrOf(model["edges"])
         val refIdById = mutableMapOf<String, String>()
         val usedRefIds = mutableSetOf<String>()
@@ -271,7 +284,7 @@ object UseCaseModelMapper {
                         else -> PumlUseCaseElementKind.USE_CASE
                     }
                 val data = objOf(node["data"]) ?: JsonObject(emptyMap())
-                val displayName = textOf(data["name"]) ?: "Unnamed"
+                val displayName = PumlName.forPuml(textOf(data["name"]))
                 val alias = residual.elementAliases[id]
                 val refId = (alias ?: displayName.takeIf { BARE_IDENT.matches(it) } ?: freshRefId(displayName)).also { usedRefIds.add(it) }
                 refIdById[id] = refId
@@ -301,18 +314,18 @@ object UseCaseModelMapper {
                 PumlUseCaseRelation(sourceRefId, targetRefId, kind, textOf(data["label"]) ?: "", arrowToken)
             }
 
-        return UseCasePumlExport(PumlUseCaseDiagram(null, elementsWithParent, relations), emptyMap(), arrowTokens, elementAliases)
+        return UseCasePumlExport(PumlUseCaseDiagram(null, elementsWithParent, relations, PumlNotes.fromModel(model, refIdById)), emptyMap(), arrowTokens, elementAliases)
     }
 
     /** Element-name set + `(source,target,type)` relation multiset — the UseCase-diagram input to
      *  [RoundTripValidator]. */
     fun signature(model: JsonObject): Pair<Set<String>, List<Triple<String, String, String>>> {
-        val nodes = arrOf(model["nodes"])
+        val nodes = arrOf(model["nodes"]).filterNot { isAnnotationNode(textOf(it["type"])) || textOf(it["type"]) == NOTE_NODE_TYPE }
         val nameById = mutableMapOf<String, String>()
         val names =
             nodes.mapNotNull { node ->
                 val id = textOf(node["id"]) ?: return@mapNotNull null
-                val name = textOf(objOf(node["data"])?.get("name")) ?: return@mapNotNull null
+                val name = PumlName.forPuml(textOf(objOf(node["data"])?.get("name")))
                 nameById[id] = name
                 name
             }.toSet()

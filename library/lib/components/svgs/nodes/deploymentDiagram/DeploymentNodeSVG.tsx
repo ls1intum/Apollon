@@ -20,7 +20,8 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
   showAssessmentResults = false,
   data,
 }) => {
-  const { name, stereotype, isComponentHeaderShown } = data
+  const { name, stereotype, isComponentHeaderShown, technology, description } =
+    data
   const hasStereotype =
     !!isComponentHeaderShown && !!stereotype && stereotype.length > 0
 
@@ -75,6 +76,8 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           verticalAnchor="top"
           nameTextDecoration="underline"
           fill={textColor}
+          technology={technology}
+          description={description}
         />
       </g>
 

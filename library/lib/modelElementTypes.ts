@@ -65,6 +65,9 @@ export const DiagramEdgeTypeRecord = {
   ClassBidirectional: "ClassBidirectional",
   ClassUnidirectional: "ClassUnidirectional",
   ClassDependency: "ClassDependency",
+  // The dashed, arrowless line that ties a note (`colorDescription`) to the
+  // element it annotates. Offered in every diagram type, like the note itself.
+  NoteLink: "NoteLink",
   ActivityControlFlow: "ActivityControlFlow",
   ObjectLink: "ObjectLink",
   FlowChartFlowline: "FlowChartFlowline",

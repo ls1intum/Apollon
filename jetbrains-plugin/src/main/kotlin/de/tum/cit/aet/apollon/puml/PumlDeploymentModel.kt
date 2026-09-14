@@ -30,6 +30,7 @@ data class PumlDeploymentDiagram(
     val name: String?,
     val elements: List<PumlDeploymentElement>,
     val relations: List<PumlDeploymentRelation>,
+    val notes: List<PumlNote> = emptyList(),
 )
 
 /** Reinterprets a generic arrow-shape relation as one of the two Deployment edge kinds Apollon

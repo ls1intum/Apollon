@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonObject
 
 /** What every family's [PumlParseResult.Parsed]/[PumlObjectParseResult.Parsed]/... converges to
  *  once [PlantUmlDiagramImporter] has picked a family and parsed it — everything
- *  [de.tum.cit.aet.apollon.workspace.ArchitectStudioWorkspace] needs without knowing which family
+ *  [de.tum.cit.aet.apollon.document.PumlDocumentBridge] needs without knowing which family
  *  produced it. */
 sealed interface DispatchedImport {
     data class Rejected(val reason: String) : DispatchedImport
@@ -32,6 +32,30 @@ object PlantUmlDiagramImporter {
             return DispatchedImport.Rejected(unsupportedReasonFor(family))
         }
         return when (family) {
+            DiagramFamily.C4 ->
+                when (val r = PlantUmlC4Importer.parse(text)) {
+                    is PumlC4ParseResult.Rejected -> DispatchedImport.Rejected(r.reason)
+                    is PumlC4ParseResult.Parsed ->
+                        DispatchedImport.Parsed(family, r.residual.copy(family = family), r.unsupportedCount) { prev, title ->
+                            C4ModelMapper.toApollonModel(r.diagram, prev, title)
+                        }
+                }
+            DiagramFamily.SEQUENCE ->
+                when (val r = PlantUmlSequenceImporter.parse(text)) {
+                    is PumlSequenceParseResult.Rejected -> DispatchedImport.Rejected(r.reason)
+                    is PumlSequenceParseResult.Parsed ->
+                        DispatchedImport.Parsed(family, r.residual.copy(family = family), r.unsupportedCount) { prev, title ->
+                            SequenceModelMapper.toApollonModel(r.diagram, prev, title)
+                        }
+                }
+            DiagramFamily.ACTIVITY ->
+                when (val r = PlantUmlActivityImporter.parse(text)) {
+                    is PumlActivityParseResult.Rejected -> DispatchedImport.Rejected(r.reason)
+                    is PumlActivityParseResult.Parsed ->
+                        DispatchedImport.Parsed(family, r.residual.copy(family = family), r.unsupportedCount) { prev, title ->
+                            ActivityModelMapper.toApollonModel(r.diagram, prev, title)
+                        }
+                }
             DiagramFamily.CLASS ->
                 when (val r = PlantUmlImporter.parse(text)) {
                     is PumlParseResult.Rejected -> DispatchedImport.Rejected(r.reason)
@@ -79,11 +103,8 @@ object PlantUmlDiagramImporter {
     private fun unsupportedReasonFor(family: DiagramFamily): String =
         when (family) {
             DiagramFamily.UNKNOWN -> "does not contain an @startuml block"
-            DiagramFamily.C4 -> "is a C4-PlantUML diagram — Architect Studio can render it in Preview but cannot yet edit it visually"
-            DiagramFamily.ACTIVITY -> "is an Activity diagram — Architect Studio can render it in Preview but cannot yet edit it visually"
-            DiagramFamily.COMMUNICATION -> "is a Communication diagram — Architect Studio can render it in Preview but cannot yet edit it visually"
-            DiagramFamily.SEQUENCE -> "is a Sequence diagram — Architect Studio can render it in Preview but cannot yet edit it visually"
-            DiagramFamily.STATE -> "is a State diagram — Architect Studio can render it in Preview but cannot yet edit it visually"
+            DiagramFamily.COMMUNICATION -> "is a Communication diagram — Architect Studio can render it in View but cannot yet edit it visually"
+            DiagramFamily.STATE -> "is a State diagram — Architect Studio can render it in View but cannot yet edit it visually"
             DiagramFamily.OTHER -> "is a PlantUML diagram type Architect Studio does not yet recognise"
             else -> "is not a diagram type Architect Studio can edit visually"
         }

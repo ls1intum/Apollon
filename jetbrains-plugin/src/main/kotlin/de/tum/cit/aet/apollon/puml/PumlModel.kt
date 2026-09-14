@@ -31,8 +31,33 @@ data class PumlType(
     val methods: List<PumlMember>,
     /** The exact source keyword (`"class"`, `"abstract class"`, `"abstract"`, `"interface"`, `"enum"`, `"entity"`). */
     val keyword: String,
-)
+    /** Enclosing `package` name, or `null` at the top level. */
+    val parentName: String? = null,
+    /** The source-level `as <alias>`. PlantUML only accepts one on a quoted display name
+     *  (`class "Order Line" as OL`), and once a type has one, *that* is what relation lines and
+     *  note anchors have to reference — hence [refId]. */
+    val alias: String? = null,
+    /** Every `<<stereotype>>` on the declaration, verbatim and including the angle brackets. The
+     *  canvas has no field for a free-form stereotype (its own `stereotype` key is reserved for
+     *  `interface`/`enumeration`), so this is carried rather than modelled. */
+    val stereotype: String? = null,
+    /** The lines between `{` and `}` exactly as written, trimmed of indentation. Kept so a save
+     *  that did not touch this type's members reproduces its body byte for byte — member order,
+     *  `--` separators, blank lines and each member's own spacing included. */
+    val bodySource: List<String> = emptyList(),
+) {
+    /** What a relation line or note anchor names this type by: its alias if it has one, its
+     *  display name otherwise. */
+    val refId: String get() = alias ?: name
+}
 
+/** A `package Name { ... }` grouping — the class-diagram counterpart of the Component family's
+ *  `package` subsystem, and the Apollon `package` node type. Holds no members of its own; what
+ *  belongs to it is whichever [PumlType]s name it in [PumlType.parentName]. */
+data class PumlPackage(val name: String)
+
+/** [sourceName]/[targetName] are the names as a relation *line* spells them — a type's
+ *  [PumlType.refId], which is its alias where it has one, not its display name. */
 data class PumlRelation(
     val sourceName: String,
     val targetName: String,
@@ -51,4 +76,6 @@ data class PumlDiagram(
     val name: String?,
     val types: List<PumlType>,
     val relations: List<PumlRelation>,
+    val packages: List<PumlPackage> = emptyList(),
+    val notes: List<PumlNote> = emptyList(),
 )

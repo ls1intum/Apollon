@@ -9,4 +9,9 @@ package de.tum.cit.aet.apollon.puml
  */
 data class PumlObjectInstance(val name: String, val fields: List<PumlMember>)
 
-data class PumlObjectDiagram(val name: String?, val objects: List<PumlObjectInstance>, val relations: List<PumlRelation>)
+data class PumlObjectDiagram(
+    val name: String?,
+    val objects: List<PumlObjectInstance>,
+    val relations: List<PumlRelation>,
+    val notes: List<PumlNote> = emptyList(),
+)

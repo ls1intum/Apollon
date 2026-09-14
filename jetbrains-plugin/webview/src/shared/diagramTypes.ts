@@ -26,3 +26,24 @@ export const DIAGRAM_TYPES = {
 
 export const diagramTypeEntries = (): [UMLDiagramType, string][] =>
   Object.entries(DIAGRAM_TYPES) as [UMLDiagramType, string][]
+
+/**
+ * What the empty-file picker may offer, keyed by the id the host sends back in a `create`
+ * message. A superset of DIAGRAM_TYPES, because two of the things a `.puml` can be started as are
+ * ways of *using* a notation rather than notations of their own, so they have no Apollon diagram
+ * type to key off: a C4 model is drawn out of deployment elements, and a sequence diagram opens on
+ * the canvas as a communication diagram. Mirrors `de.tum.cit.aet.apollon.puml.C4_STARTER_ID` /
+ * `SEQUENCE_STARTER_ID` and `PumlScaffold.STARTERS`.
+ */
+export const STARTER_LABELS: Record<string, string> = {
+  ...DIAGRAM_TYPES,
+  C4: "C4 model",
+  Sequence: "Sequence diagram",
+}
+
+/** [id, label] for the ids the host offered, in the host's order, skipping any this build has no
+ *  label for (an older webview against a newer host). */
+export const starterEntries = (ids: string[]): [string, string][] =>
+  ids
+    .filter((id) => id in STARTER_LABELS)
+    .map((id) => [id, STARTER_LABELS[id]] as [string, string])

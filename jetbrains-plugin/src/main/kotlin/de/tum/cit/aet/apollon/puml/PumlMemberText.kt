@@ -11,6 +11,21 @@ package de.tum.cit.aet.apollon.puml
  */
 private val MODIFIER_TOKEN = Regex("""\{(\w+)\}""")
 
+/** A `--`/`..`/`==`/`__` compartment divider inside a class body. Not a member, and not something
+ *  the canvas can hold — it survives through [PumlType.bodySource]. */
+val SEPARATOR_LINE = Regex("""^[-.=_]{2,}.*""")
+
+/** The members a class body's source lines declare, in the order they are written. Both sides of
+ *  the converter read a body through this, so [PlantUmlExporter] can tell whether the canvas still
+ *  agrees with the source it came from and reproduce it verbatim if so. */
+fun membersIn(bodyLines: List<String>): List<PumlMember> =
+    bodyLines.mapNotNull { line ->
+        val trimmed = line.trim()
+        if (trimmed.isEmpty() || SEPARATOR_LINE.matches(trimmed)) return@mapNotNull null
+        val parsed = parseMemberText(trimmed)
+        PumlMember(parsed.toApollonName(), parsed.isMethod, parsed.isAbstractModifier)
+    }
+
 data class ParsedMember(
     val visibility: String, // "", "+", "-", "#", "~"
     val modifiers: List<String>, // lowercase, "abstract" excluded (see isAbstractModifier)

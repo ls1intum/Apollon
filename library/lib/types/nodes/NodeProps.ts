@@ -78,14 +78,35 @@ export type ComponentSubsystemNodeProps = {
   isComponentSubsystemHeaderShown: boolean
 } & DefaultNodeProps
 
+/**
+ * The two descriptive lines a deployment-palette node can carry under its name:
+ * a short technology/kind marker rendered in brackets (`[Kotlin/Ktor]`,
+ * `[EC2]`) and a longer free-text description below it.
+ *
+ * Both are optional and render nothing when absent, so a diagram authored
+ * before they existed looks unchanged. They exist because a box's name alone
+ * rarely says what the box *is*: the C4 model treats technology + description as
+ * part of every element, and a UML deployment node or component wants the same
+ * two lines. Distinct from `stereotype`, which is a UML metaclass keyword and
+ * renders in guillemets.
+ */
+export type DescribedNodeProps = {
+  technology?: string
+  description?: string
+}
+
 export type DeploymentNodeProps = {
   isComponentHeaderShown: boolean
   stereotype: string
-} & DefaultNodeProps
+} & DescribedNodeProps &
+  DefaultNodeProps
 
 export type DeploymentComponentProps = {
   isComponentHeaderShown: boolean
-} & DefaultNodeProps
+} & DescribedNodeProps &
+  DefaultNodeProps
+
+export type DeploymentArtifactProps = DescribedNodeProps & DefaultNodeProps
 
 export type PetriNetPlaceProps = {
   tokens: number

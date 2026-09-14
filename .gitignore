@@ -94,8 +94,3 @@ docs/.snippet-typecheck/
 # sandbox) — regenerated on every build, never hand-edited.
 jetbrains-plugin/.gradle/
 jetbrains-plugin/.intellijPlatform/
-
-# Architect Studio's working directory (created in whatever project a `.puml` file is edited
-# from) — generated `.apollon`/index/residual artefacts, never hand-edited. Manually testing the
-# plugin against this repo itself creates one at the root.
-.architect-studio/

@@ -2,6 +2,7 @@ package de.tum.cit.aet.apollon.protocol
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -17,6 +18,7 @@ private const val FIELD_AUTO_EXPORT = "autoExport"
 private const val FIELD_REQUEST_ID = "requestId"
 private const val FIELD_FORMAT = "format"
 private const val FIELD_REASON = "reason"
+private const val FIELD_DIAGRAM_TYPES = "diagramTypes"
 
 /**
  * Host <-> webview wire contract, hand-mirrored from the VS Code extension's
@@ -38,7 +40,17 @@ enum class AutoExport {
 
 /** Host -> webview. */
 sealed interface HostMessage {
-    data class Init(val model: JsonElement?, val autoExport: AutoExport) : HostMessage
+    /**
+     * [diagramTypes] narrows the empty-file picker to the types the *host* can persist, and is only
+     * meaningful when [model] is `null`. A `.apollon` file sends `null` here, meaning "every type";
+     * a `.puml` sends [de.tum.cit.aet.apollon.puml.PumlScaffold.diagramTypes], because the other
+     * eight have no PlantUML exporter and would be unsaveable the moment they were drawn.
+     */
+    data class Init(
+        val model: JsonElement?,
+        val autoExport: AutoExport,
+        val diagramTypes: List<String>? = null,
+    ) : HostMessage
 
     data class Invalid(val reason: String) : HostMessage
 
@@ -56,6 +68,11 @@ fun HostMessage.toJson(): JsonObject =
                 put(FIELD_TYPE, "init")
                 put(FIELD_MODEL, model ?: JsonNull)
                 put(FIELD_AUTO_EXPORT, autoExport.name)
+                // Omitted rather than sent as null when unrestricted, so the webview's
+                // `?? diagramTypeEntries()` fallback covers both this and an older host.
+                diagramTypes?.let { types ->
+                    put(FIELD_DIAGRAM_TYPES, JsonArray(types.map { JsonPrimitive(it) }))
+                }
             }
         is HostMessage.Invalid ->
             buildJsonObject {

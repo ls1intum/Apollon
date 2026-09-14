@@ -38,6 +38,7 @@ export const STRAIGHT_PATH_STEP_EDGE_TYPES: ReadonlySet<string> = new Set([
   "ClassBidirectional",
   "ClassUnidirectional",
   "ClassDependency",
+  "NoteLink",
   "ComponentDependency",
   "ComponentProvidedInterface",
   "ComponentRequiredInterface",

@@ -34,6 +34,7 @@ data class PumlUseCaseDiagram(
     val name: String?,
     val elements: List<PumlUseCaseElement>,
     val relations: List<PumlUseCaseRelation>,
+    val notes: List<PumlNote> = emptyList(),
 )
 
 /** Reinterprets a generic arrow-shape relation ([PumlRelationGrammar.parseRelationLine]) as one of

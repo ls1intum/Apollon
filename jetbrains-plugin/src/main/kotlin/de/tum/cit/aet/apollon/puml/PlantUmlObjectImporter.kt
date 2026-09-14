@@ -30,6 +30,7 @@ object PlantUmlObjectImporter {
 
         var openObject: OpenObject? = null
         var openBlockCloser: String? = null
+        val noteReader = PumlNoteReader()
 
         fun flushPostambleAsUnsupported() {
             if (postamble.isNotEmpty()) {
@@ -57,6 +58,15 @@ object PlantUmlObjectImporter {
             if (openBlockCloser != null) {
                 unsupported += raw
                 if (trimmed.equals(openBlockCloser, ignoreCase = true)) openBlockCloser = null
+                continue
+            }
+
+            // Before every other branch: an open note body may hold a blank line, a comment or
+            // something that reads exactly like a declaration, and `N1 .. Order` is otherwise a
+            // perfectly good dashed relation.
+            if (noteReader.consume(trimmed)) {
+                flushPostambleAsUnsupported()
+                sawMapped = true
                 continue
             }
 
@@ -100,7 +110,7 @@ object PlantUmlObjectImporter {
 
         openObject?.let { unsupported += "' Architect Studio: unterminated object ${it.name}" }
 
-        if (!sawMapped) return PumlObjectParseResult.Rejected("no object declarations found")
+        if (!sawMapped) return PumlObjectParseResult.Rejected("contains no object declarations")
 
         val residual =
             PumlResidual(
@@ -112,7 +122,7 @@ object PlantUmlObjectImporter {
                 postamble = postamble,
                 unsupported = unsupported,
             )
-        return PumlObjectParseResult.Parsed(PumlObjectDiagram(name, objects, relations), residual, unsupported.count { it.isNotBlank() })
+        return PumlObjectParseResult.Parsed(PumlObjectDiagram(name, objects, relations, noteReader.result()), residual, unsupported.count { it.isNotBlank() })
     }
 }
 

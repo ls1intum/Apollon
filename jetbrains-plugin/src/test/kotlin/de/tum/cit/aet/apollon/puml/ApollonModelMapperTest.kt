@@ -103,8 +103,30 @@ class ApollonModelMapperTest {
                 listOf(PumlRelation("A", "B", PumlRelationKind.DEPENDENCY, arrowToken = "..>")),
             )
         val mapped = ApollonModelMapper.toApollonModel(diagram, null, "t")
-        val (names, relations) = ApollonModelMapper.signature(mapped.model)
-        assertEquals(setOf("A", "B"), names)
-        assertEquals(listOf(Triple("A", "B", "ClassDependency")), relations)
+        val signature = ApollonModelMapper.signature(mapped.model)
+        assertEquals(setOf("A", "B"), signature.names)
+        assertEquals(listOf(Triple("A", "B", "ClassDependency")), signature.relations)
+    }
+
+    /** A dropped or reordered member used to pass the round-trip gate untouched: the signature
+     *  compared classifier names and relations only. */
+    @Test
+    fun `signature carries each classifier's members, in canvas order`() {
+        val diagram =
+            PumlDiagram(
+                null,
+                listOf(
+                    PumlType(
+                        "A",
+                        PumlKind.CLASS,
+                        listOf(PumlMember("- id: Long", isMethod = false, isAbstract = false)),
+                        listOf(PumlMember("+ save()", isMethod = true, isAbstract = false)),
+                        "class",
+                    ),
+                ),
+                emptyList(),
+            )
+        val mapped = ApollonModelMapper.toApollonModel(diagram, null, "t")
+        assertEquals(mapOf("A" to listOf("- id: Long", "+ save()")), ApollonModelMapper.signature(mapped.model).members)
     }
 }

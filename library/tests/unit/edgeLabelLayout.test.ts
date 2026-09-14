@@ -158,6 +158,17 @@ describe("computeMiddleLabelLayout", () => {
     expect(placed.dominantBaseline).toBe("hanging")
   })
 
+  it("scores a multi-line block by its full height, not one line", () => {
+    // A band sitting well above the arm: a one-line label fits under it, a
+    // three-line block reaches into it. Without the height the block would be
+    // placed as if it were one line and its upper lines would land on the node.
+    const nodeRects = [{ x: -50, y: 40, width: 300, height: 20 }]
+    expect(horizontal({ nodeRects }).side).toBe("above")
+    expect(horizontal({ nodeRects, lineCount: 3 }).side).toBe("below")
+    // With nothing in the way the extra lines change nothing.
+    expect(horizontal({ lineCount: 3 }).side).toBe("above")
+  })
+
   it("keeps the default side when both sides are clear", () => {
     const placed = horizontal({
       nodeRects: [{ x: 1000, y: 1000, width: 10, height: 10 }],

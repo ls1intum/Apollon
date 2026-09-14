@@ -67,6 +67,38 @@ class DiagramTypeDetectorTest {
     }
 
     @Test
+    fun `a class diagram that declares an interface is still a class diagram`() {
+        // `interface` is the one keyword the class and component families share. Counting it as
+        // component evidence classified this — a thoroughly ordinary class diagram — as a component
+        // diagram, whose importer then found nothing and swept every class into `unsupported`.
+        val text =
+            """
+            @startuml
+            abstract class Person
+            class Customer
+            interface Payable
+            enum OrderStatus
+            Person <|-- Customer
+            Payable <|.. Customer
+            @enduml
+            """.trimIndent()
+        assertEquals(DiagramFamily.CLASS, detect(text))
+    }
+
+    @Test
+    fun `an interface-only file with no component markers reads as a class diagram`() {
+        val text =
+            """
+            @startuml
+            interface Payable
+            interface Refundable
+            Payable <|-- Refundable
+            @enduml
+            """.trimIndent()
+        assertEquals(DiagramFamily.CLASS, detect(text))
+    }
+
+    @Test
     fun `detects a component diagram`() {
         val text =
             """
@@ -161,17 +193,17 @@ class DiagramTypeDetectorTest {
     }
 
     @Test
-    fun `hasImporter is true only for the five families with a real importer`() {
+    fun `hasImporter is true only for the eight families with a real importer`() {
         assertEquals(true, DiagramFamily.CLASS.hasImporter)
         assertEquals(true, DiagramFamily.OBJECT.hasImporter)
         assertEquals(true, DiagramFamily.USE_CASE.hasImporter)
         assertEquals(true, DiagramFamily.COMPONENT.hasImporter)
         assertEquals(true, DiagramFamily.DEPLOYMENT.hasImporter)
-        assertEquals(false, DiagramFamily.SEQUENCE.hasImporter)
+        assertEquals(true, DiagramFamily.C4.hasImporter)
+        assertEquals(true, DiagramFamily.ACTIVITY.hasImporter)
+        assertEquals(true, DiagramFamily.SEQUENCE.hasImporter)
         assertEquals(false, DiagramFamily.STATE.hasImporter)
-        assertEquals(false, DiagramFamily.ACTIVITY.hasImporter)
         assertEquals(false, DiagramFamily.COMMUNICATION.hasImporter)
-        assertEquals(false, DiagramFamily.C4.hasImporter)
         assertEquals(false, DiagramFamily.OTHER.hasImporter)
     }
 }

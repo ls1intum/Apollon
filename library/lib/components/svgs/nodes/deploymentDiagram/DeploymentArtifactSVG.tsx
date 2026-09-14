@@ -1,16 +1,20 @@
 import { MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight } from "@/utils/svgTextLayout"
+import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
+import { useMemo } from "react"
 import AssessmentIcon from "../../AssessmentIcon"
+import { NodeSubtext } from "../NodeSubtext"
 import { SVGComponentProps } from "@/types/SVG"
-import { DefaultNodeProps } from "@/types"
+import { DeploymentArtifactProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
 
 interface Props extends SVGComponentProps {
-  data: DefaultNodeProps
+  data: DeploymentArtifactProps
 }
+
+const NAME_TOP_Y = 25
 
 export const DeploymentArtifactSVG: React.FC<Props> = ({
   id,
@@ -21,12 +25,38 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
   showAssessmentResults = false,
   data,
 }) => {
-  const { name } = data
+  const { name, technology, description } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
+
+  const nameMaxWidth = width - 60
+  const nameMaxLines = maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)
+
+  // Unlike the node and component shapes, the artifact lays its name out
+  // directly rather than through StereotypeAndName, so it has to measure the
+  // wrapped name itself to know where the subtext starts.
+  const nameLineCount = useMemo(() => {
+    if (!name) return 0
+    const wrapped = wrapTextInRect(
+      name,
+      nameMaxWidth,
+      { fontSize: LAYOUT.NAME_FONT_SIZE, fontWeight: "bold" },
+      { lineHeight: LAYOUT.NAME_LINE_HEIGHT, maxLines: nameMaxLines }
+    )
+    return Math.max(1, wrapped.lines.length)
+  }, [name, nameMaxWidth, nameMaxLines])
+
+  const subtextTop =
+    NAME_TOP_Y +
+    (nameLineCount - 0.5) * LAYOUT.NAME_LINE_HEIGHT +
+    LAYOUT.SUBTEXT_NAME_GAP
+  const subtextMaxLines = Math.max(
+    0,
+    Math.floor((height - 8 - subtextTop) / LAYOUT.SUBTEXT_LINE_HEIGHT)
+  )
 
   return (
     <svg
@@ -72,13 +102,23 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
         <MultilineText
           text={name}
           x={width / 2}
-          y={25}
-          maxWidth={width - 60}
+          y={NAME_TOP_Y}
+          maxWidth={nameMaxWidth}
           fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
-          maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
+          maxLines={nameMaxLines}
+        />
+
+        <NodeSubtext
+          technology={technology}
+          description={description}
+          x={width / 2}
+          y={subtextTop + LAYOUT.SUBTEXT_LINE_HEIGHT / 2}
+          maxWidth={nameMaxWidth}
+          maxLines={subtextMaxLines}
+          fill={textColor}
         />
       </g>
 

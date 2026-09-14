@@ -21,6 +21,7 @@ object PlantUmlUseCaseExporter {
         }
         diagram.relations.forEach { lines += renderRelation(it) }
 
+        lines += PumlNotes.render(diagram.notes, indent, diagram.elements.map { it.refId }.toSet())
         lines += residual.unsupported
         lines += residual.postamble
         lines += residual.endLine
