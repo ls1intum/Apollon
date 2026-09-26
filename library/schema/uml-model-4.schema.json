@@ -137,7 +137,12 @@
           "score": {
             "type": "number"
           },
+          "title": {
+            "description": "Short headline (the host's Feedback.text). Falls back to the element name when empty.",
+            "type": "string"
+          },
           "feedback": {
+            "description": "Longer explanation (the host's Feedback.detailText).",
             "type": "string"
           },
           "dropInfo": {},
@@ -166,6 +171,14 @@
             "required": [
               "status"
             ]
+          },
+          "feedbackSuggestion": {
+            "description": "Set when this mirrors an Athena feedback suggestion (the host's Feedback.isFeedbackSuggestion)\nthe assessor hasn't accepted-as-is or has edited since. Drives the AI feedback suggestion badge\nin the give-feedback popover.",
+            "enum": [
+              "adapted",
+              "suggested"
+            ],
+            "type": "string"
           }
         },
         "additionalProperties": false,
