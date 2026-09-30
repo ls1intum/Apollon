@@ -24,6 +24,9 @@ jobs:
   version:
     name: Version Packages PR
     runs-on: ubuntu-latest
+    # Forks can't open PRs via GITHUB_TOKEN (and shouldn't manage this repo's
+    # versioning anyway) — only run against the upstream repo.
+    if: github.repository == 'ls1intum/Apollon'
     timeout-minutes: 15
     permissions:
       contents: write # commit the version bump to the PR branch

@@ -54,6 +54,7 @@ jobs:
     name: ${{ matrix.name }}
     needs: [detect-changes]
     if: >
+      github.repository == 'ls1intum/Apollon' &&
       github.actor != 'dependabot[bot]' &&
       needs.detect-changes.outputs.should-skip != 'true' && (
         needs.detect-changes.outputs.docker-relevant == 'true' ||

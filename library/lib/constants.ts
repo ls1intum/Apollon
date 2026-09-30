@@ -176,6 +176,14 @@ export const LAYOUT = Object.freeze({
   /** Stereotype tspans like `«component»` render at 0.8em of the name font. */
   STEREOTYPE_LINE_HEIGHT: 15,
   STEREOTYPE_NAME_GAP: 4,
+  /**
+   * The `[technology]` marker and description paragraph a node may carry under
+   * its name. Two points smaller than the name so the name stays the thing the
+   * eye lands on first.
+   */
+  SUBTEXT_FONT_SIZE: DEFAULT_FONT_SIZE - 2,
+  SUBTEXT_LINE_HEIGHT: Math.round((DEFAULT_FONT_SIZE - 2) * 1.2),
+  SUBTEXT_NAME_GAP: 4,
 } as const)
 
 /**

@@ -20,7 +20,7 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
   showAssessmentResults = false,
   data,
 }) => {
-  const { name, isComponentHeaderShown } = data
+  const { name, isComponentHeaderShown, technology, description } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
@@ -70,6 +70,8 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           width={width}
           height={height}
           fill={textColor}
+          technology={technology}
+          description={description}
         />
       </g>
 

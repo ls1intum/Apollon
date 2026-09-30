@@ -247,7 +247,7 @@ export function Apollon(props: ApollonProps) {
   const mergedStyle: CSSProperties = { ...style, ...theme }
 
   return (
-    <ApollonInstanceContext.Provider value={editor}>
+    <ApollonInstanceContext value={editor}>
       <div
         ref={containerRef}
         className={className}
@@ -255,7 +255,7 @@ export function Apollon(props: ApollonProps) {
         data-theme={dataTheme}
       />
       {children === undefined ? <ApollonDefaultControls /> : children}
-    </ApollonInstanceContext.Provider>
+    </ApollonInstanceContext>
   )
 }
 

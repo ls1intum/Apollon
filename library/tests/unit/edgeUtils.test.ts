@@ -13,6 +13,7 @@ import {
   getAxisAlignedSegments,
   getConnectionLineType,
   getDefaultEdgeType,
+  getEdgeTypeForConnection,
   getDistributedHandleOffsets,
   getDistributedHandleOffsetPercents,
   getFreeformAnchorFromPoint,
@@ -2401,6 +2402,43 @@ describe("getDefaultEdgeType", () => {
     expect(
       getDefaultEdgeType("UnknownDiagram" as unknown as UMLDiagramType)
     ).toBe("ClassUnidirectional")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getEdgeTypeForConnection
+// ---------------------------------------------------------------------------
+describe("getEdgeTypeForConnection", () => {
+  it("keeps the diagram default between two modelled elements", () => {
+    expect(getEdgeTypeForConnection("ClassDiagram", "class", "class")).toBe(
+      "ClassUnidirectional"
+    )
+  })
+
+  it.each(["ClassDiagram", "ComponentDiagram", "BPMN"] as UMLDiagramType[])(
+    "anchors a note with a NoteLink in %s, whatever the diagram default",
+    (diagramType) => {
+      expect(
+        getEdgeTypeForConnection(diagramType, "colorDescription", "class")
+      ).toBe("NoteLink")
+      expect(
+        getEdgeTypeForConnection(diagramType, "class", "colorDescription")
+      ).toBe("NoteLink")
+    }
+  )
+
+  it("still uses a NoteLink between two notes", () => {
+    expect(
+      getEdgeTypeForConnection(
+        "ClassDiagram",
+        "colorDescription",
+        "colorDescription"
+      )
+    ).toBe("NoteLink")
+  })
+
+  it("falls back to the diagram default when a node type is unknown", () => {
+    expect(getEdgeTypeForConnection("ObjectDiagram")).toBe("ObjectLink")
   })
 })
 

@@ -16,10 +16,10 @@ const renderPicker = (
   const store = createMetadataStore(new Y.Doc())
   store.getState().setTagConfig(resolveTagConfig(options))
   render(
-    <MetadataStoreContext.Provider value={store}>
+    <MetadataStoreContext value={store}>
       <TagChips tags={tags} onChange={onChange} />
       <TagPicker tags={tags} onChange={onChange} subject="attribute" />
-    </MetadataStoreContext.Provider>
+    </MetadataStoreContext>
   )
   return onChange
 }
@@ -33,9 +33,9 @@ describe("TagPicker gating", () => {
       (() => {
         const store = createMetadataStore(new Y.Doc())
         return (
-          <MetadataStoreContext.Provider value={store}>
+          <MetadataStoreContext value={store}>
             <TagPicker tags={["x"]} onChange={vi.fn()} subject="attribute" />
-          </MetadataStoreContext.Provider>
+          </MetadataStoreContext>
         )
       })()
     )

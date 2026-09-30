@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 import { StoreApi, useStore } from "zustand"
 import { DiagramStore } from "./diagramStore"
 import { MetadataStore } from "./metadataStore"
@@ -34,7 +34,7 @@ export const OverlayStoreContext = createContext<StoreApi<OverlayStore> | null>(
 
 // Custom hooks for components
 export const useDiagramStore = <T>(selector: (state: DiagramStore) => T): T => {
-  const store = useContext(DiagramStoreContext)
+  const store = use(DiagramStoreContext)
   if (!store) throw new Error("DiagramStoreContext not provided")
   return useStore(store, selector)
 }
@@ -45,7 +45,7 @@ export const useDiagramStore = <T>(selector: (state: DiagramStore) => T): T => {
  * e.g. two rapid pastes, where the second must build on the first's insert.
  */
 export const useDiagramStoreApi = (): StoreApi<DiagramStore> => {
-  const store = useContext(DiagramStoreContext)
+  const store = use(DiagramStoreContext)
   if (!store) throw new Error("DiagramStoreContext not provided")
   return store
 }
@@ -53,13 +53,13 @@ export const useDiagramStoreApi = (): StoreApi<DiagramStore> => {
 export const useMetadataStore = <T>(
   selector: (state: MetadataStore) => T
 ): T => {
-  const store = useContext(MetadataStoreContext)
+  const store = use(MetadataStoreContext)
   if (!store) throw new Error("MetadataStoreContext not provided")
   return useStore(store, selector)
 }
 
 export const usePopoverStore = <T>(selector: (state: PopoverStore) => T): T => {
-  const store = useContext(PopoverStoreContext)
+  const store = use(PopoverStoreContext)
   if (!store) throw new Error("PopoverStoreContext not provided")
   return useStore(store, selector)
 }
@@ -67,7 +67,7 @@ export const usePopoverStore = <T>(selector: (state: PopoverStore) => T): T => {
 export const useAssessmentSelectionStore = <T>(
   selector: (state: AssessmentSelectionStore) => T
 ): T => {
-  const store = useContext(AssessmentSelectionStoreContext)
+  const store = use(AssessmentSelectionStoreContext)
   if (!store) throw new Error("AssessmentSelectionStoreContext not provided")
   return useStore(store, selector)
 }
@@ -75,7 +75,7 @@ export const useAssessmentSelectionStore = <T>(
 export const useAlignmentGuidesStore = <T>(
   selector: (state: AlignmentGuidesStore) => T
 ): T => {
-  const store = useContext(AlignmentGuidesStoreContext)
+  const store = use(AlignmentGuidesStoreContext)
   if (!store) throw new Error("AlignmentGuidesStoreContext not provided")
   return useStore(store, selector)
 }
@@ -83,19 +83,19 @@ export const useAlignmentGuidesStore = <T>(
 export const useEdgeGeometryStore = <T>(
   selector: (state: EdgeGeometryStore) => T
 ): T => {
-  const store = useContext(EdgeGeometryStoreContext)
+  const store = use(EdgeGeometryStoreContext)
   if (!store) throw new Error("EdgeGeometryStoreContext not provided")
   return useStore(store, selector)
 }
 
 export const useEdgeGeometryStoreApi = (): StoreApi<EdgeGeometryStore> => {
-  const store = useContext(EdgeGeometryStoreContext)
+  const store = use(EdgeGeometryStoreContext)
   if (!store) throw new Error("EdgeGeometryStoreContext not provided")
   return store
 }
 
 export const useOverlayStore = <T>(selector: (state: OverlayStore) => T): T => {
-  const store = useContext(OverlayStoreContext)
+  const store = use(OverlayStoreContext)
   if (!store) throw new Error("OverlayStoreContext not provided")
   return useStore(store, selector)
 }

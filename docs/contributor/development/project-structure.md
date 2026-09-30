@@ -31,6 +31,9 @@ Apollon/
 ├── vscode-extension/         # apollon-extension — VS Code extension
 │   ├── src/                  # extension host (custom text editor, tree view, commands)
 │   └── webview/              # @tumaet/vscode-webview — diagram canvas (Vite)
+├── jetbrains-plugin/         # apollon-jetbrains — IntelliJ IDEA / WebStorm plugin
+│   ├── src/main/kotlin/      # plugin host (Gradle, IntelliJ Platform Gradle Plugin)
+│   └── webview/              # @tumaet/jetbrains-webview — diagram canvas (Vite), same shape as the VS Code one
 ├── docker/                   # Compose files for local + production
 ├── docs/                     # Documentation sources (this directory)
 ├── scripts/                  # dev.mjs and other monorepo helpers
@@ -45,15 +48,17 @@ Apollon/
 
 ## Workspaces
 
-| Workspace                   | Name                     | Published as                                                                                         |
-| --------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `library/`                  | `@tumaet/apollon`        | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                                 |
-| `packages/ui/`              | `@tumaet/ui`             | internal design system (consumed by the webapp; not published)                                       |
-| `standalone/webapp/`        | `@tumaet/webapp`         | `ghcr.io/ls1intum/apollon/webapp`                                                                    |
-| `standalone/server/`        | `@tumaet/server`         | `ghcr.io/ls1intum/apollon/server`                                                                    |
-| `vscode-extension/`         | `apollon-extension`      | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension) |
-| `vscode-extension/webview/` | `@tumaet/vscode-webview` | bundled into the extension VSIX                                                                      |
-| `docs/`                     | `@tumaet/docs`           | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                            |
+| Workspace                   | Name                        | Published as                                                                                         |
+| --------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `library/`                  | `@tumaet/apollon`           | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                                 |
+| `packages/ui/`              | `@tumaet/ui`                | internal design system (consumed by the webapp; not published)                                       |
+| `standalone/webapp/`        | `@tumaet/webapp`            | `ghcr.io/ls1intum/apollon/webapp`                                                                    |
+| `standalone/server/`        | `@tumaet/server`            | `ghcr.io/ls1intum/apollon/server`                                                                    |
+| `vscode-extension/`         | `apollon-extension`         | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=aet-tum.apollon-extension) |
+| `vscode-extension/webview/` | `@tumaet/vscode-webview`    | bundled into the extension VSIX                                                                      |
+| `jetbrains-plugin/`         | `apollon-jetbrains`         | [JetBrains Marketplace](https://plugins.jetbrains.com/) (pending first publish)                      |
+| `jetbrains-plugin/webview/` | `@tumaet/jetbrains-webview` | bundled into the plugin ZIP                                                                          |
+| `docs/`                     | `@tumaet/docs`              | published as the Docusaurus site at <https://ls1intum.github.io/Apollon/>                            |
 
 The scope carries the organization and the name carries the role, so `@tumaet/apollon` is the product and every other workspace is named for the job it does. `apollon-extension` is the sole exception: the VS Code Marketplace requires an extension name to match `[a-z0-9][a-z0-9-]*`, so `vsce` rejects a scope outright.
 

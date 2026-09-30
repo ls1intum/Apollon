@@ -19,6 +19,14 @@ export type CustomEdgeProps = {
   targetAnchor?: FreeformEdgeAnchor
   label?: string | null
   messages?: MessageData[] // For communication diagram edges with direction-aware messages
+  /**
+   * Deployment / C4 relations only: a bracketed technology marker and a
+   * description, stacked under the label. The node-side equivalent of
+   * `DescribedNodeProps` — a C4 relation carries the same two annotations its
+   * boxes do, and `label` alone cannot say what a connection runs over.
+   */
+  technology?: string
+  description?: string
   strokeColor?: string
   textColor?: string
 }

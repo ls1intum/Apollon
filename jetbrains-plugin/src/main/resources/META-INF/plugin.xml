@@ -1,0 +1,100 @@
+<idea-plugin>
+    <!-- Reverse-DNS, immutable after the first Marketplace upload — see the
+         plan's open question on Marketplace ID collisions before publishing. -->
+    <id>de.tum.cit.aet.apollon</id>
+    <name>Architect Studio</name>
+    <vendor url="https://aet.cit.tum.de/">TUM Applied Education Technologies</vendor>
+
+    <description><![CDATA[
+    Draw UML diagrams directly in IntelliJ IDEA or WebStorm with Architect Studio.
+    Open a PlantUML (<code>.puml</code>) file and it comes up with three tabs:
+    <b>View</b> puts the source beside a render from PlantUML's own engine,
+    <b>Edit</b> puts it on a visual canvas, and <b>Text</b> is the PlantUML
+    source full width — all three are the same file, so an edit in one shows up
+    in the others. C4 diagrams render with no internet connection. Native
+    <code>.apollon</code> diagrams are versioned in Git alongside your code.
+    ]]></description>
+
+    <!-- Platform-only: this is what makes one build install into both IntelliJ
+         IDEA and WebStorm (and every other JetBrains IDE). Do not add
+         com.intellij.modules.java here — that would silently exclude WebStorm. -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- `com.intellij.ui.jcef.*` (JBCefApp/JBCefBrowser/...) lives in a
+         separate V2 content module, not in what `com.intellij.modules.platform`
+         pulls in — omitting this throws NoClassDefFoundError at runtime the
+         moment ApollonFileEditor touches JBCefApp, even though it compiles
+         fine (the compile-time platform jar has no such split). Confirmed
+         against the platform's own module descriptors: the bundled Markdown
+         plugin's JCEF-based preview declares the same dependency. -->
+    <dependencies>
+        <module name="intellij.platform.ui.jcef" />
+        <!-- IdeView/LangDataKeys (NewArchitectureDiagramActionGroup's target-directory lookup)
+             live in this content module, not in what com.intellij.modules.platform alone pulls
+             in — same class of omission the jcef module above already had to work around. -->
+        <module name="intellij.platform.lang.core" />
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.ApollonFileEditorProvider" />
+        <!-- The three tabs a `.puml` file opens with. Both of these are
+             PLACE_BEFORE_DEFAULT_EDITOR, so they sort ahead of the platform's own
+             text editor; among themselves the platform orders them by
+             WeighedFileEditorProvider.getWeight(), giving View, Edit, Text. The
+             first tab is also the one a file with no remembered choice opens on.
+             Note View is itself a split editor (source beside render) but keeps
+             PLACE_BEFORE_DEFAULT_EDITOR rather than the HIDE_DEFAULT_EDITOR the
+             platform's own TextEditorWithPreviewProvider uses, so the Text tab
+             stays — see PlantUmlPreviewFileEditorProvider.getPolicy. -->
+        <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PlantUmlPreviewFileEditorProvider" />
+        <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PumlCanvasFileEditorProvider" />
+        <projectConfigurable
+            id="apollon.settings"
+            displayName="Architect Studio"
+            instance="de.tum.cit.aet.apollon.settings.ApollonConfigurable" />
+        <toolWindow
+            id="Architect Studio"
+            anchor="right"
+            factoryClass="de.tum.cit.aet.apollon.toolwindow.DiagramToolWindowFactory" />
+        <notificationGroup id="Architect Studio" displayType="BALLOON" />
+    </extensions>
+
+    <actions>
+        <group id="Apollon.MainMenu" text="Architect Studio" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last" />
+            <action
+                id="Apollon.NewDiagram"
+                class="de.tum.cit.aet.apollon.actions.NewDiagramAction"
+                text="New Diagram…"
+                description="Create a new diagram" />
+            <action
+                id="Apollon.AutoLayout"
+                class="de.tum.cit.aet.apollon.actions.AutoLayoutDiagramAction"
+                text="Auto Layout"
+                description="Re-arrange the focused diagram: relationships decide the rows, unconnected elements are grouped below" />
+            <action
+                id="Apollon.ExportDiagram"
+                class="de.tum.cit.aet.apollon.actions.ExportDiagramAction"
+                text="Export Diagram…"
+                description="Render the focused diagram to a sibling SVG or PNG file" />
+        </group>
+        <!-- Under the platform's own NewGroup, so this shows up both in File > New and in the
+             Project view's right-click New menu. Its C4/UML submenus and every leaf are built at
+             runtime from DiagramTypeCatalog — see NewArchitectureDiagramActionGroup. -->
+        <group
+            id="Apollon.NewArchitectureDiagramGroup"
+            class="de.tum.cit.aet.apollon.actions.NewArchitectureDiagramActionGroup"
+            text="Architecture Diagram"
+            popup="true">
+            <add-to-group group-id="NewGroup" anchor="last" />
+        </group>
+    </actions>
+
+    <!-- App-level only: `FileDocumentManagerListener` has no project-scoped
+         topic, so `ApollonSaveListener` itself walks every open project. -->
+    <applicationListeners>
+        <listener
+            class="de.tum.cit.aet.apollon.editor.ApollonSaveListener"
+            topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener" />
+    </applicationListeners>
+</idea-plugin>

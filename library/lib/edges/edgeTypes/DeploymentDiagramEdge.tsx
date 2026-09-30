@@ -141,6 +141,8 @@ export const DeploymentDiagramEdge = ({
 
         <EdgeMiddleLabels
           label={data?.label}
+          technology={data?.technology}
+          description={data?.description}
           activePoints={edgeData.activePoints}
           showRelationshipLabels={showRelationshipLabels}
           nodeRects={edgeData.nodeRects}

@@ -382,6 +382,11 @@ export interface MiddleLabelInput {
   /** Nearby other-edge polylines (see collectNeighborPolylines), collected over
    * the WHOLE edge so they cover any arm the label may land on. */
   neighborGeometry?: IPoint[][]
+  /** Lines in the label block; defaults to 1. A deployment or C4 relation can
+   * stack a technology and a description under its name, and the extra height
+   * has to be scored or the block lands clear of the line while its lower lines
+   * sit across a node. */
+  lineCount?: number
 }
 
 /** Clearance (flow px) kept between the label box and any line or node, so a
@@ -428,7 +433,7 @@ export function computeMiddleLabelLayout(input: MiddleLabelInput): PlacedLabel {
   ).point
 
   const w = input.measuredWidth ?? estimateLabelWidth(labelText, fontSize)
-  const h = EDGES.LABEL_LINE_HEIGHT
+  const h = Math.max(1, input.lineCount ?? 1) * EDGES.LABEL_LINE_HEIGHT
   const segments = getAxisAlignedSegments(points)
   if (segments.length === 0) {
     return placeOnSide({ point: arc }, "above")

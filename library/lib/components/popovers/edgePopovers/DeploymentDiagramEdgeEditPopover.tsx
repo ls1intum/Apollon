@@ -38,6 +38,9 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
   }
 
   const edgeData = edge.data as CustomEdgeProps | undefined
+  const isConnector =
+    edge.type === "DeploymentAssociation" ||
+    edge.type === "DeploymentDependency"
 
   return (
     <PopoverLayout title={t.edge}>
@@ -75,16 +78,48 @@ export const DeploymentEdgeEditPopover: React.FC<PopoverProps> = ({
         </PopoverSection>
       )}
 
-      {/* Show label input only for associations */}
-      {edge.type === "DeploymentAssociation" && (
-        <PopoverSection title={t.label} divider>
-          <TextField
-            value={edgeData?.label ?? ""}
-            onChange={(e) => handleLabelChange(e.target.value)}
-            fullWidth
-            placeholder={t.label}
-          />
-        </PopoverSection>
+      {/* Interfaces are drawn as a socket and a lollipop and have no text of
+          their own; the two connector types do. */}
+      {isConnector && (
+        <>
+          <PopoverSection title={t.label} divider>
+            <TextField
+              value={edgeData?.label ?? ""}
+              onChange={(e) => handleLabelChange(e.target.value)}
+              fullWidth
+              placeholder={t.label}
+            />
+          </PopoverSection>
+
+          <PopoverSection title={t.details} divider>
+            <TextField
+              label={t.technology}
+              value={edgeData?.technology ?? ""}
+              onChange={(e) =>
+                updateEdgeData(elementId, {
+                  ...edge.data,
+                  technology: e.target.value,
+                })
+              }
+              placeholder={t.technologyPlaceholder}
+              fullWidth
+            />
+            <TextField
+              label={t.description}
+              value={edgeData?.description ?? ""}
+              onChange={(e) =>
+                updateEdgeData(elementId, {
+                  ...edge.data,
+                  description: e.target.value,
+                })
+              }
+              placeholder={t.descriptionPlaceholder}
+              multiline
+              minRows={2}
+              fullWidth
+            />
+          </PopoverSection>
+        </>
       )}
     </PopoverLayout>
   )

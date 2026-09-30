@@ -1,11 +1,11 @@
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, use, type ReactNode } from "react"
 import type { ApollonEditor } from "@/apollon-editor"
 
 /** Live {@link ApollonEditor} instance; `null` until the mount effect commits. */
 export const ApollonInstanceContext = createContext<ApollonEditor | null>(null)
 
 export function useApollonEditor(): ApollonEditor | null {
-  return useContext(ApollonInstanceContext)
+  return use(ApollonInstanceContext)
 }
 
 /** Like {@link useApollonEditor}, but throws when no editor is available. */
@@ -32,8 +32,6 @@ export function ApollonProvider({
   children: ReactNode
 }) {
   return (
-    <ApollonInstanceContext.Provider value={editor}>
-      {children}
-    </ApollonInstanceContext.Provider>
+    <ApollonInstanceContext value={editor}>{children}</ApollonInstanceContext>
   )
 }

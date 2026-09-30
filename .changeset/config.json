@@ -4,9 +4,19 @@
   "access": "public",
   "baseBranch": "main",
   "fixed": [
-    ["@tumaet/apollon", "@tumaet/webapp", "@tumaet/server", "apollon-extension"]
+    [
+      "@tumaet/apollon",
+      "@tumaet/webapp",
+      "@tumaet/server",
+      "apollon-extension",
+      "@tumaet/jetbrains-plugin"
+    ]
   ],
   "updateInternalDependencies": "patch",
   "privatePackages": { "version": true, "tag": false },
-  "ignore": ["@tumaet/docs", "@tumaet/vscode-webview"]
+  "ignore": [
+    "@tumaet/docs",
+    "@tumaet/vscode-webview",
+    "@tumaet/jetbrains-webview"
+  ]
 }

@@ -1,0 +1,99 @@
+!$THEME = "C4_violet_new"
+
+' new style uses rounded rectangles by default, and wireframe style is defined via swapped colors in theme itself
+!ROUNDED_STYLE ?= 1
+!NEW_C4_STYLE ?= 0
+
+!$ELEMENT_FONT_COLOR ?= "#4B006E"
+!$ELEMENT_BG_COLOR ?= "#FFFFFF"
+!$ELEMENT_BORDER_COLOR ?= "#4B006E"
+!$EXTERNAL_ELEMENT_BG_COLOR ?= "#F4F4F4"
+!$EXTERNAL_ELEMENT_BORDER_COLOR ?= "#080808"
+
+!$PERSON_FONT_COLOR ?= "#4B006E"
+!$PERSON_BG_COLOR ?= $ELEMENT_BG_COLOR
+!$PERSON_BORDER_COLOR ?= "#4B006E"
+!$EXTERNAL_PERSON_FONT_COLOR ?= "#4B006E"
+!$EXTERNAL_PERSON_BG_COLOR ?= $EXTERNAL_ELEMENT_BG_COLOR
+!$EXTERNAL_PERSON_BORDER_COLOR ?= $EXTERNAL_ELEMENT_BORDER_COLOR
+
+!$SYSTEM_FONT_COLOR ?= "#7C2AE8"
+!$SYSTEM_BG_COLOR ?= $ELEMENT_BG_COLOR
+!$SYSTEM_BORDER_COLOR ?= "#7C2AE8"
+!$EXTERNAL_SYSTEM_FONT_COLOR ?= "#7C2AE8"
+!$EXTERNAL_SYSTEM_BG_COLOR ?= $EXTERNAL_ELEMENT_BG_COLOR
+!$EXTERNAL_SYSTEM_BORDER_COLOR ?= $EXTERNAL_ELEMENT_BORDER_COLOR
+
+!$CONTAINER_FONT_COLOR ?= "#A259E6"
+!$CONTAINER_BG_COLOR ?= $ELEMENT_BG_COLOR
+!$CONTAINER_BORDER_COLOR ?= "#A259E6"
+!$EXTERNAL_CONTAINER_FONT_COLOR ?= "#A259E6"
+!$EXTERNAL_CONTAINER_BG_COLOR ?= $EXTERNAL_ELEMENT_BG_COLOR
+!$EXTERNAL_CONTAINER_BORDER_COLOR ?= $EXTERNAL_ELEMENT_BORDER_COLOR
+
+!$COMPONENT_FONT_COLOR ?= "#4B006E"
+!$COMPONENT_BG_COLOR ?= $ELEMENT_BG_COLOR
+!$COMPONENT_BORDER_COLOR ?= "#4B006E"
+!$EXTERNAL_COMPONENT_FONT_COLOR ?= "#4B006E"
+!$EXTERNAL_COMPONENT_BG_COLOR ?= $EXTERNAL_ELEMENT_BG_COLOR
+!$EXTERNAL_COMPONENT_BORDER_COLOR ?= $EXTERNAL_ELEMENT_BORDER_COLOR
+
+!$NODE_FONT_COLOR ?= "#000000"
+!$NODE_BG_COLOR ?= "#FFFFFF"
+!$NODE_BORDER_COLOR ?= "#A2A2A2"
+
+' <<<<<<<<<<<<< sequence diagram is styled via skinparam and style
+
+' $BOUNDARY_BG_COLOR... have to be defined in theme itself that it can be used in styles,...
+' (no default values which are defined in C4.puml)
+' If skinparams and styles are defined with concrete values no variables are required
+!$BOUNDARY_BG_COLOR ?= "transparent"
+!$BOUNDARY_COLOR ?= "#444444"
+!$ARROW_COLOR ?= "#666666"
+
+' replace transparent with concrete background that it can be used as font color too
+!if ($BOUNDARY_BG_COLOR == "transparent")
+  !$SEQUENCE_BG_COLOR = white
+!else
+  !$SEQUENCE_BG_COLOR = $BOUNDARY_BG_COLOR
+!endif
+
+' "C4 styled" default is no foot boxes
+hide footbox
+' "C4 styled" default is that lifeline is arrow color
+skinparam SequenceLifelineBorderColor $ARROW_COLOR
+
+skinparam SequenceGroupBodyBackgroundColor $SEQUENCE_BG_COLOR
+skinparam SequenceGroupFontColor $BOUNDARY_COLOR
+skinparam SequenceGroupBackgroundColor $BOUNDARY_COLOR
+skinparam SequenceGroupHeaderFontColor $SEQUENCE_BG_COLOR
+skinparam SequenceGroupBorderColor $BOUNDARY_COLOR
+
+skinparam SequenceReferenceBackgroundColor $SEQUENCE_BG_COLOR
+skinparam SequenceReferenceFontColor $BOUNDARY_COLOR
+skinparam SequenceReferenceHeaderBackgroundColor $BOUNDARY_COLOR
+' VIA STYLE
+' skinparam SequenceReferenceHeaderFontColor $SEQUENCE_BG_COLOR
+<style>
+referenceHeader {
+  fontcolor $SEQUENCE_BG_COLOR
+}
+</style>
+skinparam SequenceReferenceBorderColor $BOUNDARY_COLOR
+
+skinparam SequenceDividerBackgroundColor $SEQUENCE_BG_COLOR
+skinparam SequenceDividerFontColor $BOUNDARY_COLOR
+skinparam SequenceDividerBorderColor $BOUNDARY_COLOR
+
+' VIA STYLE
+' skinparam SequenceDelayFontColor green
+<style>
+sequenceDiagram {
+  delay {
+    FontColor $BOUNDARY_COLOR
+  }
+}
+</style>
+
+' <<<<<<<<<<<<< end sequence diagram
+

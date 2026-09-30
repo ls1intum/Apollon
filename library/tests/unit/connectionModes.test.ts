@@ -179,8 +179,13 @@ describe("none mode", () => {
   it("is not a connection target", () => {
     const at = { x: rect.x, y: rect.y }
     expect(getEdgeAnchorFromPoint("activitySwimlane", at, rect)).toBeNull()
-    expect(getEdgeAnchorFromPoint("colorDescription", at, rect)).toBeNull()
     expect(getEdgeAnchorFromPoint("titleAndDesctiption", at, rect)).toBeNull()
     expect(getEdgeAnchorFromPoint("bpmnAnnotation", at, rect)).toBeNull()
+  })
+
+  it("does not cover the general UML note, which anchors to what it annotates", () => {
+    expect(
+      getEdgeAnchorFromPoint("colorDescription", { x: rect.x, y: rect.y }, rect)
+    ).not.toBeNull()
   })
 })

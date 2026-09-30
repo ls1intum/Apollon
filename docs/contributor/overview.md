@@ -56,6 +56,6 @@ fix(server): handle gunzip Z_DATA_ERROR in autoVersion
 refactor(vscode-extension)!: drop deprecated webview-ui-toolkit
 ```
 
-Valid types: `feat`, `fix`, `perf`, `docs`, `refactor`, `build`, `chore`, `ci`, `test`, `style`, `revert`. Valid scopes: `library`, `server`, `webapp`, `vscode`, `vscode-extension`, `deps`, `ci`, `docker`, `docs`, `release`. (`commitlint.config.mjs` is the source of truth.)
+Valid types: `feat`, `fix`, `perf`, `docs`, `refactor`, `build`, `chore`, `ci`, `test`, `style`, `revert`. Valid scopes: `library`, `server`, `webapp`, `vscode`, `vscode-extension`, `jetbrains`, `deps`, `ci`, `docker`, `docs`, `release`. (`commitlint.config.mjs` is the source of truth.)
 
 Because the repo is squash-merge only, the PR title's type becomes the commit type — and that type **groups the release note** (the full mapping is in [Release notes → How your change gets grouped](/contributor/development/release-notes#how-your-change-gets-grouped)). Pick it for the user-visible kind of change.

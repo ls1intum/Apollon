@@ -394,9 +394,9 @@ describe("OverlayLayer band rendering (rendered lane stacking)", () => {
     const store = createOverlayStore()
     for (const c of controls) store.getState().register(c)
     return render(
-      <OverlayStoreContext.Provider value={store}>
+      <OverlayStoreContext value={store}>
         <OverlayLayer />
-      </OverlayStoreContext.Provider>
+      </OverlayStoreContext>
     )
   }
 
@@ -481,9 +481,9 @@ describe("useKeyboardInset (OverlayLayer)", () => {
   function renderLayer(bottom: number) {
     const store = createOverlayStore()
     const result = render(
-      <OverlayStoreContext.Provider value={store}>
+      <OverlayStoreContext value={store}>
         <OverlayLayer />
-      </OverlayStoreContext.Provider>
+      </OverlayStoreContext>
     )
     const grid = result.container.querySelector(
       ".apollon-overlay-grid"

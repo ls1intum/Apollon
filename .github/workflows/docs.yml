@@ -89,7 +89,9 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    if: needs.build.outputs.is-production == 'true'
+    # Forks don't have Pages enabled (and shouldn't deploy to the upstream
+    # site anyway) — only run against the upstream repo.
+    if: needs.build.outputs.is-production == 'true' && github.repository == 'ls1intum/Apollon'
     runs-on: ubuntu-latest
     permissions:
       pages: write

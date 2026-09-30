@@ -42,6 +42,7 @@ import {
   CommunicationObjectNameSeeFeedbackPopover,
 } from "./communicationDiagram"
 import {
+  DeploymentArtifactEditPopover,
   DeploymentComponentEditPopover,
   DeploymentNodeEditPopover,
 } from "./deploymentDiagram"
@@ -62,6 +63,7 @@ import { ComponentEdgeEditPopover } from "./edgePopovers/ComponentDiagramEdgeEdi
 import { ReachabilityGraphMarkingEditPopover } from "./reachabilityGraphDiagram"
 import { DeploymentEdgeEditPopover } from "./edgePopovers/DeploymentDiagramEdgeEditPopover"
 import { ObjectDiagramEdgeEditPopover } from "./edgePopovers/ObjectDiagramEdgeEditPopover"
+import { NoteLinkEditPopover } from "./edgePopovers/NoteLinkEditPopover"
 import { FlowChartEdgeEditPopover } from "./edgePopovers/FlowChartEdgeEditPopover"
 import { SyntaxTreeEdgeEditPopover } from "./edgePopovers/SyntaxTreeEdgeEditPopover"
 import { SfcActionTableEditPopover, SfcEdgeEditPopover } from "./sfcDiagram"
@@ -82,6 +84,7 @@ type NodePopoverType =
   | "FlowchartDecision"
   | "FlowchartInputOutput"
   | "FlowchartFunctionCall"
+  | "DeploymentArtifact"
   | "DeploymentComponent"
   | "DeploymentNode"
   | "SyntaxTreeNonterminal"
@@ -113,6 +116,7 @@ type EdgePopoverType =
   | "ClassBidirectional"
   | "ClassUnidirectional"
   | "ClassDependency"
+  | "NoteLink"
   | "ActivityControlFlow"
   | "ObjectLink"
   | "CommunicationLink"
@@ -155,6 +159,7 @@ const editPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   ClassBidirectional: EdgeEditPopover,
   ClassUnidirectional: EdgeEditPopover,
   ClassDependency: EdgeEditPopover,
+  NoteLink: NoteLinkEditPopover,
   ActivityControlFlow: ActivityDiagramEdgeEditPopover,
   ObjectLink: ObjectDiagramEdgeEditPopover,
   CommunicationLink: CommunicationDiagramEdgeEditPopover,
@@ -189,6 +194,7 @@ const editPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   FlowchartDecision: DefaultNodeEditPopover,
   FlowchartInputOutput: DefaultNodeEditPopover,
   FlowchartFunctionCall: DefaultNodeEditPopover,
+  DeploymentArtifact: DeploymentArtifactEditPopover,
   DeploymentComponent: DeploymentComponentEditPopover,
   DeploymentNode: DeploymentNodeEditPopover,
   SyntaxTreeNonterminal: SyntaxTreeNonterminalEditPopover,
@@ -225,6 +231,7 @@ const giveFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   ClassBidirectional: EdgeGiveFeedbackPopover,
   ClassUnidirectional: EdgeGiveFeedbackPopover,
   ClassDependency: EdgeGiveFeedbackPopover,
+  NoteLink: EdgeGiveFeedbackPopover,
   ActivityControlFlow: EdgeGiveFeedbackPopover,
   ObjectLink: EdgeGiveFeedbackPopover,
   ReachabilityGraphArc: EdgeGiveFeedbackPopover,
@@ -258,6 +265,7 @@ const giveFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   FlowchartDecision: DefaultNodeGiveFeedbackPopover,
   FlowchartInputOutput: DefaultNodeGiveFeedbackPopover,
   FlowchartFunctionCall: DefaultNodeGiveFeedbackPopover,
+  DeploymentArtifact: DefaultNodeGiveFeedbackPopover,
   DeploymentComponent: DefaultNodeGiveFeedbackPopover,
   DeploymentNode: DefaultNodeGiveFeedbackPopover,
   SyntaxTreeNonterminal: DefaultNodeGiveFeedbackPopover,
@@ -295,6 +303,7 @@ const seeFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   ClassBidirectional: EdgeSeeFeedbackPopover,
   ClassUnidirectional: EdgeSeeFeedbackPopover,
   ClassDependency: EdgeSeeFeedbackPopover,
+  NoteLink: EdgeSeeFeedbackPopover,
   ActivityControlFlow: EdgeSeeFeedbackPopover,
   ObjectLink: EdgeSeeFeedbackPopover,
   ReachabilityGraphArc: EdgeSeeFeedbackPopover,
@@ -328,6 +337,7 @@ const seeFeedbackPopovers: Record<PopoverType, React.FC<PopoverProps>> = {
   FlowchartDecision: DefaultNodeSeeFeedbackPopover,
   FlowchartInputOutput: DefaultNodeSeeFeedbackPopover,
   FlowchartFunctionCall: DefaultNodeSeeFeedbackPopover,
+  DeploymentArtifact: DefaultNodeSeeFeedbackPopover,
   DeploymentComponent: DefaultNodeSeeFeedbackPopover,
   DeploymentNode: DefaultNodeSeeFeedbackPopover,
   SyntaxTreeNonterminal: DefaultNodeSeeFeedbackPopover,

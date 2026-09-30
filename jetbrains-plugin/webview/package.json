@@ -1,0 +1,34 @@
+{
+  "name": "@tumaet/jetbrains-webview",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite build --watch --mode development",
+    "build": "vite build",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "catalog:",
+    "@tumaet/apollon": "workspace:*",
+    "@xyflow/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "catalog:"
+  }
+}

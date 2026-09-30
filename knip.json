@@ -49,6 +49,9 @@
     "vscode-extension/webview": {
       "entry": ["src/main.tsx"]
     },
+    "jetbrains-plugin/webview": {
+      "entry": ["src/main.tsx"]
+    },
     "docs": {
       "entry": ["sidebars.{user,library,contributor}.ts", "src/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
