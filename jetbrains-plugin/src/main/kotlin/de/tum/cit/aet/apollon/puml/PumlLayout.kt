@@ -29,14 +29,26 @@ private const val TEXT_PADDING = 24
 private const val MAX_WIDTH = 400
 
 // Chosen so a grid of default-sized boxes keeps the 260x220 pitch every other family's layout
-// was already tuned around.
-private const val COL_GAP = 100
-private const val ROW_GAP = 80
+// was already tuned around. Internal rather than private because [PumlAutoLayout] lays its rows
+// out on the same pitch — one place to re-tune, not two.
+internal const val COL_GAP = 100
+internal const val ROW_GAP = 80
 private const val DEFAULT_ROW_HEIGHT = 140
 
 /** Deterministic geometry for nodes/edges Architect Studio creates — no external layout engine
  *  (plan §D5), so the same [PumlDiagram] always lays out the same way. */
 object PumlLayout {
+    /** Inset, gap and title-bar allowance a nesting family lays its children out inside — kept as
+     *  a member of this object rather than top-level, because [C4ModelMapper] and its siblings
+     *  each already declare their own file-private constant of the same name for *import-time*
+     *  placement, and a top-level declaration here would collide with those. [PumlAutoLayout]
+     *  needs the same pitch to size and fill a container when the user asks it to re-arrange one;
+     *  [C4ModelMapper] alone is repointed at these (see the plan on why the others stay as they
+     *  are). */
+    const val CONTAINER_PADDING = 20
+    const val CONTAINER_SPACING = 20
+    const val CONTAINER_HEADER = 40
+
     fun sizeOf(type: PumlType): Size {
         val header = if (type.kind == PumlKind.INTERFACE || type.kind == PumlKind.ENUM) HEADER_HEIGHT_WITH_STEREOTYPE else HEADER_HEIGHT
         val rows = type.attributes.size + type.methods.size
@@ -70,6 +82,15 @@ object PumlLayout {
     }
 
     private fun ceilToGrid(value: Int): Int = ceil(value / GRID_SNAP.toDouble()).toInt() * GRID_SNAP
+
+    /** Rounds a coordinate onto the same grid [sizeOf] rounds sizes up to — a multiple of the
+     *  canvas's own 5 px snap (`CANVAS.SNAP_TO_GRID_PX`), so a laid-out node lands where the canvas
+     *  would have snapped it to anyway rather than half a step off. */
+    internal fun snapToGrid(value: Int): Int = Math.round(value / GRID_SNAP.toDouble()).toInt() * GRID_SNAP
+
+    /** Where a container's own children start, parent-relative: past the left/top padding and
+     *  below the header band that carries the container's name/stereotype. */
+    internal fun containerContentOrigin(): Point = Point(CONTAINER_PADDING, CONTAINER_HEADER)
 
     /**
      * A square-ish grid of [sizes], laid out so no box overlaps its neighbours: each column is as

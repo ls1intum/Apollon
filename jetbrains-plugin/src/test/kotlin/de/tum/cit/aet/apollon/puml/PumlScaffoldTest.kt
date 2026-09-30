@@ -88,4 +88,36 @@ class PumlScaffoldTest {
             )
         }
     }
+
+    /** The "New Architecture Diagram" wizard's own starters (plan §3): one per
+     *  [DiagramTypeCatalog] tag, each carrying the metadata line the wizard writes. */
+    @Test
+    fun `every catalog tag has a starter with its metadata line`() {
+        DiagramTypeCatalog.ENTRIES.forEach { entry ->
+            val metadata = PumlDiagramMetadata(entry.tag, "New Diagram", "")
+            val text = PumlScaffold.textForTag(entry.tag, metadata)
+            assertNotNull("no starter for ${entry.tag}", text)
+            assertEquals(metadata, PumlDiagramMetadataCodec.parse(text!!))
+        }
+    }
+
+    @Test
+    fun `a tag not in the catalog has no starter`() {
+        assertNull(PumlScaffold.textForTag("NOT-A-TAG", PumlDiagramMetadata("NOT-A-TAG", "x", "")))
+    }
+
+    @Test
+    fun `every C4-level catalog starter includes its own level's macro file`() {
+        val expected =
+            mapOf(
+                "C4-CONTEXT" to "C4_Context",
+                "C4-CONTAINER" to "C4_Container",
+                "C4-COMPONENT" to "C4_Component",
+                "C4-DYNAMIC" to "C4_Dynamic",
+            )
+        expected.forEach { (tag, macroFile) ->
+            val text = PumlScaffold.textForTag(tag, PumlDiagramMetadata(tag, "New Diagram", ""))!!
+            assertTrue("$tag starter does not include $macroFile", text.contains("<C4/$macroFile>"))
+        }
+    }
 }

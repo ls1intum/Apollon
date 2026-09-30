@@ -11,10 +11,10 @@ import org.junit.Test
  * `!includeurl` from GitHub rather than the bundled `<C4/…>` stdlib, a `title`, and blank lines
  * between every declaration.
  *
- * The include cannot be honoured — [de.tum.cit.aet.apollon.render.PlantUmlRenderService] runs
- * PlantUML sandboxed, so the View tab shows "Cannot open URL" — but that is the renderer's
- * business. The canvas reads the macro calls directly and must not care where the macros came
- * from.
+ * Nothing is fetched: [de.tum.cit.aet.apollon.render.PlantUmlRenderService] runs PlantUML sandboxed
+ * and answers the include from the C4 macros PlantUML already bundles. That is the renderer's
+ * business, though — the canvas reads the macro calls directly and must not care where the macros
+ * came from, or whether they resolved at all.
  */
 class C4ContextSandboxTest {
     private val source =

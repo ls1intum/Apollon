@@ -40,6 +40,15 @@ export type HostMessage =
   /** The document changed underneath us (git, a split text editor, revert). */
   | { type: "externalUpdate"; model: DocumentModel }
   | { type: "export"; format: ExportFormat; requestId: number }
+  /**
+   * The IDE action asking the canvas to start an auto-layout. The canvas answers
+   * with `autoLayout`, carrying its own model — it holds the sizes the browser
+   * measured and any edit still inside the host's commit debounce, so it, not
+   * the host, is the authority on what to arrange.
+   */
+  | { type: "autoLayoutRequested" }
+  /** The arranged model. Applied as a normal canvas edit, so `Ctrl+Z` reverses it. */
+  | { type: "applyLayout"; model: UMLModel }
 
 /** Webview -> host. */
 export type WebviewMessage =
@@ -60,3 +69,5 @@ export type WebviewMessage =
       payload: string
     }
   | { type: "exportFailed"; requestId: number; reason: string }
+  /** Arrange this model, please. Answered with `applyLayout`. */
+  | { type: "autoLayout"; model: UMLModel }

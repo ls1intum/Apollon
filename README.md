@@ -37,6 +37,27 @@
 
 </div>
 
+### How TO BUILD JETBRAINS
+
+pnpm run build:jetbrains # from /lab/architecture-studio
+cd jetbrains-plugin
+./gradlew buildPlugin -x buildSearchableOptions
+
+That lands an installable build/distributions/apollon-jetbrains-5.3.0.zip (22 MB — it carries the bundled plantuml-mit jar). Install it in any JetBrains IDE via Settings → Plugins → ⚙ → Install Plugin from Disk….
+
+Two things to know:
+
+- The webview build is not optional and Gradle won't do it for you. copyWebviewAssets (a Sync task wired into processResources) copies webview/dist into src/main/resources/webview; if you never ran build:jetbrains, the canvas serves whatever bundle is committed. If you changed anything under library/, use
+  pnpm build:lib && pnpm run build:jetbrains — the webview resolves @tumaet/apollon to library/dist/, not to the sources.
+- -x buildSearchableOptions is needed in this container. That task launches a headless IDE with the plugin to harvest Configurable search terms, which needs a real display and working JCEF; here it fails with has module dependency 'intellij.platform.ui.jcef' which cannot be loaded. Skipping it still
+  produces a complete ZIP.
+
+To just run it instead of packaging:
+
+cd jetbrains-plugin && ./gradlew runIde
+
+which launches a sandboxed IDE with the plugin installed — that's what the remaining manual checks (README.dev.md steps 2-7) need.
+
 ## Why Apollon
 
 - **Made for learning and teaching.** Apollon powers the UML modeling exercises and grading workflows in [Artemis](https://artemis.tum.de/), TUM's interactive learning platform, and holds up in large university courses — but it is a general-purpose editor that works just as well outside the classroom.

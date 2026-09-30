@@ -68,4 +68,62 @@ object PumlScaffold {
 
     /** The starter text for [diagramType], or `null` if that family has no PlantUML exporter. */
     fun textFor(diagramType: String): String? = STARTERS[diagramType]?.let { "@startuml\n$it\n@enduml\n" }
+
+    /**
+     * One starter body per [DiagramTypeCatalog] tag, for the "New Architecture Diagram" wizard.
+     * The seven UML tags reuse [STARTERS] verbatim; the four C4 tags each point at the bundled
+     * macro file for that level (`resources/c4/C4_<Level>.puml`, wired up offline by
+     * [de.tum.cit.aet.apollon.render.C4MacroBundle]) with a skeleton sized to it, rather than all
+     * sharing the Container-level starter.
+     */
+    private val BODY_FOR_TAG: Map<String, String> =
+        linkedMapOf(
+            "UML-CLASS" to STARTERS.getValue("ClassDiagram"),
+            "UML-OBJECT" to STARTERS.getValue("ObjectDiagram"),
+            "UML-USE-CASE" to STARTERS.getValue("UseCaseDiagram"),
+            "UML-COMPONENT" to STARTERS.getValue("ComponentDiagram"),
+            "UML-DEPLOYMENT" to STARTERS.getValue("DeploymentDiagram"),
+            "UML-ACTIVITY" to STARTERS.getValue("ActivityDiagram"),
+            "UML-SEQUENCE" to STARTERS.getValue(SEQUENCE_STARTER_ID),
+            "C4-CONTEXT" to
+                """
+                !include <C4/C4_Context>
+
+                Person(user, "Customer", "Someone who uses the system")
+                System(system, "Software System", "Does something useful")
+                Rel(user, system, "Uses")
+                """.trimIndent(),
+            "C4-CONTAINER" to STARTERS.getValue(C4_STARTER_ID),
+            "C4-COMPONENT" to
+                """
+                !include <C4/C4_Component>
+
+                Container_Boundary(container, "Web Application") {
+                  Component(componentA, "New Component", "Technology", "Does something useful")
+                }
+                """.trimIndent(),
+            "C4-DYNAMIC" to
+                """
+                !include <C4/C4_Dynamic>
+
+                Person(user, "Customer", "Someone who uses the system")
+                System_Boundary(system, "Software System") {
+                  Container(web, "Web Application", "Technology", "Does something useful")
+                  ContainerDb(db, "Database", "Technology", "Stores what the application needs")
+                }
+                RelIndex(1, user, web, "Uses", "HTTPS")
+                RelIndex(2, web, db, "Reads from and writes to", "SQL/TCP")
+                """.trimIndent(),
+        )
+
+    /** The starter text for [tag] (a [DiagramTypeCatalog] tag), with [metadata] recorded as the
+     *  file's own name/type/description comment — see [PumlDiagramMetadataCodec]. `null` if [tag]
+     *  is not one of the catalog's tags. */
+    fun textForTag(
+        tag: String,
+        metadata: PumlDiagramMetadata,
+    ): String? {
+        val body = BODY_FOR_TAG[tag] ?: return null
+        return "@startuml\n${PumlDiagramMetadataCodec.renderLine(metadata)}\n\n$body\n@enduml\n"
+    }
 }

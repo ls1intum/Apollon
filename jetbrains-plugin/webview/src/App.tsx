@@ -22,6 +22,8 @@ const STATUS_LINGER_MS = 2000
 
 type ExportStatus = "idle" | "exporting" | "exported" | "failed"
 
+type LayoutStatus = "idle" | "arranging" | "failed"
+
 /** What the canvas shows, driven entirely by what the document holds. */
 type View =
   | { kind: "loading" }
@@ -132,6 +134,34 @@ function AutoExportButton({
   )
 }
 
+/** Asks the host to arrange the diagram. The host owns the algorithm, in Kotlin — the same one a
+ *  fresh PlantUML import goes through — so there is one arrangement rather than two. */
+function AutoLayoutButton({
+  status,
+  onArrange,
+}: {
+  status: LayoutStatus
+  onArrange: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className="apollon-glass apollon-jetbrains-status"
+      disabled={status === "arranging"}
+      onClick={onArrange}
+      title="Re-arrange every element: relationships decide the rows, unconnected elements are grouped below. Ctrl+Z undoes it."
+    >
+      <span>
+        {status === "arranging"
+          ? "Arranging…"
+          : status === "failed"
+            ? "Auto layout failed"
+            : "Auto layout"}
+      </span>
+    </button>
+  )
+}
+
 function App() {
   const editorRef = useRef<ApollonEditor | null>(null)
   const theme = useHostTheme()
@@ -140,6 +170,7 @@ function App() {
   const [external, setExternal] = useState<UMLModel>()
   const [autoExport, setAutoExport] = useState<AutoExport>("off")
   const [status, setStatus] = useState<ExportStatus>("idle")
+  const [layoutStatus, setLayoutStatus] = useState<LayoutStatus>("idle")
 
   /**
    * The model as last synced with the host. Setting `model` makes the editor
@@ -172,6 +203,35 @@ function App() {
     setView((current) =>
       current.kind === "editor" ? current : { kind: "editor", initial: model }
     )
+  }, [])
+
+  /**
+   * Hands the current model to the host to arrange. The canvas is the one that
+   * asks, from either trigger, because it is the only side that knows the sizes
+   * the browser measured and holds edits still inside the host's commit debounce.
+   */
+  const requestArrange = useCallback(() => {
+    const editor = editorRef.current
+    if (!editor) {
+      setLayoutStatus("failed")
+      return
+    }
+    setLayoutStatus("arranging")
+    postToHost({ type: "autoLayout", model: editor.model })
+  }, [])
+
+  /**
+   * Applies the arranged model. Deliberately does *not* touch `lastSyncedJson`:
+   * the echo through `subscribeToModelChange` is wanted here, because that is
+   * what persists the new geometry (the layout sidecar for a `.puml`, the
+   * document itself for a `.apollon`). Going through the model prop rather than
+   * around it also puts the change on the canvas's own undo stack, so `Ctrl+Z`
+   * brings the previous arrangement back.
+   */
+  const applyArranged = useCallback((model: UMLModel) => {
+    setExternal(model)
+    setLayoutStatus("idle")
+    editorRef.current?.fitView()
   }, [])
 
   const runExport = useCallback(
@@ -222,6 +282,12 @@ function App() {
         case "export":
           void runExport(message.format, message.requestId)
           break
+        case "autoLayoutRequested":
+          requestArrange()
+          break
+        case "applyLayout":
+          applyArranged(message.model)
+          break
         default:
           // Every `HostMessage` variant is handled above; adding one without a
           // case here is a compile error rather than a silent no-op.
@@ -230,7 +296,7 @@ function App() {
     })
     postToHost({ type: "ready" })
     return unsubscribe
-  }, [applyModel, runExport])
+  }, [applyModel, applyArranged, requestArrange, runExport])
 
   // A confirmation should not read as the steady state.
   useEffect(() => {
@@ -274,6 +340,13 @@ function App() {
       }}
     >
       <ApollonDefaultControls />
+      <ApollonControl
+        id="apollon-jetbrains:auto-layout"
+        region="top-right"
+        groupLabel="Auto layout"
+      >
+        <AutoLayoutButton status={layoutStatus} onArrange={requestArrange} />
+      </ApollonControl>
       <ApollonControl
         id="apollon-jetbrains:auto-export"
         region="top-right"

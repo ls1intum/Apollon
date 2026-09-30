@@ -19,6 +19,7 @@ import de.tum.cit.aet.apollon.protocol.HostMessage
 import de.tum.cit.aet.apollon.protocol.ProtocolException
 import de.tum.cit.aet.apollon.protocol.WebviewMessage
 import de.tum.cit.aet.apollon.protocol.parseWebviewMessage
+import de.tum.cit.aet.apollon.puml.PumlAutoLayout
 import de.tum.cit.aet.apollon.settings.ApollonConfigurable
 import de.tum.cit.aet.apollon.settings.ApollonSettings
 import java.beans.PropertyChangeListener
@@ -104,8 +105,12 @@ class ApollonFileEditor(
                 ShowSettingsUtil.getInstance().showSettingsDialog(project, ApollonConfigurable(project))
             is WebviewMessage.ExportResult -> exporter.settle(message.requestId, message.payload, null)
             is WebviewMessage.ExportFailed -> exporter.settle(message.requestId, null, message.reason)
+            is WebviewMessage.AutoLayout -> host.post(HostMessage.ApplyLayout(PumlAutoLayout.arrange(message.model)))
         }
     }
+
+    /** Arrange this canvas, for the auto-layout action. */
+    fun requestAutoLayout() = host.post(HostMessage.AutoLayoutRequested)
 
     private fun autoExportSetting() = ApollonSettings.getInstance(project).autoExport
 

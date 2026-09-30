@@ -1,6 +1,9 @@
 package de.tum.cit.aet.apollon.editor
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -9,6 +12,7 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.ui.components.JBLabel
 import de.tum.cit.aet.apollon.document.PumlCanvasState
 import de.tum.cit.aet.apollon.document.PumlDocumentBridge
 import de.tum.cit.aet.apollon.export.DiagramExporter
@@ -18,19 +22,25 @@ import de.tum.cit.aet.apollon.protocol.HostMessage
 import de.tum.cit.aet.apollon.protocol.ProtocolException
 import de.tum.cit.aet.apollon.protocol.WebviewMessage
 import de.tum.cit.aet.apollon.protocol.parseWebviewMessage
+import de.tum.cit.aet.apollon.puml.DiagramTypeCatalog
+import de.tum.cit.aet.apollon.puml.PumlAutoLayout
+import de.tum.cit.aet.apollon.puml.PumlDiagramMetadataCodec
 import de.tum.cit.aet.apollon.puml.PumlScaffold
 import de.tum.cit.aet.apollon.settings.ApollonConfigurable
 import de.tum.cit.aet.apollon.settings.ApollonSettings
+import de.tum.cit.aet.apollon.ui.DiagramMetadataDialog
+import java.awt.BorderLayout
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import javax.swing.JComponent
+import javax.swing.JPanel
 
 private val LOG = Logger.getInstance(PumlCanvasFileEditor::class.java)
 
 /**
  * The **Edit** tab of a `.puml` file: the Apollon canvas, bound to the PlantUML file itself.
  *
- * Sits alongside [PlantUmlPreviewFileEditor] ("View") and the platform's own text editor on the one
+ * Sits alongside [PumlSplitFileEditor] ("View") and the platform's own text editor on the one
  * document, so the three tabs are three views of a single file — an edit made on the canvas is
  * already there when you switch to the text, and vice versa. [PumlDocumentBridge] owns the
  * translation in both directions; this class is only the JCEF wiring and the protocol.
@@ -51,10 +61,23 @@ class PumlCanvasFileEditor(
             "This IDE was built without JCEF support, so the Architect Studio canvas cannot render.",
             ::onWebviewMessage,
         )
+
+    /** Phase-1 stand-in for a real per-type palette (plan §4): names the diagram's recorded type,
+     *  or says none is set yet, rather than showing any actual different tools. */
+    private val toolsetBanner = JBLabel()
+    private val rootComponent =
+        JPanel(BorderLayout()).apply {
+            add(toolsetBanner, BorderLayout.NORTH)
+            add(host.component, BorderLayout.CENTER)
+        }
     private var bridge: PumlDocumentBridge? = null
 
     /** Reported once per import, not once per keystroke — the balloon is a heads-up, not a log. */
     private var reportedUnsupportedCount = -1
+
+    /** Whether this editor instance has already asked about a missing [PumlDiagramMetadataCodec]
+     *  block — asked at most once per time the file is opened, not on every focus. */
+    private var promptedForMetadata = false
 
     init {
         FileDocumentManager.getInstance().getDocument(file)?.let { document ->
@@ -69,7 +92,33 @@ class PumlCanvasFileEditor(
                 )
             }
             bridge = documentBridge
+            refreshToolsetBanner(document.text)
+            ApplicationManager.getApplication().invokeLater {
+                if (!project.isDisposed) ensureMetadata(document)
+            }
         }
+    }
+
+    /** An existing file with no diagram-type metadata: ask once, then write the answer in as the
+     *  file's own `' @architect-studio-diagram ...` comment (see [PumlDiagramMetadataCodec]) so it
+     *  opens straight to its tools next time. Declining leaves the file untouched. */
+    private fun ensureMetadata(document: Document) {
+        if (promptedForMetadata || document.text.isBlank()) return
+        promptedForMetadata = true
+        if (DiagramTypeCatalog.byTag(PumlDiagramMetadataCodec.parse(document.text).type) != null) return
+        val metadata = DiagramMetadataDialog.show(project, preselectedType = null) ?: return
+        WriteCommandAction.runWriteCommandAction(project, "Set Diagram Metadata", null, {
+            document.setText(PumlDiagramMetadataCodec.withMetadata(document.text, metadata))
+        })
+        refreshToolsetBanner(document.text)
+    }
+
+    private fun refreshToolsetBanner(text: String) {
+        val metadata = PumlDiagramMetadataCodec.parse(text)
+        toolsetBanner.text =
+            DiagramTypeCatalog.byTag(metadata.type)
+                ?.let { "  ${it.group} ${it.label} diagram tools loaded" }
+                ?: "  No diagram type set — tools not loaded"
     }
 
     /** Push [state] to the canvas, choosing the message the current phase calls for: the initial
@@ -78,6 +127,7 @@ class PumlCanvasFileEditor(
         state: PumlCanvasState,
         asUpdate: (kotlinx.serialization.json.JsonObject?) -> HostMessage,
     ) {
+        FileDocumentManager.getInstance().getDocument(file)?.let { refreshToolsetBanner(it.text) }
         when (state) {
             is PumlCanvasState.Model -> {
                 host.post(asUpdate(state.model))
@@ -129,8 +179,15 @@ class PumlCanvasFileEditor(
                 ShowSettingsUtil.getInstance().showSettingsDialog(project, ApollonConfigurable(project))
             is WebviewMessage.ExportResult -> exporter.settle(message.requestId, message.payload, null)
             is WebviewMessage.ExportFailed -> exporter.settle(message.requestId, null, message.reason)
+            // Arranging changes positions only, so the regenerated PlantUML is byte-identical and
+            // the document is never touched — the sidecar write inside `onCanvasModel` is what
+            // records it, exactly as it does for a node drag.
+            is WebviewMessage.AutoLayout -> host.post(HostMessage.ApplyLayout(PumlAutoLayout.arrange(message.model)))
         }
     }
+
+    /** Arrange this canvas, for the auto-layout action. */
+    fun requestAutoLayout() = host.post(HostMessage.AutoLayoutRequested)
 
     private fun autoExportSetting() = ApollonSettings.getInstance(project).autoExport
 
@@ -150,7 +207,7 @@ class PumlCanvasFileEditor(
         }
     }
 
-    override fun getComponent(): JComponent = host.component
+    override fun getComponent(): JComponent = rootComponent
 
     override fun getPreferredFocusedComponent(): JComponent = host.component
 

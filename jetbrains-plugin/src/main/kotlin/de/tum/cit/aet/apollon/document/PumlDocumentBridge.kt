@@ -133,8 +133,16 @@ class PumlDocumentBridge(
             is DispatchedImport.Parsed -> {
                 val sidecar = readSidecar()
                 sidecarOnDisk = if (sidecar.isEmpty()) null else sidecar.toJson()
-                val mapped = parsed.toApollonModel(sidecar.toPreviousModel(), titleFor(file.name))
+                val previous = sidecar.toPreviousModel()
+                val mapped = parsed.toApollonModel(previous, titleFor(file.name))
                 residual = parsed.residual.withImported(mapped)
+                // Deliberately *not* arranged here. Auto layout is a helper the user invokes, never
+                // something an import does on its own: an import runs again on every external change
+                // to the document, and until the sidecar exists `previous` is null every time — so
+                // arranging here would silently throw away a position the user had just dragged,
+                // each time they typed in the Text tab. The layout is the user's to manage; a file
+                // with no committed layout opens on whatever the family mapper placed and is one
+                // click of Auto layout away from being arranged.
                 // The title/description block is in no importer's output — nothing in the
                 // PlantUML mentions it — so the sidecar has to put it back before the canvas ever
                 // sees the model. Notes go through the `.puml` itself now (see PumlNotes).

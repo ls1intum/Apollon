@@ -59,6 +59,20 @@ sealed interface HostMessage {
     data class ExternalUpdate(val model: JsonElement?) : HostMessage
 
     data class Export(val format: ExportFormat, val requestId: Int) : HostMessage
+
+    /**
+     * Asks the canvas to start an auto-layout. It answers with [WebviewMessage.AutoLayout], carrying
+     * its current model — the canvas is the authority on that, since it holds the sizes the browser
+     * actually measured, and only it knows about edits still inside the commit debounce.
+     *
+     * Sent by the IDE action; the canvas's own Auto layout button skips this and posts the answer
+     * directly.
+     */
+    data object AutoLayoutRequested : HostMessage
+
+    /** The arranged model, to apply as a normal canvas edit — undoable, and persisted by the
+     *  `modelChanged` that follows it. */
+    data class ApplyLayout(val model: JsonElement) : HostMessage
 }
 
 fun HostMessage.toJson(): JsonObject =
@@ -95,6 +109,12 @@ fun HostMessage.toJson(): JsonObject =
                 put(FIELD_FORMAT, format.name)
                 put(FIELD_REQUEST_ID, requestId)
             }
+        is HostMessage.AutoLayoutRequested -> buildJsonObject { put(FIELD_TYPE, "autoLayoutRequested") }
+        is HostMessage.ApplyLayout ->
+            buildJsonObject {
+                put(FIELD_TYPE, "applyLayout")
+                put(FIELD_MODEL, model)
+            }
     }
 
 fun HostMessage.toJsonString(): String = Json.encodeToString(JsonObject.serializer(), toJson())
@@ -115,6 +135,9 @@ sealed interface WebviewMessage {
         WebviewMessage
 
     data class ExportFailed(val requestId: Int, val reason: String) : WebviewMessage
+
+    /** Arrange this model, please. Answered with [HostMessage.ApplyLayout]. */
+    data class AutoLayout(val model: JsonObject) : WebviewMessage
 }
 
 class ProtocolException(message: String) : Exception(message)
@@ -149,6 +172,11 @@ fun parseWebviewMessage(text: String): WebviewMessage {
                 requestId = root.intField(FIELD_REQUEST_ID),
                 format = ExportFormat.valueOf(root[FIELD_FORMAT]!!.jsonPrimitive.content),
                 payload = root["payload"]!!.jsonPrimitive.content,
+            )
+        "autoLayout" ->
+            WebviewMessage.AutoLayout(
+                root[FIELD_MODEL] as? JsonObject
+                    ?: throw ProtocolException("autoLayout without a model"),
             )
         "exportFailed" ->
             WebviewMessage.ExportFailed(

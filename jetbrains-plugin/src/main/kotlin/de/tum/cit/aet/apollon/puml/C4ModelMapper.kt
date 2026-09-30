@@ -15,9 +15,6 @@ data class C4PumlExport(
 )
 
 private const val MODEL_SCHEMA_VERSION = "4.0.0"
-private const val CONTAINER_PADDING = 20
-private const val CONTAINER_SPACING = 20
-private const val CONTAINER_HEADER = 40
 private val C4_BARE_IDENT = Regex("""^[A-Za-z_][\w$]*$""")
 
 /**
@@ -107,7 +104,7 @@ private fun detailHeight(element: PumlC4Element): Int {
         if (description.isEmpty()) {
             0
         } else {
-            val perLine = maxOf(1, (defaultSizeFor(element.kind).width - 2 * CONTAINER_PADDING) / DETAIL_CHAR_WIDTH)
+            val perLine = maxOf(1, (defaultSizeFor(element.kind).width - 2 * PumlLayout.CONTAINER_PADDING) / DETAIL_CHAR_WIDTH)
             minOf(DETAIL_MAX_LINES, (description.length + perLine - 1) / perLine)
         }
     return ((if (technology.isEmpty()) 0 else 1) + descriptionLines) * DETAIL_LINE_HEIGHT
@@ -208,10 +205,10 @@ object C4ModelMapper {
             val children = childrenByParent[element.refId].orEmpty().filterNot { it.refId in seen }
             if (children.isEmpty()) return defaultSizeFor(element)
             val sizes = children.map { freshSize(it, seen + element.refId) }
-            val width = sizes.maxOf { it.width } + 2 * CONTAINER_PADDING
+            val width = sizes.maxOf { it.width } + 2 * PumlLayout.CONTAINER_PADDING
             val height =
-                CONTAINER_HEADER + detailHeight(element) + CONTAINER_SPACING +
-                    sizes.sumOf { it.height + CONTAINER_SPACING }
+                PumlLayout.CONTAINER_HEADER + detailHeight(element) + PumlLayout.CONTAINER_SPACING +
+                    sizes.sumOf { it.height + PumlLayout.CONTAINER_SPACING }
             return Size(width, height)
         }
 
@@ -279,11 +276,11 @@ object C4ModelMapper {
                 }
             rectById[id] = Rect(absolute.x, absolute.y, size.width, size.height)
 
-            var cursorY = CONTAINER_HEADER + detailHeight(element) + CONTAINER_SPACING
+            var cursorY = PumlLayout.CONTAINER_HEADER + detailHeight(element) + PumlLayout.CONTAINER_SPACING
             childrenByParent[element.refId].orEmpty().forEach { child ->
-                emit(child, id, absolute, Point(CONTAINER_PADDING, cursorY))
+                emit(child, id, absolute, Point(PumlLayout.CONTAINER_PADDING, cursorY))
                 if (prevIdByName[child.displayName] == null) {
-                    cursorY += freshSize(child, emptySet()).height + CONTAINER_SPACING
+                    cursorY += freshSize(child, emptySet()).height + PumlLayout.CONTAINER_SPACING
                 }
             }
         }

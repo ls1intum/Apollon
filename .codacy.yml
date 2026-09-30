@@ -13,3 +13,10 @@ exclude_paths:
   # to run it themselves) — same reasoning as the VS Code extension's own
   # webview bundle. Not hand-authored, not restyled to local lint rules.
   - "jetbrains-plugin/src/main/resources/webview/**"
+
+  # Vendored verbatim from C4-PlantUML
+  # (https://github.com/plantuml-stdlib/C4-PlantUML) so the plugin can render
+  # C4 diagrams offline, and updated by re-copying a release, not by hand.
+  # `README.md` alongside them is ours and is not excluded.
+  - "jetbrains-plugin/src/main/resources/c4/**/*.puml"
+  - "jetbrains-plugin/src/main/resources/c4/LICENSE"

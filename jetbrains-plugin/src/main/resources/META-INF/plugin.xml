@@ -8,12 +8,11 @@
     <description><![CDATA[
     Draw UML diagrams directly in IntelliJ IDEA or WebStorm with Architect Studio.
     Open a PlantUML (<code>.puml</code>) file and it comes up with three tabs:
-    <b>View</b> renders it with PlantUML's own engine, <b>Edit</b> puts it on a
-    visual canvas, and <b>Text</b> is the PlantUML source — all three are the
-    same file, so an edit in one shows up in the others. Native
+    <b>View</b> puts the source beside a render from PlantUML's own engine,
+    <b>Edit</b> puts it on a visual canvas, and <b>Text</b> is the PlantUML
+    source full width — all three are the same file, so an edit in one shows up
+    in the others. C4 diagrams render with no internet connection. Native
     <code>.apollon</code> diagrams are versioned in Git alongside your code.
-    Built on the <a href="https://github.com/ls1intum/Apollon">Apollon</a> UML
-    editor.
     ]]></description>
 
     <!-- Platform-only: this is what makes one build install into both IntelliJ
@@ -30,15 +29,23 @@
          plugin's JCEF-based preview declares the same dependency. -->
     <dependencies>
         <module name="intellij.platform.ui.jcef" />
+        <!-- IdeView/LangDataKeys (NewArchitectureDiagramActionGroup's target-directory lookup)
+             live in this content module, not in what com.intellij.modules.platform alone pulls
+             in — same class of omission the jcef module above already had to work around. -->
+        <module name="intellij.platform.lang.core" />
     </dependencies>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.ApollonFileEditorProvider" />
-        <!-- The three tabs a `.puml` file opens with. Both are
+        <!-- The three tabs a `.puml` file opens with. Both of these are
              PLACE_BEFORE_DEFAULT_EDITOR, so they sort ahead of the platform's own
              text editor; among themselves the platform orders them by
              WeighedFileEditorProvider.getWeight(), giving View, Edit, Text. The
-             first tab is also the one a file with no remembered choice opens on. -->
+             first tab is also the one a file with no remembered choice opens on.
+             Note View is itself a split editor (source beside render) but keeps
+             PLACE_BEFORE_DEFAULT_EDITOR rather than the HIDE_DEFAULT_EDITOR the
+             platform's own TextEditorWithPreviewProvider uses, so the Text tab
+             stays — see PlantUmlPreviewFileEditorProvider.getPolicy. -->
         <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PlantUmlPreviewFileEditorProvider" />
         <fileEditorProvider implementation="de.tum.cit.aet.apollon.editor.PumlCanvasFileEditorProvider" />
         <projectConfigurable
@@ -61,10 +68,25 @@
                 text="New Diagram…"
                 description="Create a new diagram" />
             <action
+                id="Apollon.AutoLayout"
+                class="de.tum.cit.aet.apollon.actions.AutoLayoutDiagramAction"
+                text="Auto Layout"
+                description="Re-arrange the focused diagram: relationships decide the rows, unconnected elements are grouped below" />
+            <action
                 id="Apollon.ExportDiagram"
                 class="de.tum.cit.aet.apollon.actions.ExportDiagramAction"
                 text="Export Diagram…"
                 description="Render the focused diagram to a sibling SVG or PNG file" />
+        </group>
+        <!-- Under the platform's own NewGroup, so this shows up both in File > New and in the
+             Project view's right-click New menu. Its C4/UML submenus and every leaf are built at
+             runtime from DiagramTypeCatalog — see NewArchitectureDiagramActionGroup. -->
+        <group
+            id="Apollon.NewArchitectureDiagramGroup"
+            class="de.tum.cit.aet.apollon.actions.NewArchitectureDiagramActionGroup"
+            text="Architecture Diagram"
+            popup="true">
+            <add-to-group group-id="NewGroup" anchor="last" />
         </group>
     </actions>
 
