@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Sparkles, Trash2 } from "lucide-react"
+import { useState, type FocusEvent } from "react"
+import { Sparkles, Trash2, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
@@ -78,6 +78,32 @@ export const GiveFeedbackAssessmentBox = ({
   // Default title placeholder tracks the score's sign — see assessmentTitle.ts.
   const defaultTitle = defaultTitleFor(toneFor(score), t)
 
+  // Like the host's unified feedback card (applyDefaultTitleIfEmpty / refreshDefaultTitle), an edited
+  // box never keeps an empty title: the default is written in once the box gets content or the title
+  // field is left empty, and a title that is still one of the defaults follows the score's sign. A
+  // title counts as default by its text, so this also holds for a reopened assessment. A title the
+  // assessor typed is never touched.
+  const isDefaultTitle = (value: string) =>
+    [t.feedback, t.positiveFeedback, t.needsRevision].includes(value.trim())
+
+  /** The title to store alongside `newScore`: filled if empty, kept in line with the sign if default. */
+  const titleForScore = (currentTitle: string, newScore: string) =>
+    currentTitle.trim() === "" || isDefaultTitle(currentTitle)
+      ? defaultTitleFor(toneFor(newScore), t)
+      : currentTitle
+
+  const titleOrDefault = (currentTitle: string) =>
+    currentTitle.trim() === "" ? defaultTitle : currentTitle
+
+  // The description carries the comment, as the title is only a heading, so the host does not accept an
+  // assessment without one. A grading instruction dropped on the element brings its own feedback as the
+  // description, which makes it optional, like the host's Feedback.hasContent.
+  const instructionFeedback = (
+    existing?.dropInfo as { feedback?: string } | undefined
+  )?.feedback
+  const isDescriptionMissing =
+    !!existing && feedback.trim() === "" && !instructionFeedback
+
   const updateAssessment = (
     newTitle: string,
     newScore: string,
@@ -119,6 +145,33 @@ export const GiveFeedbackAssessmentBox = ({
     setFeedback("")
   }
 
+  // Two-step delete, mirroring the host's unified feedback card (ConfirmIconComponent): the first click
+  // arms the button (X turns into a trash icon), the second one deletes. Leaving the button disarms it.
+  // A box with nothing in it has nothing to lose, so it is deleted on the first click, like the host's
+  // canDismissWithoutConfirm.
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const isEmpty =
+    title === "" &&
+    (parseFloat(score) || 0) === 0 &&
+    feedback === "" &&
+    !existing?.feedbackSuggestion
+
+  const handleDeleteClick = () => {
+    if (confirmingDelete || isEmpty) {
+      setConfirmingDelete(false)
+      handleDelete()
+    } else {
+      setConfirmingDelete(true)
+    }
+  }
+  const disarmDelete = () => setConfirmingDelete(false)
+  // The editor moves focus to its root on every pointerdown, so pressing the armed button blurs it before
+  // its click lands. A blur while the pointer is still over the button is that press, not the assessor
+  // moving away (leaving with the mouse is handled by onMouseLeave, tabbing away still disarms).
+  const disarmDeleteOnBlur = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.matches(":hover")) disarmDelete()
+  }
+
   return (
     <PopoverSection divider={divider}>
       {/* Reference row: which element this box is about — separate from the
@@ -148,6 +201,13 @@ export const GiveFeedbackAssessmentBox = ({
             setTitle(value)
             updateAssessment(value, score, feedback)
           }}
+          onBlur={() => {
+            // Only an existing assessment gets a default title: leaving the empty title field of an element
+            // that was never graded must not create an assessment for it.
+            if (!existing || title.trim() !== "") return
+            setTitle(defaultTitle)
+            updateAssessment(defaultTitle, score, feedback)
+          }}
           placeholder={defaultTitle}
           aria-label={t.assessmentFor(typeText)}
           data-field="assessment-title"
@@ -156,18 +216,34 @@ export const GiveFeedbackAssessmentBox = ({
         <AssessmentScoreInput
           value={score}
           onChange={(value) => {
+            const nextTitle = titleForScore(title, value)
             setScore(value)
-            updateAssessment(title, value, feedback)
+            setTitle(nextTitle)
+            updateAssessment(nextTitle, value, feedback)
           }}
           ariaLabel={t.points}
           placeholder="0"
         />
         <IconButton
-          ariaLabel={t.deleteAssessmentFor(name)}
-          tooltip={t.deleteAssessment}
-          onClick={handleDelete}
+          ariaLabel={
+            confirmingDelete
+              ? t.confirmDeleteAssessment
+              : t.deleteAssessmentFor(name)
+          }
+          tooltip={
+            confirmingDelete ? t.confirmDeleteAssessment : t.deleteAssessment
+          }
+          data-field="assessment-delete"
+          data-confirming={confirmingDelete || undefined}
+          onClick={handleDeleteClick}
+          onMouseLeave={disarmDelete}
+          onBlur={disarmDeleteOnBlur}
         >
-          <Trash2 width={16} height={16} aria-hidden="true" />
+          {confirmingDelete ? (
+            <Trash2 width={16} height={16} aria-hidden="true" />
+          ) : (
+            <X width={16} height={16} aria-hidden="true" />
+          )}
         </IconButton>
       </div>
       <TextField
@@ -175,12 +251,15 @@ export const GiveFeedbackAssessmentBox = ({
         minRows={3}
         maxLength={FEEDBACK_MAX_LENGTH}
         aria-label={t.feedback}
+        error={isDescriptionMissing}
         helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
         value={feedback}
         onChange={(e) => {
           const value = e.target.value
+          const nextTitle = titleOrDefault(title)
           setFeedback(value)
-          updateAssessment(title, score, value)
+          setTitle(nextTitle)
+          updateAssessment(nextTitle, score, value)
         }}
         placeholder={t.addComment}
         fullWidth

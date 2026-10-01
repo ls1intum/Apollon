@@ -21,6 +21,28 @@ import { useLabels } from "@/i18n/useLabels"
 
 const STEP = 0.5
 
+/**
+ * Bounds for a single assessment's points, matching the host's CREDITS_MIN /
+ * CREDITS_MAX (the host server rejects anything outside them), so a mistyped
+ * large number cannot distort the total score.
+ */
+const SCORE_MIN = -100
+const SCORE_MAX = 100
+
+const clampScore = (value: number): number =>
+  Math.min(SCORE_MAX, Math.max(SCORE_MIN, value))
+
+/**
+ * Pulls a typed value back into [SCORE_MIN, SCORE_MAX] as soon as it leaves
+ * it; anything still in range (or not yet a number, like "-" or "") passes
+ * through untouched so typing is not interrupted.
+ */
+export const clampedScoreInput = (raw: string): string => {
+  const parsed = parseFloat(raw)
+  if (Number.isNaN(parsed) || clampScore(parsed) === parsed) return raw
+  return clampScore(parsed).toString()
+}
+
 export type AssessmentTone = "positive" | "negative" | "zero"
 
 /** Shared by the title field's default placeholder (GiveFeedbackAssessmentBox). */
@@ -38,7 +60,7 @@ export const toneFor = (value: string): AssessmentTone => {
 const steppedValue = (current: number, delta: number): number => {
   const snapped =
     (delta > 0 ? Math.floor(current / STEP) : Math.ceil(current / STEP)) * STEP
-  return snapped + delta
+  return clampScore(snapped + delta)
 }
 
 export const AssessmentScoreInput: React.FC<{
@@ -50,8 +72,9 @@ export const AssessmentScoreInput: React.FC<{
   const t = useLabels()
   const tone = toneFor(value)
 
+  const current = parseFloat(value) || 0
+
   const step = (delta: number) => {
-    const current = parseFloat(value) || 0
     onChange(steppedValue(current, delta).toString())
   }
 
@@ -61,6 +84,7 @@ export const AssessmentScoreInput: React.FC<{
         type="button"
         data-slot="assessment-score-step"
         aria-label={t.decreasePoints}
+        disabled={current <= SCORE_MIN}
         onClick={() => step(-STEP)}
       >
         <Minus width={12} height={12} aria-hidden="true" />
@@ -68,8 +92,10 @@ export const AssessmentScoreInput: React.FC<{
       <input
         type="number"
         step={STEP}
+        min={SCORE_MIN}
+        max={SCORE_MAX}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(clampedScoreInput(e.target.value))}
         aria-label={ariaLabel}
         placeholder={placeholder}
       />
@@ -77,6 +103,7 @@ export const AssessmentScoreInput: React.FC<{
         type="button"
         data-slot="assessment-score-step"
         aria-label={t.increasePoints}
+        disabled={current >= SCORE_MAX}
         onClick={() => step(STEP)}
       >
         <Plus width={12} height={12} aria-hidden="true" />

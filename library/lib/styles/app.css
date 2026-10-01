@@ -1616,7 +1616,18 @@ svg.react-flow__connectionline {
   flex: none;
 }
 
-[data-slot="assessment-score-step"]:hover {
+/* Armed state of the give-feedback box's two-step delete (GiveFeedbackAssessmentBox):
+   the trash icon turns the danger color, like the host's confirm icon. */
+[data-slot="icon-button"][data-field="assessment-delete"][data-confirming] {
+  color: var(--apollon-danger, #721c24);
+}
+
+[data-slot="assessment-score-step"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+[data-slot="assessment-score-step"]:not(:disabled):hover {
   background-color: color-mix(in srgb, var(--apollon-foreground, #000) 16%, transparent);
 }
 

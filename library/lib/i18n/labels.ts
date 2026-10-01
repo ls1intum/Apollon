@@ -80,6 +80,11 @@ export interface ApollonLabels {
   adaptedAiFeedbackSuggestion: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
+  /**
+   * Tooltip and accessible name of the delete button once it is armed (showing the trash icon), asking for the
+   * second click. Optional for dictionaries authored before the two-step delete existed.
+   */
+  confirmDeleteAssessment?: string
   assessmentFor: (type: string) => string
   /** Optional for dictionaries authored before assessment navigation existed. */
   previousAssessment?: string
@@ -378,6 +383,8 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   adaptedAiFeedbackSuggestion: "Adapted AI Feedback Suggestion",
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
+  confirmDeleteAssessment:
+    "Please confirm that you want to delete this assessment!",
   assessmentFor: (type) => `Assessment for ${type}`,
   previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",
