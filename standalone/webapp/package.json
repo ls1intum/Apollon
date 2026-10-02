@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "size": "size-limit",
-    "storybook": "10.6.1",
+    "storybook": "pnpm --filter @tumaet/ui run build:css && storybook dev -p 6006",
     "build-storybook": "pnpm --filter @tumaet/ui run build:css && storybook build",
     "test:storybook": "vitest run --config vitest.config.storybook.ts",
     "pw": "node node_modules/@playwright/test/cli.js",
