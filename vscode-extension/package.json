@@ -171,6 +171,7 @@
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "@types/vscode": "~1.86.0",
+    "@xyflow/react": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
