@@ -72,6 +72,22 @@ jobs:
               - '.github/workflows/pr-health-checks.yml'
               - '.github/actions/**'
 
+  library-release-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+      - run: pnpm install --filter tumaet --frozen-lockfile --ignore-scripts
+      - run: node --test scripts/library-release.test.mjs
+      - run: shellcheck scripts/finalize-library-release.sh
+      - name: Validate release workflow syntax and shell scripts
+        # actionlint lacks GitHub's queue key; the policy tests check it explicitly.
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 -ignore '^unexpected key "queue" for "concurrency" section\.' .github/workflows/release-library.yml .github/workflows/release-standalone.yml .github/workflows/release-vscode-extension.yml .github/workflows/release.yml .github/workflows/pr-health-checks.yml .github/workflows/docs.yml
+
   # No path filter: a stale CDN version can drift in via a doc edit OR a bump,
   # so check every PR. Pure Node — no pnpm install needed.
   version-sync-check:
@@ -508,6 +524,7 @@ jobs:
       [
         detect-changes,
         version-sync-check,
+        library-release-policy,
         no-mui-emotion,
         lint-and-format-check,
         vscode-extension-checks,

@@ -72,7 +72,7 @@
     "react-markdown": "10.1.0",
     "react-toastify": "11.1.0",
     "remark-gfm": "4.0.1",
-    "semver": "^7.8.5",
+    "semver": "catalog:",
     "svg2pdf.js": "catalog:",
     "tailwindcss": "catalog:",
     "zustand": "catalog:"

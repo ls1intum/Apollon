@@ -5,157 +5,312 @@ on:
     branches: [main]
     paths:
       - library/package.json
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Stage the current version, or finalize after npm approval
+        type: choice
+        options: [stage, finalize]
+        default: stage
+      artifact_id:
+        description: Original staging artifact ID (required for finalize)
+        type: string
 
 concurrency:
   group: release-library
   cancel-in-progress: false
+  queue: max
 
 permissions: {}
 
+env:
+  NPM_VERSION: 12.2.0
+
 jobs:
   check:
-    name: Check for new version
+    if: github.repository == 'ls1intum/Apollon' && github.ref == 'refs/heads/main' && inputs.operation != 'finalize'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.v.outputs.version }}
-      publish: ${{ steps.v.outputs.publish }}
-      release: ${{ steps.v.outputs.release }}
+      changed: ${{ steps.version.outputs.changed }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.sha }}
-
-      - id: v
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./library/package.json').version")
-          if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
-            echo "::error::library version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
-            exit 1
-          fi
-          PUBLISHED=$(npm view --json "@tumaet/apollon@$VERSION" version 2>/dev/null | tr -d '"' | tr -d '[:space:]' || true)
-          if [ "$PUBLISHED" = "$VERSION" ]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          fi
-          TAG="@tumaet/apollon@${VERSION}"
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "release=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "release=true" >> "$GITHUB_OUTPUT"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-  publish:
-    name: Publish and release
-    needs: [check]
-    if: needs.check.outputs.publish == 'true' || needs.check.outputs.release == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: npm-publish
-    permissions:
-      contents: write # create tag + GitHub Release
-      id-token: write # OIDC for npm trusted publishing + provenance
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          ref: ${{ github.sha }}
-          # Full history so extract-changelog.mjs can resolve each changelog
-          # entry's commit type (feat/fix/...) to group the release notes.
           fetch-depth: 0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
-
+          persist-credentials: false
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version-file: ".nvmrc"
-          registry-url: https://registry.npmjs.org/
-          cache: "pnpm"
-
-      # OIDC trusted publishing needs npm 11.5.1+; pnpm lacks it (pnpm#9812).
-      - run: npm install -g --ignore-scripts npm@11.5.1
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm --filter @tumaet/apollon run build
-      - run: pnpm --filter @tumaet/apollon run test
-
-      - name: Pack
-        id: pack
-        working-directory: library
-        # `pnpm pack --json` writes the tarball path to stdout as structured
-        # output; previous `pnpm pack | tail -n 1` broke when pnpm logged
-        # warnings on stdout (pnpm/pnpm#10200). The type-guarded jq filter
-        # tolerates either object or array output — pnpm has flip-flopped
-        # between the two shapes across releases.
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Check for a version change
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          TARBALL=$(pnpm pack --json | jq -r 'if type=="array" then .[0].filename else .filename end')
-          test -f "$TARBALL"
-          echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
-
-      - name: Publish to npm with OIDC trusted publishing
-        if: needs.check.outputs.publish == 'true'
-        working-directory: library
-        run: npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance --tag latest
-
-      - name: Ensure release tag exists
-        if: needs.check.outputs.release == 'true'
-        env:
-          VERSION: ${{ needs.check.outputs.version }}
-        run: |
-          TAG="@tumaet/apollon@${VERSION}"
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists on origin"
+          if [ "$GITHUB_EVENT_NAME" != push ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          git show "$BEFORE_SHA:library/package.json" > before.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs'
+          const current = JSON.parse(readFileSync('library/package.json', 'utf8'))
+          const previous = JSON.parse(readFileSync('before.json', 'utf8'))
+          appendFileSync(process.env.GITHUB_OUTPUT, `changed=${current.version !== previous.version}\n`)
+          NODE
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG" "$GITHUB_SHA"
-          git push origin "refs/tags/$TAG"
-
-      - name: Create GitHub Release
-        if: needs.check.outputs.release == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.check.outputs.version }}
+  build:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      node: ${{ steps.identity.outputs.node }}
+      integrity: ${{ steps.pack.outputs.integrity }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: npm install -g --ignore-scripts "npm@$NPM_VERSION"
+      - run: pnpm install --frozen-lockfile
+      - name: Validate release identity and policy
+        id: identity
+        run: |
+          node --test scripts/library-release.test.mjs
+          npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version > latest.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs'
+          import { validateNextVersion } from './scripts/library-release.mjs'
+          const pkg = JSON.parse(readFileSync('library/package.json', 'utf8'))
+          if (pkg.name !== '@tumaet/apollon' || pkg.private) throw new Error('Invalid package identity')
+          validateNextVersion(pkg.version, JSON.parse(readFileSync('latest.json', 'utf8')))
+          appendFileSync(process.env.GITHUB_OUTPUT, `node=${readFileSync('.nvmrc', 'utf8').trim()}\n`)
+          NODE
+      - run: pnpm --filter @tumaet/apollon run lint
+      - run: pnpm --filter @tumaet/apollon run build
+      - run: pnpm --filter @tumaet/apollon run test
+      - name: Pack tested package and release notes
+        id: pack
         run: |
           set -euo pipefail
-          TAG="@tumaet/apollon@${VERSION}"
+          mkdir -p "$RUNNER_TEMP/library-release"
+          pnpm --dir library pack --pack-destination "$RUNNER_TEMP/library-release"
+          shopt -s nullglob
+          files=( "$RUNNER_TEMP/library-release/"*.tgz )
+          test "${#files[@]}" -eq 1
+          mv "${files[0]}" "$RUNNER_TEMP/library-release/package.tgz"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync, appendFileSync } from 'node:fs'
+          import { integrity } from './scripts/library-release.mjs'
+          const dir = `${process.env.RUNNER_TEMP}/library-release`
+          const { name, version } = JSON.parse(readFileSync('library/package.json', 'utf8'))
+          const digest = integrity(readFileSync(`${dir}/package.tgz`))
+          writeFileSync(`${dir}/manifest.json`, JSON.stringify({ name, version, integrity: digest, sha: process.env.GITHUB_SHA }))
+          appendFileSync(process.env.GITHUB_OUTPUT, `integrity=${digest}\n`)
+          NODE
+          VERSION=$(node -p "require('./library/package.json').version")
+          node scripts/extract-changelog.mjs "$VERSION" library > "$RUNNER_TEMP/library-release/notes.md"
+          # shellcheck disable=SC2016 # Markdown backticks are literal.
+          printf '\nInstall: `npm install @tumaet/apollon@%s`\n\nApproved on npm with 2FA after OIDC staging.\n' "$VERSION" >> "$RUNNER_TEMP/library-release/notes.md"
+      - name: Smoke test the packed package as an external consumer
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/library-consumer"
+          cd "$RUNNER_TEMP/library-consumer"
+          printf '{"private":true,"type":"module"}\n' > package.json
+          npm install "$RUNNER_TEMP/library-release/package.tgz" --ignore-scripts --no-audit --no-fund
+          node --input-type=module <<'NODE'
+          import { createRequire } from 'node:module'
+          import { readFileSync, accessSync } from 'node:fs'
+          import { fileURLToPath, pathToFileURL } from 'node:url'
+          const require = createRequire(import.meta.url)
+          const packageUrl = pathToFileURL(require.resolve('@tumaet/apollon/package.json'))
+          const pkg = JSON.parse(readFileSync(packageUrl, 'utf8'))
+          for (const [entry, target] of Object.entries(pkg.exports)) {
+            accessSync(fileURLToPath(import.meta.resolve(entry === '.' ? pkg.name : `${pkg.name}/${entry.slice(2)}`)))
+            if (typeof target === 'object' && target.types) accessSync(new URL(target.types, packageUrl))
+          }
+          await import('@tumaet/apollon/model')
+          NODE
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        id: upload
+        with:
+          name: library-release-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/library-release/
+          if-no-files-found: error
+          retention-days: 90
 
-          # Body = the Changesets-owned CHANGELOG section (curated per-PR voice),
-          # regrouped by category (Features/Bug Fixes/...) from each entry's
-          # commit type, plus an install footer. Fall back to GitHub's
-          # --generate-notes only when there is no changelog section for this
-          # version (e.g. a release that carried no changeset).
-          CHANGELOG=$(node scripts/extract-changelog.mjs "$VERSION" library)
-          {
-            if [ -n "$CHANGELOG" ]; then printf '%s\n\n' "$CHANGELOG"; fi
-            cat <<EOF
-          Install:
+  stage:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: npm-publish
+    permissions:
+      id-token: write
+    steps:
+      # Keep package code out of the job with publish credentials.
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: ${{ needs.build.outputs.node }}
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - run: npm install -g --ignore-scripts "npm@$NPM_VERSION"
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: artifact
+      - name: Verify and stage the tested tarball
+        env:
+          EXPECTED_INTEGRITY: ${{ needs.build.outputs.integrity }}
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto'
+          import { readFileSync } from 'node:fs'
+          const digest = `sha512-${createHash('sha512').update(readFileSync('artifact/package.tgz')).digest('base64')}`
+          if (digest !== process.env.EXPECTED_INTEGRITY) throw new Error('Tarball integrity mismatch')
+          NODE
+          npm stage publish ./artifact/package.tgz --ignore-scripts --access public --provenance --tag next
+          echo "Review the staged package on npm and approve with 2FA. Then run **Release Library**, operation **finalize**, artifact_id **$ARTIFACT_ID**. No public GitHub Release has been created." >> "$GITHUB_STEP_SUMMARY"
 
-          \`\`\`sh
-          npm install @tumaet/apollon@${VERSION}
-          \`\`\`
+  finalize:
+    if: github.repository == 'ls1intum/Apollon' && github.ref == 'refs/heads/main' && inputs.operation == 'finalize'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      version: ${{ steps.verified.outputs.version }}
+      integrity: ${{ steps.verified.outputs.integrity }}
+      sha: ${{ steps.source.outputs.sha }}
+      run-id: ${{ steps.source.outputs.run-id }}
+      latest: ${{ steps.verified.outputs.latest }}
+      promote: ${{ steps.verified.outputs.promote }}
+      node: ${{ steps.verified.outputs.node }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+      - run: pnpm install --filter tumaet --frozen-lockfile --ignore-scripts
+      - name: Validate original staging artifact
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          [[ "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > artifact.json
+          RUN_ID=$(jq -er .workflow_run.id artifact.json)
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" > run.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs'
+          import { validateStagingArtifact } from './scripts/library-release.mjs'
+          const artifact = JSON.parse(readFileSync('artifact.json', 'utf8'))
+          const run = JSON.parse(readFileSync('run.json', 'utf8'))
+          validateStagingArtifact(artifact, run)
+          appendFileSync(process.env.GITHUB_OUTPUT, `sha=${run.head_sha}\nrun-id=${run.id}\n`)
+          NODE
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ inputs.artifact_id }}
+          path: artifact
+          run-id: ${{ steps.source.outputs.run-id }}
+          github-token: ${{ github.token }}
+      - name: Verify npm approval and exact published content
+        id: verified
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/library-release.mjs artifact > identity.json
+          VERSION=$(jq -r .version identity.json)
+          npm view --registry=https://registry.npmjs.org/ --json "@tumaet/apollon@$VERSION" > published.json
+          node scripts/library-release.mjs artifact published.json > verified.json
+          TAG_SHA=$(git ls-remote --tags origin "refs/tags/@tumaet/apollon@$VERSION" | cut -f1)
+          if [ -n "$TAG_SHA" ]; then test "$TAG_SHA" = "$SOURCE_SHA"; fi
+          npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version > latest.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs'
+          import { shouldPromote } from './scripts/library-release.mjs'
+          const { version, integrity } = JSON.parse(readFileSync('verified.json', 'utf8'))
+          const latest = JSON.parse(readFileSync('latest.json', 'utf8'))
+          const node = readFileSync('.nvmrc', 'utf8').trim()
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nintegrity=${integrity}\nlatest=${latest}\npromote=${shouldPromote(version, latest)}\nnode=${node}\n`)
+          NODE
 
-          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION}).
-          EOF
-          } > release-notes.md
+  promote:
+    needs: finalize
+    if: needs.finalize.outputs.promote == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: npm-promote
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: ${{ needs.finalize.outputs.node }}
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - run: npm install -g --ignore-scripts "npm@$NPM_VERSION"
+      - name: Promote only the verified newer version
+        env:
+          VERSION: ${{ needs.finalize.outputs.version }}
+          EXPECTED_LATEST: ${{ needs.finalize.outputs.latest }}
+        run: |
+          set -euo pipefail
+          LATEST=$(npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er .)
+          test "$LATEST" = "$EXPECTED_LATEST"
+          npm dist-tag add "@tumaet/apollon@$VERSION" latest
+          test "$(npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er .)" = "$VERSION"
 
-          GENERATE=()
-          [ -z "$CHANGELOG" ] && GENERATE=(--generate-notes)
-
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --target "$GITHUB_SHA" \
-            --verify-tag \
-            --latest=false \
-            "${GENERATE[@]}" \
-            --notes-file release-notes.md
+  release:
+    needs: [finalize, promote]
+    if: |
+      !cancelled() && needs.finalize.result == 'success' &&
+      (needs.promote.result == 'success' || needs.promote.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ inputs.artifact_id }}
+          path: artifact
+          run-id: ${{ needs.finalize.outputs.run-id }}
+          github-token: ${{ github.token }}
+      - name: Verify and create or resume the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.finalize.outputs.version }}
+          SOURCE_SHA: ${{ needs.finalize.outputs.sha }}
+          EXPECTED_INTEGRITY: ${{ needs.finalize.outputs.integrity }}
+        run: |
+          set -euo pipefail
+          DIGEST="sha512-$(openssl dgst -sha512 -binary artifact/package.tgz | openssl base64 -A)"
+          test "$DIGEST" = "$EXPECTED_INTEGRITY"
+          bash scripts/finalize-library-release.sh artifact "$VERSION" "$SOURCE_SHA"
