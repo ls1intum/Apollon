@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=24.15.0"
+    "node": ">=24.21.0"
   },
   "scripts": {
     "build": "tsc && node --eval \"require('node:fs').cpSync('assets','dist/assets',{recursive:true})\"",

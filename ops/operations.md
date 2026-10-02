@@ -12,7 +12,7 @@ description: Required infrastructure, environment variables, durability posture,
   image across local, test, and production) — provides RedisJSON ≥ 2.0,
   required for HEAD storage. Plain `redis:7-alpine` / `redis:8-alpine`
   do not bundle the JSON module.
-- **Node.js ≥ 24**, **pnpm ≥ 11**.
+- **Node.js ≥ 24**, **pnpm ≥ 12**.
 
 The server checks `MODULE LIST` at startup and asserts ReJSON is loaded;
 on missing module the boot fails closed (process exits non-zero) rather

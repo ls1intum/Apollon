@@ -106,7 +106,7 @@ To preview the documentation site instead, run `pnpm dev:docs` from the repo roo
 ## Requirements
 
 - **Node.js**: version pinned in [`.nvmrc`](./.nvmrc) (Node 24 LTS).
-- **pnpm 11+**: the package manager. The exact version is pinned in the `packageManager` field of `package.json`. Install it with `npm install -g pnpm@11`.
+- **pnpm 12+**: the package manager. The exact version is pinned in the `packageManager` field of `package.json`. Install it with `npm install -g pnpm@12`.
 - **Docker**: only when `pnpm dev` needs to start a local Redis.
 
 ## Documentation

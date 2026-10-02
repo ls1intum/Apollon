@@ -25,7 +25,7 @@ docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
   mcr.microsoft.com/playwright:v1.63.0-noble \
   bash -c "curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g pnpm@11.1.3 \
+    && npm install -g pnpm@12.8.1 \
     && pnpm install --frozen-lockfile \
     && pnpm run build:lib \
     && cd standalone/webapp \
