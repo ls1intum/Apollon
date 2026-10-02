@@ -56,11 +56,16 @@ catalog:
   "@vitest/browser": "5.0.3"
   "@vitest/browser-playwright": "5.0.3"
   "@vitest/coverage-v8": "5.0.3"
-  "@xyflow/react": "12.12.0"
+  # Held at 12.11.x: 12.12.0 makes the pane ignore touch pointers whenever
+  # `panOnDrag` is a button array (Apollon's multi-selection mode sets [1, 2]),
+  # so tapping empty canvas no longer clears the selection on touch
+  # (e2e multi-selection-mode "taps build, shrink and clear"). Needs a library
+  # change before this can move.
+  "@xyflow/react": "12.11.1"
   # Locked to the exact version @xyflow/react@12.11.1 depends on. The library
   # imports getEdgePosition from it (not re-exported by @xyflow/react's barrel)
   # to compute edge endpoints centrally, byte-for-byte as React Flow does.
-  "@xyflow/system": "0.0.83"
+  "@xyflow/system": "0.0.78"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"
