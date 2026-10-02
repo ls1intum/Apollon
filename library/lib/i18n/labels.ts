@@ -86,16 +86,32 @@ export interface ApollonLabels {
    */
   confirmDeleteAssessment?: string
   /**
-   * Tooltip of the link button of an assessment linked to a grading instruction, naming how the instruction is applied.
-   * Optional for dictionaries authored before assessments showed their grading instruction.
+   * Tooltip of the "Linked to" chip of an assessment linked to a grading instruction, naming how the instruction is
+   * applied. Optional for dictionaries authored before assessments showed their grading instruction.
    */
   gradingInstructionFor?: (description: string) => string
-  /** Tooltip and accessible name of the link button once armed, asking for the second click that removes the link. */
+  /** Tooltip and accessible name of the chip's remove button once armed, asking for the second click that removes the link. */
   removeGradingInstruction?: string
-  /** Hint on the grading instruction's text when the student reads it together with the assessment's description. */
-  gradingInstructionHint?: string
-  /** Hint on the grading instruction's text of an AI feedback suggestion, whose own description is all the student reads. */
-  gradingInstructionHintAiSuggestion?: string
+  /**
+   * Label in front of the criterion's title on the chip of an assessment linked to a grading instruction.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterion?: string
+  /**
+   * Shown on the chip instead of the criterion's title when the host did not provide one.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterionFallback?: string
+  /**
+   * Shown after the criterion's title on the chip, e.g. "Linked to Encapsulation Criterion". Not shown after the fallback.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterionSuffix?: string
+  /**
+   * Tooltip and accessible name of the chip's remove button before it is armed.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  removeLinkedCriterion?: string
   assessmentFor: (type: string) => string
   /** Optional for dictionaries authored before assessment navigation existed. */
   previousAssessment?: string
@@ -400,10 +416,10 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
     `Assessment instruction: ${description}`,
   removeGradingInstruction:
     "Do you want to remove the link to the assessment instruction?",
-  gradingInstructionHint:
-    "This feedback is linked to an assessment instruction, which sets its points. The student sees the instruction's feedback text together with your description.",
-  gradingInstructionHintAiSuggestion:
-    "This AI suggestion is linked to an assessment instruction, which sets its points. The student sees only the suggestion's description, not the instruction's feedback text.",
+  linkedCriterion: "Linked to",
+  linkedCriterionFallback: "Assessment Criterion",
+  linkedCriterionSuffix: "Criterion",
+  removeLinkedCriterion: "Remove the link to the assessment criterion",
   assessmentFor: (type) => `Assessment for ${type}`,
   previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",

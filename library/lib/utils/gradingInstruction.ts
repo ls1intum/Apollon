@@ -11,13 +11,10 @@ export type GradingInstructionInfo = {
   feedback?: string
   /** How the assessor should apply the instruction. */
   instructionDescription?: string
-}
-
-/**
- * What the host's grading instructions panel drags onto an element: the instruction, plus the title of its criterion,
- * which an instruction does not carry itself. The title only names the assessment and is not stored in `dropInfo`.
- */
-export type DroppedGradingInstruction = GradingInstructionInfo & {
+  /**
+   * The title of the instruction's criterion, which an instruction does not carry itself. The host adds it so the
+   * assessment can name it (the give-feedback box shows it as "Linked to <criterion>") and strips it again.
+   */
   criterionTitle?: string
 }
 
@@ -45,18 +42,19 @@ export const adaptedSuggestion = (
  * host's StructuredGradingCriterionService.applyGradingInstruction: the assessment takes the instruction's points, and
  * an assessor's own assessment takes the criterion's text as its description, where it can be edited. The text
  * replaces an empty description or the one a previously linked instruction wrote, never what the assessor wrote. An AI
- * suggestion keeps its own description, which is all the student reads, and becomes adapted. The criterion's title
- * names the assessment if its title is empty or one of the points-based `defaultTitles`, so a title the assessor wrote
- * and an AI suggestion's own title stay.
+ * suggestion keeps its own description and becomes adapted. The student reads the description, or the criterion's
+ * text when the description is empty. The criterion's title stays in `dropInfo` and names the assessment if its title
+ * is empty or one of the points-based `defaultTitles`, so a title the assessor wrote and an AI suggestion's own title
+ * stay.
  */
 export const linkGradingInstruction = (
   existing: Assessment | undefined,
-  dropped: DroppedGradingInstruction,
+  instruction: GradingInstructionInfo,
   elementId: string,
   elementType: string,
   defaultTitles: readonly string[] = []
 ): Assessment => {
-  const { criterionTitle, ...instruction } = dropped
+  const criterionTitle = instruction.criterionTitle?.trim()
   const previousInstructionText = gradingInstructionOf(existing)?.feedback
   const isAISuggestion = !!existing?.feedbackSuggestion
   const takesInstructionText =
@@ -68,9 +66,7 @@ export const linkGradingInstruction = (
   const hasDefaultTitle =
     existingTitle === "" || defaultTitles.includes(existingTitle)
   const title =
-    criterionTitle?.trim() && hasDefaultTitle
-      ? criterionTitle.trim()
-      : existing?.title
+    criterionTitle && hasDefaultTitle ? criterionTitle : existing?.title
 
   return {
     ...existing,

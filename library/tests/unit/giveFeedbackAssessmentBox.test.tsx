@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import type { Assessment } from "@/typings"
 import { DEFAULT_LABELS, mergeLabels } from "@/i18n/labels"
 
@@ -290,8 +290,42 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     document.querySelector<HTMLButtonElement>(
       '[data-field="assessment-grading-instruction"]'
     )
-  const instructionText = () =>
-    document.querySelector('[data-slot="assessment-grading-instruction"]')
+  const linkedCriterionChip = () =>
+    document.querySelector('[data-slot="assessment-linked-criterion"]')
+
+  it("opens the chip's tooltip after the box's short delay, not the editor's", async () => {
+    vi.useFakeTimers()
+    try {
+      assessments.element = {
+        modelElementId: "element",
+        elementType: "node",
+        score: 2,
+        dropInfo: { ...instruction, criterionTitle: "Association" },
+      }
+      renderBox()
+      const tooltipText = labels.gradingInstructionFor!(
+        instruction.instructionDescription
+      )
+      const chipText = document.querySelector(
+        '[data-slot="assessment-linked-criterion-text"]'
+      )!
+
+      fireEvent.mouseEnter(chipText)
+      fireEvent.mouseMove(chipText)
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+      expect(document.body).not.toHaveTextContent(tooltipText)
+
+      // The editor's own 700ms delay would keep it closed well past this point
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+      expect(document.body).toHaveTextContent(tooltipText)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 
   it("keeps the grading instruction when the description is edited", () => {
     // The host unlinks an assessment that comes back without its grading instruction.
@@ -329,51 +363,63 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     ).toBeDisabled()
   })
 
-  it("does not repeat the criterion's text once the description contains it", () => {
+  it("names the linked criterion in a chip next to the element", () => {
     assessments.element = {
       modelElementId: "element",
       elementType: "node",
       score: 2,
       feedback: "Correct association",
-      dropInfo: instruction,
+      dropInfo: { ...instruction, criterionTitle: "  Association  " },
     }
     renderBox()
 
-    expect(instructionText()).toBeNull()
+    expect(linkedCriterionChip()).toHaveTextContent(
+      `${labels.linkedCriterion}Association${labels.linkedCriterionSuffix}`
+    )
+    expect(
+      linkedCriterionChip()!.querySelector(
+        '[data-slot="assessment-linked-criterion-title"]'
+      )
+    ).toHaveTextContent(/^Association$/)
+    // The criterion's text is no longer repeated above the description
+    expect(
+      document.querySelector('[data-slot="assessment-grading-instruction"]')
+    ).toBeNull()
   })
 
-  it("shows the criterion's text of an AI suggestion, which the student does not read", () => {
+  it("names the criterion generically when the host provides no title", () => {
     assessments.element = {
       modelElementId: "element",
       elementType: "node",
       score: 2,
-      feedback: "The association between Person and Car is right.",
-      dropInfo: instruction,
-      feedbackSuggestion: "suggested",
+      dropInfo: { ...instruction, criterionTitle: " " },
     }
     renderBox()
 
-    expect(instructionText()).toHaveTextContent("Correct association")
     expect(
-      screen.getByRole("img", {
-        name: labels.gradingInstructionHintAiSuggestion,
-      })
-    ).toBeInTheDocument()
+      linkedCriterionChip()!.querySelector(
+        '[data-slot="assessment-linked-criterion-title"]'
+      )
+    ).toHaveTextContent(labels.linkedCriterionFallback)
+    // The fallback already reads "Assessment Criterion", so it is not followed by the suffix again
+    expect(
+      linkedCriterionChip()!.querySelector(
+        '[data-slot="assessment-linked-criterion-suffix"]'
+      )
+    ).toBeNull()
   })
 
-  it("tells the assessor that the student reads the criterion's text with an assessor's description", () => {
+  it("shows no linked criterion chip without a grading instruction", () => {
     assessments.element = {
       modelElementId: "element",
       elementType: "node",
       score: 2,
-      feedback: "Check the multiplicity.",
-      dropInfo: instruction,
+      feedback: "Good",
     }
     renderBox()
 
-    expect(
-      screen.getByRole("img", { name: labels.gradingInstructionHint })
-    ).toBeInTheDocument()
+    expect(linkedCriterionChip()).toBeNull()
+    expect(linkButton()).toBeNull()
   })
 
   it("removes the link in two steps, keeping the points and unlocking them", () => {
@@ -386,9 +432,11 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     }
     renderBox()
 
+    // The remove control sits inside the chip
+    expect(linkedCriterionChip()).toContainElement(linkButton())
     expect(linkButton()).toHaveAttribute(
       "aria-label",
-      labels.gradingInstructionFor(instruction.instructionDescription)
+      labels.removeLinkedCriterion
     )
     fireEvent.click(linkButton()!)
     expect(assessments.element.dropInfo).toEqual(instruction)
@@ -401,6 +449,7 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     expect(assessments.element.dropInfo).toBeUndefined()
     expect(assessments.element.score).toBe(2)
     expect(linkButton()).toBeNull()
+    expect(linkedCriterionChip()).toBeNull()
     expect(screen.getByLabelText(labels.points)).toBeEnabled()
   })
 

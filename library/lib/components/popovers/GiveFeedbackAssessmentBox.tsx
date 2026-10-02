@@ -1,9 +1,15 @@
 import { useState, type FocusEvent } from "react"
-import { Info, Link, Sparkles, Trash2, Unlink, X } from "lucide-react"
+import { Link, Sparkles, Trash2, Unlink, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { IconButton, TextField, Tooltip, Typography } from "../ui"
+import {
+  IconButton,
+  TextField,
+  Tooltip,
+  TooltipProvider,
+  Typography,
+} from "../ui"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "./PopoverLayout"
 import { AssessmentScoreInput, toneFor } from "./AssessmentScoreInput"
@@ -35,6 +41,12 @@ interface Props {
   /** Draw a separator above this box. Off for the first box in a popover. */
   divider?: boolean
 }
+
+/**
+ * Tooltip delay inside the box. The editor waits 700ms so tooltips do not pop up while the pointer crosses the canvas, but
+ * the box's controls are aimed at, and the host's unified feedback card, which this box mirrors, opens its tooltips after 150ms.
+ */
+const TOOLTIP_DELAY = 150
 
 /** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
 const FEEDBACK_MAX_LENGTH = 500
@@ -188,9 +200,9 @@ export const GiveFeedbackAssessmentBox = ({
     if (!event.currentTarget.matches(":hover")) disarmDelete()
   }
 
-  // The link to a grading instruction is removed in two steps as well, like the host's grading instruction link icon: the
-  // link icon names the instruction, a first click arms it, the second one removes the link. The points stay and become
-  // editable again, and an AI suggestion becomes adapted (see unlinkGradingInstruction).
+  // The link to a grading instruction is removed in two steps as well, like the remove control of the host's linked
+  // criterion chip: a first click arms the X (it turns into an unlink icon), the second one removes the link. The points
+  // stay and become editable again, and an AI suggestion becomes adapted (see unlinkGradingInstruction).
   const [confirmingUnlink, setConfirmingUnlink] = useState(false)
   const handleUnlinkClick = () => {
     if (!confirmingUnlink) {
@@ -209,162 +221,171 @@ export const GiveFeedbackAssessmentBox = ({
     if (!event.currentTarget.matches(":hover")) disarmUnlink()
   }
 
-  // Like the host's unified feedback card, the criterion's text is shown above the description unless the description
-  // already contains it, as it does once the criterion was dropped on an assessor's own assessment. The hint says what
-  // the student reads: an AI suggestion with a description shows only that description, any other assessment both.
-  const showsInstructionFeedback =
-    !!instructionFeedback && !feedback.includes(instructionFeedback)
-  const instructionHint =
-    existing?.feedbackSuggestion && feedback.trim() !== ""
-      ? t.gradingInstructionHintAiSuggestion
-      : t.gradingInstructionHint
+  // Like the host's unified feedback card, a linked assessment names its criterion in a "Linked to" chip next to the
+  // element. The student reads the description, or the criterion's text when the description is empty.
+  // A named criterion is followed by "Criterion"; the generic fallback name already says it.
+  const criterionTitle = instruction?.criterionTitle?.trim()
+  const linkedCriterionTitle = criterionTitle || t.linkedCriterionFallback
 
   return (
-    <PopoverSection divider={divider}>
-      {/* Reference row: which element this box is about — separate from the
+    <TooltipProvider delayDuration={TOOLTIP_DELAY}>
+      <PopoverSection divider={divider}>
+        {/* Reference row: which element this box is about — separate from the
           editable title below, same split as the host's unified feedback
           reference chip vs. its title field. */}
-      <Typography
-        variant="caption"
-        style={{ opacity: 0.7, display: "flex", alignItems: "center", gap: 4 }}
-      >
-        {typeText}
-        <span data-slot="assessment-name-chip">{name}</span>
-      </Typography>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: ROW_GAP,
-        }}
-      >
-        <TextField
-          multiline
-          minRows={1}
-          maxLength={TITLE_MAX_LENGTH}
-          value={title}
-          onChange={(e) => {
-            const value = e.target.value
-            setTitle(value)
-            updateAssessment(value, score, feedback)
+        <Typography
+          variant="caption"
+          style={{
+            opacity: 0.7,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 4,
+            minWidth: 0,
           }}
-          onBlur={() => {
-            // Only an existing assessment gets a default title: leaving the empty title field of an element
-            // that was never graded must not create an assessment for it.
-            if (!existing || title.trim() !== "") return
-            setTitle(defaultTitle)
-            updateAssessment(defaultTitle, score, feedback)
+        >
+          {typeText}
+          <span data-slot="assessment-name-chip">{name}</span>
+          {instruction && (
+            <span data-slot="assessment-linked-criterion">
+              <Tooltip
+                title={t.gradingInstructionFor(
+                  instruction.instructionDescription ?? ""
+                )}
+              >
+                <span data-slot="assessment-linked-criterion-text">
+                  <Link width={12} height={12} aria-hidden="true" />
+                  <span data-slot="assessment-linked-criterion-label">
+                    {t.linkedCriterion}
+                  </span>
+                  <span data-slot="assessment-linked-criterion-title">
+                    {linkedCriterionTitle}
+                  </span>
+                  {criterionTitle && (
+                    <span data-slot="assessment-linked-criterion-suffix">
+                      {t.linkedCriterionSuffix}
+                    </span>
+                  )}
+                </span>
+              </Tooltip>
+              <IconButton
+                ariaLabel={
+                  confirmingUnlink
+                    ? t.removeGradingInstruction
+                    : t.removeLinkedCriterion
+                }
+                tooltip={
+                  confirmingUnlink
+                    ? t.removeGradingInstruction
+                    : t.removeLinkedCriterion
+                }
+                data-field="assessment-grading-instruction"
+                data-confirming={confirmingUnlink || undefined}
+                onClick={handleUnlinkClick}
+                onMouseLeave={disarmUnlink}
+                onBlur={disarmUnlinkOnBlur}
+              >
+                {confirmingUnlink ? (
+                  <Unlink width={12} height={12} aria-hidden="true" />
+                ) : (
+                  <X width={12} height={12} aria-hidden="true" />
+                )}
+              </IconButton>
+            </span>
+          )}
+        </Typography>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: ROW_GAP,
           }}
-          placeholder={defaultTitle}
-          aria-label={t.assessmentFor(typeText)}
-          data-field="assessment-title"
-          fullWidth
-        />
-        <AssessmentScoreInput
-          value={score}
-          onChange={(value) => {
-            const nextTitle = titleForScore(title, value)
-            setScore(value)
-            setTitle(nextTitle)
-            updateAssessment(nextTitle, value, feedback)
-          }}
-          ariaLabel={t.points}
-          placeholder="0"
-          disabled={!!instruction}
-        />
-        {instruction && (
+        >
+          <TextField
+            multiline
+            minRows={1}
+            maxLength={TITLE_MAX_LENGTH}
+            value={title}
+            onChange={(e) => {
+              const value = e.target.value
+              setTitle(value)
+              updateAssessment(value, score, feedback)
+            }}
+            onBlur={() => {
+              // Only an existing assessment gets a default title: leaving the empty title field of an element
+              // that was never graded must not create an assessment for it.
+              if (!existing || title.trim() !== "") return
+              setTitle(defaultTitle)
+              updateAssessment(defaultTitle, score, feedback)
+            }}
+            placeholder={defaultTitle}
+            aria-label={t.assessmentFor(typeText)}
+            data-field="assessment-title"
+            fullWidth
+          />
+          <AssessmentScoreInput
+            value={score}
+            onChange={(value) => {
+              const nextTitle = titleForScore(title, value)
+              setScore(value)
+              setTitle(nextTitle)
+              updateAssessment(nextTitle, value, feedback)
+            }}
+            ariaLabel={t.points}
+            placeholder="0"
+            disabled={!!instruction}
+          />
           <IconButton
             ariaLabel={
-              confirmingUnlink
-                ? t.removeGradingInstruction
-                : t.gradingInstructionFor(
-                    instruction.instructionDescription ?? ""
-                  )
+              confirmingDelete
+                ? t.confirmDeleteAssessment
+                : t.deleteAssessmentFor(name)
             }
             tooltip={
-              confirmingUnlink
-                ? t.removeGradingInstruction
-                : t.gradingInstructionFor(
-                    instruction.instructionDescription ?? ""
-                  )
+              confirmingDelete ? t.confirmDeleteAssessment : t.deleteAssessment
             }
-            data-field="assessment-grading-instruction"
-            data-confirming={confirmingUnlink || undefined}
-            onClick={handleUnlinkClick}
-            onMouseLeave={disarmUnlink}
-            onBlur={disarmUnlinkOnBlur}
+            data-field="assessment-delete"
+            data-confirming={confirmingDelete || undefined}
+            onClick={handleDeleteClick}
+            onMouseLeave={disarmDelete}
+            onBlur={disarmDeleteOnBlur}
           >
-            {confirmingUnlink ? (
-              <Unlink width={16} height={16} aria-hidden="true" />
+            {confirmingDelete ? (
+              <Trash2 width={16} height={16} aria-hidden="true" />
             ) : (
-              <Link width={16} height={16} aria-hidden="true" />
+              <X width={16} height={16} aria-hidden="true" />
             )}
           </IconButton>
-        )}
-        <IconButton
-          ariaLabel={
-            confirmingDelete
-              ? t.confirmDeleteAssessment
-              : t.deleteAssessmentFor(name)
-          }
-          tooltip={
-            confirmingDelete ? t.confirmDeleteAssessment : t.deleteAssessment
-          }
-          data-field="assessment-delete"
-          data-confirming={confirmingDelete || undefined}
-          onClick={handleDeleteClick}
-          onMouseLeave={disarmDelete}
-          onBlur={disarmDeleteOnBlur}
-        >
-          {confirmingDelete ? (
-            <Trash2 width={16} height={16} aria-hidden="true" />
-          ) : (
-            <X width={16} height={16} aria-hidden="true" />
-          )}
-        </IconButton>
-      </div>
-      {showsInstructionFeedback && (
-        <div data-slot="assessment-grading-instruction">
-          <span>{instructionFeedback}</span>
-          <Tooltip title={instructionHint}>
-            <span
-              data-slot="assessment-grading-instruction-hint"
-              aria-label={instructionHint}
-              role="img"
-            >
-              <Info width={14} height={14} aria-hidden="true" />
+        </div>
+        <TextField
+          multiline
+          minRows={3}
+          maxLength={FEEDBACK_MAX_LENGTH}
+          aria-label={t.feedback}
+          error={isDescriptionMissing}
+          helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
+          value={feedback}
+          onChange={(e) => {
+            const value = e.target.value
+            const nextTitle = titleOrDefault(title)
+            setFeedback(value)
+            setTitle(nextTitle)
+            updateAssessment(nextTitle, score, value)
+          }}
+          placeholder={t.addComment}
+          fullWidth
+        />
+        {existing?.feedbackSuggestion && (
+          <div data-slot="assessment-suggestion-badge">
+            <Sparkles width={14} height={14} aria-hidden="true" />
+            <span>
+              {existing.feedbackSuggestion === "adapted"
+                ? t.adaptedAiFeedbackSuggestion
+                : t.aiFeedbackSuggestion}
             </span>
-          </Tooltip>
-        </div>
-      )}
-      <TextField
-        multiline
-        minRows={3}
-        maxLength={FEEDBACK_MAX_LENGTH}
-        aria-label={t.feedback}
-        error={isDescriptionMissing}
-        helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
-        value={feedback}
-        onChange={(e) => {
-          const value = e.target.value
-          const nextTitle = titleOrDefault(title)
-          setFeedback(value)
-          setTitle(nextTitle)
-          updateAssessment(nextTitle, score, value)
-        }}
-        placeholder={t.addComment}
-        fullWidth
-      />
-      {existing?.feedbackSuggestion && (
-        <div data-slot="assessment-suggestion-badge">
-          <Sparkles width={14} height={14} aria-hidden="true" />
-          <span>
-            {existing.feedbackSuggestion === "adapted"
-              ? t.adaptedAiFeedbackSuggestion
-              : t.aiFeedbackSuggestion}
-          </span>
-        </div>
-      )}
-    </PopoverSection>
+          </div>
+        )}
+      </PopoverSection>
+    </TooltipProvider>
   )
 }

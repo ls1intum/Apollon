@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
 import {
-  type DroppedGradingInstruction,
+  type GradingInstructionInfo,
   linkGradingInstruction,
 } from "@/utils/gradingInstruction"
 import { useLabels } from "@/i18n/useLabels"
@@ -30,7 +30,7 @@ export const useDropFeedback = ({
 
       const dropData = event.dataTransfer.getData("text/plain")
 
-      const instruction: DroppedGradingInstruction = JSON.parse(dropData)
+      const instruction: GradingInstructionInfo = JSON.parse(dropData)
       // The points-based default titles the give-feedback box writes in; the criterion's title replaces them
       const defaultTitles = [t.feedback, t.positiveFeedback, t.needsRevision]
       // Merged into the element's assessment rather than replacing it, so a title, an assessor's description and an AI

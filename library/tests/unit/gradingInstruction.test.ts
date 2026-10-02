@@ -133,8 +133,8 @@ describe("linkGradingInstruction title", () => {
     )
 
     expect(linked.title).toBe("Association")
-    // The criterion's title only names the assessment and is not stored with the instruction
-    expect(linked.dropInfo).toEqual(correct)
+    // The criterion's title stays with the instruction, so the give-feedback box can name the linked criterion
+    expect(linked.dropInfo).toEqual(dropped)
   })
 
   it("replaces a points-based default title", () => {
