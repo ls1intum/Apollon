@@ -85,6 +85,17 @@ export interface ApollonLabels {
    * second click. Optional for dictionaries authored before the two-step delete existed.
    */
   confirmDeleteAssessment?: string
+  /**
+   * Tooltip of the link button of an assessment linked to a grading instruction, naming how the instruction is applied.
+   * Optional for dictionaries authored before assessments showed their grading instruction.
+   */
+  gradingInstructionFor?: (description: string) => string
+  /** Tooltip and accessible name of the link button once armed, asking for the second click that removes the link. */
+  removeGradingInstruction?: string
+  /** Hint on the grading instruction's text when the student reads it together with the assessment's description. */
+  gradingInstructionHint?: string
+  /** Hint on the grading instruction's text of an AI feedback suggestion, whose own description is all the student reads. */
+  gradingInstructionHintAiSuggestion?: string
   assessmentFor: (type: string) => string
   /** Optional for dictionaries authored before assessment navigation existed. */
   previousAssessment?: string
@@ -385,6 +396,14 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   confirmDeleteAssessment:
     "Please confirm that you want to delete this assessment!",
+  gradingInstructionFor: (description) =>
+    `Assessment instruction: ${description}`,
+  removeGradingInstruction:
+    "Do you want to remove the link to the assessment instruction?",
+  gradingInstructionHint:
+    "This feedback is linked to an assessment instruction, which sets its points. The student sees the instruction's feedback text together with your description.",
+  gradingInstructionHintAiSuggestion:
+    "This AI suggestion is linked to an assessment instruction, which sets its points. The student sees only the suggestion's description, not the instruction's feedback text.",
   assessmentFor: (type) => `Assessment for ${type}`,
   previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",

@@ -23,6 +23,7 @@ vi.mock("@/i18n/useLabels", () => ({
 
 import { GiveFeedbackAssessmentBox } from "@/components/popovers/GiveFeedbackAssessmentBox"
 import { clampedScoreInput } from "@/components/popovers/AssessmentScoreInput"
+import { linkGradingInstruction } from "@/utils/gradingInstruction"
 
 const labels = mergeLabels(DEFAULT_LABELS)
 
@@ -269,5 +270,193 @@ describe("GiveFeedbackAssessmentBox score bounds", () => {
     expect(
       screen.getByRole("button", { name: labels.decreasePoints })
     ).toBeEnabled()
+  })
+})
+
+describe("GiveFeedbackAssessmentBox grading instruction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    assessments = {}
+  })
+
+  const instruction = {
+    id: 7,
+    credits: 2,
+    feedback: "Correct association",
+    instructionDescription: "The association is modelled correctly",
+  }
+  const descriptionField = () => screen.getByLabelText(labels.feedback)
+  const linkButton = () =>
+    document.querySelector<HTMLButtonElement>(
+      '[data-field="assessment-grading-instruction"]'
+    )
+  const instructionText = () =>
+    document.querySelector('[data-slot="assessment-grading-instruction"]')
+
+  it("keeps the grading instruction when the description is edited", () => {
+    // The host unlinks an assessment that comes back without its grading instruction.
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Correct association",
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    fireEvent.change(descriptionField(), {
+      target: { value: "Correct association, well done" },
+    })
+
+    expect(assessments.element.dropInfo).toEqual(instruction)
+  })
+
+  it("locks the points while a grading instruction sets them", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    expect(screen.getByLabelText(labels.points)).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: labels.increasePoints })
+    ).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: labels.decreasePoints })
+    ).toBeDisabled()
+  })
+
+  it("does not repeat the criterion's text once the description contains it", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Correct association",
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    expect(instructionText()).toBeNull()
+  })
+
+  it("shows the criterion's text of an AI suggestion, which the student does not read", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "The association between Person and Car is right.",
+      dropInfo: instruction,
+      feedbackSuggestion: "suggested",
+    }
+    renderBox()
+
+    expect(instructionText()).toHaveTextContent("Correct association")
+    expect(
+      screen.getByRole("img", {
+        name: labels.gradingInstructionHintAiSuggestion,
+      })
+    ).toBeInTheDocument()
+  })
+
+  it("tells the assessor that the student reads the criterion's text with an assessor's description", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Check the multiplicity.",
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    expect(
+      screen.getByRole("img", { name: labels.gradingInstructionHint })
+    ).toBeInTheDocument()
+  })
+
+  it("removes the link in two steps, keeping the points and unlocking them", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Correct association",
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    expect(linkButton()).toHaveAttribute(
+      "aria-label",
+      labels.gradingInstructionFor(instruction.instructionDescription)
+    )
+    fireEvent.click(linkButton()!)
+    expect(assessments.element.dropInfo).toEqual(instruction)
+    expect(linkButton()).toHaveAttribute(
+      "aria-label",
+      labels.removeGradingInstruction
+    )
+
+    fireEvent.click(linkButton()!)
+    expect(assessments.element.dropInfo).toBeUndefined()
+    expect(assessments.element.score).toBe(2)
+    expect(linkButton()).toBeNull()
+    expect(screen.getByLabelText(labels.points)).toBeEnabled()
+  })
+
+  it("takes over a grading instruction dropped while the box is open, so the next edit keeps it", () => {
+    // The host drops the link of an assessment whose points no longer match its instruction.
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 1,
+      feedback: "",
+    }
+    const { rerender } = renderBox()
+
+    assessments.element = linkGradingInstruction(
+      assessments.element,
+      instruction,
+      "element",
+      "node"
+    )
+    rerender(
+      <GiveFeedbackAssessmentBox
+        elementId="element"
+        name="Person"
+        elementType="node"
+      />
+    )
+
+    expect(screen.getByLabelText(labels.points)).toHaveValue(2)
+    expect(screen.getByLabelText(labels.points)).toBeDisabled()
+    expect(descriptionField()).toHaveValue("Correct association")
+
+    fireEvent.change(descriptionField(), {
+      target: { value: "Correct association, well done" },
+    })
+
+    expect(assessments.element.score).toBe(2)
+    expect(assessments.element.dropInfo).toEqual(instruction)
+  })
+
+  it("marks an AI suggestion as adapted when its grading instruction is removed", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "The association between Person and Car is right.",
+      dropInfo: instruction,
+      feedbackSuggestion: "suggested",
+    }
+    renderBox()
+
+    fireEvent.click(linkButton()!)
+    fireEvent.click(linkButton()!)
+
+    expect(assessments.element.feedbackSuggestion).toBe("adapted")
+    expect(assessments.element.feedback).toBe(
+      "The association between Person and Car is right."
+    )
   })
 })

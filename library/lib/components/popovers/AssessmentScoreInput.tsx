@@ -68,7 +68,9 @@ export const AssessmentScoreInput: React.FC<{
   onChange: (value: string) => void
   ariaLabel: string
   placeholder?: string
-}> = ({ value, onChange, ariaLabel, placeholder }) => {
+  /** Locks the points, e.g. while a grading instruction sets them (as the host's unified feedback card does). */
+  disabled?: boolean
+}> = ({ value, onChange, ariaLabel, placeholder, disabled = false }) => {
   const t = useLabels()
   const tone = toneFor(value)
 
@@ -84,7 +86,7 @@ export const AssessmentScoreInput: React.FC<{
         type="button"
         data-slot="assessment-score-step"
         aria-label={t.decreasePoints}
-        disabled={current <= SCORE_MIN}
+        disabled={disabled || current <= SCORE_MIN}
         onClick={() => step(-STEP)}
       >
         <Minus width={12} height={12} aria-hidden="true" />
@@ -98,12 +100,13 @@ export const AssessmentScoreInput: React.FC<{
         onChange={(e) => onChange(clampedScoreInput(e.target.value))}
         aria-label={ariaLabel}
         placeholder={placeholder}
+        disabled={disabled}
       />
       <button
         type="button"
         data-slot="assessment-score-step"
         aria-label={t.increasePoints}
-        disabled={current >= SCORE_MAX}
+        disabled={disabled || current >= SCORE_MAX}
         onClick={() => step(STEP)}
       >
         <Plus width={12} height={12} aria-hidden="true" />

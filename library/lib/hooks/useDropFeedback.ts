@@ -1,5 +1,9 @@
-import { Assessment } from "@/typings"
 import React, { useCallback } from "react"
+import {
+  type DroppedGradingInstruction,
+  linkGradingInstruction,
+} from "@/utils/gradingInstruction"
+import { useLabels } from "@/i18n/useLabels"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store/context"
 
@@ -12,6 +16,7 @@ export const useDropFeedback = ({
   elementId,
   elementType = "default",
 }: Props) => {
+  const t = useLabels()
   const { setAssessments } = useDiagramStore(
     useShallow((state) => ({
       setAssessments: state.setAssessments,
@@ -25,21 +30,23 @@ export const useDropFeedback = ({
 
       const dropData = event.dataTransfer.getData("text/plain")
 
-      const instruction = JSON.parse(dropData)
-      const newAssessment: Assessment = {
-        modelElementId: elementId,
-        elementType,
-        score: instruction.credits,
-        feedback: instruction.feedback,
-        dropInfo: instruction,
-        correctionStatus: { status: "NOT_VALIDATED" },
-      }
+      const instruction: DroppedGradingInstruction = JSON.parse(dropData)
+      // The points-based default titles the give-feedback box writes in; the criterion's title replaces them
+      const defaultTitles = [t.feedback, t.positiveFeedback, t.needsRevision]
+      // Merged into the element's assessment rather than replacing it, so a title, an assessor's description and an AI
+      // suggestion's state survive the drop (see linkGradingInstruction).
       setAssessments((prev) => ({
         ...prev,
-        [elementId]: newAssessment,
+        [elementId]: linkGradingInstruction(
+          prev[elementId],
+          instruction,
+          elementId,
+          elementType,
+          defaultTitles
+        ),
       }))
     },
-    [elementId, elementType]
+    [elementId, elementType, t]
   )
 
   return handleDrop

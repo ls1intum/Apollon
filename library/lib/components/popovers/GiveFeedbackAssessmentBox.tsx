@@ -1,13 +1,18 @@
 import { useState, type FocusEvent } from "react"
-import { Sparkles, Trash2, X } from "lucide-react"
+import { Info, Link, Sparkles, Trash2, Unlink, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { IconButton, TextField, Typography } from "../ui"
+import { IconButton, TextField, Tooltip, Typography } from "../ui"
 import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "./PopoverLayout"
 import { AssessmentScoreInput, toneFor } from "./AssessmentScoreInput"
 import { defaultTitleFor } from "./assessmentTitle"
+import {
+  adaptedSuggestion,
+  gradingInstructionOf,
+  unlinkGradingInstruction,
+} from "@/utils/gradingInstruction"
 
 /** Gap between controls within a row (reference chip, title/score/delete). */
 const ROW_GAP = 8
@@ -75,6 +80,18 @@ export const GiveFeedbackAssessmentBox = ({
   const [score, setScore] = useState(existing?.score?.toString() ?? "")
   const [feedback, setFeedback] = useState(existing?.feedback ?? "")
 
+  // A grading instruction dropped on the element (or unlinked) while the box is open changes its points, description and
+  // title in the store. The fields are read from the store again then; otherwise the next edit would write their stale
+  // values back, and the host drops the link of an assessment whose points no longer match its instruction. Edits made in
+  // the box carry the same dropInfo object along, so they do not trigger this.
+  const [syncedDropInfo, setSyncedDropInfo] = useState(existing?.dropInfo)
+  if (existing?.dropInfo !== syncedDropInfo) {
+    setSyncedDropInfo(existing?.dropInfo)
+    setTitle(existing?.title ?? "")
+    setScore(existing?.score?.toString() ?? "")
+    setFeedback(existing?.feedback ?? "")
+  }
+
   // Default title placeholder tracks the score's sign — see assessmentTitle.ts.
   const defaultTitle = defaultTitleFor(toneFor(score), t)
 
@@ -98,9 +115,8 @@ export const GiveFeedbackAssessmentBox = ({
   // The description carries the comment, as the title is only a heading, so the host does not accept an
   // assessment without one. A grading instruction dropped on the element brings its own feedback as the
   // description, which makes it optional, like the host's Feedback.hasContent.
-  const instructionFeedback = (
-    existing?.dropInfo as { feedback?: string } | undefined
-  )?.feedback
+  const instruction = gradingInstructionOf(existing)
+  const instructionFeedback = instruction?.feedback
   const isDescriptionMissing =
     !!existing && feedback.trim() === "" && !instructionFeedback
 
@@ -119,15 +135,15 @@ export const GiveFeedbackAssessmentBox = ({
       title: newTitle || undefined,
       feedback: newFeedback || undefined,
       correctionStatus: { status: "NOT_VALIDATED" },
+      // `updated` is built fresh on every keystroke, so everything an edit does not change is carried over here.
+      // Dropping the grading instruction would unlink it from the assessment on any edit (the host drops the link of
+      // an assessment that comes back without it).
+      dropInfo: existing?.dropInfo,
       // A suggestion transitions to adapted the moment it is touched, mirroring the host's unified
       // feedback card (see UnifiedFeedbackComponent.markAdaptedIfSuggestion) - a one-way, sticky
-      // transition that never reverts. Building `updated` fresh on every keystroke would otherwise
-      // silently drop this field and make the "AI Feedback Suggestion" badge vanish instead of
-      // turning into "Adapted AI Feedback Suggestion".
-      feedbackSuggestion:
-        existing?.feedbackSuggestion === "suggested"
-          ? "adapted"
-          : existing?.feedbackSuggestion,
+      // transition that never reverts. Dropping the field would make the "AI Feedback Suggestion" badge
+      // vanish instead of turning into "Adapted AI Feedback Suggestion".
+      feedbackSuggestion: adaptedSuggestion(existing?.feedbackSuggestion),
     }
 
     setAssessments((prev) => ({
@@ -171,6 +187,37 @@ export const GiveFeedbackAssessmentBox = ({
   const disarmDeleteOnBlur = (event: FocusEvent<HTMLElement>) => {
     if (!event.currentTarget.matches(":hover")) disarmDelete()
   }
+
+  // The link to a grading instruction is removed in two steps as well, like the host's grading instruction link icon: the
+  // link icon names the instruction, a first click arms it, the second one removes the link. The points stay and become
+  // editable again, and an AI suggestion becomes adapted (see unlinkGradingInstruction).
+  const [confirmingUnlink, setConfirmingUnlink] = useState(false)
+  const handleUnlinkClick = () => {
+    if (!confirmingUnlink) {
+      setConfirmingUnlink(true)
+      return
+    }
+    setConfirmingUnlink(false)
+    setAssessments((prev) =>
+      prev[elementId]
+        ? { ...prev, [elementId]: unlinkGradingInstruction(prev[elementId]) }
+        : prev
+    )
+  }
+  const disarmUnlink = () => setConfirmingUnlink(false)
+  const disarmUnlinkOnBlur = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.matches(":hover")) disarmUnlink()
+  }
+
+  // Like the host's unified feedback card, the criterion's text is shown above the description unless the description
+  // already contains it, as it does once the criterion was dropped on an assessor's own assessment. The hint says what
+  // the student reads: an AI suggestion with a description shows only that description, any other assessment both.
+  const showsInstructionFeedback =
+    !!instructionFeedback && !feedback.includes(instructionFeedback)
+  const instructionHint =
+    existing?.feedbackSuggestion && feedback.trim() !== ""
+      ? t.gradingInstructionHintAiSuggestion
+      : t.gradingInstructionHint
 
   return (
     <PopoverSection divider={divider}>
@@ -223,7 +270,37 @@ export const GiveFeedbackAssessmentBox = ({
           }}
           ariaLabel={t.points}
           placeholder="0"
+          disabled={!!instruction}
         />
+        {instruction && (
+          <IconButton
+            ariaLabel={
+              confirmingUnlink
+                ? t.removeGradingInstruction
+                : t.gradingInstructionFor(
+                    instruction.instructionDescription ?? ""
+                  )
+            }
+            tooltip={
+              confirmingUnlink
+                ? t.removeGradingInstruction
+                : t.gradingInstructionFor(
+                    instruction.instructionDescription ?? ""
+                  )
+            }
+            data-field="assessment-grading-instruction"
+            data-confirming={confirmingUnlink || undefined}
+            onClick={handleUnlinkClick}
+            onMouseLeave={disarmUnlink}
+            onBlur={disarmUnlinkOnBlur}
+          >
+            {confirmingUnlink ? (
+              <Unlink width={16} height={16} aria-hidden="true" />
+            ) : (
+              <Link width={16} height={16} aria-hidden="true" />
+            )}
+          </IconButton>
+        )}
         <IconButton
           ariaLabel={
             confirmingDelete
@@ -246,6 +323,20 @@ export const GiveFeedbackAssessmentBox = ({
           )}
         </IconButton>
       </div>
+      {showsInstructionFeedback && (
+        <div data-slot="assessment-grading-instruction">
+          <span>{instructionFeedback}</span>
+          <Tooltip title={instructionHint}>
+            <span
+              data-slot="assessment-grading-instruction-hint"
+              aria-label={instructionHint}
+              role="img"
+            >
+              <Info width={14} height={14} aria-hidden="true" />
+            </span>
+          </Tooltip>
+        </div>
+      )}
       <TextField
         multiline
         minRows={3}
