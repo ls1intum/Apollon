@@ -1,4 +1,4 @@
-import { useState, type FocusEvent } from "react"
+import { useEffect, useRef, useState, type FocusEvent } from "react"
 import { Link, Sparkles, Trash2, Unlink, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
@@ -226,6 +226,47 @@ export const GiveFeedbackAssessmentBox = ({
   // A named criterion is followed by "Criterion"; the generic fallback name already says it.
   const criterionTitle = instruction?.criterionTitle?.trim()
   const linkedCriterionTitle = criterionTitle || t.linkedCriterionFallback
+  // Once a narrow box cuts the criterion's name or grading scale off, the chip's tooltip repeats the chip in full, e.g.
+  // "Linked to Association Criterion | Correct". The chip comes and goes with the instruction, so the measurement follows
+  // it. It watches the chip, which stays put, and looks the title and scale up each time: they are re-mounted once a
+  // tooltip wraps them.
+  const hasInstruction = !!instruction
+  // The grading scale, e.g. "Partially correct", sits in its own segment behind the criterion, so any wording reads on its own.
+  // A long one is cut off like the criterion's name, but never takes more than half the chip.
+  const gradingScale = instruction?.gradingScale?.trim()
+  const linkedCriterionRef = useRef<HTMLSpanElement>(null)
+  const [linkedCriterionTruncated, setLinkedCriterionTruncated] =
+    useState(false)
+  useEffect(() => {
+    const chip = linkedCriterionRef.current
+    if (!chip) {
+      setLinkedCriterionTruncated(false)
+      return
+    }
+    const measure = () => {
+      const segments = chip.querySelectorAll<HTMLElement>(
+        '[data-slot="assessment-linked-criterion-title"], [data-slot="assessment-linked-criterion-scale"]'
+      )
+      setLinkedCriterionTruncated(
+        Array.from(segments).some(
+          (segment) => segment.scrollWidth > segment.clientWidth
+        )
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(chip)
+    return () => observer.disconnect()
+  }, [hasInstruction, linkedCriterionTitle, gradingScale])
+  const criterionTooltip = linkedCriterionTruncated
+    ? [
+        t.linkedCriterion,
+        linkedCriterionTitle,
+        criterionTitle ? t.linkedCriterionSuffix : undefined,
+      ]
+        .filter(Boolean)
+        .join(" ") + (gradingScale ? ` | ${gradingScale}` : "")
+    : ""
 
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY}>
@@ -247,12 +288,11 @@ export const GiveFeedbackAssessmentBox = ({
           {typeText}
           <span data-slot="assessment-name-chip">{name}</span>
           {instruction && (
-            <span data-slot="assessment-linked-criterion">
-              <Tooltip
-                title={t.gradingInstructionFor(
-                  instruction.instructionDescription ?? ""
-                )}
-              >
+            <span
+              ref={linkedCriterionRef}
+              data-slot="assessment-linked-criterion"
+            >
+              <Tooltip title={criterionTooltip}>
                 <span data-slot="assessment-linked-criterion-text">
                   <Link width={12} height={12} aria-hidden="true" />
                   <span data-slot="assessment-linked-criterion-label">
@@ -268,6 +308,13 @@ export const GiveFeedbackAssessmentBox = ({
                   )}
                 </span>
               </Tooltip>
+              {gradingScale && (
+                <Tooltip title={criterionTooltip}>
+                  <span data-slot="assessment-linked-criterion-scale">
+                    {gradingScale}
+                  </span>
+                </Tooltip>
+              )}
               <IconButton
                 ariaLabel={
                   confirmingUnlink

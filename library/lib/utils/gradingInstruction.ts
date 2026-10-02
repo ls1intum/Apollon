@@ -11,6 +11,8 @@ export type GradingInstructionInfo = {
   feedback?: string
   /** How the assessor should apply the instruction. */
   instructionDescription?: string
+  /** The instruction's grading scale, e.g. "Partially correct", which the instructor may leave empty. */
+  gradingScale?: string
   /**
    * The title of the instruction's criterion, which an instruction does not carry itself. The host adds it so the
    * assessment can name it (the give-feedback box shows it as "Linked to <criterion>") and strips it again.

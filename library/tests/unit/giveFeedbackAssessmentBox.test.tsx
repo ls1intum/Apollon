@@ -293,35 +293,85 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
   const linkedCriterionChip = () =>
     document.querySelector('[data-slot="assessment-linked-criterion"]')
 
+  // jsdom lays nothing out, so the title's widths are faked to make the chip cut it off
+  const cutOffCriterionTitle = () => {
+    const scrollWidth = vi
+      .spyOn(HTMLElement.prototype, "scrollWidth", "get")
+      .mockReturnValue(200)
+    const clientWidth = vi
+      .spyOn(HTMLElement.prototype, "clientWidth", "get")
+      .mockReturnValue(100)
+    return () => {
+      scrollWidth.mockRestore()
+      clientWidth.mockRestore()
+    }
+  }
+  const hoverChipText = () => {
+    const chipText = document.querySelector(
+      '[data-slot="assessment-linked-criterion-text"]'
+    )!
+    fireEvent.mouseEnter(chipText)
+    fireEvent.mouseMove(chipText)
+  }
+  const fullChipText = `${labels.linkedCriterion} Association ${labels.linkedCriterionSuffix} | Correct`
+
   it("opens the chip's tooltip after the box's short delay, not the editor's", async () => {
+    vi.useFakeTimers()
+    const restoreWidths = cutOffCriterionTitle()
+    try {
+      assessments.element = {
+        modelElementId: "element",
+        elementType: "node",
+        score: 2,
+        dropInfo: {
+          ...instruction,
+          gradingScale: "Correct",
+          criterionTitle: "Association",
+        },
+      }
+      renderBox()
+
+      hoverChipText()
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+      expect(document.body).not.toHaveTextContent(fullChipText)
+
+      // The editor's own 700ms delay would keep it closed well past this point
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+      expect(document.body).toHaveTextContent(fullChipText)
+      // The instruction's description stays out of the tooltip
+      expect(document.body).not.toHaveTextContent(
+        instruction.instructionDescription
+      )
+    } finally {
+      restoreWidths()
+      vi.useRealTimers()
+    }
+  })
+
+  it("shows no chip tooltip while the criterion's name fits", async () => {
     vi.useFakeTimers()
     try {
       assessments.element = {
         modelElementId: "element",
         elementType: "node",
         score: 2,
-        dropInfo: { ...instruction, criterionTitle: "Association" },
+        dropInfo: {
+          ...instruction,
+          gradingScale: "Correct",
+          criterionTitle: "Association",
+        },
       }
       renderBox()
-      const tooltipText = labels.gradingInstructionFor!(
-        instruction.instructionDescription
-      )
-      const chipText = document.querySelector(
-        '[data-slot="assessment-linked-criterion-text"]'
-      )!
 
-      fireEvent.mouseEnter(chipText)
-      fireEvent.mouseMove(chipText)
+      hoverChipText()
       await act(async () => {
-        vi.advanceTimersByTime(100)
+        vi.advanceTimersByTime(1000)
       })
-      expect(document.body).not.toHaveTextContent(tooltipText)
-
-      // The editor's own 700ms delay would keep it closed well past this point
-      await act(async () => {
-        vi.advanceTimersByTime(100)
-      })
-      expect(document.body).toHaveTextContent(tooltipText)
+      expect(document.body).not.toHaveTextContent(fullChipText)
     } finally {
       vi.useRealTimers()
     }
@@ -384,6 +434,55 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     // The criterion's text is no longer repeated above the description
     expect(
       document.querySelector('[data-slot="assessment-grading-instruction"]')
+    ).toBeNull()
+  })
+
+  it("shows the grading scale in its own segment of the linked criterion chip", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Correct association",
+      dropInfo: {
+        ...instruction,
+        gradingScale: " Partially correct ",
+        criterionTitle: "Association",
+      },
+    }
+    renderBox()
+
+    const scale = linkedCriterionChip()!.querySelector(
+      '[data-slot="assessment-linked-criterion-scale"]'
+    )
+    expect(scale).toHaveTextContent(/^Partially correct$/)
+    // It is a segment of its own, not part of the "Linked to Association Criterion" text
+    expect(
+      linkedCriterionChip()!.querySelector(
+        '[data-slot="assessment-linked-criterion-text"]'
+      )
+    ).toHaveTextContent(
+      `${labels.linkedCriterion}Association${labels.linkedCriterionSuffix}`
+    )
+  })
+
+  it("shows no grading scale the instructor left empty", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      feedback: "Correct association",
+      dropInfo: {
+        ...instruction,
+        gradingScale: "  ",
+        criterionTitle: "Association",
+      },
+    }
+    renderBox()
+
+    expect(
+      linkedCriterionChip()!.querySelector(
+        '[data-slot="assessment-linked-criterion-scale"]'
+      )
     ).toBeNull()
   })
 

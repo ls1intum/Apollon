@@ -1758,13 +1758,39 @@ span:has(> [data-field="assessment-title"]) {
   color: var(--apollon-gray-variant, #495057);
 }
 
-/* The label and the suffix frame the criterion's title, which alone is bold. */
-[data-slot="assessment-linked-criterion-label"],
+/* The link icon already says it; "Linked to" stays for screen readers only. */
+[data-slot="assessment-linked-criterion-label"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The suffix follows the criterion's title, which alone is bold. */
 [data-slot="assessment-linked-criterion-suffix"] {
   flex: none;
   font-weight: 500;
   white-space: nowrap;
   color: var(--apollon-gray-variant, #495057);
+}
+
+/* The grading scale sits in its own segment behind the criterion. A long one is cut off like the criterion's title,
+   but never takes more than half the chip, so the title stays readable next to it. */
+[data-slot="assessment-linked-criterion-scale"] {
+  align-self: stretch;
+  min-width: 0;
+  max-width: 50%;
+  padding: 1px 6px;
+  border-left: 1px solid var(--apollon-border, #cdd5df);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 [data-slot="assessment-linked-criterion-title"] {

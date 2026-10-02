@@ -85,11 +85,6 @@ export interface ApollonLabels {
    * second click. Optional for dictionaries authored before the two-step delete existed.
    */
   confirmDeleteAssessment?: string
-  /**
-   * Tooltip of the "Linked to" chip of an assessment linked to a grading instruction, naming how the instruction is
-   * applied. Optional for dictionaries authored before assessments showed their grading instruction.
-   */
-  gradingInstructionFor?: (description: string) => string
   /** Tooltip and accessible name of the chip's remove button once armed, asking for the second click that removes the link. */
   removeGradingInstruction?: string
   /**
@@ -412,8 +407,6 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
   confirmDeleteAssessment:
     "Please confirm that you want to delete this assessment!",
-  gradingInstructionFor: (description) =>
-    `Assessment instruction: ${description}`,
   removeGradingInstruction:
     "Do you want to remove the link to the assessment instruction?",
   linkedCriterion: "Linked to",
