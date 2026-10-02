@@ -83,6 +83,7 @@ catalog:
   lucide-react: "1.49.0"
   react: "19.3.0"
   react-dom: "19.3.0"
+  semver: "7.8.5"
   size-limit: "14.1.0"
   # Held at 2.7.0: 2.8.x added `"type": "module"` while `main` is still a UMD
   # bundle, so Node loads it as ESM and `require("jspdf")` never runs (jsPDF is

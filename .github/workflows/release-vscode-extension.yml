@@ -15,6 +15,7 @@ on:
 concurrency:
   group: release-vscode-extension
   cancel-in-progress: false
+  queue: max
 
 permissions: {}
 
@@ -50,7 +51,6 @@ jobs:
             echo "::error::vscode-extension version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
             exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           # The manifest is the only source for the Marketplace identity: `vsce`
           # and `ovsx` derive what they publish from `publisher` and `name`, so
@@ -60,9 +60,12 @@ jobs:
           PUBLISHER=$(node -p "require('./vscode-extension/package.json').publisher")
           NAME=$(node -p "require('./vscode-extension/package.json').name")
           EXT_ID="${PUBLISHER}.${NAME}"
-          echo "publisher=$PUBLISHER" >> "$GITHUB_OUTPUT"
-          echo "name=$NAME" >> "$GITHUB_OUTPUT"
-          echo "extension-id=$EXT_ID" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$VERSION"
+            echo "publisher=$PUBLISHER"
+            echo "name=$NAME"
+            echo "extension-id=$EXT_ID"
+          } >> "$GITHUB_OUTPUT"
 
           # A release is a version change, and nothing else. This workflow wakes
           # on any edit to the manifest, which also carries the icon, the

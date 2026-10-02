@@ -77,7 +77,9 @@
     "husky": "9.1.7",
     "knip": "6.20.0",
     "lint-staged": "17.0.8",
-    "prettier": "3.8.4"
+    "prettier": "3.8.4",
+    "semver": "catalog:",
+    "yaml": "2.9.1"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,json,md,mdx,yml,yaml}": "prettier --ignore-unknown --write"

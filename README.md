@@ -64,8 +64,8 @@ npm 7+, pnpm 8+, and Bun pull in the required peer dependencies automatically
 (`react`, `react-dom`, `@xyflow/react`, `yjs`, `y-protocols`) — the editor
 renders on the host's single React and Yjs instance instead of bundling its
 own. Yarn never installs peers, so list them in the install command there. See
-the [library README](./library/README.md) for the full API and per-framework
-guides.
+the [published library documentation](https://ls1intum.github.io/Apollon/library/)
+for the API and per-framework guides.
 
 ## Run the stack locally
 
