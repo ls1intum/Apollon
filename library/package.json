@@ -115,11 +115,11 @@
     }
   ],
   "peerDependencies": {
-    "@xyflow/react": "^12.12.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "@xyflow/react": "^12.9.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "y-protocols": "^1.0.6",
-    "yjs": "^13.6.33"
+    "yjs": "^13.6.0"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
