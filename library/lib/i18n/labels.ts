@@ -67,9 +67,46 @@ export interface ApollonLabels {
   addComment: string
   points: string
   negativePointsAllowed: string
+  decreasePoints: string
+  increasePoints: string
   feedback: string
+  /** Default title placeholder for a positively-scored box (score > 0). */
+  positiveFeedback: string
+  /** Default title placeholder for a negatively-scored box (score < 0). */
+  needsRevision: string
+  /** Give-feedback footer badge shown while this assessment mirrors an unaccepted-as-is Athena suggestion. */
+  aiFeedbackSuggestion: string
+  /** Same badge, worded for a suggestion the assessor has since edited. */
+  adaptedAiFeedbackSuggestion: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
+  /**
+   * Tooltip and accessible name of the delete button once it is armed (showing the trash icon), asking for the
+   * second click. Optional for dictionaries authored before the two-step delete existed.
+   */
+  confirmDeleteAssessment?: string
+  /** Tooltip and accessible name of the chip's remove button once armed, asking for the second click that removes the link. */
+  removeGradingInstruction?: string
+  /**
+   * Label in front of the criterion's title on the chip of an assessment linked to a grading instruction.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterion?: string
+  /**
+   * Shown on the chip instead of the criterion's title when the host did not provide one.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterionFallback?: string
+  /**
+   * Shown after the criterion's title on the chip, e.g. "Linked to Encapsulation Criterion". Not shown after the fallback.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  linkedCriterionSuffix?: string
+  /**
+   * Tooltip and accessible name of the chip's remove button before it is armed.
+   * Optional for dictionaries authored before the linked criterion chip existed.
+   */
+  removeLinkedCriterion?: string
   assessmentFor: (type: string) => string
   /** Optional for dictionaries authored before assessment navigation existed. */
   previousAssessment?: string
@@ -359,9 +396,23 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   addComment: "Add a comment…",
   points: "Points",
   negativePointsAllowed: "Negative points are allowed.",
+  decreasePoints: "Decrease points",
+  increasePoints: "Increase points",
   feedback: "Feedback",
+  positiveFeedback: "Positive",
+  needsRevision: "Needs Revision",
+  aiFeedbackSuggestion: "AI Feedback Suggestion",
+  adaptedAiFeedbackSuggestion: "Adapted AI Feedback Suggestion",
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
+  confirmDeleteAssessment:
+    "Please confirm that you want to delete this assessment!",
+  removeGradingInstruction:
+    "Do you want to remove the link to the assessment instruction?",
+  linkedCriterion: "Linked to",
+  linkedCriterionFallback: "Assessment Criterion",
+  linkedCriterionSuffix: "Criterion",
+  removeLinkedCriterion: "Remove the link to the assessment criterion",
   assessmentFor: (type) => `Assessment for ${type}`,
   previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",

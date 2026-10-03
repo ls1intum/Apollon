@@ -1540,10 +1540,6 @@ svg.react-flow__connectionline {
   font-variant-numeric: tabular-nums;
 }
 
-[data-slot="assessment-score"] > svg {
-  flex: none;
-}
-
 /* Tone pairs read the --apollon-assessment-* ramp (light/dark deltas live in
    tokens.css). The var() fallbacks mirror the light values per this file's
    convention; the real source — and the dark theme — lives in tokens.css. */
@@ -1565,6 +1561,128 @@ svg.react-flow__connectionline {
 [data-slot="assessment-score"][data-tone="ungraded"] {
   color: var(--apollon-assessment-ungraded-text, #475569);
   background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
+}
+
+/* Editable counterpart of the score pill above (AssessmentScoreInput, used by the
+   give-feedback popover). Unlike the read-only pill, the fill AND the border stay
+   neutral (white surface, gray border) at every tone — only the score text itself
+   carries the sign, so the pill's own chrome never fights the assessor's typed
+   value. +/- steppers sit inside the same pill, mirroring the host's unified
+   feedback points control. */
+[data-slot="assessment-score-input"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--apollon-border, #cdd5df);
+  background-color: var(--apollon-surface, #fff);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot="assessment-score-input"] input {
+  border: none;
+  background: transparent;
+  width: 4ch;
+  padding: 0;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+[data-slot="assessment-score-input"] input::-webkit-outer-spin-button,
+[data-slot="assessment-score-input"] input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Fixed neutral color (not `inherit`/tone) — the +/- steppers are a control
+   affordance, not the graded value, so they stay legible and visually
+   constant while the pill's border/text swing across the tone ramp. */
+[data-slot="assessment-score-step"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--apollon-foreground, #000);
+  flex: none;
+}
+
+/* Armed state of the give-feedback box's two-step delete (GiveFeedbackAssessmentBox):
+   the trash icon turns the danger color, like the host's confirm icon. */
+[data-slot="icon-button"][data-field="assessment-delete"][data-confirming] {
+  color: var(--apollon-danger, #721c24);
+}
+
+[data-slot="assessment-score-step"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+[data-slot="assessment-score-step"]:not(:disabled):hover {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 16%,
+    transparent
+  );
+}
+
+[data-slot="assessment-score-input"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+}
+
+[data-slot="assessment-score-input"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+}
+
+[data-slot="assessment-score-input"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+}
+
+/* Give-feedback box's title field (GiveFeedbackAssessmentBox): a bold, single-line-
+   growing headline next to the score pill, echoing the host's unified feedback title
+   input. The compound selector (not just [data-field=...]) outweighs the shared
+   textarea's own [data-slot="textarea"] rule regardless of stylesheet order.
+   Keeps field-sizing: content (inherited) so the field keeps auto-growing its HEIGHT
+   with wrapped lines instead of scrolling. The bug this used to have — a long unbroken
+   word stretching the field (and the row it shares with the score pill/delete button)
+   wider instead of wrapping — was the classic flex-item overflow: a flex item's
+   default min-width:auto floors its shrink at its content's min-content size, and
+   field-sizing:content makes that min-content size track the actual longest word.
+   min-width: 0 lifts that floor so the row can shrink the field to wrap instead. */
+[data-field="assessment-title"][data-slot="textarea"] {
+  font-weight: 600;
+  min-height: calc(1lh + 0.5rem) !important;
+  resize: none;
+  min-width: 0;
+}
+
+/* The shared TextField's own wrapper <span> around the title textarea is itself a flex
+   item of the same row, and needs the same min-width: 0 lift — otherwise IT floors the
+   shrink instead, one level up. */
+span:has(> [data-field="assessment-title"]) {
+  min-width: 0;
+}
+
+/* Give-feedback box footer: marks an assessment that still mirrors an Athena feedback
+   suggestion the assessor hasn't written over (GiveFeedbackAssessmentBox). Text-only,
+   colored rather than boxed, matching the host's own footer-variant suggestion badge. */
+[data-slot="assessment-suggestion-badge"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--apollon-feedback-suggestion, #b54efe);
 }
 
 /* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
@@ -1606,6 +1724,99 @@ svg.react-flow__connectionline {
     transparent
   );
   color: var(--apollon-foreground, #000);
+}
+
+/* Give-feedback box: the "Linked to <criterion>" chip of an assessment linked to a grading instruction, after the
+   name chip in the reference row (GiveFeedbackAssessmentBox), like the host's unified feedback card. An outlined
+   neutral chip with the name chip's sizing; the inset shadow outlines it without making it taller. The remove
+   control sits inside at the end, behind a hairline. */
+[data-slot="assessment-linked-criterion"] {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: var(--apollon-radius-sm, 4px);
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 5%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px var(--apollon-border, #cdd5df);
+  color: var(--apollon-foreground, #000);
+}
+
+[data-slot="assessment-linked-criterion-text"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 1px 6px;
+}
+
+[data-slot="assessment-linked-criterion-text"] > svg {
+  flex: none;
+  color: var(--apollon-gray-variant, #495057);
+}
+
+/* The link icon already says it; "Linked to" stays for screen readers only. */
+[data-slot="assessment-linked-criterion-label"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The suffix follows the criterion's title, which alone is bold. */
+[data-slot="assessment-linked-criterion-suffix"] {
+  flex: none;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--apollon-gray-variant, #495057);
+}
+
+/* The grading scale sits in its own segment behind the criterion. A long one is cut off like the criterion's title,
+   but never takes more than half the chip, so the title stays readable next to it. */
+[data-slot="assessment-linked-criterion-scale"] {
+  align-self: stretch;
+  min-width: 0;
+  max-width: 50%;
+  padding: 1px 6px;
+  border-left: 1px solid var(--apollon-border, #cdd5df);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+[data-slot="assessment-linked-criterion-title"] {
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The shared icon button is a 28px square; inside the chip it shrinks to the chip's height. */
+[data-slot="assessment-linked-criterion"] [data-slot="icon-button"] {
+  flex: none;
+  width: 20px;
+  height: auto;
+  border-left: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: 0 var(--apollon-radius-sm, 4px) var(--apollon-radius-sm, 4px) 0;
+  opacity: 0.6;
+}
+
+[data-slot="assessment-linked-criterion"] [data-slot="icon-button"]:hover,
+[data-slot="assessment-linked-criterion"]
+  [data-slot="icon-button"]:focus-visible,
+[data-slot="assessment-linked-criterion"]
+  [data-slot="icon-button"][data-confirming] {
+  opacity: 1;
 }
 
 /* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed
