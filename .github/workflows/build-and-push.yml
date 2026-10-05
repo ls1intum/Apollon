@@ -24,15 +24,15 @@ jobs:
       docker-relevant: ${{ steps.filter.outputs.docker-relevant }}
       should-skip: ${{ steps.skip-check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - id: skip-check
-        uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
+        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5
         with:
           # Never skip push-to-main — always need fresh images after merge
           do_not_skip: '["push", "workflow_dispatch"]'
 
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         if: steps.skip-check.outputs.should_skip != 'true'
         with:
@@ -72,7 +72,7 @@ jobs:
             dockerfile: ./standalone/server/Dockerfile
             image: ls1intum/apollon/server
             context: .
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@5f645f96873d8b8b3a9b2e52d06626c71377f7ac # main
     with:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
