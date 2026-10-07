@@ -150,7 +150,10 @@ export function readModelFromYDoc(ydoc: Y.Doc): UMLModel | null {
   const edges: ApollonEdge[] = Array.from(getEdgesMap(ydoc).values())
     .map((edge) => mapFromReactFlowEdgeToApollonEdge(edge))
     .sort(byId)
-  return {
+  // A copy: the values in the maps are the objects Yjs holds. Handing them out
+  // would let a caller change the document without a transaction, and a later
+  // write would see no difference to reconcile.
+  return structuredClone({
     version: CURRENT_MODEL_VERSION,
     id: getModelIdFromYDoc(ydoc) ?? "",
     title: typeof title === "string" ? title : "",
@@ -163,7 +166,7 @@ export function readModelFromYDoc(ydoc: Y.Doc): UMLModel | null {
     edges,
     assessments,
     ...(interactive && { interactive }),
-  }
+  })
 }
 
 /** Removes the diagram from `ydoc`, leaving every other shared type alone. */

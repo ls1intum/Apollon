@@ -117,6 +117,29 @@ describe("model and Y.Doc helpers", () => {
     expect(readModelFromYDoc(b)).toEqual(readModelFromYDoc(a))
   })
 
+  it("syncs an edit made to a model that was read from the document", () => {
+    const ydoc = new Y.Doc()
+    const peer = new Y.Doc()
+    ydoc.on("update", (update: Uint8Array) => Y.applyUpdate(peer, update))
+    writeModelToYDoc(ydoc, model())
+
+    const edited = readModelFromYDoc(ydoc)!
+    const node = edited.nodes.find((n) => n.id === "a-class")!
+    ;(node.data as { name: string }).name = "Changed"
+
+    const untouched = readModelFromYDoc(ydoc)!.nodes.find(
+      (n) => n.id === "a-class"
+    )!
+    expect((untouched.data as { name: string }).name).toBe("Customer")
+
+    writeModelToYDoc(ydoc, edited)
+
+    const synced = readModelFromYDoc(peer)!.nodes.find(
+      (n) => n.id === "a-class"
+    )!
+    expect((synced.data as { name: string }).name).toBe("Changed")
+  })
+
   it("replaces a previous diagram instead of merging into it", () => {
     const ydoc = new Y.Doc()
     writeModelToYDoc(ydoc, model())
