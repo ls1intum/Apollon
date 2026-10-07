@@ -1,6 +1,6 @@
 services:
   reverse-proxy:
-    image: traefik:v3.6.13
+    image: traefik:v3.7.13@sha256:24841fe2de7304c149343d877d2923b4c8800a38ba015dea9174c23b20e344a0
     container_name: apollon-traefik
     restart: unless-stopped
     networks:
@@ -57,7 +57,7 @@ services:
         max-file: "5"
 
   maintenance:
-    image: nginx:1.27-alpine
+    image: nginx:1.31-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
     restart: unless-stopped
     networks:
       - apollon-network
