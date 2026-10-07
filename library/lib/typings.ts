@@ -1,3 +1,5 @@
+import type { Awareness } from "y-protocols/awareness"
+import type * as Y from "yjs"
 import type { IPoint } from "./edges/types"
 import type { DiagramEdgeType, DiagramNodeType } from "./modelElementTypes"
 import { UMLDiagramType } from "./types/DiagramType"
@@ -74,6 +76,17 @@ export type ApollonCollaborationOptions = {
   showCursors?: boolean
   showSelectionHighlights?: boolean
   showFollow?: boolean
+  /**
+   * Host-owned document. The editor keeps its diagram in it and never destroys
+   * it. A diagram already in the document wins over the `model` option, which
+   * then only seeds an empty document.
+   */
+  ydoc?: Y.Doc
+  /**
+   * Host-owned awareness bound to `ydoc`. Requires `ydoc`. Never destroyed by
+   * the editor; on `destroy()` only the fields the editor wrote are cleared.
+   */
+  awareness?: Awareness
 }
 
 export enum Locale {

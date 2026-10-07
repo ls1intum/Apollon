@@ -34,12 +34,14 @@ export type CollaborationAwarenessApi = {
   subscribeToCollaboratorChanges: (
     callback: (collaborators: CollaboratorInfo[]) => void
   ) => () => void
+  getCollaborators: () => CollaboratorInfo[]
   getLocalAwarenessClientId: () => number
 }
 
 export type CollaborationLayerOptions = {
   enabled: boolean
   user?: CollaborationUser
+  hasHostAwareness?: boolean
   showPresence: boolean
   showCursors: boolean
   showSelectionHighlights: boolean
@@ -137,6 +139,9 @@ function CollaboratorPresenceBar({
       return
     }
 
+    // A host-owned awareness can already hold peers when this mounts; the
+    // subscription only reports later changes.
+    setCollaborators(awareness.getCollaborators())
     const unsubscribe =
       awareness.subscribeToCollaboratorChanges(setCollaborators)
 
@@ -153,7 +158,7 @@ function CollaboratorPresenceBar({
     }
 
     const localClientId = awareness.getLocalAwarenessClientId()
-    return awareness.subscribeToAwarenessChanges((states) => {
+    const countFollowers = (states: Map<number, CollaborationState>) => {
       let count = 0
       for (const [clientId, state] of states) {
         if (
@@ -164,7 +169,9 @@ function CollaboratorPresenceBar({
         }
       }
       setFollowerCount((prev) => (prev === count ? prev : count))
-    })
+    }
+    countFollowers(awareness.getAwarenessStates())
+    return awareness.subscribeToAwarenessChanges(countFollowers)
   }, [active, showFollow, awareness])
 
   const remoteCount = collaborators.filter((c) => !c.isLocal).length
@@ -286,7 +293,7 @@ function CollaboratorCursors({
       return
     }
 
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+    const showCursors = (states: Map<number, CollaborationState>) => {
       const localClientId = awareness.getLocalAwarenessClientId()
       const next = Array.from(states.entries()).flatMap(([clientId, state]) => {
         if (clientId === localClientId) return []
@@ -307,7 +314,9 @@ function CollaboratorCursors({
       })
 
       setCollaborators(next)
-    })
+    }
+    showCursors(awareness.getAwarenessStates())
+    const unsubscribe = awareness.subscribeToAwarenessChanges(showCursors)
 
     return unsubscribe
   }, [active, awareness])
@@ -477,7 +486,7 @@ function CollaboratorSelectionHighlights({
       return
     }
 
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+    const showHighlights = (states: Map<number, CollaborationState>) => {
       const localClientId = awareness.getLocalAwarenessClientId()
       const next = new Map<string, string>()
 
@@ -492,7 +501,9 @@ function CollaboratorSelectionHighlights({
       }
 
       setRemoteHighlights(next)
-    })
+    }
+    showHighlights(awareness.getAwarenessStates())
+    const unsubscribe = awareness.subscribeToAwarenessChanges(showHighlights)
 
     return unsubscribe
   }, [active, awareness])
@@ -729,7 +740,9 @@ export function CollaborationLayer({
   awareness,
 }: CollaborationLayerProps) {
   const previewMode = useDiagramStore((state) => state.previewMode)
-  const active = options.enabled && options.user !== undefined
+  const active =
+    options.enabled &&
+    (options.user !== undefined || options.hasHostAwareness === true)
   const remoteVisualsActive = active && !previewMode
   const followActive = remoteVisualsActive && options.showFollow
 

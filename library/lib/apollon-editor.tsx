@@ -66,7 +66,14 @@ import {
 } from "./overlay/types"
 import { getPerfCounters } from "./sync/perfCounters"
 import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
-import { getNodesMap } from "./sync/ydoc"
+import { getDiagramMetadata, getNodesMap, STORE_ORIGIN } from "./sync/ydoc"
+import {
+  getInteractiveFromYDoc,
+  getModelIdFromYDoc,
+  hasModelInYDoc,
+  setInteractiveInYDoc,
+  setModelIdInYDoc,
+} from "./sync/modelDoc"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -75,15 +82,19 @@ import { getAssessmentElementCenter } from "./utils/assessmentFocus"
 
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
+  // Peers are drawn from awareness `user` fields: the editor's own option, or
+  // whatever a host-owned awareness already carries.
+  const hasIdentitySource = Boolean(
+    collaboration?.user || collaboration?.awareness
+  )
   const enabled =
-    collaboration?.enabled ??
-    options?.collaborationEnabled ??
-    Boolean(collaboration?.user)
-  const showVisualsByDefault = enabled && Boolean(collaboration?.user)
+    collaboration?.enabled ?? options?.collaborationEnabled ?? hasIdentitySource
+  const showVisualsByDefault = enabled && hasIdentitySource
 
   return {
     enabled,
     user: collaboration?.user,
+    hasHostAwareness: Boolean(collaboration?.awareness),
     showPresence: collaboration?.showPresence ?? showVisualsByDefault,
     showCursors: collaboration?.showCursors ?? showVisualsByDefault,
     showSelectionHighlights:
@@ -121,6 +132,7 @@ const noopCollaborationAwareness = {
   getAwarenessStates: () => new Map(),
   subscribeToAwarenessChanges: () => () => {},
   subscribeToCollaboratorChanges: () => () => {},
+  getCollaborators: () => [],
   getLocalAwarenessClientId: () => 0,
 }
 
@@ -129,6 +141,7 @@ export class ApollonEditor {
   private reactFlowInstance: ReactFlowInstance | null = null
   private readonly syncManager: YjsSync
   private readonly ydoc: Y.Doc
+  private readonly ownsYdoc: boolean
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
@@ -156,7 +169,18 @@ export class ApollonEditor {
       element.setAttribute("data-theme", options.dataTheme)
     }
 
-    this.ydoc = new Y.Doc()
+    const hostYdoc = options?.collaboration?.ydoc
+    const hostAwareness = options?.collaboration?.awareness
+    if (hostAwareness && !hostYdoc) {
+      throw new Error("collaboration.awareness requires collaboration.ydoc")
+    }
+    if (hostAwareness && hostAwareness.doc !== hostYdoc) {
+      throw new Error(
+        "collaboration.awareness must be bound to collaboration.ydoc"
+      )
+    }
+    this.ownsYdoc = !hostYdoc
+    this.ydoc = hostYdoc ?? new Y.Doc()
     this.diagramStore = createDiagramStore(this.ydoc)
     this.metadataStore = createMetadataStore(
       this.ydoc,
@@ -170,7 +194,8 @@ export class ApollonEditor {
     this.syncManager = new YjsSync(
       this.ydoc,
       this.diagramStore,
-      this.metadataStore
+      this.metadataStore,
+      hostAwareness
     )
     const collaboration = normalizeCollaborationOptions(options)
     if (collaboration.enabled && collaboration.user) {
@@ -180,8 +205,14 @@ export class ApollonEditor {
       })
     }
 
+    // A diagram already in a host document is the source of truth: the stores
+    // are filled from it and `options.model` must not overwrite shared state.
+    const adoptsHostDiagram = !this.ownsYdoc && hasModelInYDoc(this.ydoc)
+
     const diagramId =
-      options?.model?.id || Math.random().toString(36).substring(2, 15)
+      (hostYdoc && getModelIdFromYDoc(hostYdoc)) ||
+      options?.model?.id ||
+      Math.random().toString(36).substring(2, 15)
 
     this.root = ReactDOM.createRoot(element, {
       identifierPrefix: `apollon-${diagramId}`,
@@ -194,11 +225,31 @@ export class ApollonEditor {
     const diagramName = options?.model?.title ?? ""
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
-    this.metadataStore
-      .getState()
-      .updateMetaData(diagramName, parseDiagramType(diagramType))
+    if (adoptsHostDiagram) {
+      // Read only: mounting on a shared diagram must not change it.
+      this.metadataStore.getState().updateMetaDataFromYjs()
+      this.diagramStore.getState().updateNodesFromYjs()
+      this.diagramStore.getState().updateEdgesFromYjs()
+      this.diagramStore.getState().updateAssessmentFromYjs()
+      this.diagramStore
+        .getState()
+        .setInteractive(getInteractiveFromYDoc(this.ydoc))
+    } else {
+      // A host document may already carry a title; only fill what is absent.
+      const hostTitle = hostYdoc
+        ? getDiagramMetadata(hostYdoc).get("diagramTitle")
+        : undefined
+      this.metadataStore
+        .getState()
+        .updateMetaData(hostTitle ?? diagramName, parseDiagramType(diagramType))
+      // Peers on a host document must agree on the id, so the editor that
+      // seeds the diagram stores it there.
+      if (hostYdoc && !getModelIdFromYDoc(hostYdoc)) {
+        setModelIdInYDoc(hostYdoc, diagramId, STORE_ORIGIN)
+      }
+    }
 
-    if (options?.model) {
+    if (options?.model && !adoptsHostDiagram) {
       const model = normalizeModel(options.model)
       const nodes = model.nodes || []
       const edges = model.edges || []
@@ -206,6 +257,11 @@ export class ApollonEditor {
       this.diagramStore.getState().setNodesAndEdges(nodes, edges)
       this.diagramStore.getState().setAssessments(assessments)
       this.diagramStore.getState().setInteractive(model.interactive)
+      // The selection itself stays local to an editor, but the one a host
+      // document is seeded with must not get lost on the way into it.
+      if (hostYdoc && model.interactive) {
+        setInteractiveInYDoc(hostYdoc, model.interactive, STORE_ORIGIN)
+      }
     }
 
     if (options?.mode) {
@@ -300,6 +356,7 @@ export class ApollonEditor {
                           this.syncManager.subscribeToAwarenessChanges,
                         subscribeToCollaboratorChanges:
                           this.syncManager.subscribeToCollaboratorChanges,
+                        getCollaborators: this.syncManager.getCollaborators,
                         getLocalAwarenessClientId:
                           this.syncManager.getLocalAwarenessClientId,
                       }}
@@ -572,7 +629,9 @@ export class ApollonEditor {
 
       this.syncManager.stopSync()
       this.root.unmount()
-      this.ydoc.destroy()
+      this.diagramStore.getState().undoManager?.destroy()
+      this.syncManager.releaseAwareness()
+      if (this.ownsYdoc) this.ydoc.destroy()
       this.hostRegionEls.clear()
       this.controlGenerations.clear()
       this.reactFlowInstance = null
@@ -1071,7 +1130,9 @@ export class ApollonEditor {
     const { diagramTitle, diagramType } = this.metadataStore.getState()
     const interactive = this.getInteractiveForSerialization()
     return {
-      id: diagramId,
+      // A host can replace the diagram in its document at any time, so the id
+      // is read from there rather than from the value cached at construction.
+      id: (!this.ownsYdoc && getModelIdFromYDoc(this.ydoc)) || diagramId,
       version: CURRENT_MODEL_VERSION,
       title: diagramTitle,
       type: diagramType,
