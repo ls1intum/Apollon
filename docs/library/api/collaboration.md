@@ -77,6 +77,35 @@ Any Yjs-compatible transport works. The standalone server uses a custom WebSocke
 - [`y-indexeddb`](https://github.com/yjs/y-indexeddb) for offline persistence (layered alongside any other transport)
 - Any HTTP/3 stream or BroadcastChannel if your room is browser-local
 
+## Reading and writing a Y.Doc without an editor
+
+A host sometimes has to turn a model into a Yjs document, or back, where no editor runs: when it loads a file into a shared document before the UI exists, when it saves, or on a server. The DOM-free entry point `@tumaet/apollon/model` converts between a model and a document in the layout the editor uses:
+
+```ts no-check
+import {
+  importDiagram,
+  writeModelToYDoc,
+  readModelFromYDoc,
+  hasModelInYDoc,
+  clearModelFromYDoc,
+} from "@tumaet/apollon/model"
+
+// load: file content into the shared document
+writeModelToYDoc(ydoc, importDiagram(JSON.parse(fileContent)))
+
+// save: shared document back to file content
+const model = readModelFromYDoc(ydoc) // null while the document holds no diagram
+```
+
+| Function                                 | Description                                                                                                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `writeModelToYDoc(ydoc, model, origin?)` | Writes a current model, replacing any diagram in the document. Synchronous, one transaction. Run untrusted input through `importDiagram` first. |
+| `readModelFromYDoc(ydoc)`                | Returns the diagram as a `UMLModel`, or `null` if there is none. Elements are ordered by id, so every peer reads the same result.               |
+| `hasModelInYDoc(ydoc)`                   | Whether the document holds a diagram. An empty diagram of a chosen type counts.                                                                 |
+| `clearModelFromYDoc(ydoc, origin?)`      | Removes the diagram and leaves other shared types alone.                                                                                        |
+
+The model `id` and `interactive` block are stored in the document as well, so a read after a write returns the same model. The writes run under the transaction origin `MODEL_DOC_ORIGIN` unless you pass your own `origin`.
+
 ## Awareness (cursors, selections, follow)
 
 Awareness state — who's online, where their cursor is, what they have selected, and where their viewport sits — rides on the same channel as document updates. The editor manages awareness internally; you don't need to wire anything beyond `sendBroadcastMessage` / `receiveBroadcastedMessage`.
