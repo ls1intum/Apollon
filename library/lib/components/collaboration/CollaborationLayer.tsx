@@ -606,7 +606,14 @@ function ViewportFollow({
     [followedClientId, onStopFollowing, flushViewport]
   )
 
-  useOnViewportChange({ onChange: handleViewportChange })
+  // `onStart` as well: when panning by scroll, React Flow reports the first
+  // wheel event of a gesture only as a start, already carrying the moved
+  // viewport. A single scroll step is such a gesture, and would otherwise
+  // neither be broadcast nor hand control back.
+  useOnViewportChange({
+    onStart: handleViewportChange,
+    onChange: handleViewportChange,
+  })
 
   // Publish the current viewport once on mount so a peer who follows us snaps
   // to it immediately, even if we haven't panned since joining (`onChange`
