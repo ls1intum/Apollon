@@ -111,6 +111,7 @@ Rules that apply to a host-owned document:
 - **Passing `awareness` enables collaboration** and its visuals by default; the `show*` toggles still apply. `awareness` requires `ydoc` and must be bound to it.
 - **Do not use the transaction origin `"store"`** for your own writes to the document. The editor reserves it for local edits and ignores it when syncing its view.
 - **Writes from [the model helpers](#reading-and-writing-a-ydoc-without-an-editor) count as remote changes.** A mounted editor renders them, and they never enter a user's undo history.
+- **The interactive selection stays local to an editor.** The selection of the Highlight view is not synced between peers, with or without a host document. The editor reads it from the document once when it mounts on an existing diagram, and writes it once when it seeds a document from `model`. Changes made in the Highlight view afterwards are not written to the document, so a host that saves with `readModelFromYDoc` does not capture them; take them from `editor.model` instead. A later host write does not refresh the selection of a mounted editor.
 - Other shared types in the same document are left alone, so the host can keep its own data next to the diagram. The editor uses the top-level maps `nodes`, `edges`, `assessments` and `diagramMetadata`.
 
 ## Reading and writing a Y.Doc without an editor

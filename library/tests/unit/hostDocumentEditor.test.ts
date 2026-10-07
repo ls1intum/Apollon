@@ -118,6 +118,32 @@ describe("ApollonEditor on a host-owned document", () => {
     expect(readModelFromYDoc(ydoc)!.title).toBe("From host")
   })
 
+  it("keeps the interactive selection of the model it seeds a document with", () => {
+    const ydoc = new Y.Doc()
+    const interactive = { elements: { x: true }, relationships: {} }
+
+    mount({
+      model: { ...model("Seed", ["x"]), interactive },
+      collaboration: { ydoc },
+    })
+
+    expect(readModelFromYDoc(ydoc)!.interactive).toEqual(interactive)
+  })
+
+  it("keeps its own interactive selection when the host writes another one", () => {
+    const ydoc = new Y.Doc()
+    const mounted = { elements: { a: true }, relationships: {} }
+    writeModelToYDoc(ydoc, { ...model("Shared", ["a"]), interactive: mounted })
+    const editor = mount({ collaboration: { ydoc } })
+
+    writeModelToYDoc(ydoc, {
+      ...model("Shared", ["a"]),
+      interactive: { elements: {}, relationships: {} },
+    })
+
+    expect(editor.model.interactive).toEqual(mounted)
+  })
+
   it("carries the interactive selection of a shared diagram into the model", () => {
     const ydoc = new Y.Doc()
     const interactive = { elements: { a: true }, relationships: {} }

@@ -83,6 +83,17 @@ export function getInteractiveFromYDoc(
     | undefined
 }
 
+export function setInteractiveInYDoc(
+  ydoc: Y.Doc,
+  interactive: InteractiveElements,
+  origin: unknown = MODEL_DOC_ORIGIN
+): void {
+  ydoc.transact(
+    () => getMetadata(ydoc).set(INTERACTIVE_KEY, interactive),
+    origin
+  )
+}
+
 export function setModelIdInYDoc(
   ydoc: Y.Doc,
   id: string,

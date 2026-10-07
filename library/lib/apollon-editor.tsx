@@ -71,6 +71,7 @@ import {
   getInteractiveFromYDoc,
   getModelIdFromYDoc,
   hasModelInYDoc,
+  setInteractiveInYDoc,
   setModelIdInYDoc,
 } from "./sync/modelDoc"
 import * as Y from "yjs"
@@ -256,6 +257,11 @@ export class ApollonEditor {
       this.diagramStore.getState().setNodesAndEdges(nodes, edges)
       this.diagramStore.getState().setAssessments(assessments)
       this.diagramStore.getState().setInteractive(model.interactive)
+      // The selection itself stays local to an editor, but the one a host
+      // document is seeded with must not get lost on the way into it.
+      if (hostYdoc && model.interactive) {
+        setInteractiveInYDoc(hostYdoc, model.interactive, STORE_ORIGIN)
+      }
     }
 
     if (options?.mode) {
