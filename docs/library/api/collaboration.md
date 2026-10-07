@@ -70,12 +70,44 @@ function watchCollaborators(editor: ApollonEditor) {
 
 ## Backing transports
 
-Any Yjs-compatible transport works. The standalone server uses a custom WebSocket relay (see [`standalone/server/src/ws.ts`](https://github.com/ls1intum/Apollon/blob/main/standalone/server/src/ws.ts)); other deployments commonly use:
+Any Yjs-compatible transport works. With the frame API above you relay the editor's messages yourself; providers that work on a `Y.Doc` attach through [a host-owned document](#bring-your-own-ydoc-and-awareness). The standalone server uses a custom WebSocket relay (see [`standalone/server/src/ws.ts`](https://github.com/ls1intum/Apollon/blob/main/standalone/server/src/ws.ts)); other deployments commonly use:
 
 - [`y-websocket`](https://github.com/yjs/y-websocket) for self-hosted WebSocket relays
 - [`y-webrtc`](https://github.com/yjs/y-webrtc) for peer-to-peer
 - [`y-indexeddb`](https://github.com/yjs/y-indexeddb) for offline persistence (layered alongside any other transport)
 - Any HTTP/3 stream or BroadcastChannel if your room is browser-local
+
+## Bring your own Y.Doc and awareness
+
+The providers above, and hosts that already run a Yjs session of their own, work on a `Y.Doc` object rather than on relayed frames. Hand the editor that document, and optionally the awareness bound to it, through the `collaboration` option:
+
+```ts no-check
+import * as Y from "yjs"
+import { WebsocketProvider } from "y-websocket"
+
+const ydoc = new Y.Doc()
+const provider = new WebsocketProvider(serverUrl, roomName, ydoc)
+
+const editor = new ApollonEditor(container, {
+  collaboration: {
+    ydoc,
+    awareness: provider.awareness,
+  },
+})
+```
+
+The editor then keeps its diagram in your document and shows cursors, selections and presence from your awareness. You do not call `sendBroadcastMessage` or `receiveBroadcastedMessage`: the provider syncs the document, and the editor emits no frames unless a send function is registered.
+
+Rules that apply to a host-owned document:
+
+- **The document is the source of truth.** If it already holds a diagram, the editor shows that diagram and the `model` option does not write to it. `model` only seeds a document that holds no diagram yet.
+- **The editor never destroys what it did not create.** `destroy()` leaves your document and your awareness alive. It removes the fields the editor wrote to the awareness (`cursor`, `viewport`, `selectedElementId`, `followingClientId`, `draggingNodes`) and keeps `user`.
+- **Destroy the editor before the document.** The editor's observers hold on to the document until `destroy()` runs.
+- **Identity comes from your awareness.** Peers are shown from the `user` field (`{ name, color, id?, imageUrl? }`) of each awareness state. Set it yourself, or pass `collaboration.user` and the editor writes it for you.
+- **Passing `awareness` enables collaboration** and its visuals by default; the `show*` toggles still apply. `awareness` requires `ydoc` and must be bound to it.
+- **Do not use the transaction origin `"store"`** for your own writes to the document. The editor reserves it for local edits and ignores it when syncing its view.
+- **Writes from [the model helpers](#reading-and-writing-a-ydoc-without-an-editor) count as remote changes.** A mounted editor renders them, and they never enter a user's undo history.
+- Other shared types in the same document are left alone, so the host can keep its own data next to the diagram. The editor uses the top-level maps `nodes`, `edges`, `assessments` and `diagramMetadata`.
 
 ## Reading and writing a Y.Doc without an editor
 

@@ -40,6 +40,7 @@ export type CollaborationAwarenessApi = {
 export type CollaborationLayerOptions = {
   enabled: boolean
   user?: CollaborationUser
+  hasHostAwareness?: boolean
   showPresence: boolean
   showCursors: boolean
   showSelectionHighlights: boolean
@@ -729,7 +730,9 @@ export function CollaborationLayer({
   awareness,
 }: CollaborationLayerProps) {
   const previewMode = useDiagramStore((state) => state.previewMode)
-  const active = options.enabled && options.user !== undefined
+  const active =
+    options.enabled &&
+    (options.user !== undefined || options.hasHostAwareness === true)
   const remoteVisualsActive = active && !previewMode
   const followActive = remoteVisualsActive && options.showFollow
 

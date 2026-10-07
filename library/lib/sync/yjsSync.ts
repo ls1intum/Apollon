@@ -37,6 +37,14 @@ export enum MessageType {
 
 export type SendBroadcastMessage = (base64data: string) => void
 
+const EDITOR_AWARENESS_FIELDS = [
+  "cursor",
+  "viewport",
+  "followingClientId",
+  "selectedElementId",
+  "draggingNodes",
+] as const
+
 export class YjsSync {
   private readonly stopYjsObserver: () => void
   private sendBroadcastMessage: SendBroadcastMessage | null = null
@@ -44,16 +52,19 @@ export class YjsSync {
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly awareness: Awareness
+  private readonly ownsAwareness: boolean
 
   constructor(
     ydoc: Y.Doc,
     diagramStore: StoreApi<DiagramStore>,
-    metadataStore: StoreApi<MetadataStore>
+    metadataStore: StoreApi<MetadataStore>,
+    awareness?: Awareness
   ) {
     this.ydoc = ydoc
     this.diagramStore = diagramStore
     this.metadataStore = metadataStore
-    this.awareness = new Awareness(this.ydoc)
+    this.ownsAwareness = !awareness
+    this.awareness = awareness ?? new Awareness(this.ydoc)
     this.stopYjsObserver = this.startYjsObserver()
 
     // Route the store's transient drag/resize frames onto the ephemeral
@@ -68,6 +79,24 @@ export class YjsSync {
 
   public stopSync() {
     this.stopYjsObserver()
+  }
+
+  /**
+   * Final teardown of the awareness. An awareness created here is destroyed; a
+   * host-owned one only loses the fields the editor wrote and keeps `user`.
+   */
+  public releaseAwareness() {
+    if (this.ownsAwareness) {
+      this.awareness.destroy()
+      return
+    }
+    const localState = this.awareness.getLocalState()
+    if (!localState) return
+    for (const field of EDITOR_AWARENESS_FIELDS) {
+      if (localState[field] != null) {
+        this.awareness.setLocalStateField(field, null)
+      }
+    }
   }
 
   /**

@@ -83,6 +83,14 @@ export function getInteractiveFromYDoc(
     | undefined
 }
 
+export function setModelIdInYDoc(
+  ydoc: Y.Doc,
+  id: string,
+  origin: unknown = MODEL_DOC_ORIGIN
+): void {
+  ydoc.transact(() => getMetadata(ydoc).set(DIAGRAM_ID_KEY, id), origin)
+}
+
 /**
  * Writes `model` into `ydoc` in the layout the editor reads, replacing any
  * diagram already there. Synchronous, one transaction. Expects a current
