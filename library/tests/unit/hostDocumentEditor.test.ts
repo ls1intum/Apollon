@@ -73,6 +73,7 @@ describe("ApollonEditor on a host-owned document", () => {
     writeModelToYDoc(ydoc, model("Second", ["b", "c"]))
 
     expect(editor.model.title).toBe("Second")
+    expect(editor.model.id).toBe("id-Second")
     expect(editor.model.nodes.map((node) => node.id).sort()).toEqual(["b", "c"])
   })
 

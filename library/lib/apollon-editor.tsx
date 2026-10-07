@@ -131,6 +131,7 @@ const noopCollaborationAwareness = {
   getAwarenessStates: () => new Map(),
   subscribeToAwarenessChanges: () => () => {},
   subscribeToCollaboratorChanges: () => () => {},
+  getCollaborators: () => [],
   getLocalAwarenessClientId: () => 0,
 }
 
@@ -349,6 +350,7 @@ export class ApollonEditor {
                           this.syncManager.subscribeToAwarenessChanges,
                         subscribeToCollaboratorChanges:
                           this.syncManager.subscribeToCollaboratorChanges,
+                        getCollaborators: this.syncManager.getCollaborators,
                         getLocalAwarenessClientId:
                           this.syncManager.getLocalAwarenessClientId,
                       }}
@@ -1122,7 +1124,9 @@ export class ApollonEditor {
     const { diagramTitle, diagramType } = this.metadataStore.getState()
     const interactive = this.getInteractiveForSerialization()
     return {
-      id: diagramId,
+      // A host can replace the diagram in its document at any time, so the id
+      // is read from there rather than from the value cached at construction.
+      id: (!this.ownsYdoc && getModelIdFromYDoc(this.ydoc)) || diagramId,
       version: CURRENT_MODEL_VERSION,
       title: diagramTitle,
       type: diagramType,

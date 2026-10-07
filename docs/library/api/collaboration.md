@@ -88,11 +88,14 @@ import { WebsocketProvider } from "y-websocket"
 const ydoc = new Y.Doc()
 const provider = new WebsocketProvider(serverUrl, roomName, ydoc)
 
-const editor = new ApollonEditor(container, {
-  collaboration: {
-    ydoc,
-    awareness: provider.awareness,
-  },
+// Mount only once the document has its existing content.
+provider.once("sync", () => {
+  const editor = new ApollonEditor(container, {
+    collaboration: {
+      ydoc,
+      awareness: provider.awareness,
+    },
+  })
 })
 ```
 
@@ -100,6 +103,7 @@ The editor then keeps its diagram in your document and shows cursors, selections
 
 Rules that apply to a host-owned document:
 
+- **Mount after the document has loaded.** Construct the editor only after the provider's first sync, and after an asynchronous persistence provider such as y-indexeddb has finished loading. On a document that holds no diagram the constructor writes a title, a diagram type and an id. If the existing content arrives later, those writes compete with the stored values and can replace them.
 - **The document is the source of truth.** If it already holds a diagram, the editor shows that diagram and the `model` option does not write to it. `model` only seeds a document that holds no diagram yet.
 - **The editor never destroys what it did not create.** `destroy()` leaves your document and your awareness alive. It removes the fields the editor wrote to the awareness (`cursor`, `viewport`, `selectedElementId`, `followingClientId`, `draggingNodes`) and keeps `user`.
 - **Destroy the editor before the document.** The editor's observers hold on to the document until `destroy()` runs.
