@@ -378,6 +378,14 @@ function LocalCollaborationAwareness({
   )
   const diagramId = useDiagramStore((state) => state.diagramId)
 
+  // A pan or zoom moves the diagram under a resting pointer, so the cursor's
+  // flow position changes without any pointer event.
+  const scheduleCursorFlushRef = useRef<(() => void) | null>(null)
+  const localViewport = useViewport()
+  useEffect(() => {
+    scheduleCursorFlushRef.current?.()
+  }, [localViewport.x, localViewport.y, localViewport.zoom])
+
   useEffect(() => {
     if (!active || !options.showCursors) {
       awareness.setLocalAwarenessCursor(null)
@@ -388,35 +396,42 @@ function LocalCollaborationAwareness({
     if (!container) return
 
     const rafRef = { current: 0 }
-    const pendingRef = {
-      current: null as CollaborationCursor | null,
+    // The pointer's last screen position. It is projected into flow space only
+    // when the frame flushes, never at event time: during a pan the pointer
+    // event arrives before the viewport moves, so projecting right away mixes
+    // the new pointer position with the previous viewport and the published
+    // cursor jitters for peers.
+    const pointerRef = {
+      current: null as { clientX: number; clientY: number } | null,
     }
 
     const flushCursor = () => {
-      if (pendingRef.current) {
-        awareness.setLocalAwarenessCursor(pendingRef.current)
-        pendingRef.current = null
-      }
       rafRef.current = 0
-    }
-
-    const handlePointerMove = (event: PointerEvent) => {
+      if (!pointerRef.current) return
       const flowPosition = reactFlow.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
+        x: pointerRef.current.clientX,
+        y: pointerRef.current.clientY,
       })
-
-      pendingRef.current = {
+      awareness.setLocalAwarenessCursor({
         x: flowPosition.x,
         y: flowPosition.y,
-      }
+      })
+    }
 
+    const scheduleFlush = () => {
       if (!rafRef.current) {
         rafRef.current = window.requestAnimationFrame(flushCursor)
       }
     }
+    scheduleCursorFlushRef.current = scheduleFlush
+
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerRef.current = { clientX: event.clientX, clientY: event.clientY }
+      scheduleFlush()
+    }
 
     const handlePointerLeave = () => {
+      pointerRef.current = null
       awareness.setLocalAwarenessCursor(null)
     }
 
@@ -429,6 +444,7 @@ function LocalCollaborationAwareness({
       if (rafRef.current) {
         window.cancelAnimationFrame(rafRef.current)
       }
+      scheduleCursorFlushRef.current = null
       awareness.setLocalAwarenessCursor(null)
     }
   }, [active, awareness, diagramId, options.showCursors, reactFlow])
