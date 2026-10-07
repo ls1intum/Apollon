@@ -170,7 +170,7 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "@types/vscode": "~1.86.0",
+    "@types/vscode": "~1.140.0",
     "@xyflow/react": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",

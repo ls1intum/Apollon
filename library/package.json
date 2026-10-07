@@ -165,7 +165,7 @@
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.68.0",
     "vite": "catalog:",
-    "vite-plugin-dts": "5.1.1",
+    "vite-plugin-dts": "5.1.2",
     "vitest": "catalog:",
     "y-protocols": "catalog:",
     "yjs": "catalog:"
