@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { act } from "react"
+import { act, createElement } from "react"
+import { createRoot, type Root } from "react-dom/client"
+import { Apollon } from "@/components/react/Apollon"
 import * as Y from "yjs"
 import { Awareness } from "y-protocols/awareness"
 import { ApollonEditor } from "@/apollon-editor"
@@ -26,6 +28,7 @@ const model = (title: string, nodeIds: string[]): UMLModel =>
   }) as unknown as UMLModel
 
 const editors: ApollonEditor[] = []
+const wrapperRoots: Root[] = []
 const documents: Y.Doc[] = []
 const createDoc = () => {
   const ydoc = new Y.Doc()
@@ -43,6 +46,7 @@ const mount = (options: ConstructorParameters<typeof ApollonEditor>[1]) => {
 afterEach(async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
   await act(async () => {
+    for (const root of wrapperRoots.splice(0)) root.unmount()
     for (const editor of editors.splice(0)) editor.destroy()
   })
   for (const ydoc of documents.splice(0)) ydoc.destroy()
@@ -134,16 +138,19 @@ describe("ApollonEditor on a host-owned document", () => {
       "ClassDiagram",
       "class",
       { name: "Autosized", attributes: [], methods: [] },
+      "imperative",
     ],
     [
       "CommunicationDiagram",
       "communicationObjectName",
       { name: "Autosized", attributes: [], methods: [] },
+      "imperative",
     ],
     [
       "ObjectDiagram",
       "objectName",
       { name: "Autosized", attributes: [], methods: [] },
+      "imperative",
     ],
     [
       "Sfc",
@@ -152,11 +159,18 @@ describe("ApollonEditor on a host-owned document", () => {
         name: "Actions",
         actionRows: [{ id: "row", name: "Action", identifier: "N" }],
       },
+      "imperative",
     ],
-    ["Sfc", "sfcJump", { name: "Target" }],
+    ["Sfc", "sfcJump", { name: "Target" }, "imperative"],
+    [
+      "ClassDiagram",
+      "class",
+      { name: "Autosized", attributes: [], methods: [] },
+      "React wrapper",
+    ],
   ] as const)(
-    "preserves readonly geometry and editable autosizing for %s %s",
-    async (diagramType, nodeType, data) => {
+    "preserves readonly geometry and editable autosizing for $0 $1 via $3",
+    async (diagramType, nodeType, data, mountPath) => {
       vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
       vi.stubGlobal(
         "DOMMatrixReadOnly",
@@ -213,9 +227,27 @@ describe("ApollonEditor on a host-owned document", () => {
         const onUpdate = vi.fn()
         ydoc.on("update", onUpdate)
         let editor!: ApollonEditor
+        let wrapperRoot: Root | undefined
 
         await act(async () => {
-          editor = mount({ readonly, controls: [], collaboration: { ydoc } })
+          if (mountPath === "React wrapper") {
+            const element = document.createElement("div")
+            document.body.appendChild(element)
+            wrapperRoot = createRoot(element)
+            wrapperRoots.push(wrapperRoot)
+            wrapperRoot.render(
+              createElement(Apollon, {
+                readonly,
+                collaboration: { ydoc },
+                children: null,
+                onMount: (instance) => {
+                  editor = instance
+                },
+              })
+            )
+          } else {
+            editor = mount({ readonly, controls: [], collaboration: { ydoc } })
+          }
         })
         await act(async () => {
           await new Promise<void>((resolve) =>
@@ -270,7 +302,10 @@ describe("ApollonEditor on a host-owned document", () => {
           expect(resized.width > 20 || resized.height > 10).toBe(true)
         }
 
-        await act(async () => editor.destroy())
+        await act(async () => {
+          if (wrapperRoot) wrapperRoot.unmount()
+          else editor.destroy()
+        })
       }
     }
   )
