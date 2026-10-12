@@ -60,20 +60,23 @@ not wait for npm approval: they consume the library from the workspace.
 
 ## Version PR setup
 
-Install a dedicated GitHub App on **Apollon only**, with repository permissions
-**Contents: write** and **Pull requests: write**. Create GitHub environment
-`version-pr` with deployment branch `main`. Put variable `RELEASE_APP_CLIENT_ID`
-and secret `RELEASE_APP_PRIVATE_KEY` in that environment, not at repository or
-organization level. Remove any broader copies of the private key so other
-branches cannot bypass the environment policy. Do not give the App permission
-to bypass branch protection.
+The version workflow uses GitHub's built-in, short-lived `GITHUB_TOKEN`.
+No separate GitHub App, private key, or personal access token is required.
+Restrict the `version-pr` environment to deployment branch `main`. In the
+repository's Actions settings, enable **Allow GitHub Actions to create and
+approve pull requests**. The workflow does not approve or merge its own PR.
 
-The version workflow creates a short-lived, repository-scoped installation
-token with [GitHub's token action](https://github.com/actions/create-github-app-token).
-[Changesets v2](https://github.com/changesets/action) uses that token explicitly
-and pushes signed commits through GitHub's API. App-created PR events start the
-required CI checks; `GITHUB_TOKEN`-created events do not. Missing App configuration
-fails the workflow rather than creating a PR without checks.
+[Changesets v2](https://github.com/changesets/action) creates the version PR
+and pushes signed commits through GitHub's API. GitHub places CI runs for
+PRs created or updated with `GITHUB_TOKEN` in an approval-required state.
+A maintainer must select **Approve workflows to run** on the PR, wait for all
+required checks, then review and merge it normally. Repeat CI approval after
+an automated update when GitHub requests it. Never bypass required checks.
+See [GitHub's token event rules](https://docs.github.com/en/actions/concepts/security/github_token).
+
+Versioning does not publish packages or tags. The separate release workflows
+handle publication after the version PR is merged; npm staging still needs
+package-owner approval.
 
 ## npm setup
 
