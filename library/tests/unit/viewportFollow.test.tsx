@@ -1,10 +1,8 @@
 import { act, cleanup, render } from "@testing-library/react"
 import { useOnViewportChange } from "@xyflow/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import {
-  CollaborationLayer,
-  type CollaborationAwarenessApi,
-} from "@/components/collaboration/CollaborationLayer"
+import { CollaborationLayer } from "@/components/collaboration/CollaborationLayer"
+import * as Y from "yjs"
 import { createOverlayStore } from "@/overlay/overlayStore"
 import { createDiagramStore } from "@/store/diagramStore"
 import { DiagramStoreContext, OverlayStoreContext } from "@/store/context"
@@ -24,8 +22,12 @@ vi.mock("@xyflow/react", async (importOriginal) => ({
   useViewport: () => ({ x: 0, y: 0, zoom: 1 }),
 }))
 
+const documents: Y.Doc[] = []
+
 function mount(reactStrictMode = false) {
-  const diagramStore = createDiagramStore()
+  const doc = new Y.Doc()
+  documents.push(doc)
+  const diagramStore = createDiagramStore(doc)
   const overlayStore = createOverlayStore()
   const awareness = {
     setLocalAwarenessCursor: vi.fn(),
@@ -33,10 +35,11 @@ function mount(reactStrictMode = false) {
     setLocalAwarenessViewport: vi.fn(),
     setLocalAwarenessFollowing: vi.fn(),
     getAwarenessStates: () => new Map(),
+    getCollaborators: () => [],
     subscribeToAwarenessChanges: () => () => {},
     subscribeToCollaboratorChanges: () => () => {},
     getLocalAwarenessClientId: () => 1,
-  } satisfies CollaborationAwarenessApi
+  }
 
   const view = render(
     <DiagramStoreContext value={diagramStore}>
@@ -66,6 +69,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  for (const doc of documents.splice(0)) doc.destroy()
   vi.restoreAllMocks()
 })
 
