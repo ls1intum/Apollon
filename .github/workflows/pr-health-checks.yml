@@ -530,7 +530,7 @@ jobs:
         perf-firefox-tests,
         visual-regression-tests,
       ]
-    if: always()
+    if: ${{ !cancelled() }}
     steps:
       - name: Evaluate results
         run: |
