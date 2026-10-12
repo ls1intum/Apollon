@@ -596,6 +596,7 @@ function ViewportFollow({
 }) {
   const reactFlow = useReactFlow()
 
+  const mountedRef = useRef(false)
   const pendingViewport = useRef<CollaborationViewport | null>(null)
   const broadcastRaf = useRef(0)
   // True only for the synchronous span of a follow-driven `setViewport`. The
@@ -606,22 +607,36 @@ function ViewportFollow({
   const applyingRemote = useRef(false)
   const lastApplied = useRef<CollaborationViewport | null>(null)
 
+  // Ignore retained viewport callbacks after preview entry or unmount.
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      pendingViewport.current = null
+      if (broadcastRaf.current) {
+        window.cancelAnimationFrame(broadcastRaf.current)
+      }
+      broadcastRaf.current = 0
+    }
+  }, [])
+
   const flushViewport = useCallback(() => {
     broadcastRaf.current = 0
+    if (!mountedRef.current) return
     if (pendingViewport.current) {
       awareness.setLocalAwarenessViewport(pendingViewport.current)
       pendingViewport.current = null
     }
   }, [awareness])
 
-  // A single `onChange` handles both jobs: a real user pan/zoom hands control
-  // back (stops following), and every move is coalesced to one broadcast per
-  // frame — mirroring how the cursor broadcaster throttles pointer moves. The
-  // `applyingRemote`/`sameViewport` guards keep a follow-applied viewport from
-  // tripping either path.
+  // Local movement stops following; remote-applied movement must not echo.
   const handleViewportChange = useCallback(
     (viewport: CollaborationViewport) => {
-      if (applyingRemote.current || sameViewport(viewport, lastApplied.current))
+      if (
+        !mountedRef.current ||
+        applyingRemote.current ||
+        sameViewport(viewport, lastApplied.current)
+      )
         return
       if (followedClientId !== null) onStopFollowing()
       pendingViewport.current = viewport
@@ -632,7 +647,11 @@ function ViewportFollow({
     [followedClientId, onStopFollowing, flushViewport]
   )
 
-  useOnViewportChange({ onChange: handleViewportChange })
+  // The first pan-scroll event reports its moved viewport only through onStart.
+  useOnViewportChange({
+    onStart: handleViewportChange,
+    onChange: handleViewportChange,
+  })
 
   // Publish the current viewport once on mount so a peer who follows us snaps
   // to it immediately, even if we haven't panned since joining (`onChange`
@@ -640,15 +659,6 @@ function ViewportFollow({
   useEffect(() => {
     awareness.setLocalAwarenessViewport(reactFlow.getViewport())
   }, [awareness, reactFlow])
-
-  useEffect(
-    () => () => {
-      if (broadcastRaf.current) {
-        window.cancelAnimationFrame(broadcastRaf.current)
-      }
-    },
-    []
-  )
 
   // Reflect who we follow into awareness so the target can show a follower
   // count; clears on unfollow/unmount.
