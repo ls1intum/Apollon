@@ -55,6 +55,8 @@ jobs:
     needs: [detect-changes]
     if: >
       github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository) &&
       needs.detect-changes.outputs.should-skip != 'true' && (
         needs.detect-changes.outputs.docker-relevant == 'true' ||
         github.event_name == 'push'
@@ -79,11 +81,39 @@ jobs:
       docker-context: ${{ matrix.context }}
       tags: "type=sha,format=long"
 
+  fork-build:
+    name: Fork / Build ${{ matrix.platform }} Docker Image for ${{ matrix.image }}
+    needs: [detect-changes]
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      needs.detect-changes.outputs.should-skip != 'true' &&
+      needs.detect-changes.outputs.docker-relevant == 'true'
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [webapp, server]
+        platform: [linux/amd64, linux/arm64]
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: ./standalone/${{ matrix.image }}/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: false
+
   # Gate job for required checks — handles skipped builds correctly
   docker-build-gate:
     name: Docker Build Gate
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-and-push-workflow]
+    needs: [detect-changes, build-and-push-workflow, fork-build]
     if: always()
     steps:
       - name: Evaluate results
