@@ -1,5 +1,11 @@
 # @tumaet/apollon
 
+## 5.3.1
+
+### Patch Changes
+
+- [#848](https://github.com/ls1intum/Apollon/pull/848) [`90e28f4`](https://github.com/ls1intum/Apollon/commit/90e28f48312dc2d4f8f43079f713c98b671cebc0) Thanks [@krusche](https://github.com/krusche)! - Pick up the latest fixes in the editor's underlying libraries, including React 19.3 and Base UI 1.8, with no change to the public API.
+
 ## 5.3.0
 
 ### Minor Changes

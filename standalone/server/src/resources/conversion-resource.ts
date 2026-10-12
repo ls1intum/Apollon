@@ -159,8 +159,8 @@ export class ConversionResource {
     }
     pw.worker.on("message", (m: WorkerMessage) => this.onMessage(pw, m))
     pw.worker.on("error", (e) =>
-      // @types/node 26 types the worker "error" payload as `unknown`; narrow
-      // it to an Error for onExit (which expects one).
+      // Newer @types/node types the worker "error" payload as `unknown`; keep
+      // narrowing it to an Error for onExit (which expects one).
       this.onExit(pw, e instanceof Error ? e : new Error(String(e)))
     )
     pw.worker.on("exit", (code) => {

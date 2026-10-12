@@ -7,7 +7,7 @@ slug: /
 
 # Contributor overview
 
-Apollon is a **pnpm 11 monorepo on Node 24 LTS**. Every bundled artifact is built with Vite (the standalone server runs through `tsc` directly). The library is published to npm; the standalone ships as Docker images; the VS Code extension is published to the Marketplace and Open VSX. One repo, four release pipelines, one bundler.
+Apollon is a **pnpm 12 monorepo on Node 24 LTS**. Every bundled artifact is built with Vite (the standalone server runs through `tsc` directly). The library is published to npm; the standalone ships as Docker images; the VS Code extension is published to the Marketplace and Open VSX. One repo, four release pipelines, one bundler.
 
 ## Setup
 

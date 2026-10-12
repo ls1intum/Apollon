@@ -1,11 +1,11 @@
 {
   "name": "@tumaet/server",
-  "version": "5.3.0",
+  "version": "5.3.1",
   "private": true,
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=24.15.0"
+    "node": ">=24.21.0"
   },
   "scripts": {
     "build": "tsc && node --eval \"require('node:fs').cpSync('assets','dist/assets',{recursive:true})\"",
@@ -19,12 +19,12 @@
     "migrate:string-to-json": "tsx src/scripts/migrate-string-to-json.ts"
   },
   "dependencies": {
-    "@hono/node-server": "2.0.6",
+    "@hono/node-server": "2.0.10",
     "@tumaet/apollon": "workspace:*",
     "@xyflow/react": "catalog:",
     "canvas": "npm:@napi-rs/canvas@1.0.1",
-    "global-jsdom": "29.0.0",
-    "hono": "4.12.27",
+    "global-jsdom": "30.0.0",
+    "hono": "4.13.7",
     "jsdom": "catalog:",
     "lib0": "0.2.117",
     "pdfmake": "0.3.11",
@@ -35,7 +35,7 @@
     "ulid": "3.0.2",
     "ws": "8.21.0",
     "y-protocols": "1.0.7",
-    "yjs": "13.6.31",
+    "yjs": "catalog:",
     "zod": "4.4.3"
   },
   "devDependencies": {

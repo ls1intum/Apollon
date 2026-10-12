@@ -71,6 +71,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe("LocalVersionRepository", () => {
@@ -346,9 +347,7 @@ describe("LocalVersionRepository", () => {
     // origin-wide and session-scoped (reset in beforeEach), so the second
     // call is a no-op.
     const persistSpy = vi.fn().mockResolvedValue(true)
-    Object.assign(globalThis, {
-      navigator: { storage: { persist: persistSpy } },
-    })
+    vi.stubGlobal("navigator", { storage: { persist: persistSpy } })
 
     await LocalVersionRepository.requestPersistence!()
     await LocalVersionRepository.requestPersistence!()
