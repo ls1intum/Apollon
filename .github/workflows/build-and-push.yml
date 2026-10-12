@@ -22,11 +22,13 @@ jobs:
     timeout-minutes: 5
     outputs:
       docker-relevant: ${{ steps.filter.outputs.docker-relevant }}
-      should-skip: ${{ steps.skip-check.outputs.should_skip }}
+      should-skip: ${{ steps.skip-check.outcome == 'success' && steps.skip-check.outputs.should_skip == 'true' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - id: skip-check
+        # Deduplication is optional; an API failure must run normal checks.
+        continue-on-error: true
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
         with:
           # Never skip push-to-main — always need fresh images after merge
@@ -34,7 +36,7 @@ jobs:
 
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
         id: filter
-        if: steps.skip-check.outputs.should_skip != 'true'
+        if: steps.skip-check.outcome != 'success' || steps.skip-check.outputs.should_skip != 'true'
         with:
           filters: |
             docker-relevant:
