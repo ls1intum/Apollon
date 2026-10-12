@@ -66,7 +66,7 @@ Restrict the `version-pr` environment to deployment branch `main`. In the
 repository's Actions settings, enable **Allow GitHub Actions to create and
 approve pull requests**. The workflow does not approve or merge its own PR.
 
-[Changesets v2](https://github.com/changesets/action) creates the version PR
+[Changesets Action v1](https://github.com/changesets/action) creates the version PR
 and pushes signed commits through GitHub's API. GitHub places CI runs for
 PRs created or updated with `GITHUB_TOKEN` in an approval-required state.
 A maintainer must select **Approve workflows to run** on the PR, wait for all

@@ -245,11 +245,14 @@ test("version PRs use the built-in token and cannot publish packages or tags", (
     step.uses?.startsWith("changesets/action@")
   )
   assert.equal(version.with["github-token"], "${{ github.token }}")
-  assert.equal(version.with["version-script"], "pnpm run changeset:version")
-  assert.equal(version.with["publish-script"], undefined)
-  assert.equal(version.with["create-github-releases"], false)
-  assert.equal(version.with["push-git-tags"], false)
-  assert.equal(version.with["push-with-git-cli"], false)
+  assert.equal(version.with.version, "pnpm run changeset:version")
+  assert.equal(version.with.publish, undefined)
+  assert.equal(version.with.createGithubReleases, false)
+  assert.equal(version.with.commitMode, "github-api")
+  assert.match(
+    version.uses,
+    /#|changesets\/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d/
+  )
 })
 
 test("CLI fails closed for absent approval, corrupt artifacts, and invalid registry JSON", () => {
