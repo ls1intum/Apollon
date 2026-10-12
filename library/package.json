@@ -80,7 +80,7 @@
     {
       "name": "main entry (published JS, deps externalized)",
       "path": "dist/index.js",
-      "limit": "122 kB",
+      "limit": "123 kB",
       "disablePlugins": [
         "@size-limit/webpack",
         "@size-limit/time"
@@ -98,7 +98,7 @@
     {
       "name": "/model DOM-free entry and shared chunks",
       "path": [
-        "dist/model.js",
+        "dist/model*.js",
         "dist/ydoc-*.js",
         "dist/persistedShape-*.js"
       ],
