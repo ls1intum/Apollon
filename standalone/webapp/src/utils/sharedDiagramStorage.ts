@@ -9,6 +9,7 @@ const SHARED_DIAGRAM_EXPIRY_GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000
 
 export type SharedDiagramEntry = {
   id: string
+  writeToken?: string
   sharedAt: string
   favorite: boolean
   lastSharedView: DiagramView
@@ -67,6 +68,8 @@ const readStore = (): SharedDiagramStore => {
     return {
       entries: entries.map((entry) => ({
         id: entry.id,
+        writeToken:
+          typeof entry.writeToken === "string" ? entry.writeToken : undefined,
         sharedAt: entry.sharedAt,
         favorite: Boolean((entry as Partial<SharedDiagramEntry>).favorite),
         // Entries with no stored mode default to EDIT (the Collaborate default
@@ -121,7 +124,21 @@ export const subscribeToSharedDiagramChange = (
 export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>
   readStore().entries
 
+export const getSharedDiagramWriteToken = (
+  diagramId: string
+): string | undefined => {
+  if (typeof window === "undefined") return undefined
+  if (window.location.pathname === `/shared/${encodeURIComponent(diagramId)}`) {
+    const token = new URLSearchParams(window.location.hash.slice(1)).get(
+      "access"
+    )
+    if (token) return token
+  }
+  return readStore().entries.find((entry) => entry.id === diagramId)?.writeToken
+}
+
 type AddSharedDiagramEntryOptions = {
+  writeToken?: string
   lastSharedView?: DiagramView
   sourceModelId?: string
   lastCopiedAt?: string
@@ -149,6 +166,7 @@ export const addSharedDiagramEntry = (
     entries: [
       {
         id: normalizedId,
+        writeToken: options.writeToken ?? existingEntry?.writeToken,
         sharedAt: now,
         favorite: existingEntry?.favorite ?? false,
         // New share with no explicit mode adopts the Collaborate default; an

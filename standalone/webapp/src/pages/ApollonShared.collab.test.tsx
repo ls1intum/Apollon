@@ -26,7 +26,12 @@ import type { UMLModel } from "@tumaet/apollon"
  */
 
 const DIAGRAM_ID = "collab-1"
-const HEAD_MODEL = { id: DIAGRAM_ID, nodes: [{ id: "head" }], edges: [] }
+const HEAD_MODEL = {
+  id: DIAGRAM_ID,
+  nodes: [{ id: "head" }],
+  edges: [],
+  canWrite: true,
+}
 const PREVIEW_BODY = {
   id: DIAGRAM_ID,
   nodes: [{ id: "old" }],
@@ -179,6 +184,77 @@ afterEach(() => {
 })
 
 describe("a collaborator's actions, as this client sees them", () => {
+  it("does not let a preview-exit fetch overwrite a newer reader update", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    const view = await mountEditor({ previewVersion: "v1" })
+    await waitFor(() =>
+      expect(
+        (editorHoisted.instance as { previewMode: boolean }).previewMode
+      ).toBe(true)
+    )
+    await emit({ type: "DIAGRAM_UPDATED" })
+    const pending: ((diagram: Diagram) => void)[] = []
+    fetchDiagram.mockImplementation(
+      () => new Promise((resolve) => pending.push(resolve))
+    )
+    act(() => view.history.push(`/shared/${DIAGRAM_ID}?view=COLLABORATE`))
+    await waitFor(() => expect(pending).toHaveLength(1))
+    await emit({ type: "DIAGRAM_UPDATED" })
+    expect(pending).toHaveLength(2)
+    const latest = { ...HEAD_MODEL, nodes: [], canWrite: false }
+    await act(async () => pending[1]!(latest as unknown as Diagram))
+    await act(async () => pending[0]!(HEAD_MODEL as unknown as Diagram))
+    expect((editorHoisted.instance as { model: object }).model).toEqual(latest)
+  })
+  it("refreshes readers from saved HEAD and ignores an older HTTP response", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    await mountEditor()
+    const pending: ((diagram: Diagram) => void)[] = []
+    fetchDiagram.mockImplementation(
+      () => new Promise((resolve) => pending.push(resolve))
+    )
+    await emit({ type: "DIAGRAM_UPDATED" })
+    await emit({ type: "DIAGRAM_UPDATED" })
+    expect(pending).toHaveLength(2)
+    const latest = { ...HEAD_MODEL, nodes: [], canWrite: false }
+    await act(async () => pending[1]!(latest as unknown as Diagram))
+    await act(async () => pending[0]!(HEAD_MODEL as unknown as Diagram))
+    expect((editorHoisted.instance as { model: object }).model).toEqual(latest)
+  })
+
+  it("does not replace a preview with a late reader HEAD response", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    const view = await mountEditor()
+    let finish!: (diagram: Diagram) => void
+    fetchDiagram.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        })
+    )
+    await emit({ type: "DIAGRAM_UPDATED" })
+    act(() =>
+      view.history.push(`/shared/${DIAGRAM_ID}?view=COLLABORATE&version=v1`)
+    )
+    await waitFor(() =>
+      expect(
+        (editorHoisted.instance as { previewMode: boolean }).previewMode
+      ).toBe(true)
+    )
+    await act(async () => finish(HEAD_MODEL as unknown as Diagram))
+    expect((editorHoisted.instance as { model: object }).model).toEqual(
+      PREVIEW_BODY
+    )
+  })
   it("refreshes the canvas and announces a peer's restore", async () => {
     await mountEditor()
     const editor = editorHoisted.instance as { model: object }

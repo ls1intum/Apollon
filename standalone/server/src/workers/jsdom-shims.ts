@@ -4,7 +4,7 @@
 // `window`, `document`, or the apollon library.
 // `canvas` is aliased to @napi-rs/canvas (see standalone/server/package.json);
 // jsdom's HTMLCanvasElement resolves the same alias for getContext().
-import { GlobalFonts } from "canvas"
+import { DOMMatrix, GlobalFonts } from "canvas"
 import { fileURLToPath } from "node:url"
 import "global-jsdom/register"
 import { installSvgPathGeometry } from "./svgPathGeometry.js"
@@ -58,6 +58,26 @@ const w = window as Window & typeof globalThis
 const g = globalThis as typeof globalThis & { ResizeObserver?: unknown }
 
 g.ResizeObserver ??= ResizeObserverShim
+w.DOMMatrixReadOnly ??= DOMMatrix as unknown as typeof DOMMatrixReadOnly
+// JSDOM leaves React Flow's transform functions uncomputed; canvas needs a
+// matrix form. Convert this viewport format without changing its geometry.
+const getComputedStyle = w.getComputedStyle.bind(w)
+w.getComputedStyle = (element, pseudoElement) => {
+  const style = getComputedStyle(element, pseudoElement)
+  if (element.classList.contains("xyflow__viewport")) {
+    const match =
+      /^translate\(([-+\deE.]+)px,\s*([-+\deE.]+)px\) scale\(([-+\deE.]+)\)$/.exec(
+        style.transform
+      )
+    if (match) {
+      const [x, y, zoom] = match.slice(1).map(Number)
+      if ([x, y, zoom].every(Number.isFinite)) {
+        style.transform = new DOMMatrix().translate(x, y).scale(zoom).toString()
+      }
+    }
+  }
+  return style
+}
 w.requestAnimationFrame ??= (cb: FrameRequestCallback) =>
   setTimeout(() => cb(Date.now()), 16) as unknown as number
 w.cancelAnimationFrame ??= (id: number) => clearTimeout(id)

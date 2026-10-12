@@ -33,6 +33,17 @@ Apollon supports 13 diagram types:
 Any diagram exports to SVG, PNG, PDF, PPTX, or JSON. JSON round-trips — re-import
 it to keep editing. Real-time collaboration is optional and runs over WebSockets.
 
+## Shared link permissions
+
+Review links are read-only. Changing the `view` option in the URL does not
+allow edits. Edit, collaboration, and give-feedback links grant write access;
+anyone who has one can share that access with others. Give-feedback opens
+assessment mode but does not limit the link's server permissions to feedback.
+
+Links created before secure sharing was introduced remain readable. To edit
+one, export or duplicate the diagram and share the new copy. Changing a link
+to review mode does not revoke write links that you already sent.
+
 ## Which way to use Apollon
 
 Apollon ships in several forms. Pick the one that matches your context.

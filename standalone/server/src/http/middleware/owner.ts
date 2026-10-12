@@ -7,7 +7,7 @@ import { getCookie, setCookie } from "hono/cookie"
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto"
 import type { AppEnv } from "../env.js"
 
-const COOKIE_PREFIX = "apollon_owner_"
+const COOKIE_PREFIX = "apollon_owner_v2_"
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 180 // 180 days
 const NONCE_BYTES = 16
 
@@ -17,7 +17,7 @@ interface OwnerCookieOptions {
 
 function sign(diagramId: string, nonce: string, secret: string): string {
   return createHmac("sha256", secret)
-    .update(`${diagramId}|${nonce}`)
+    .update(`apollon-owner-v2|${diagramId}|${nonce}`)
     .digest("hex")
 }
 
@@ -62,7 +62,8 @@ function readDiagramIdFromPath(path: string): string | undefined {
  * `c.var.isOwner` (true|false) and — when a diagram id is present in the path —
  * the `X-Owner-Match` response header.
  *
- * Never blocks a request — friction, not security.
+ * Only creation issues this versioned cookie. Old soft-owner cookies could
+ * be issued to any writer and cannot establish ownership.
  */
 export function ownerReader({ secret }: OwnerCookieOptions) {
   return createMiddleware<AppEnv>(async (c, next) => {

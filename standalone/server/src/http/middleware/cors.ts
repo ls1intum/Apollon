@@ -21,7 +21,12 @@ export function configureCors(config: Config) {
     origin: allowedOrigins,
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowHeaders: ["Content-Type", "If-Match", "If-None-Match"],
+    allowHeaders: [
+      "Content-Type",
+      "If-Match",
+      "If-None-Match",
+      "Authorization",
+    ],
     exposeHeaders: ["x-owner-match", "x-request-id", "etag"],
   })
 }

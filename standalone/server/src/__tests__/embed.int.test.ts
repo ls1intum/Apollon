@@ -157,10 +157,12 @@ describe("GET /api/diagrams/:diagramId/preview.svg", () => {
 
   it("changes the ETag after a PUT bumps headRev", async () => {
     const app = appWith(okResource())
-    const id = await createDiagram(app)
+    const owner = request.agent(app)
+    const created = await owner.post("/api/diagrams").send(baseDiagram)
+    const id = created.body.id as string
     const first = await request(app).get(`/api/diagrams/${id}/preview.svg`)
 
-    const put = await request(app)
+    const put = await owner
       .put(`/api/diagrams/${id}`)
       .send({ ...baseDiagram, title: "Mutated" })
     expect(put.status).toBe(200)

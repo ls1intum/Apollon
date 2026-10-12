@@ -17,6 +17,29 @@ import {
 } from "./sharedDiagramLinks"
 
 describe("shared diagram link helpers", () => {
+  it("includes write access only in the fragment and never in a review link", () => {
+    const edit = new URL(
+      buildSharedDiagramUrl(
+        "abc",
+        DiagramView.COLLABORATE,
+        "https://example.test",
+        "write-token"
+      )
+    )
+    expect(edit.searchParams.has("access")).toBe(false)
+    expect(edit.hash).toBe("#access=write-token")
+    const read = new URL(
+      buildSharedDiagramUrl(
+        "abc",
+        DiagramView.SEE_FEEDBACK,
+        "https://example.test",
+        "write-token"
+      )
+    )
+    expect(read.hash).toBe("")
+    read.searchParams.set("view", DiagramView.COLLABORATE)
+    expect(read.href).not.toContain("write-token")
+  })
   it("builds shared diagram URLs for every view", () => {
     for (const view of Object.values(DiagramView)) {
       expect(buildSharedDiagramUrl("abc", view, "https://example.test")).toBe(

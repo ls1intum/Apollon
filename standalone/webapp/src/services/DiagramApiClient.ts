@@ -1,6 +1,10 @@
 import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
 import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
+import {
+  addSharedDiagramEntry,
+  getSharedDiagramWriteToken,
+} from "@/utils/sharedDiagramStorage"
 import type {
   ApiErrorBody,
   ApiErrorCode,
@@ -40,6 +44,11 @@ async function request<T>(
     Accept: "application/json",
     ...opts.headers,
   }
+  const diagramId = /^\/api\/diagrams\/([^/]+)/.exec(path)?.[1]
+  const writeToken = diagramId
+    ? getSharedDiagramWriteToken(diagramId)
+    : undefined
+  if (writeToken) headers.Authorization = `Bearer ${writeToken}`
   if (opts.body !== undefined && !(opts.body instanceof FormData)) {
     headers["Content-Type"] = "application/json"
   }
@@ -86,7 +95,9 @@ export const DiagramApiClient = {
     const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`, {
       signal: opts.signal,
     })
-    return data
+    const { writeToken, ...diagram } = data
+    if (writeToken) addSharedDiagramEntry(diagramId, { writeToken })
+    return diagram
   },
 
   /**
@@ -112,7 +123,9 @@ export const DiagramApiClient = {
       method: "POST",
       body: model,
     })
-    return data
+    const { writeToken, ...diagram } = data
+    if (writeToken) addSharedDiagramEntry(data.id, { writeToken })
+    return diagram
   },
 
   async deleteDiagram(diagramId: string): Promise<void> {
@@ -124,11 +137,7 @@ export const DiagramApiClient = {
     opts: { signal?: AbortSignal } = {}
   ): Promise<StoredDiagram | null> {
     try {
-      const { data } = await request<StoredDiagram>(
-        `/api/diagrams/${diagramId}`,
-        { signal: opts.signal }
-      )
-      return data
+      return await DiagramApiClient.fetchDiagram(diagramId, opts)
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return null
       throw err
@@ -255,6 +264,11 @@ export const VersionApiClient = {
     params.set("view", current.get("view") ?? "collaborate")
     params.set("version", versionId)
     // Native-aware origin (capacitor://localhost isn't externally openable).
-    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}`
+    const token = getSharedDiagramWriteToken(diagramId)
+    const fragment =
+      params.get("view") !== "SEE_FEEDBACK" && token
+        ? `#access=${encodeURIComponent(token)}`
+        : ""
+    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}${fragment}`
   },
 }

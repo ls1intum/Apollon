@@ -3,7 +3,7 @@ import "./env.js"
 import { loadConfig } from "./config.js"
 import { logger } from "./logger.js"
 import { buildApp } from "./http/app.js"
-import { bootLoadFunction, createRedisClient } from "./redis.js"
+import { bootLoadFunction, createRedisClient, k } from "./redis.js"
 import { startRelayServer } from "./ws.js"
 
 async function main() {
@@ -32,6 +32,9 @@ async function main() {
   const relay = startRelayServer({
     port: config.WS_PORT,
     host: config.HOST,
+    ownerSecret: config.OWNER_SECRET,
+    diagramExists: async (id) => (await redis.exists(k.diagram(id))) === 1,
+    allowedOrigins: config.CORS_ORIGIN?.split(",").map((s) => s.trim()) ?? [],
   })
 
   const app = buildApp({ config, redis, relay })

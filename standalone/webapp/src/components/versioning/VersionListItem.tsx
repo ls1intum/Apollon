@@ -46,6 +46,7 @@ import { isNamedVersion } from "@/lib/version/predicates"
 type RowLink = (accessibleName: string) => ReactNode
 
 interface ViewProps {
+  canWrite?: boolean
   version: PendingVersion
   /**
    * The per-version thumbnail node, rendered when the version is not pending.
@@ -104,6 +105,7 @@ export function VersionListItemView({
   versionNumber,
   isPreviewing,
   canRestore,
+  canWrite = true,
   hasPermalink = true,
   rowLink,
   onPreview,
@@ -127,11 +129,13 @@ export function VersionListItemView({
   const closeMenu = () => setMenuOpen(false)
 
   const startEditing = () => {
+    if (!canWrite) return
     setDraft(version.description ?? "")
     setEditing(true)
   }
 
   const submitEdit = async () => {
+    if (!canWrite) return
     // Cancelled via Escape — onBlur fired after cancelEdit's state batch;
     // skip the submit so we don't overwrite the description with draft.
     if (cancellingRef.current) {
@@ -365,7 +369,7 @@ export function VersionListItemView({
               align="end"
               onClick={(e) => e.stopPropagation()}
             >
-              {canRestore && (
+              {canWrite && canRestore && (
                 <DropdownMenuItem
                   onClick={() => {
                     closeMenu()
@@ -391,15 +395,17 @@ export function VersionListItemView({
                   Without the rAF, the textarea's autoFocus loses to that,
                   fires onBlur immediately, and `submitEdit` early-returns on
                   the unchanged empty draft — making the action look broken. */}
-              <DropdownMenuItem
-                onClick={() => {
-                  closeMenu()
-                  requestAnimationFrame(() => startEditing())
-                }}
-              >
-                {description ? t.editDescription : t.addDescription}
-              </DropdownMenuItem>
-              {named && (
+              {canWrite && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    closeMenu()
+                    requestAnimationFrame(() => startEditing())
+                  }}
+                >
+                  {description ? t.editDescription : t.addDescription}
+                </DropdownMenuItem>
+              )}
+              {canWrite && named && (
                 <Fragment>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
