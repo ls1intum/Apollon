@@ -34,7 +34,7 @@ jobs:
       publish: ${{ steps.v.outputs.publish }}
       release: ${{ steps.v.outputs.release }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
           # The parent commit too, to read the version this push replaced.
@@ -114,12 +114,12 @@ jobs:
       vsix-name: ${{ steps.pack.outputs.name }}
       vsix-sha256: ${{ steps.pack.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install pnpm
-        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -166,7 +166,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: ${{ !inputs.dry_run }}
-        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: vscode-extension/${{ steps.pack.outputs.name }}
 
@@ -185,7 +185,7 @@ jobs:
       # `.nvmrc` is the one source for the Node version, and this job has no
       # working tree to read it from. `checkout` cleans the directory, so it has
       # to precede the artifact download rather than follow it.
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
           sparse-checkout: .nvmrc
@@ -196,7 +196,7 @@ jobs:
           name: vsix
           path: ./
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: ".nvmrc"
 
@@ -264,7 +264,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
           # Full history so extract-changelog.mjs can resolve each changelog
