@@ -97,12 +97,14 @@ writeModelToYDoc(ydoc, importDiagram(JSON.parse(fileContent)))
 const model = readModelFromYDoc(ydoc) // null while the document holds no diagram
 ```
 
-| Function                                 | Description                                                                                                                                     |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `writeModelToYDoc(ydoc, model, origin?)` | Writes a current model, replacing any diagram in the document. Synchronous, one transaction. Run untrusted input through `importDiagram` first. |
-| `readModelFromYDoc(ydoc)`                | Returns the diagram as a `UMLModel`, or `null` if there is none. Elements are ordered by id, so every peer reads the same result.               |
-| `hasModelInYDoc(ydoc)`                   | Whether the document holds a diagram. An empty diagram of a chosen type counts.                                                                 |
-| `clearModelFromYDoc(ydoc, origin?)`      | Removes the diagram and leaves other shared types alone.                                                                                        |
+| Function                                 | Description                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `writeModelToYDoc(ydoc, model, origin?)` | Writes a current model, replacing any diagram in the document. Synchronous, one transaction. Normalize older formats with `importDiagram` first. |
+| `readModelFromYDoc(ydoc)`                | Returns the diagram as a `UMLModel`, or `null` if there is none. Elements are ordered by id, so every peer reads the same result.                |
+| `hasModelInYDoc(ydoc)`                   | Whether the document holds a diagram. An empty diagram of a chosen type counts.                                                                  |
+| `clearModelFromYDoc(ydoc, origin?)`      | Removes the diagram and leaves other shared types alone.                                                                                         |
+
+For untrusted files, enforce size limits and validate the normalized model against the [model schema](./model-contract). `importDiagram` converts supported formats; it does not fully validate model data.
 
 The model `id` and `interactive` block are stored in the document as well, so a read after a write returns the same model. The writes run under the transaction origin `MODEL_DOC_ORIGIN` unless you pass your own `origin`.
 

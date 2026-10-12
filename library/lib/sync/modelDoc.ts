@@ -132,11 +132,12 @@ export function writeModelToYDoc(
 export function readModelFromYDoc(ydoc: Y.Doc): UMLModel | null {
   if (!hasModelInYDoc(ydoc)) return null
   const metadata = getMetadata(ydoc)
-  const assessments: { [id: string]: Assessment } = {}
   const assessmentsMap = getAssessments(ydoc)
-  for (const key of Array.from(assessmentsMap.keys()).sort()) {
-    assessments[key] = assessmentsMap.get(key)!
-  }
+  const assessments: { [id: string]: Assessment } = Object.fromEntries(
+    Array.from(assessmentsMap.keys())
+      .sort()
+      .map((key) => [key, assessmentsMap.get(key)!])
+  )
   const title = metadata.get(DIAGRAM_TITLE_KEY)
   const interactive = getInteractiveFromYDoc(ydoc)
   const edges: ApollonEdge[] = Array.from(getEdgesMap(ydoc).values())
