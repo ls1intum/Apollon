@@ -539,12 +539,14 @@ export const useStepPathEdge = ({
         setCustomPoints([])
       }
       if (hasStoredManualPoints) {
-        setEdges((edges) =>
-          edges.map((edge) =>
-            edge.id === id
-              ? { ...edge, data: { ...edge.data, points: [] } }
-              : edge
-          )
+        setEdges(
+          (edges) =>
+            edges.map((edge) =>
+              edge.id === id
+                ? { ...edge, data: { ...edge.data, points: [] } }
+                : edge
+            ),
+          { persist: isDiagramModifiable }
         )
       }
       return
@@ -569,18 +571,24 @@ export const useStepPathEdge = ({
       targetPosition
     )
 
-    if (arePointsEqual(storedPoints, pointsToStore)) return
+    if (arePointsEqual(storedPoints, pointsToStore)) {
+      // Enabling edits promotes an already reprojected local route to Yjs.
+      if (isDiagramModifiable) setEdges((edges) => edges)
+      return
+    }
 
     setCustomPoints(pointsToStore)
-    setEdges((edges) =>
-      edges.map((edge) =>
-        edge.id === id
-          ? {
-              ...edge,
-              data: { ...edge.data, points: pointsToStore },
-            }
-          : edge
-      )
+    setEdges(
+      (edges) =>
+        edges.map((edge) =>
+          edge.id === id
+            ? {
+                ...edge,
+                data: { ...edge.data, points: pointsToStore },
+              }
+            : edge
+        ),
+      { persist: isDiagramModifiable }
     )
   }, [
     activePoints,
@@ -596,6 +604,7 @@ export const useStepPathEdge = ({
     hasManualPoints,
     hasStoredManualPoints,
     id,
+    isDiagramModifiable,
     setCustomPoints,
     setEdges,
     shouldPreferComputedPath,

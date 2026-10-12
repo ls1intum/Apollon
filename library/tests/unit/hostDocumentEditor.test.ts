@@ -197,7 +197,14 @@ describe("ApollonEditor on a host-owned document", () => {
               type: "ClassBidirectional",
               sourceHandle: "right",
               targetHandle: "left",
-              data: { points: [] },
+              data: {
+                points: [
+                  { x: 20, y: 5 },
+                  { x: 60, y: 5 },
+                  { x: 60, y: 50 },
+                  { x: 0, y: 50 },
+                ],
+              },
             },
           ]
         }
@@ -240,6 +247,23 @@ describe("ApollonEditor on a host-owned document", () => {
           })
           expect(onUpdate).not.toHaveBeenCalled()
           expect(Y.encodeStateAsUpdate(ydoc)).toEqual(before)
+          if (nodeType === "class") {
+            expect(readModelFromYDoc(ydoc)!.edges[0].data.points).toEqual(
+              shared.edges[0].data.points
+            )
+            await act(async () => editor.setReadonly(false))
+            await act(async () => {
+              await new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve())
+              )
+            })
+            expect(readModelFromYDoc(ydoc)!.edges[0].data.points).toEqual(
+              editor.model.edges[0].data.points
+            )
+            expect(readModelFromYDoc(ydoc)!.edges[0].data.points).not.toEqual(
+              shared.edges[0].data.points
+            )
+          }
         } else {
           expect(onUpdate).toHaveBeenCalled()
           const resized = readModelFromYDoc(ydoc)!.nodes[0]
