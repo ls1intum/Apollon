@@ -1,5 +1,16 @@
 # @tumaet/webapp
 
+## 5.4.0
+
+### Minor Changes
+
+- Ships the latest `@tumaet/apollon` editor release.
+
+### Patch Changes
+
+- Updated dependencies [[`c88673a`](https://github.com/ls1intum/Apollon/commit/c88673ad6e2fe20fc85be4adc6b1d297db8c115e), [`bace1fd`](https://github.com/ls1intum/Apollon/commit/bace1fd1cc63885c67a81f64e16e6cbd4f54bb76), [`b9b7283`](https://github.com/ls1intum/Apollon/commit/b9b7283fa22a0498443410334f2e3532d4b19079), [`957b733`](https://github.com/ls1intum/Apollon/commit/957b733274bff1e3adb9f7640e86653839b59116)]:
+  - @tumaet/apollon@5.4.0
+
 ## 5.3.1
 
 ### Patch Changes
