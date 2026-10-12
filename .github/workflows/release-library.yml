@@ -92,10 +92,10 @@ jobs:
           npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version > latest.json
           node --input-type=module <<'NODE'
           import { readFileSync, appendFileSync } from 'node:fs'
-          import { validateNextVersion } from './scripts/library-release.mjs'
+          import { normalizeNpmView, validateNextVersion } from './scripts/library-release.mjs'
           const pkg = JSON.parse(readFileSync('library/package.json', 'utf8'))
           if (pkg.name !== '@tumaet/apollon' || pkg.private) throw new Error('Invalid package identity')
-          validateNextVersion(pkg.version, JSON.parse(readFileSync('latest.json', 'utf8')))
+          validateNextVersion(pkg.version, normalizeNpmView(JSON.parse(readFileSync('latest.json', 'utf8'))))
           appendFileSync(process.env.GITHUB_OUTPUT, `node=${readFileSync('.nvmrc', 'utf8').trim()}\n`)
           NODE
       - run: pnpm --filter @tumaet/apollon run lint
@@ -250,9 +250,9 @@ jobs:
           npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version > latest.json
           node --input-type=module <<'NODE'
           import { readFileSync, appendFileSync } from 'node:fs'
-          import { shouldPromote } from './scripts/library-release.mjs'
+          import { normalizeNpmView, shouldPromote } from './scripts/library-release.mjs'
           const { version, integrity } = JSON.parse(readFileSync('verified.json', 'utf8'))
-          const latest = JSON.parse(readFileSync('latest.json', 'utf8'))
+          const latest = normalizeNpmView(JSON.parse(readFileSync('latest.json', 'utf8')))
           const node = readFileSync('.nvmrc', 'utf8').trim()
           appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nintegrity=${integrity}\nlatest=${latest}\npromote=${shouldPromote(version, latest)}\nnode=${node}\n`)
           NODE
@@ -278,10 +278,19 @@ jobs:
           EXPECTED_LATEST: ${{ needs.finalize.outputs.latest }}
         run: |
           set -euo pipefail
-          LATEST=$(npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er .)
+          read_latest() {
+            npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er '
+              (if type == "array" then
+                if length == 1 then .[0] else error("npm view must return exactly one result") end
+              else . end) |
+              if type == "string" then . else error("npm view must return a version") end
+            '
+          }
+          LATEST=$(read_latest)
           test "$LATEST" = "$EXPECTED_LATEST"
           npm dist-tag add "@tumaet/apollon@$VERSION" latest
-          test "$(npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er .)" = "$VERSION"
+          LATEST=$(read_latest)
+          test "$LATEST" = "$VERSION"
 
   release:
     needs: [finalize, promote]
