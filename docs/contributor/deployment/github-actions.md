@@ -10,13 +10,13 @@ Deployments are fully automatic on merge to `main`; production promotion is one 
 
 ## Flow
 
-| Stage          | Trigger                                     | Workflow                                                                        | Result                                                                                      |
-| -------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Staging (auto) | successful Docker build on `main`           | `deploy-staging-after-build.yml` → `deploy-staging.yml`                         | The matching `sha-<commit>` images deploy to staging                                        |
-| Docs (auto)    | push to `main`                              | `docs.yml`                                                                      | Docusaurus site rebuilt and published to GitHub Pages                                       |
-| Release        | version change merged to `main`             | `release-library.yml`, `release-standalone.yml`, `release-vscode-extension.yml` | npm / VS Code Marketplace publish + Docker retag to `vX.Y.Z` + cosign sign + GitHub Release |
-| TestFlight     | successful new standalone `vX.Y.Z` release  | `ios-testflight-release.yml`                                                    | Matching signed iOS build uploads once to TestFlight                                        |
-| Production     | Actions → **Deploy to Production** (manual) | `deploy-prod.yml`                                                               | prod runs the selected `image-tag`                                                          |
+| Stage          | Trigger                                     | Workflow                                                                        | Result                                                                                                                                      |
+| -------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Staging (auto) | successful Docker build on `main`           | `deploy-staging-after-build.yml` → `deploy-staging.yml`                         | The matching `sha-<commit>` images deploy to staging                                                                                        |
+| Docs (auto)    | push to `main`                              | `docs.yml`                                                                      | Docusaurus site rebuilt; published after its pinned npm version is public                                                                   |
+| Release        | version change merged to `main`             | `release-library.yml`, `release-standalone.yml`, `release-vscode-extension.yml` | npm staging (2FA approval + verified latest promotion and finalization) / Marketplace publish + Docker retag + cosign sign + GitHub Release |
+| TestFlight     | successful new standalone `vX.Y.Z` release  | `ios-testflight-release.yml`                                                    | Matching signed iOS build uploads once to TestFlight                                                                                        |
+| Production     | Actions → **Deploy to Production** (manual) | `deploy-prod.yml`                                                               | prod runs the selected `image-tag`                                                                                                          |
 
 `version-monotonicity.yml` guards every PR by failing if a workspace
 `package.json` version moves backwards.

@@ -9,27 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as PrivacyRouteImport } from "./routes/privacy"
-import { Route as PlaygroundRouteImport } from "./routes/playground"
-import { Route as ImprintRouteImport } from "./routes/imprint"
-import { Route as IdRouteImport } from "./routes/$id"
 import { Route as IndexRouteImport } from "./routes/index"
-import { Route as SharedDiagramIdRouteImport } from "./routes/shared.$diagramId"
+import { Route as IdRouteImport } from "./routes/$id"
+import { Route as ImprintRouteImport } from "./routes/imprint"
+import { Route as PlaygroundRouteImport } from "./routes/playground"
+import { Route as PrivacyRouteImport } from "./routes/privacy"
 import { Route as LocalIdRouteImport } from "./routes/local.$id"
+import { Route as SharedDiagramIdRouteImport } from "./routes/shared.$diagramId"
 
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: "/privacy",
-  path: "/privacy",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlaygroundRoute = PlaygroundRouteImport.update({
-  id: "/playground",
-  path: "/playground",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImprintRoute = ImprintRouteImport.update({
-  id: "/imprint",
-  path: "/imprint",
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const IdRoute = IdRouteImport.update({
@@ -37,19 +27,29 @@ const IdRoute = IdRouteImport.update({
   path: "/$id",
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+const ImprintRoute = ImprintRouteImport.update({
+  id: "/imprint",
+  path: "/imprint",
   getParentRoute: () => rootRouteImport,
 } as any)
-const SharedDiagramIdRoute = SharedDiagramIdRouteImport.update({
-  id: "/shared/$diagramId",
-  path: "/shared/$diagramId",
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: "/playground",
+  path: "/playground",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: "/privacy",
+  path: "/privacy",
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocalIdRoute = LocalIdRouteImport.update({
   id: "/local/$id",
   path: "/local/$id",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedDiagramIdRoute = SharedDiagramIdRouteImport.update({
+  id: "/shared/$diagramId",
+  path: "/shared/$diagramId",
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -123,25 +123,11 @@ export interface RootRouteChildren {
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/privacy": {
-      id: "/privacy"
-      path: "/privacy"
-      fullPath: "/privacy"
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/playground": {
-      id: "/playground"
-      path: "/playground"
-      fullPath: "/playground"
-      preLoaderRoute: typeof PlaygroundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/imprint": {
-      id: "/imprint"
-      path: "/imprint"
-      fullPath: "/imprint"
-      preLoaderRoute: typeof ImprintRouteImport
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/$id": {
@@ -151,18 +137,25 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
-      preLoaderRoute: typeof IndexRouteImport
+    "/imprint": {
+      id: "/imprint"
+      path: "/imprint"
+      fullPath: "/imprint"
+      preLoaderRoute: typeof ImprintRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/shared/$diagramId": {
-      id: "/shared/$diagramId"
-      path: "/shared/$diagramId"
-      fullPath: "/shared/$diagramId"
-      preLoaderRoute: typeof SharedDiagramIdRouteImport
+    "/playground": {
+      id: "/playground"
+      path: "/playground"
+      fullPath: "/playground"
+      preLoaderRoute: typeof PlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/privacy": {
+      id: "/privacy"
+      path: "/privacy"
+      fullPath: "/privacy"
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/local/$id": {
@@ -170,6 +163,13 @@ declare module "@tanstack/react-router" {
       path: "/local/$id"
       fullPath: "/local/$id"
       preLoaderRoute: typeof LocalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/shared/$diagramId": {
+      id: "/shared/$diagramId"
+      path: "/shared/$diagramId"
+      fullPath: "/shared/$diagramId"
+      preLoaderRoute: typeof SharedDiagramIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

@@ -1,8 +1,8 @@
 # Documentation Deployment Pipeline
 #
 # - PR with docs changes: build a /-rooted bundle
-# - push to main with docs changes: build /Apollon/-rooted bundle and deploy
-#   it to GitHub Pages
+# - production builds deploy only when their pinned npm version is public
+# - library release completion checks whether npm approval permits deployment
 
 name: Docs
 
@@ -28,6 +28,10 @@ on:
       - ".nvmrc"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
+  workflow_run:
+    workflows: [Release Library]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -39,12 +43,17 @@ concurrency:
 jobs:
   build:
     name: Build Docusaurus site
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       is-production: ${{ steps.flag.outputs.is-production }}
+      published: ${{ steps.npm.outputs.published }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
 
       - uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
 
@@ -60,6 +69,21 @@ jobs:
           else
             echo "is-production=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Check that production CDN links are published
+        id: npm
+        if: steps.flag.outputs.is-production == 'true'
+        run: |
+          npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon versions > published-versions.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs'
+          const { version } = JSON.parse(readFileSync('library/package.json', 'utf8'))
+          const versions = JSON.parse(readFileSync('published-versions.json', 'utf8'))
+          if (!Array.isArray(versions)) throw new Error('Invalid npm version list')
+          const published = versions.includes(version)
+          appendFileSync(process.env.GITHUB_OUTPUT, `published=${published}\n`)
+          if (!published) console.log('Docs deployment waits for npm approval.')
+          NODE
 
       - run: pnpm install --frozen-lockfile
 
@@ -81,7 +105,7 @@ jobs:
         env:
           DOCUSAURUS_BASE_URL: ${{ steps.flag.outputs.is-production == 'true' && '/Apollon/' || '/' }}
 
-      - if: steps.flag.outputs.is-production == 'true'
+      - if: steps.flag.outputs.is-production == 'true' && steps.npm.outputs.published == 'true'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: docs/build
@@ -89,7 +113,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    if: needs.build.outputs.is-production == 'true'
+    if: needs.build.outputs.is-production == 'true' && needs.build.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write

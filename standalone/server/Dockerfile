@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.9
 
-ARG NODE_IMAGE=node:24.15.0-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e
+ARG NODE_IMAGE=node:24.21.0-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
 
 # DL3006 wants `FROM image:tag`, but the ARG default above is fully
 # digest-pinned (stronger than tag pinning). The ARG indirection lets CI
@@ -10,7 +10,7 @@ FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 # pnpm installed via npm, not corepack; corepack disabled so it cannot shadow.
-RUN corepack disable && npm install -g pnpm@11.1.3 \
+RUN corepack disable && npm install -g pnpm@12.8.1 \
     && pnpm config set store-dir /pnpm/store
 WORKDIR /app
 
