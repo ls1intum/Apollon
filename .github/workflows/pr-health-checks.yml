@@ -286,12 +286,9 @@ jobs:
         # to the wrong package. cli.js pins the install to @playwright/test.
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install chromium
 
-      # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
-      # documented in the composite action.
-      - name: Install Playwright system deps (bounded + retried)
-        uses: ./.github/actions/playwright-install-deps
-        with:
-          browser: chromium
+      - name: Install Playwright system deps
+        timeout-minutes: 10
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install-deps chromium
 
       - name: Run E2E tests
         # Use the test:e2e script (node …/@playwright/test/cli.js): running via
@@ -358,12 +355,9 @@ jobs:
         # install step for why `pnpm exec playwright` is wrong).
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install firefox
 
-      # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
-      # the composite action.
-      - name: Install Playwright system deps (bounded + retried)
-        uses: ./.github/actions/playwright-install-deps
-        with:
-          browser: firefox
+      - name: Install Playwright system deps
+        timeout-minutes: 10
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install-deps firefox
 
       - name: Run Firefox performance budget tests
         run: pnpm --filter @tumaet/webapp run test:perf:firefox
