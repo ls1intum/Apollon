@@ -141,8 +141,9 @@ export function Apollon(props: ApollonProps) {
   const initialOptionsRef = useRef<ApollonOptions>({
     model: defaultModel,
     type: defaultType,
-    mode: defaultMode,
-    view: defaultView,
+    mode: mode ?? defaultMode,
+    view: view ?? defaultView,
+    readonly,
     availableViews,
     enablePopups,
     collaborationEnabled,
