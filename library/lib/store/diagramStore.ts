@@ -19,6 +19,12 @@ import {
   STORE_ORIGIN,
 } from "@/sync/ydoc"
 import { recordStoreNodeWrite } from "@/sync/perfCounters"
+import {
+  nodeEntriesForPersistence,
+  stripComputedSegmentsFromEdge,
+  stripComputedSegmentsFromEdges,
+  stripSelected,
+} from "@/sync/persistedShape"
 import { deepEqual } from "@/utils/storeUtils"
 import { Assessment, DraggingNode, InteractiveElements } from "@/typings"
 import {
@@ -86,36 +92,6 @@ const initialDiagramState: InitialDiagramState = {
   collaborationEnabled: false,
   previewMode: false,
   lastPlacedElementId: null,
-}
-
-function stripComputedSegmentsFromEdge(edge: Edge): Edge {
-  if (
-    !edge.data ||
-    !Object.prototype.hasOwnProperty.call(edge.data, "computedSegments")
-  ) {
-    return edge
-  }
-
-  const data = { ...(edge.data as Record<string, unknown>) }
-  delete data.computedSegments
-  return { ...edge, data }
-}
-
-function stripComputedSegmentsFromEdges(edges: Edge[]): Edge[] {
-  return edges.map(stripComputedSegmentsFromEdge)
-}
-
-// The transient `selected` flag is re-overlaid locally on read
-// (`updateNodesFromYjs`), so it must never be persisted: otherwise selection
-// toggles become Yjs writes, undo entries and peer broadcasts.
-function stripSelected(node: Node): Node {
-  const persisted = { ...node }
-  delete persisted.selected
-  return persisted
-}
-
-function nodeEntriesForPersistence(nodes: Node[]): Array<[string, Node]> {
-  return nodes.map((node) => [node.id, stripSelected(node)])
 }
 
 export type DiagramStore = {
