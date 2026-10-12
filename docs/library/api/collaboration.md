@@ -104,7 +104,9 @@ The editor then keeps its diagram in your document and shows cursors, selections
 Rules that apply to a host-owned document:
 
 - **Mount after the document has loaded.** Construct the editor only after the provider's first sync, and after an asynchronous persistence provider such as y-indexeddb has finished loading. On a document that holds no diagram the constructor writes a title, a diagram type and an id. If the existing content arrives later, those writes compete with the stored values and can replace them.
+- **One active editor per document.** Mount only one editor on each `Y.Doc` object. A second mount throws until the first editor is destroyed. Each peer can use its own document connected through a provider.
 - **The document is the source of truth.** If it already holds a diagram, the editor shows that diagram and the `model` option does not write to it. `model` only seeds a document that holds no diagram yet.
+- **Read-only layout stays local.** Content can expand nodes in the displayed model without writing that geometry to the document. `editor.model` includes these display dimensions; `readModelFromYDoc` preserves the document geometry.
 - **The editor never destroys what it did not create.** `destroy()` leaves your document and your awareness alive. It removes the fields the editor wrote to the awareness (`cursor`, `viewport`, `selectedElementId`, `followingClientId`, `draggingNodes`) and keeps `user`.
 - **Destroy the editor before the document.** The editor's observers hold on to the document until `destroy()` runs.
 - **Identity comes from your awareness.** Peers are shown from the `user` field (`{ name, color, id?, imageUrl? }`) of each awareness state. Set it yourself, or pass `collaboration.user` and the editor writes it for you.

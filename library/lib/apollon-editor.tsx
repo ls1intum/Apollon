@@ -80,6 +80,8 @@ import * as Apollon from "./typings"
 import { FONT_FAMILY, DEFAULT_FONT_SIZE } from "./fontStack"
 import { getAssessmentElementCenter } from "./utils/assessmentFocus"
 
+const activeHostDocuments = new WeakSet<Y.Doc>()
+
 const normalizeCollaborationOptions = (options?: Apollon.ApollonOptions) => {
   const collaboration = options?.collaboration
   // Peers are drawn from awareness `user` fields: the editor's own option, or
@@ -151,6 +153,7 @@ export class ApollonEditor {
   private readonly hostRegionEls = new Map<OverlayRegion, HTMLElement>()
   private readonly controlGenerations = new Map<string, number>()
   private subscribers: Apollon.Subscribers = {}
+  private destroyed = false
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
       throw new Error("Element is required to initialize Apollon")
@@ -171,6 +174,9 @@ export class ApollonEditor {
 
     const hostYdoc = options?.collaboration?.ydoc
     const hostAwareness = options?.collaboration?.awareness
+    if (hostYdoc && activeHostDocuments.has(hostYdoc)) {
+      throw new Error("collaboration.ydoc already has an active ApollonEditor")
+    }
     if (hostAwareness && !hostYdoc) {
       throw new Error("collaboration.awareness requires collaboration.ydoc")
     }
@@ -369,6 +375,7 @@ export class ApollonEditor {
         </MetadataStoreContext.Provider>
       </DiagramStoreContext.Provider>
     )
+    if (hostYdoc) activeHostDocuments.add(hostYdoc)
   }
 
   private setReactFlowInstance(instance: ReactFlowInstance) {
@@ -621,6 +628,8 @@ export class ApollonEditor {
   }
 
   public destroy() {
+    if (this.destroyed) return
+    this.destroyed = true
     try {
       Object.keys(this.subscribers).forEach((subscriberId) => {
         this.subscribers[parseInt(subscriberId)]?.()
@@ -629,6 +638,7 @@ export class ApollonEditor {
 
       this.syncManager.stopSync()
       this.root.unmount()
+      this.diagramStore.getState().undoManager?.clear()
       this.diagramStore.getState().undoManager?.destroy()
       this.syncManager.releaseAwareness()
       if (this.ownsYdoc) this.ydoc.destroy()
@@ -640,6 +650,8 @@ export class ApollonEditor {
       // so a regression in unmount/ydoc.destroy is surfaced rather than hidden.
       // eslint-disable-next-line no-console
       console.warn("[ApollonEditor] destroy() partial failure:", err)
+    } finally {
+      if (!this.ownsYdoc) activeHostDocuments.delete(this.ydoc)
     }
   }
 

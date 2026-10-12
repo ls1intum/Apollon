@@ -79,7 +79,8 @@ export type ApollonCollaborationOptions = {
   /**
    * Host-owned document. The editor keeps its diagram in it and never destroys
    * it. A diagram already in the document wins over the `model` option, which
-   * then only seeds an empty document.
+   * then only seeds an empty document. Only one editor can use the same
+   * document at a time; destroy it before mounting another.
    */
   ydoc?: Y.Doc
   /**

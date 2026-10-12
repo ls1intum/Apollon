@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, it, expect } from "vitest"
 import * as Y from "yjs"
 import { Awareness } from "y-protocols/awareness"
 import { createDiagramStore } from "@/store/diagramStore"
@@ -7,6 +7,17 @@ import { YjsSync } from "@/sync/yjsSync"
 import { readModelFromYDoc, writeModelToYDoc } from "@/model"
 import type { UMLModel } from "@/typings"
 import type { Node } from "@xyflow/react"
+
+const documents: Y.Doc[] = []
+const createDoc = () => {
+  const doc = new Y.Doc()
+  documents.push(doc)
+  return doc
+}
+
+afterEach(() => {
+  for (const doc of documents.splice(0)) doc.destroy()
+})
 
 const classNode = (id: string, x = 0): Node => ({
   id,
@@ -56,8 +67,8 @@ const connect = (a: Y.Doc, b: Y.Doc) => {
 
 describe("editor stores on a host-owned document", () => {
   it("a change applied by the host's provider reaches the store", () => {
-    const docA = new Y.Doc()
-    const docB = new Y.Doc()
+    const docA = createDoc()
+    const docB = createDoc()
     connect(docA, docB)
     const a = attach(docA, new Awareness(docA))
     const b = attach(docB, new Awareness(docB))
@@ -68,7 +79,7 @@ describe("editor stores on a host-owned document", () => {
   })
 
   it("a host write is rendered but is not on the user's undo stack", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const peer = attach(ydoc, new Awareness(ydoc))
 
     writeModelToYDoc(ydoc, model([classNode("seeded")]))
@@ -80,9 +91,30 @@ describe("editor stores on a host-owned document", () => {
     expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(false)
   })
 
+  it("keeps display geometry local until an explicit persistent update", () => {
+    const ydoc = createDoc()
+    const peer = attach(ydoc, new Awareness(ydoc))
+    writeModelToYDoc(ydoc, model([classNode("a")]))
+
+    peer.diagramStore
+      .getState()
+      .setNodes((nodes) => nodes.map((node) => ({ ...node, width: 300 })), {
+        persist: false,
+      })
+
+    expect(peer.diagramStore.getState().nodes[0].width).toBe(300)
+    expect(readModelFromYDoc(ydoc)!.nodes[0].width).toBe(200)
+    expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(false)
+
+    peer.diagramStore.getState().setNodes(peer.diagramStore.getState().nodes)
+
+    expect(readModelFromYDoc(ydoc)!.nodes[0].width).toBe(300)
+    expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(true)
+  })
+
   it("undo reverts only the local user's edit", () => {
-    const docA = new Y.Doc()
-    const docB = new Y.Doc()
+    const docA = createDoc()
+    const docB = createDoc()
     connect(docA, docB)
     writeModelToYDoc(docA, model([]))
     const a = attach(docA, new Awareness(docA))
@@ -99,7 +131,7 @@ describe("editor stores on a host-owned document", () => {
   })
 
   it("releasing a host awareness clears the editor's fields and keeps the user", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const awareness = new Awareness(ydoc)
     const user = { id: "u1", name: "Ada", color: "#ff0000" }
     awareness.setLocalStateField("user", user)
@@ -119,7 +151,7 @@ describe("editor stores on a host-owned document", () => {
   })
 
   it("releasing an awareness the sync created itself destroys it", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const diagramStore = createDiagramStore(ydoc)
     const metadataStore = createMetadataStore(ydoc)
     const sync = new YjsSync(ydoc, diagramStore, metadataStore)
@@ -132,7 +164,7 @@ describe("editor stores on a host-owned document", () => {
   })
 
   it("a destroyed undo manager stops capturing writes on the surviving document", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const peer = attach(ydoc, new Awareness(ydoc))
     const undoManager = peer.diagramStore.getState().undoManager!
 

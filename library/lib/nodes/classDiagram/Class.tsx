@@ -95,42 +95,47 @@ export function Class({
 
   useEffect(() => {
     if (height && height <= minHeight) {
-      setNodes((prev) =>
-        prev.map((node) => {
-          if (node.id === id) {
-            return {
-              ...node,
-              height: minHeight,
-              measured: {
-                ...node.measured,
+      setNodes(
+        (prev) =>
+          prev.map((node) => {
+            if (node.id === id) {
+              return {
+                ...node,
                 height: minHeight,
-              },
+                measured: {
+                  ...node.measured,
+                  height: minHeight,
+                },
+              }
             }
-          }
-          return node
-        })
+            return node
+          }),
+        { persist: isDiagramModifiable }
       )
     }
-  }, [minHeight, height, id, setNodes])
+  }, [minHeight, height, id, setNodes, isDiagramModifiable])
 
   useEffect(() => {
     if (width && width <= minWidth) {
-      setNodes((prev) =>
-        prev.map((node) => {
-          if (node.id === id) {
-            return {
-              ...node,
-              width: Math.max(width ?? 0, minWidth),
-              measured: {
+      setNodes(
+        (prev) =>
+          prev.map((node) => {
+            if (node.id === id) {
+              return {
+                ...node,
                 width: Math.max(width ?? 0, minWidth),
-              },
+                measured: {
+                  ...node.measured,
+                  width: Math.max(width ?? 0, minWidth),
+                },
+              }
             }
-          }
-          return node
-        })
+            return node
+          }),
+        { persist: isDiagramModifiable }
       )
     }
-  }, [id, setNodes, minWidth])
+  }, [id, setNodes, minWidth, width, isDiagramModifiable])
 
   const finalWidth = Math.max(width ?? 0, minWidth)
 

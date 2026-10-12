@@ -128,7 +128,10 @@ export type DiagramStore = {
    * collaboration teardown; a no-op when nothing is being broadcast.
    */
   endTransientNodeBroadcast: () => void
-  setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
+  setNodes: (
+    payload: Node[] | ((nodes: Node[]) => Node[]),
+    options?: { persist?: boolean }
+  ) => void
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
   addEdge: (edge: Edge) => void
@@ -449,17 +452,20 @@ export const createDiagramStore = (
               "addEdge"
             )
           },
-          setNodes: (payload) => {
+          setNodes: (payload, { persist = true } = {}) => {
             const nodes =
               typeof payload === "function" ? payload(get().nodes) : payload
 
-            if (deepEqual(get().nodes, nodes)) {
-              return
+            // Local layout can differ from Yjs even when the view is unchanged.
+            if (persist) {
+              transactStore(() => {
+                reconcileYMap(
+                  getNodesMap(ydoc),
+                  nodeEntriesForPersistence(nodes)
+                )
+              })
             }
-
-            transactStore(() => {
-              reconcileYMap(getNodesMap(ydoc), nodeEntriesForPersistence(nodes))
-            })
+            if (deepEqual(get().nodes, nodes)) return
             const prunedInteractive = pruneInteractiveElements(
               {
                 elements: get().interactiveElements,
@@ -999,12 +1005,9 @@ export const createDiagramStore = (
           },
 
           updateAssessmentFromYjs: () => {
-            const yMap = getAssessments(ydoc)
-            const assessments: Record<string, Assessment> = {}
-
-            yMap.forEach((value, key) => {
-              assessments[key] = value
-            })
+            const assessments = Object.fromEntries(
+              getAssessments(ydoc).entries()
+            )
 
             set({ assessments }, undefined, "updateAssessmentFromYjs")
           },

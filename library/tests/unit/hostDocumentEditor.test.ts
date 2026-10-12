@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { act } from "react"
 import * as Y from "yjs"
 import { Awareness } from "y-protocols/awareness"
 import { ApollonEditor } from "@/apollon-editor"
@@ -25,6 +26,12 @@ const model = (title: string, nodeIds: string[]): UMLModel =>
   }) as unknown as UMLModel
 
 const editors: ApollonEditor[] = []
+const documents: Y.Doc[] = []
+const createDoc = () => {
+  const ydoc = new Y.Doc()
+  documents.push(ydoc)
+  return ydoc
+}
 const mount = (options: ConstructorParameters<typeof ApollonEditor>[1]) => {
   const element = document.createElement("div")
   document.body.appendChild(element)
@@ -33,14 +40,20 @@ const mount = (options: ConstructorParameters<typeof ApollonEditor>[1]) => {
   return editor
 }
 
-afterEach(() => {
-  for (const editor of editors.splice(0)) editor.destroy()
+afterEach(async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
+  await act(async () => {
+    for (const editor of editors.splice(0)) editor.destroy()
+  })
+  for (const ydoc of documents.splice(0)) ydoc.destroy()
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   document.body.innerHTML = ""
 })
 
 describe("ApollonEditor on a host-owned document", () => {
   it("shows the diagram already in the document and ignores the model option", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     writeModelToYDoc(ydoc, model("Shared", ["a", "b"]))
 
     const editor = mount({
@@ -54,8 +67,27 @@ describe("ApollonEditor on a host-owned document", () => {
     expect(readModelFromYDoc(ydoc)!.title).toBe("Shared")
   })
 
+  it("preserves special assessment keys when adopting and replacing a document", () => {
+    const ydoc = createDoc()
+    const shared = model("Shared", ["a"])
+    shared.assessments = JSON.parse(
+      '{"__proto__":{"modelElementId":"a","elementType":"class","score":1},"constructor":{"modelElementId":"a","elementType":"class","score":2}}'
+    )
+    writeModelToYDoc(ydoc, shared)
+    const editor = mount({ collaboration: { ydoc } })
+
+    expect(editor.model.assessments).toEqual(shared.assessments)
+    expect(Object.keys(editor.model.assessments).sort()).toEqual([
+      "__proto__",
+      "constructor",
+    ])
+    shared.assessments["__proto__"].score = 3
+    writeModelToYDoc(ydoc, shared)
+    expect(editor.model.assessments).toEqual(shared.assessments)
+  })
+
   it("seeds a document that holds no diagram from the model option", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
 
     mount({ model: model("Seed", ["x"]), collaboration: { ydoc } })
 
@@ -66,7 +98,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("renders a diagram the host writes after mounting", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     writeModelToYDoc(ydoc, model("First", ["a"]))
     const editor = mount({ collaboration: { ydoc } })
 
@@ -78,7 +110,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("leaves the host's document and awareness alive on destroy", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const awareness = new Awareness(ydoc)
     awareness.setLocalStateField("user", { name: "Ada", color: "#ff0000" })
     writeModelToYDoc(ydoc, model("Shared", ["a"]))
@@ -95,22 +127,150 @@ describe("ApollonEditor on a host-owned document", () => {
       user: { name: "Ada", color: "#ff0000" },
     })
     expect(readModelFromYDoc(ydoc)!.nodes).toHaveLength(1)
-    awareness.destroy()
   })
 
-  it("does not change a shared diagram by mounting on it", () => {
-    const ydoc = new Y.Doc()
-    const shared = { ...model("Shared", ["a"]), id: "" }
-    writeModelToYDoc(ydoc, shared)
-    const before = Y.encodeStateVector(ydoc)
+  it.each([
+    [
+      "ClassDiagram",
+      "class",
+      { name: "Autosized", attributes: [], methods: [] },
+    ],
+    [
+      "CommunicationDiagram",
+      "communicationObjectName",
+      { name: "Autosized", attributes: [], methods: [] },
+    ],
+    [
+      "ObjectDiagram",
+      "objectName",
+      { name: "Autosized", attributes: [], methods: [] },
+    ],
+    [
+      "Sfc",
+      "sfcActionTable",
+      {
+        name: "Actions",
+        actionRows: [{ id: "row", name: "Action", identifier: "N" }],
+      },
+    ],
+    ["Sfc", "sfcJump", { name: "Target" }],
+  ] as const)(
+    "preserves readonly geometry and editable autosizing for %s %s",
+    async (diagramType, nodeType, data) => {
+      vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
+      vi.stubGlobal(
+        "DOMMatrixReadOnly",
+        class {
+          m22 = 1
+        }
+      )
+      vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(
+        function (this: HTMLElement) {
+          return Number.parseFloat(this.style.width) || 800
+        }
+      )
+      vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(
+        function (this: HTMLElement) {
+          return Number.parseFloat(this.style.height) || 600
+        }
+      )
 
-    mount({ readonly: true, collaboration: { ydoc } })
+      for (const readonly of [true, false]) {
+        const ydoc = createDoc()
+        const shared = model("Shared", ["a"])
+        shared.type = diagramType
+        shared.nodes[0] = {
+          ...shared.nodes[0],
+          type: nodeType,
+          data,
+          width: 20,
+          height: 10,
+          measured: { width: 20, height: 10 },
+        }
+        if (nodeType === "class") {
+          shared.nodes.push(model("Target", ["b"]).nodes[0])
+          shared.edges = [
+            {
+              id: "edge",
+              source: "a",
+              target: "b",
+              type: "ClassBidirectional",
+              sourceHandle: "right",
+              targetHandle: "left",
+              data: { points: [] },
+            },
+          ]
+        }
+        writeModelToYDoc(ydoc, shared)
+        const before = Y.encodeStateAsUpdate(ydoc)
+        const onUpdate = vi.fn()
+        ydoc.on("update", onUpdate)
+        let editor!: ApollonEditor
 
-    expect(Y.encodeStateVector(ydoc)).toEqual(before)
+        await act(async () => {
+          editor = mount({ readonly, controls: [], collaboration: { ydoc } })
+        })
+        await act(async () => {
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => resolve())
+          )
+        })
+
+        const svg = document.querySelector('.react-flow__node[data-id="a"] svg')
+        expect(svg).not.toBeNull()
+        expect(Number(svg!.getAttribute("height"))).toBeGreaterThan(10)
+        if (readonly) {
+          expect(
+            document.querySelector(".apollon-editor--readonly")
+          ).not.toBeNull()
+          const displayed = editor.model.nodes[0]
+          expect(displayed.width > 20 || displayed.height > 10).toBe(true)
+          await act(async () => {
+            document
+              .querySelector(".react-flow__pane")!
+              .dispatchEvent(new MouseEvent("click", { bubbles: true }))
+            document.querySelector(".react-flow__pane")!.dispatchEvent(
+              new KeyboardEvent("keydown", {
+                key: "a",
+                ctrlKey: true,
+                bubbles: true,
+                cancelable: true,
+              })
+            )
+          })
+          expect(onUpdate).not.toHaveBeenCalled()
+          expect(Y.encodeStateAsUpdate(ydoc)).toEqual(before)
+        } else {
+          expect(onUpdate).toHaveBeenCalled()
+          const resized = readModelFromYDoc(ydoc)!.nodes[0]
+          expect(resized.width > 20 || resized.height > 10).toBe(true)
+        }
+
+        await act(async () => editor.destroy())
+      }
+    }
+  )
+
+  it("rejects a second active editor and allows remounting after destroy", () => {
+    const ydoc = createDoc()
+    writeModelToYDoc(ydoc, model("Shared", ["a"]))
+    const editor = mount({ collaboration: { ydoc } })
+
+    expect(() => mount({ collaboration: { ydoc } })).toThrow(
+      /already has an active ApollonEditor/
+    )
+    editor.destroy()
+    const remounted = mount({ collaboration: { ydoc } })
+
+    expect(remounted.model.nodes.map((node) => node.id)).toEqual(["a"])
+    editor.destroy()
+    expect(() => mount({ collaboration: { ydoc } })).toThrow(
+      /already has an active ApollonEditor/
+    )
   })
 
   it("keeps a title the host document already carries when it seeds the diagram", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     ydoc.getMap("diagramMetadata").set("diagramTitle", "From host")
 
     mount({ model: model("From option", ["x"]), collaboration: { ydoc } })
@@ -119,7 +279,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("keeps the interactive selection of the model it seeds a document with", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const interactive = { elements: { x: true }, relationships: {} }
 
     mount({
@@ -131,7 +291,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("keeps its own interactive selection when the host writes another one", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const mounted = { elements: { a: true }, relationships: {} }
     writeModelToYDoc(ydoc, { ...model("Shared", ["a"]), interactive: mounted })
     const editor = mount({ collaboration: { ydoc } })
@@ -145,7 +305,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("carries the interactive selection of a shared diagram into the model", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const interactive = { elements: { a: true }, relationships: {} }
     writeModelToYDoc(ydoc, { ...model("Shared", ["a"]), interactive })
 
@@ -155,7 +315,7 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("leaves the user a host awareness carries alone", () => {
-    const ydoc = new Y.Doc()
+    const ydoc = createDoc()
     const awareness = new Awareness(ydoc)
     const user = { id: "u1", name: "Ada", color: "#ff0000" }
     awareness.setLocalStateField("user", user)
@@ -178,18 +338,18 @@ describe("ApollonEditor on a host-owned document", () => {
   })
 
   it("rejects an awareness without a document", () => {
-    const awareness = new Awareness(new Y.Doc())
+    const awareness = new Awareness(createDoc())
     expect(() => mount({ collaboration: { awareness } })).toThrow(
       /requires collaboration\.ydoc/
     )
-    awareness.destroy()
   })
 
   it("rejects an awareness bound to another document", () => {
-    const awareness = new Awareness(new Y.Doc())
-    expect(() =>
-      mount({ collaboration: { ydoc: new Y.Doc(), awareness } })
-    ).toThrow(/must be bound/)
-    awareness.destroy()
+    const awareness = new Awareness(createDoc())
+    const ydoc = createDoc()
+    expect(() => mount({ collaboration: { ydoc, awareness } })).toThrow(
+      /must be bound/
+    )
+    expect(() => mount({ collaboration: { ydoc } })).not.toThrow()
   })
 })
