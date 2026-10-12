@@ -132,10 +132,7 @@ export type DiagramStore = {
     payload: Node[] | ((nodes: Node[]) => Node[]),
     options?: { persist?: boolean }
   ) => void
-  setEdges: (
-    payload: Edge[] | ((edges: Edge[]) => Edge[]),
-    options?: { persist?: boolean }
-  ) => void
+  setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
   addEdge: (edge: Edge) => void
   addNode: (node: Node) => void
@@ -492,18 +489,20 @@ export const createDiagramStore = (
             )
           },
 
-          setEdges: (payload, { persist = true } = {}) => {
+          setEdges: (payload) => {
             const edges =
               typeof payload === "function" ? payload(get().edges) : payload
             const persistedEdges = stripComputedSegmentsFromEdges(edges)
 
+            if (deepEqual(get().edges, persistedEdges)) {
+              return
+            }
             transactStore(() => {
               reconcileYMap(
                 getEdgesMap(ydoc),
                 persistedEdges.map((edge) => [edge.id, edge])
               )
-            }, persist)
-            if (deepEqual(get().edges, persistedEdges)) return
+            })
             const prunedInteractive = pruneInteractiveElements(
               {
                 elements: get().interactiveElements,

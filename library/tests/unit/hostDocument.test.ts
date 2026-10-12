@@ -125,52 +125,6 @@ describe("editor stores on a host-owned document", () => {
     expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(true)
   })
 
-  it("keeps manual route reprojection local until an identical persistent update", () => {
-    const ydoc = createDoc()
-    const peer = attach(ydoc, new Awareness(ydoc))
-    const points = [
-      { x: 200, y: 50 },
-      { x: 250, y: 50 },
-      { x: 250, y: 150 },
-      { x: 600, y: 150 },
-    ]
-    writeModelToYDoc(ydoc, {
-      ...model([classNode("a"), classNode("b", 600)]),
-      edges: [
-        {
-          id: "edge",
-          source: "a",
-          target: "b",
-          type: "ClassBidirectional",
-          sourceHandle: "right",
-          targetHandle: "left",
-          data: { points },
-        },
-      ],
-    })
-    const reprojected = points.map((point) => ({ ...point, y: point.y + 20 }))
-
-    peer.diagramStore.getState().setEdges(
-      (edges) =>
-        edges.map((edge) => ({
-          ...edge,
-          data: { ...edge.data, points: reprojected },
-        })),
-      { persist: false }
-    )
-
-    expect(peer.diagramStore.getState().edges[0].data!.points).toEqual(
-      reprojected
-    )
-    expect(readModelFromYDoc(ydoc)!.edges[0].data.points).toEqual(points)
-    expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(false)
-
-    peer.diagramStore.getState().setEdges(peer.diagramStore.getState().edges)
-
-    expect(readModelFromYDoc(ydoc)!.edges[0].data.points).toEqual(reprojected)
-    expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(true)
-  })
-
   it("undo reverts only the local user's edit", () => {
     const docA = createDoc()
     const docB = createDoc()

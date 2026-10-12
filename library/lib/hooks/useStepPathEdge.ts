@@ -509,7 +509,7 @@ export const useStepPathEdge = ({
     // It is not committed diagram state: pointer-up below owns that write. In
     // particular, a predicted reconnect of an already manual edge must not
     // overwrite its old waypoints merely by hovering a node.
-    if (dragPreviewPoints !== null) return
+    if (!isDiagramModifiable || dragPreviewPoints !== null) return
 
     // Pointer-up clears local preview state before the solver's layout-effect
     // cleanup necessarily restores the stored edge route. Do not let that brief
@@ -539,14 +539,12 @@ export const useStepPathEdge = ({
         setCustomPoints([])
       }
       if (hasStoredManualPoints) {
-        setEdges(
-          (edges) =>
-            edges.map((edge) =>
-              edge.id === id
-                ? { ...edge, data: { ...edge.data, points: [] } }
-                : edge
-            ),
-          { persist: isDiagramModifiable }
+        setEdges((edges) =>
+          edges.map((edge) =>
+            edge.id === id
+              ? { ...edge, data: { ...edge.data, points: [] } }
+              : edge
+          )
         )
       }
       return
@@ -571,24 +569,18 @@ export const useStepPathEdge = ({
       targetPosition
     )
 
-    if (arePointsEqual(storedPoints, pointsToStore)) {
-      // Enabling edits promotes an already reprojected local route to Yjs.
-      if (isDiagramModifiable) setEdges((edges) => edges)
-      return
-    }
+    if (arePointsEqual(storedPoints, pointsToStore)) return
 
     setCustomPoints(pointsToStore)
-    setEdges(
-      (edges) =>
-        edges.map((edge) =>
-          edge.id === id
-            ? {
-                ...edge,
-                data: { ...edge.data, points: pointsToStore },
-              }
-            : edge
-        ),
-      { persist: isDiagramModifiable }
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id
+          ? {
+              ...edge,
+              data: { ...edge.data, points: pointsToStore },
+            }
+          : edge
+      )
     )
   }, [
     activePoints,
