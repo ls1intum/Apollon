@@ -39,6 +39,7 @@ vi.mock("@/apollon-editor", () => ({
 }))
 
 import { Apollon } from "@/components/react/Apollon"
+import { ApollonMode, ApollonView } from "@/typings"
 
 describe("<Apollon>", () => {
   beforeEach(() => {
@@ -49,8 +50,17 @@ describe("<Apollon>", () => {
     addControlSpy.mockClear()
   })
 
-  it("constructs once with initial-only options; reactive props bypass the constructor", () => {
-    render(<Apollon defaultMode={undefined} readonly previewMode />)
+  it("initializes readonly and controlled mode/view before reactive updates", () => {
+    render(
+      <Apollon
+        defaultMode={ApollonMode.Modelling}
+        defaultView={ApollonView.Modelling}
+        mode={ApollonMode.Assessment}
+        view={ApollonView.Exporting}
+        readonly
+        previewMode
+      />
+    )
 
     expect(ctorSpy).toHaveBeenCalledTimes(1)
     const [element, options] = ctorSpy.mock.calls[0] as [
@@ -58,7 +68,9 @@ describe("<Apollon>", () => {
       Record<string, unknown>,
     ]
     expect(element).toBeInstanceOf(HTMLElement)
-    expect(options.readonly).toBeUndefined()
+    expect(options.readonly).toBe(true)
+    expect(options.mode).toBe(ApollonMode.Assessment)
+    expect(options.view).toBe(ApollonView.Exporting)
     expect(options.previewMode).toBeUndefined()
     expect(options.className).toBeUndefined()
     expect(options.onMount).toBeUndefined()

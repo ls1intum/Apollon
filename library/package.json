@@ -80,7 +80,7 @@
     {
       "name": "main entry (published JS, deps externalized)",
       "path": "dist/index.js",
-      "limit": "122 kB",
+      "limit": "123 kB",
       "disablePlugins": [
         "@size-limit/webpack",
         "@size-limit/time"
@@ -96,8 +96,12 @@
       ]
     },
     {
-      "name": "/model normalization chunk (DOM-free)",
-      "path": "dist/versionConverter-*.js",
+      "name": "/model DOM-free entry and shared chunks",
+      "path": [
+        "dist/model*.js",
+        "dist/ydoc-*.js",
+        "dist/persistedShape-*.js"
+      ],
       "limit": "8 kB",
       "disablePlugins": [
         "@size-limit/webpack",
@@ -165,7 +169,7 @@
     "typescript-eslint": "catalog:",
     "typescript-json-schema": "0.68.0",
     "vite": "catalog:",
-    "vite-plugin-dts": "5.1.1",
+    "vite-plugin-dts": "5.1.2",
     "vitest": "catalog:",
     "y-protocols": "catalog:",
     "yjs": "catalog:"

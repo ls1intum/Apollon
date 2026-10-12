@@ -21,18 +21,20 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       library: ${{ steps.filter.outputs.library }}
       vscode: ${{ steps.filter.outputs.vscode }}
-      should-skip: ${{ steps.skip-check.outputs.should_skip }}
+      should-skip: ${{ steps.skip-check.outcome == 'success' && steps.skip-check.outputs.should_skip == 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - id: skip-check
+        # Deduplication is optional; an API failure must run normal checks.
+        continue-on-error: true
         uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5
         with:
           do_not_skip: '["workflow_dispatch"]'
 
       - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
-        if: steps.skip-check.outputs.should_skip != 'true'
+        if: steps.skip-check.outcome != 'success' || steps.skip-check.outputs.should_skip != 'true'
         with:
           filters: |
             code:
@@ -284,12 +286,9 @@ jobs:
         # to the wrong package. cli.js pins the install to @playwright/test.
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install chromium
 
-      # Shared with perf-firefox-tests; the dpkg-lock hang it guards is
-      # documented in the composite action.
-      - name: Install Playwright system deps (bounded + retried)
-        uses: ./.github/actions/playwright-install-deps
-        with:
-          browser: chromium
+      - name: Install Playwright system deps
+        timeout-minutes: 10
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install-deps chromium
 
       - name: Run E2E tests
         # Use the test:e2e script (node …/@playwright/test/cli.js): running via
@@ -356,12 +355,9 @@ jobs:
         # install step for why `pnpm exec playwright` is wrong).
         run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install firefox
 
-      # Shared with e2e-tests; the dpkg-lock hang it guards is documented in
-      # the composite action.
-      - name: Install Playwright system deps (bounded + retried)
-        uses: ./.github/actions/playwright-install-deps
-        with:
-          browser: firefox
+      - name: Install Playwright system deps
+        timeout-minutes: 10
+        run: pnpm --filter @tumaet/webapp exec node node_modules/@playwright/test/cli.js install-deps firefox
 
       - name: Run Firefox performance budget tests
         run: pnpm --filter @tumaet/webapp run test:perf:firefox
@@ -534,7 +530,7 @@ jobs:
         perf-firefox-tests,
         visual-regression-tests,
       ]
-    if: always()
+    if: ${{ !cancelled() }}
     steps:
       - name: Evaluate results
         run: |

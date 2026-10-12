@@ -69,6 +69,36 @@
       "automerge": true
     },
     {
+      "description": "Keep the verified React Flow/system pair until the touch regression is fixed.",
+      "matchPackageNames": ["@xyflow/react"],
+      "allowedVersions": "12.11.1"
+    },
+    {
+      "description": "Keep the system version required by the verified React Flow version.",
+      "matchPackageNames": ["@xyflow/system"],
+      "allowedVersions": "0.0.78"
+    },
+    {
+      "description": "Keep Node PDF export working until the ESM package entry is fixed.",
+      "matchPackageNames": ["svg2pdf.js"],
+      "allowedVersions": "<2.8.0"
+    },
+    {
+      "description": "Match the VS Code API series declared in engines.vscode.",
+      "matchPackageNames": ["@types/vscode"],
+      "allowedVersions": ">=1.86.0 <1.87.0"
+    },
+    {
+      "description": "Keep TypeScript within typescript-eslint's supported peer range.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<6.1.0"
+    },
+    {
+      "description": "Move formatter-minor migrations into a separate formatting change.",
+      "matchPackageNames": ["prettier"],
+      "allowedVersions": "<3.9.0"
+    },
+    {
       "description": "@types/pdfmake — pinned to 0.2.x because 0.3.x removed the .vfs property used by standalone/server/src/workers/pdf-conversion-worker-thread.ts. Re-evaluate when migrating the worker to the 0.3 API.",
       "matchPackageNames": ["@types/pdfmake"],
       "enabled": false

@@ -233,7 +233,9 @@ function App({
               routingReady ? onlyRenderVisibleElements : false
             }
             onDragOver={onDragOver}
-            onNodesChange={onNodesChange}
+            onNodesChange={(changes) =>
+              onNodesChange(changes, { persist: isDiagramModifiable })
+            }
             onEdgesChange={onEdgesChange}
             onConnectStart={onConnectStart}
             onConnect={onConnect}

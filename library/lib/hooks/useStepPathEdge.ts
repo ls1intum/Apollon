@@ -509,7 +509,7 @@ export const useStepPathEdge = ({
     // It is not committed diagram state: pointer-up below owns that write. In
     // particular, a predicted reconnect of an already manual edge must not
     // overwrite its old waypoints merely by hovering a node.
-    if (dragPreviewPoints !== null) return
+    if (!isDiagramModifiable || dragPreviewPoints !== null) return
 
     // Pointer-up clears local preview state before the solver's layout-effect
     // cleanup necessarily restores the stored edge route. Do not let that brief
@@ -596,6 +596,7 @@ export const useStepPathEdge = ({
     hasManualPoints,
     hasStoredManualPoints,
     id,
+    isDiagramModifiable,
     setCustomPoints,
     setEdges,
     shouldPreferComputedPath,
