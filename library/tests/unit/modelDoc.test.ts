@@ -89,6 +89,32 @@ describe("model and Y.Doc helpers", () => {
     )
   })
 
+  it("round-trips assessments with keys that match object prototype properties", () => {
+    const ydoc = new Y.Doc()
+    const peer = new Y.Doc()
+    ydoc.on("update", (update: Uint8Array) => Y.applyUpdate(peer, update))
+    const assessments = Object.fromEntries(
+      ["__proto__", "constructor"].map((id) => [
+        id,
+        { modelElementId: id, elementType: "class", score: 1 },
+      ])
+    )
+
+    writeModelToYDoc(ydoc, { ...model(), assessments })
+
+    for (const doc of [ydoc, peer]) {
+      const read = readModelFromYDoc(doc)!
+      expect(read.assessments).toEqual(assessments)
+      expect(Object.keys(read.assessments).sort()).toEqual([
+        "__proto__",
+        "constructor",
+      ])
+    }
+
+    ydoc.destroy()
+    peer.destroy()
+  })
+
   it("treats an empty diagram of a chosen type as a model", () => {
     const ydoc = new Y.Doc()
     writeModelToYDoc(ydoc, { ...model(), nodes: [], edges: [] })

@@ -96,8 +96,12 @@
       ]
     },
     {
-      "name": "/model normalization chunk (DOM-free)",
-      "path": "dist/versionConverter-*.js",
+      "name": "/model DOM-free entry and shared chunks",
+      "path": [
+        "dist/model.js",
+        "dist/ydoc-*.js",
+        "dist/persistedShape-*.js"
+      ],
       "limit": "8 kB",
       "disablePlugins": [
         "@size-limit/webpack",
