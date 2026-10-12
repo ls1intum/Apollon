@@ -17,11 +17,11 @@ function viewport(page: Page) {
   })
 }
 
-async function wheelStep(page: Page) {
+async function wheelStep(page: Page, deltaY = 80) {
   await page.bringToFront()
   const bounds = await page.locator(".react-flow__pane").boundingBox()
   await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + 120)
-  await page.mouse.wheel(0, 80)
+  await page.mouse.wheel(0, deltaY)
 }
 
 test("a single wheel step is followed and a follower's first step takes control back", async ({
@@ -57,8 +57,18 @@ test("a single wheel step is followed and a follower's first step takes control 
   await expect(leader.getByLabel(/You · followed by 1/)).toBeHidden()
 
   const independent = await viewport(follower)
-  await wheelStep(leader)
-  await expect.poll(() => viewport(leader)).not.toEqual(beforeTakeBack)
+  const beforeLeaderStep = await viewport(leader)
+  await wheelStep(leader, 140)
+  await expect.poll(() => viewport(leader)).not.toEqual(beforeLeaderStep)
+  expect(await viewport(leader)).not.toEqual(independent)
+  for (const peer of [leader, follower]) {
+    await peer.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        })
+    )
+  }
   expect(await viewport(follower)).toEqual(independent)
 })
 
