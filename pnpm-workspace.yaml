@@ -63,11 +63,11 @@ catalog:
   # so tapping empty canvas no longer clears the selection on touch
   # (e2e multi-selection-mode "taps build, shrink and clear"). Needs a library
   # change before this can move.
-  "@xyflow/react": "12.12.0"
+  "@xyflow/react": "12.11.1"
   # Locked to the exact version @xyflow/react@12.11.1 depends on. The library
   # imports getEdgePosition from it (not re-exported by @xyflow/react's barrel)
   # to compute edge endpoints centrally, byte-for-byte as React Flow does.
-  "@xyflow/system": "0.0.83"
+  "@xyflow/system": "0.0.78"
   # React Compiler (stable v1). Wired via @vitejs/plugin-react's Babel slot.
   # Pinned exact — the compiler has not committed to SemVer-safe output yet.
   babel-plugin-react-compiler: "1.0.0"
@@ -89,7 +89,7 @@ catalog:
   # bundle, so Node loads it as ESM and `require("jspdf")` never runs (jsPDF is
   # undefined under vitest and in the server's Node conversion path). Revisit
   # once upstream fixes the entry points.
-  "svg2pdf.js": "2.8.1"
+  "svg2pdf.js": "2.7.0"
   tailwind-merge: "3.7.0"
   tailwindcss: "4.3.3"
   # Held at 6.0.x: typescript-eslint (peer `typescript <6.1.0`) does not support
