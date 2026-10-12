@@ -396,11 +396,7 @@ function LocalCollaborationAwareness({
     if (!container) return
 
     const rafRef = { current: 0 }
-    // The pointer's last screen position. It is projected into flow space only
-    // when the frame flushes, never at event time: during a pan the pointer
-    // event arrives before the viewport moves, so projecting right away mixes
-    // the new pointer position with the previous viewport and the published
-    // cursor jitters for peers.
+    // Project at frame flush: pan pointer events precede the viewport update.
     const pointerRef = {
       current: null as { clientX: number; clientY: number } | null,
     }
@@ -408,10 +404,13 @@ function LocalCollaborationAwareness({
     const flushCursor = () => {
       rafRef.current = 0
       if (!pointerRef.current) return
-      const flowPosition = reactFlow.screenToFlowPosition({
-        x: pointerRef.current.clientX,
-        y: pointerRef.current.clientY,
-      })
+      const flowPosition = reactFlow.screenToFlowPosition(
+        {
+          x: pointerRef.current.clientX,
+          y: pointerRef.current.clientY,
+        },
+        { snapToGrid: false }
+      )
       awareness.setLocalAwarenessCursor({
         x: flowPosition.x,
         y: flowPosition.y,
