@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
+import { getSharedDiagramWriteToken } from "@/utils/sharedDiagramStorage"
 
 interface Options {
   diagramId: string | undefined
@@ -31,9 +32,13 @@ export function useFlushOnUnload(opts: Options) {
       if (!diagramId || !isDirty()) return
       const model = getModel()
       if (!model) return
+      const token = getSharedDiagramWriteToken(diagramId)
       void fetch(`${serverURL}/api/diagrams/${diagramId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(model),
         keepalive: true,
         credentials: "include",

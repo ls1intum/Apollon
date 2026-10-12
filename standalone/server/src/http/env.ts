@@ -9,5 +9,7 @@ export interface AppEnv {
     requestId: string
     /** True if the request carries a valid owner cookie for the diagram on this route. */
     isOwner: boolean
+    canWrite: boolean
+    writeToken: string | undefined
   }
 }

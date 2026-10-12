@@ -97,6 +97,7 @@ export const ShareLinkRow = ({
       </Tooltip>
 
       <Select
+        disabled={options.length === 1}
         value={mode}
         onValueChange={(value) => onSelectMode(value as DiagramView)}
       >

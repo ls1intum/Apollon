@@ -29,7 +29,9 @@ const FakeApollonEditor = vi.hoisted(
       liveModel: object | undefined = undefined
       modelChangeCb: (() => void) | null = null
       previewMode = false
-      constructor() {
+      options: { readonly?: boolean }
+      constructor(_container?: unknown, options: { readonly?: boolean } = {}) {
+        this.options = options
         // The component instantiates its editor via `new ApollonEditor(...)`;
         // capture it so a test can drive the same instance the autosaver uses.
         editorHoisted.instance = this
@@ -241,7 +243,7 @@ async function resolveFetch(model: object = { nodes: [], edges: [] }) {
   await act(async () => {
     const pending = fetchHoisted.state.pending!
     fetchHoisted.state.pending = null
-    pending.resolve(model)
+    pending.resolve({ canWrite: true, ...model })
   })
 }
 
@@ -267,6 +269,19 @@ afterEach(() => {
 })
 
 describe("ApollonShared — loading-state regression", () => {
+  it.each([false, undefined])(
+    "keeps a COLLABORATE URL readonly when server canWrite is %s",
+    async (canWrite) => {
+      mountAt("/shared/abc?view=COLLABORATE")
+      await resolveFetch({ nodes: [], edges: [], canWrite })
+      await waitFor(() =>
+        expect(editorHoisted.instance?.options.readonly).toBe(true)
+      )
+      const sendUpdate = vi.spyOn(DiagramApiClient, "sendDiagramUpdate")
+      act(() => editorHoisted.instance.modelChangeCb?.())
+      expect(sendUpdate).not.toHaveBeenCalled()
+    }
+  )
   it("shows the loading overlay while the initial diagram fetch is in flight", async () => {
     mountAt("/shared/abc?view=COLLABORATE")
     expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()

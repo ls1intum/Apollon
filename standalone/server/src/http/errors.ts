@@ -13,6 +13,8 @@ export class ApiError extends Error {
 }
 
 export const Errors = {
+  forbidden: (msg = "Write access is required") =>
+    new ApiError(403, "FORBIDDEN", msg),
   invalidParams: (msg = "Invalid request parameters") =>
     new ApiError(422, "INVALID_PARAMS", msg),
   // Raised by the bodyLimit middleware when a request body exceeds

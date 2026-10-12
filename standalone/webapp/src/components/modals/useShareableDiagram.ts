@@ -9,6 +9,7 @@ import {
   addSharedDiagramEntry,
   markSharedDiagramCopied,
   updateSharedDiagramView,
+  getSharedDiagramWriteToken,
 } from "@/utils/sharedDiagramStorage"
 import { buildSharedDiagramUrl } from "@/utils/sharedDiagramLinks"
 
@@ -17,8 +18,8 @@ type Phase = "form" | "creating"
 /**
  * The shared "share this diagram" state machine used by both the editor and the
  * dashboard share dialogs. It uploads a snapshot ONCE; after that, changing the
- * access mode only rewrites the `?view=` of the same link — it never creates a
- * second server diagram. Copy is explicit, with a transient "copied" flag.
+ * Read-only links omit the write capability. Changing the view never creates a
+ * second server diagram.
  */
 export function useShareableDiagram(
   modelData: UMLModel | null,
@@ -28,7 +29,11 @@ export function useShareableDiagram(
   const [diagramId, setDiagramId] = useState<string | null>(
     initialDiagramId ?? null
   )
-  const [mode, setMode] = useState<DiagramView>(DiagramView.COLLABORATE)
+  const [mode, setMode] = useState<DiagramView>(
+    initialDiagramId && !getSharedDiagramWriteToken(initialDiagramId)
+      ? DiagramView.SEE_FEEDBACK
+      : DiagramView.COLLABORATE
+  )
   const [copied, setCopied] = useState(false)
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -39,7 +44,12 @@ export function useShareableDiagram(
     []
   )
 
-  const link = diagramId ? buildSharedDiagramUrl(diagramId, mode) : ""
+  const writeToken = diagramId
+    ? getSharedDiagramWriteToken(diagramId)
+    : undefined
+  const link = diagramId
+    ? buildSharedDiagramUrl(diagramId, mode, undefined, writeToken)
+    : ""
 
   const createDiagramMutation = useMutation({
     mutationFn: (model: UMLModel) => DiagramApiClient.createDiagram(model),
@@ -83,6 +93,7 @@ export function useShareableDiagram(
   }
 
   const selectMode = (next: DiagramView) => {
+    if (diagramId && !writeToken && next !== DiagramView.SEE_FEEDBACK) return
     setMode(next)
     if (diagramId) updateSharedDiagramView(diagramId, next)
   }
@@ -93,6 +104,7 @@ export function useShareableDiagram(
     mode,
     copied,
     link,
+    canWrite: Boolean(writeToken),
     isCreating: phase === "creating",
     create,
     copy,

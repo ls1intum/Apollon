@@ -90,19 +90,19 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: `http://127.0.0.1:${serverPort}`,
-        changeOrigin: true,
+        changeOrigin: false,
       },
       // The server-rendered embed page lives on the API host. Proxy it too so
       // the iframe snippet (which points at the webapp origin in dev) resolves
       // instead of falling through to the SPA's catch-all error page.
       "/embed": {
         target: `http://127.0.0.1:${serverPort}`,
-        changeOrigin: true,
+        changeOrigin: false,
       },
       "/ws": {
         target: `ws://127.0.0.1:${wsPort}`,
         ws: true,
-        changeOrigin: true,
+        changeOrigin: false,
       },
     },
   },

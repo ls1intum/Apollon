@@ -11,6 +11,7 @@ import {
 } from "y-protocols/awareness"
 import * as Y from "yjs"
 import * as decoding from "lib0/decoding"
+import { verifyWriteToken } from "./http/middleware/access.js"
 
 const AWARENESS_MSG_TYPE = 3
 const DIAGRAM_ID_RE = /^[A-Za-z0-9_-]{1,64}$/
@@ -36,6 +37,9 @@ interface RelayServer {
 interface StartOptions {
   port: number
   host?: string
+  ownerSecret: string
+  diagramExists: (diagramId: string) => Promise<boolean>
+  allowedOrigins?: string[]
   /** Override the per-room socket cap; integration tests use a smaller value. */
   maxSocketsPerRoom?: number
 }
@@ -175,27 +179,37 @@ export function startRelayServer(opts: StartOptions): RelayServer {
         ws.close(1008, "Invalid diagramId")
         return
       }
+      const origin = request.headers.origin
+      if (origin && !opts.allowedOrigins?.includes(origin)) {
+        let sameHost = false
+        try {
+          const originUrl = new URL(origin)
+          sameHost =
+            ["http:", "https:"].includes(originUrl.protocol) &&
+            originUrl.origin === origin &&
+            originUrl.host === request.headers.host
+        } catch {
+          // Opaque or malformed origins are never trusted.
+        }
+        if (!sameHost) {
+          ws.close(1008, "Untrusted origin")
+          return
+        }
+      }
       ws.isAlive = true
       ws.on("pong", () => {
         ws.isAlive = true
       })
-      let room = rooms.get(diagramId)
-      if (!room) {
-        room = new Set()
-        rooms.set(diagramId, room)
-      }
-      if (room.size >= maxSocketsPerRoom) {
-        logger.warn(
-          { diagramId, size: room.size },
-          "ws room over capacity, rejecting connection"
+      let access: "pending" | "checking" | "read" | "write" = "pending"
+      const accessTimeout = setTimeout(() => {
+        ws.close(
+          access === "checking" ? 1011 : 1008,
+          access === "checking"
+            ? "Access verification unavailable"
+            : "Access handshake required"
         )
-        ws.close(1013, "Try again later")
-        return
-      }
-      room.add(ws)
-      ws.diagramId = diagramId
-      awarenessClientIdsBySocket.set(ws, new Set())
-      getOrCreateAwarenessState(diagramId)
+      }, 5000)
+      accessTimeout.unref()
 
       ws.on("message", (raw: WebSocket.RawData) => {
         const message =
@@ -205,8 +219,82 @@ export function startRelayServer(opts: StartOptions): RelayServer {
               ? raw.toString("utf-8")
               : ""
 
+        // Verification is asynchronous. No queued application frame may
+        // reach a room until access is established and acknowledged.
+        if (access === "checking") return
+        if (access === "pending") {
+          let token: string | undefined
+          try {
+            const parsed = JSON.parse(message) as Record<string, unknown>
+            if (
+              parsed.kind !== "access" ||
+              (parsed.token !== undefined && typeof parsed.token !== "string")
+            ) {
+              ws.close(1008, "Access handshake required")
+              return
+            }
+            token = parsed.token as string | undefined
+          } catch {
+            ws.close(1008, "Invalid access handshake")
+            return
+          }
+          access = "checking"
+          void (async () => {
+            const canWrite =
+              token !== undefined &&
+              (await verifyWriteToken(token, diagramId, opts.ownerSecret))
+            if (
+              (token !== undefined && !canWrite) ||
+              !(await opts.diagramExists(diagramId))
+            ) {
+              ws.close(1008, "Invalid write capability or diagram")
+              return
+            }
+            if (ws.readyState !== WebSocket.OPEN) return
+            let room = rooms.get(diagramId)
+            if (!room) {
+              room = new Set()
+              rooms.set(diagramId, room)
+            }
+            if (room.size >= maxSocketsPerRoom) {
+              ws.close(1013, "Try again later")
+              return
+            }
+            room.add(ws)
+            ws.diagramId = diagramId
+            awarenessClientIdsBySocket.set(ws, new Set())
+            getOrCreateAwarenessState(diagramId)
+            access = canWrite ? "write" : "read"
+            clearTimeout(accessTimeout)
+            ws.send(JSON.stringify({ kind: "access", canWrite }))
+          })().catch(() => ws.close(1011, "Access verification unavailable"))
+          return
+        }
+
+        if (access === "read") {
+          try {
+            const parsed = JSON.parse(message) as Record<string, unknown>
+            const encoded = parsed.diagramData
+            if (
+              Object.keys(parsed).length !== 1 ||
+              typeof encoded !== "string" ||
+              !["AA==", "Ag=="].includes(encoded)
+            ) {
+              ws.close(1008, "Reader cannot publish updates")
+              return
+            }
+          } catch {
+            ws.close(1008, "Reader cannot publish updates")
+            return
+          }
+        }
+
         try {
           const parsed = JSON.parse(message) as Record<string, unknown>
+          if (parsed.kind === "access") {
+            ws.close(1008, "Access is already established")
+            return
+          }
 
           if (typeof parsed.diagramData === "string") {
             const roomState = roomAwarenessStates.get(diagramId)
@@ -245,6 +333,7 @@ export function startRelayServer(opts: StartOptions): RelayServer {
       })
 
       ws.on("close", () => {
+        clearTimeout(accessTimeout)
         const r = rooms.get(diagramId)
         if (r) {
           r.delete(ws)
@@ -296,19 +385,25 @@ export function startRelayServer(opts: StartOptions): RelayServer {
     const envelope: Envelope = { kind: "control", control }
     const message = JSON.stringify(envelope)
     broadcast(rooms, diagramId, message, null)
+    if (control.type === "DIAGRAM_DELETED") {
+      for (const client of rooms.get(diagramId) ?? []) client.close(1008)
+    }
   }
 
   async function close(): Promise<void> {
     clearInterval(heartbeatInterval)
-    for (const room of rooms.values()) {
-      for (const client of room) {
-        try {
-          client.close()
-        } catch {
-          // Ignore.
-        }
+    for (const client of wss.clients) {
+      try {
+        client.close()
+      } catch {
+        // Ignore.
       }
     }
+    for (const state of roomAwarenessStates.values()) {
+      state.awareness.destroy()
+      state.doc.destroy()
+    }
+    roomAwarenessStates.clear()
     rooms.clear()
     await new Promise<void>((resolve) => wss.close(() => resolve()))
   }

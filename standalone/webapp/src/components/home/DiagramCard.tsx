@@ -57,6 +57,7 @@ import {
 } from "@/components/navbar/islandPrimitives"
 import {
   markSharedDiagramCopied,
+  getSharedDiagramWriteToken,
   removeSharedDiagramEntry,
   updateSharedDiagramView,
 } from "@/utils/sharedDiagramStorage"
@@ -427,9 +428,23 @@ export const DiagramActionsMenu = ({
   const isCurrentDiagramInEditor = diagram.id === currentModelId
 
   const copySharedLink = async (view: DiagramView, message: string) => {
+    if (
+      view !== DiagramView.SEE_FEEDBACK &&
+      !getSharedDiagramWriteToken(diagram.id)
+    ) {
+      toast.info(
+        "This share is read-only. Create a new shared copy to give edit access."
+      )
+      return
+    }
     try {
       await navigator.clipboard.writeText(
-        buildSharedDiagramUrl(diagram.id, view)
+        buildSharedDiagramUrl(
+          diagram.id,
+          view,
+          undefined,
+          getSharedDiagramWriteToken(diagram.id)
+        )
       )
       markSharedDiagramCopied(diagram.id, view)
       toast.success(message)

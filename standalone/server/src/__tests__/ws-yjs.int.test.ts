@@ -12,6 +12,9 @@ import {
   type YjsSync,
 } from "@tumaet/apollon/internals"
 import { startRelayServer } from "../ws.js"
+import { createWriteToken } from "../http/middleware/access.js"
+
+const secret = "test-secret-test-secret-test-secret"
 
 // ---------------------------------------------------------------------------
 // Helpers — set up real WebSocket peers driven by the library's actual
@@ -48,7 +51,13 @@ async function connectPeer(
    *  needs the second peer to carry the first peer's offline mutations. */
   seedDoc?: Y.Doc
 ): Promise<Peer> {
+  const token = await createWriteToken(diagramId, secret)
   const { ydoc, sync } = createHeadlessSync(seedDoc)
+  let accessReady = false
+  let markReady!: () => void
+  const ready = new Promise<void>((resolve) => {
+    markReady = resolve
+  })
   const ws = new WebSocket(
     `ws://127.0.0.1:${port}?diagramId=${encodeURIComponent(diagramId)}`
   )
@@ -57,7 +66,7 @@ async function connectPeer(
   // WebSocketManager uses; tests share that critical-path code shape so a
   // regression in either side surfaces consistently.
   sync.setSendBroadcastMessage((data) => {
-    if (ws.readyState === WebSocket.OPEN) {
+    if (accessReady && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ diagramData: data }))
     }
   })
@@ -70,7 +79,25 @@ async function connectPeer(
           ? raw.toString("utf-8")
           : ""
     try {
-      const parsed = JSON.parse(text) as { diagramData?: string }
+      const parsed = JSON.parse(text) as {
+        kind?: string
+        canWrite?: boolean
+        diagramData?: string
+      }
+      if (parsed.kind === "access" && parsed.canWrite === true) {
+        accessReady = true
+        ws.send(
+          JSON.stringify({ diagramData: encodeFrame(MessageType.YjsSYNC) })
+        )
+        ws.send(
+          JSON.stringify({
+            diagramData: encodeFrame(MessageType.AwarenessSync),
+          })
+        )
+        sync.broadcastFullState()
+        markReady()
+        return
+      }
       if (typeof parsed.diagramData === "string") {
         sync.handleReceivedData(parsed.diagramData)
       }
@@ -79,19 +106,8 @@ async function connectPeer(
     }
   })
 
-  const ready = new Promise<void>((resolve) => {
-    ws.once("open", () => {
-      // Mirror WebSocketManager.onopen: ask peers for state (YjsSYNC),
-      // ask for awareness (AwarenessSync), then push our own state.
-      ws.send(JSON.stringify({ diagramData: encodeFrame(MessageType.YjsSYNC) }))
-      ws.send(
-        JSON.stringify({
-          diagramData: encodeFrame(MessageType.AwarenessSync),
-        })
-      )
-      sync.broadcastFullState()
-      resolve()
-    })
+  ws.once("open", () => {
+    ws.send(JSON.stringify({ kind: "access", token }))
   })
 
   return {
@@ -156,7 +172,12 @@ let relay: ReturnType<typeof startRelayServer>
 
 beforeEach(async () => {
   port = await getFreePort()
-  relay = startRelayServer({ port, host: "127.0.0.1" })
+  relay = startRelayServer({
+    port,
+    host: "127.0.0.1",
+    ownerSecret: secret,
+    diagramExists: async () => true,
+  })
 })
 
 afterEach(async () => {
@@ -260,9 +281,14 @@ describe("Yjs collaboration — wire protocol", () => {
     const aWs = new WebSocket(
       `ws://127.0.0.1:${port}?diagramId=${encodeURIComponent("doc-echo")}`
     )
+    let accessReady = false
+    let markReady!: () => void
+    const ready = new Promise<void>((resolve) => {
+      markReady = resolve
+    })
     let yjsUpdateOutbound = 0
     aSync.setSendBroadcastMessage((data) => {
-      if (aWs.readyState !== WebSocket.OPEN) return
+      if (!accessReady || aWs.readyState !== WebSocket.OPEN) return
       const decoded = Buffer.from(data, "base64")
       if (decoded[0] === MessageType.YjsUpdate) yjsUpdateOutbound++
       aWs.send(JSON.stringify({ diagramData: data }))
@@ -275,7 +301,25 @@ describe("Yjs collaboration — wire protocol", () => {
             ? raw.toString("utf-8")
             : ""
       try {
-        const parsed = JSON.parse(text) as { diagramData?: string }
+        const parsed = JSON.parse(text) as {
+          kind?: string
+          canWrite?: boolean
+          diagramData?: string
+        }
+        if (parsed.kind === "access" && parsed.canWrite === true) {
+          accessReady = true
+          aWs.send(
+            JSON.stringify({ diagramData: encodeFrame(MessageType.YjsSYNC) })
+          )
+          aWs.send(
+            JSON.stringify({
+              diagramData: encodeFrame(MessageType.AwarenessSync),
+            })
+          )
+          aSync.broadcastFullState()
+          markReady()
+          return
+        }
         if (typeof parsed.diagramData === "string") {
           aSync.handleReceivedData(parsed.diagramData)
         }
@@ -283,20 +327,11 @@ describe("Yjs collaboration — wire protocol", () => {
         /* noop */
       }
     })
-    await new Promise<void>((resolve) =>
-      aWs.once("open", () => {
-        aWs.send(
-          JSON.stringify({ diagramData: encodeFrame(MessageType.YjsSYNC) })
-        )
-        aWs.send(
-          JSON.stringify({
-            diagramData: encodeFrame(MessageType.AwarenessSync),
-          })
-        )
-        aSync.broadcastFullState()
-        resolve()
-      })
-    )
+    const token = await createWriteToken("doc-echo", secret)
+    aWs.once("open", () => {
+      aWs.send(JSON.stringify({ kind: "access", token }))
+    })
+    await ready
 
     const b = await connectPeer(port, "doc-echo")
     await b.ready

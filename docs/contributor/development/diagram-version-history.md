@@ -208,13 +208,30 @@ REVISION_MISMATCH`, the client refetches HEAD, re-applies its
 
 ## Permissions
 
-There is no real auth. URL bearers have full read/write/delete access. A
-soft HMAC-signed cookie (`apollon_owner_<id>`) is issued on first
-`POST /diagrams` and the first `POST .../versions` per diagram.
-Destructive routes set the `X-Owner-Match: true|false` response header.
-The webapp uses this only to add a confirm-twice friction prompt for
-non-creators — "Heads up — this diagram was originally created in a
-different browser. Continue?" Friction, not security.
+The diagram ID grants read access, including version history and embeds. Writes
+require a signed, diagram-specific capability or the creator's v2 HttpOnly
+owner cookie. The server checks every diagram and version mutation. The
+WebSocket relay checks access before joining a room; readers cannot send
+document updates or transient edit geometry.
+
+Edit, collaboration, and give-feedback links carry the write capability in
+`#access=...`. Feedback mode changes the UI, not the write scope. Review links
+omit the capability; changing `view=` does not grant write access. The webapp
+sends capabilities in the HTTP Authorization header and the WebSocket access
+handshake, not in URL queries or persisted diagram models.
+
+A capability remains valid while its diagram exists and the server signing
+key is unchanged. Anyone with a write link can pass it on. Delete the diagram
+to revoke its links; changing a link's view does not revoke an earlier grant.
+
+Legacy links remain readable but cannot write. Old soft-owner cookies are not
+accepted as creator proof because earlier routes issued them to arbitrary
+writers. Export or duplicate the diagram and share the new copy to get new
+write links. Rotating `OWNER_SECRET` invalidates both owner cookies and write
+capabilities; retain the key across normal deployments.
+
+`X-Owner-Match` still distinguishes creators from collaborators for destructive
+confirmation prompts. It is not a substitute for the server's write checks.
 
 ## Library API additions
 

@@ -8,6 +8,7 @@ import type { RelayHook } from "../http/app.js"
 import { Errors } from "../http/errors.js"
 import { validate } from "../http/middleware/validate.js"
 import { setOwnerCookie } from "../http/middleware/owner.js"
+import { createWriteToken } from "../http/middleware/access.js"
 import { logger } from "../logger.js"
 import { tryAutoVersion } from "../services/autoVersion.js"
 import { DiagramBody, DiagramIdParams, PutDiagramBody } from "./_schemas.js"
@@ -170,7 +171,15 @@ export function mountDiagramRoutes(
         }
         await saveHead(redis, config, diagram)
         setOwnerCookie(c, id, config.OWNER_SECRET)
-        return c.json(diagram, 201)
+        c.header("cache-control", "private, no-store")
+        return c.json(
+          {
+            ...diagram,
+            canWrite: true,
+            writeToken: await createWriteToken(id, config.OWNER_SECRET),
+          },
+          201
+        )
       }
     )
   )
@@ -186,7 +195,25 @@ export function mountDiagramRoutes(
         config.DIAGRAM_TTL_SECONDS,
         params.diagramId
       )
-      return c.json(diagram, 200)
+      c.header("cache-control", "private, no-store")
+      const canWrite = c.get("canWrite")
+      return c.json(
+        {
+          ...diagram,
+          canWrite,
+          ...(canWrite
+            ? {
+                writeToken:
+                  c.get("writeToken") ??
+                  (await createWriteToken(
+                    params.diagramId,
+                    config.OWNER_SECRET
+                  )),
+              }
+            : {}),
+        },
+        200
+      )
     })
   )
 
@@ -196,6 +223,7 @@ export function mountDiagramRoutes(
       { params: DiagramIdParams, body: PutDiagramBody },
       async (c, { params, body }) => {
         const existing = await readDiagram(redis, params.diagramId)
+        if (!existing) throw Errors.notFound("diagram not found")
 
         // If-Match advisory race detection. Optional; the client drives the
         // retry loop. LWW remains the documented contract — this header
@@ -225,12 +253,9 @@ export function mountDiagramRoutes(
           updatedAt: new Date().toISOString(),
         }
         const { headRev, updatedAt } = await saveHead(redis, config, merged)
-
-        // Issue the owner cookie on first PUT for diagrams created before
-        // the soft-cookie feature shipped (back-compat).
-        if (!c.get("isOwner")) {
-          setOwnerCookie(c, params.diagramId, config.OWNER_SECRET)
-        }
+        relay?.publishControl(params.diagramId, {
+          type: "DIAGRAM_UPDATED",
+        })
 
         // Fire-and-forget auto-version. The HEAD response is what the client
         // is waiting on; auto-versioning is bookkeeping that shouldn't block
