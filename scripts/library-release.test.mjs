@@ -249,6 +249,7 @@ test("version PRs use the built-in token and cannot publish packages or tags", (
   assert.equal(version.with.publish, undefined)
   assert.equal(version.with.createGithubReleases, false)
   assert.equal(version.with.commitMode, "github-api")
+  assert.equal(version.with.prDraft, undefined)
   assert.match(
     version.uses,
     /#|changesets\/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d/
