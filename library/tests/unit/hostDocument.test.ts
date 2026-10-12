@@ -24,6 +24,7 @@ const classNode = (id: string, x = 0): Node => ({
   type: "class",
   width: 200,
   height: 100,
+  measured: { width: 200, height: 100 },
   position: { x, y: 0 },
   data: { name: `Class ${id}` },
 })
@@ -102,6 +103,18 @@ describe("editor stores on a host-owned document", () => {
         persist: false,
       })
 
+    peer.diagramStore.getState().onNodesChange(
+      [
+        {
+          id: "a",
+          type: "dimensions",
+          dimensions: { width: 300, height: 100 },
+        },
+      ],
+      { persist: false }
+    )
+    expect(peer.diagramStore.getState().nodes[0].measured!.width).toBe(300)
+    expect(readModelFromYDoc(ydoc)!.nodes[0].measured.width).toBe(200)
     expect(peer.diagramStore.getState().nodes[0].width).toBe(300)
     expect(readModelFromYDoc(ydoc)!.nodes[0].width).toBe(200)
     expect(peer.diagramStore.getState().undoManager!.canUndo()).toBe(false)

@@ -136,7 +136,10 @@ export type DiagramStore = {
   setNodesAndEdges: (nodes: Node[], edges: Edge[]) => void
   addEdge: (edge: Edge) => void
   addNode: (node: Node) => void
-  onNodesChange: OnNodesChange
+  onNodesChange: (
+    changes: Parameters<OnNodesChange>[0],
+    options?: { persist?: boolean }
+  ) => void
   onEdgesChange: OnEdgesChange
   reset: () => void
   setSelectedElementsId: (
@@ -181,8 +184,8 @@ export const createDiagramStore = (
         // so no `Y.Map.clear()`/`set` ever lands in the live doc and
         // contaminates peer state. Use this instead of `ydoc.transact(…,
         // "store")` directly.
-        const transactStore = (fn: () => void) => {
-          if (get().previewMode) return
+        const transactStore = (fn: () => void, persist = true) => {
+          if (!persist || get().previewMode) return
           ydoc.transact(fn, STORE_ORIGIN)
         }
 
@@ -550,7 +553,7 @@ export const createDiagramStore = (
             )
           },
 
-          onNodesChange: (changes) => {
+          onNodesChange: (changes, { persist = true } = {}) => {
             const selectChanges = changes.filter(
               (change) => change.type === "select"
             )
@@ -624,6 +627,7 @@ export const createDiagramStore = (
             // so peers see the parent grow live instead of jumping at settle.
             let publishedLiveFrames = false
             if (
+              persist &&
               get().collaborationEnabled &&
               !get().previewMode &&
               draggingNodesPublisher
@@ -741,7 +745,7 @@ export const createDiagramStore = (
                   nodeEntriesForPersistence(nextNodes)
                 )
               }
-            })
+            }, persist)
             const prunedInteractive = pruneInteractiveElements(
               {
                 elements: get().interactiveElements,
