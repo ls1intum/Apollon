@@ -52,7 +52,7 @@ permissions:
 jobs:
   deploy-db:
     if: ${{ inputs.deploy-db }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@5f645f96873d8b8b3a9b2e52d06626c71377f7ac # main
     with:
       environment: Staging
       docker-compose-file: "./docker/compose.db.yml"
@@ -63,7 +63,7 @@ jobs:
 
   deploy-proxy:
     if: ${{ inputs.deploy-proxy }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@5f645f96873d8b8b3a9b2e52d06626c71377f7ac # main
     with:
       environment: Staging
       docker-compose-file: "./docker/compose.proxy.yml"
@@ -74,7 +74,7 @@ jobs:
 
   deploy-app:
     if: ${{ inputs.deploy-app }}
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@5f645f96873d8b8b3a9b2e52d06626c71377f7ac # main
     with:
       environment: Staging
       docker-compose-file: "./docker/compose.app.yml"

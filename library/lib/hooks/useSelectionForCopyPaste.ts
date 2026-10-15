@@ -17,6 +17,7 @@ export const useSelectionForCopyPaste = () => {
     edges,
     selectedElementIds,
     setSelectedElementsId,
+    setLocalSelection,
     setNodes,
     setEdges,
   } = useDiagramStore(
@@ -25,6 +26,7 @@ export const useSelectionForCopyPaste = () => {
       edges: state.edges,
       selectedElementIds: state.selectedElementIds,
       setSelectedElementsId: state.setSelectedElementsId,
+      setLocalSelection: state.setLocalSelection,
       setNodes: state.setNodes,
       setEdges: state.setEdges,
     }))
@@ -43,16 +45,12 @@ export const useSelectionForCopyPaste = () => {
       ...edges.map((edge) => edge.id),
     ]
 
-    setSelectedElementsId(allElementIds)
-    setNodes(nodes.map((node) => ({ ...node, selected: true })))
-    setEdges(edges.map((edge) => ({ ...edge, selected: true })))
-  }, [nodes, edges, setSelectedElementsId, setNodes, setEdges])
+    setLocalSelection(allElementIds)
+  }, [nodes, edges, setLocalSelection])
 
   const clearSelection = useCallback(() => {
-    setSelectedElementsId([])
-    setNodes(nodes.map((node) => ({ ...node, selected: false })))
-    setEdges(edges.map((edge) => ({ ...edge, selected: false })))
-  }, [nodes, edges, setSelectedElementsId, setNodes, setEdges])
+    setLocalSelection([])
+  }, [setLocalSelection])
 
   const copySelectedElements = useCallback(async () => {
     if (selectedElementIds.length === 0) {

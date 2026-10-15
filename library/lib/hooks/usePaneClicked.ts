@@ -14,17 +14,13 @@ export const usePaneClicked = () => {
       readonly: state.readonly,
     }))
   )
-  const { nodes, edges, setSelectedElementsId, setNodes, setEdges } =
-    useDiagramStore(
-      useShallow((state) => ({
-        nodes: state.nodes,
-        edges: state.edges,
-        selectedElementIds: state.selectedElementIds,
-        setSelectedElementsId: state.setSelectedElementsId,
-        setNodes: state.setNodes,
-        setEdges: state.setEdges,
-      }))
-    )
+  const { nodes, setLocalSelection, setNodes } = useDiagramStore(
+    useShallow((state) => ({
+      nodes: state.nodes,
+      setLocalSelection: state.setLocalSelection,
+      setNodes: state.setNodes,
+    }))
+  )
 
   const {
     isAssessmentSelectionMode,
@@ -51,28 +47,20 @@ export const usePaneClicked = () => {
     if (isAssessmentSelectionMode) {
       clearSelection()
     }
-    setSelectedElementsId([])
+    setLocalSelection([])
     const updatedExistingNodes = nodes.map((node) => ({
       ...node,
       selected: false,
       dragging: false,
     }))
 
-    const updatedExistingEdges = edges.map((edge) => ({
-      ...edge,
-      selected: false,
-      dragging: false,
-    }))
-    setNodes(updatedExistingNodes)
-    setEdges(updatedExistingEdges)
+    setNodes(updatedExistingNodes, { persist: false })
   }, [
     isAssessmentSelectionMode,
     clearSelection,
-    setSelectedElementsId,
+    setLocalSelection,
     nodes,
-    edges,
     setNodes,
-    setEdges,
   ])
 
   return { onPaneClicked }

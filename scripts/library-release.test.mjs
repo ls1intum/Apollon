@@ -15,6 +15,7 @@ import { parse } from "yaml"
 import semver from "semver"
 import {
   integrity,
+  normalizeNpmView,
   shouldPromote,
   validateNextVersion,
   validateStagingArtifact,
@@ -50,6 +51,27 @@ const stagingArtifact = {
   expired: false,
   workflow_run: { id: run.id, head_sha: sha, head_branch: "main" },
 }
+
+test("npm view accepts legacy results and singleton arrays, never ambiguous or error output", () => {
+  for (const result of ["5.3.1", published]) {
+    assert.equal(normalizeNpmView(result), result)
+    assert.equal(normalizeNpmView([result]), result)
+  }
+  for (const result of [
+    [],
+    ["5.3.1", "5.3.2"],
+    [["5.3.1"]],
+    null,
+    undefined,
+    true,
+    1,
+    { error: { code: "E404" } },
+    [{ error: { code: "E404" } }],
+  ]) {
+    assert.throws(() => normalizeNpmView(result))
+  }
+  assert.throws(() => validateVersion(["5.3.1"]))
+})
 
 test("only canonical stable release versions are accepted", () => {
   for (const version of ["0.0.0", "5.3.2", "10.20.30"])
@@ -129,6 +151,17 @@ test("exact tested bytes must be published before finalization", () => {
     version: "5.3.2",
     integrity: manifest.integrity,
   })
+  assert.deepEqual(verifyArtifact(manifest, bytes, sha, [published]), {
+    version: "5.3.2",
+    integrity: manifest.integrity,
+  })
+  for (const result of [
+    [],
+    [published, published],
+    [[published]],
+    [{ error: {} }],
+  ])
+    assert.throws(() => verifyArtifact(manifest, bytes, sha, result))
   assert.throws(() =>
     verifyArtifact(manifest, Buffer.from("changed"), sha, published)
   )
@@ -224,7 +257,7 @@ test("release workflows queue pending versions instead of replacing them", () =>
   }
 })
 
-test("version PRs use scoped App credentials and cannot publish packages or tags", () => {
+test("version PRs use the built-in token and cannot publish packages or tags", () => {
   const config = parse(
     readFileSync(
       new URL("../.github/workflows/release.yml", import.meta.url),
@@ -233,23 +266,27 @@ test("version PRs use scoped App credentials and cannot publish packages or tags
   )
   const job = config.jobs.version
   assert.equal(job.environment, "version-pr")
-  assert.deepEqual(job.permissions, { contents: "read" })
-  const token = job.steps.find((step) => step.id === "app-token")
-  assert.equal(token.with.repositories, "${{ github.event.repository.name }}")
-  assert.equal(token.with["permission-contents"], "write")
-  assert.equal(token.with["permission-pull-requests"], "write")
+  assert.deepEqual(job.permissions, {
+    contents: "write",
+    "pull-requests": "write",
+  })
+  assert.equal(
+    job.steps.some((step) => step.id === "app-token"),
+    false
+  )
   const version = job.steps.find((step) =>
     step.uses?.startsWith("changesets/action@")
   )
-  assert.equal(
-    version.with["github-token"],
-    "${{ steps.app-token.outputs.token }}"
+  assert.equal(version.with["github-token"], "${{ github.token }}")
+  assert.equal(version.with.version, "pnpm run changeset:version")
+  assert.equal(version.with.publish, undefined)
+  assert.equal(version.with.createGithubReleases, false)
+  assert.equal(version.with.commitMode, "github-api")
+  assert.equal(version.with.prDraft, undefined)
+  assert.match(
+    version.uses,
+    /#|changesets\/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d/
   )
-  assert.equal(version.with["version-script"], "pnpm run changeset:version")
-  assert.equal(version.with["publish-script"], undefined)
-  assert.equal(version.with["create-github-releases"], false)
-  assert.equal(version.with["push-git-tags"], false)
-  assert.equal(version.with["push-with-git-cli"], false)
 })
 
 test("CLI fails closed for absent approval, corrupt artifacts, and invalid registry JSON", () => {
@@ -267,13 +304,19 @@ test("CLI fails closed for absent approval, corrupt artifacts, and invalid regis
     writeFileSync(join(directory, "manifest.json"), JSON.stringify(manifest))
     writeFileSync(join(directory, "package.tgz"), bytes)
     assert.notEqual(execute().status, 0)
-    writeFileSync(publishedFile, JSON.stringify(published))
-    const result = execute()
-    assert.equal(result.status, 0, result.stderr)
-    assert.deepEqual(JSON.parse(result.stdout), {
-      version: manifest.version,
-      integrity: manifest.integrity,
-    })
+    for (const data of [published, [published]]) {
+      writeFileSync(publishedFile, JSON.stringify(data))
+      const result = execute()
+      assert.equal(result.status, 0, result.stderr)
+      assert.deepEqual(JSON.parse(result.stdout), {
+        version: manifest.version,
+        integrity: manifest.integrity,
+      })
+    }
+    for (const data of [[], [published, published], [{ error: {} }]]) {
+      writeFileSync(publishedFile, JSON.stringify(data))
+      assert.notEqual(execute().status, 0)
+    }
     writeFileSync(publishedFile, "not registry JSON")
     assert.notEqual(execute().status, 0)
     writeFileSync(publishedFile, JSON.stringify(published))
@@ -420,6 +463,44 @@ function stepFixture(t, script, files, npmState, environment = {}) {
   }
 }
 
+test("build and finalize normalize latest metadata before version checks and outputs", (t) => {
+  const helperUrl = new URL("./library-release.mjs", import.meta.url).href
+  for (const [job, stepId] of [
+    ["build", "identity"],
+    ["finalize", "verified"],
+  ]) {
+    const run = workflow.jobs[job].steps.find((step) => step.id === stepId).run
+    const script = run.slice(run.indexOf("node --input-type=module <<'NODE'"))
+    for (const data of [
+      "5.3.1",
+      ["5.3.1"],
+      [],
+      ["5.3.1", "5.3.2"],
+      { error: {} },
+    ]) {
+      const fixture = stepFixture(
+        t,
+        script,
+        {
+          "scripts/library-release.mjs": `export * from ${JSON.stringify(helperUrl)}`,
+          "library/package.json": JSON.stringify(manifest),
+          "verified.json": JSON.stringify(manifest),
+          "latest.json": JSON.stringify(data),
+          ".nvmrc": "24.21.0\n",
+        },
+        {}
+      )
+      const result = fixture.run()
+      const valid =
+        typeof data === "string" || (Array.isArray(data) && data.length === 1)
+      assert.equal(result.status === 0, valid, result.stderr)
+      if (valid && job === "finalize") {
+        assert.match(fixture.output(), /\nlatest=5\.3\.1\npromote=true\n/)
+      }
+    }
+  }
+})
+
 test("staging invokes native npm only after checking the actual tarball", (t) => {
   const script = workflow.jobs.stage.steps.find(
     (step) => step.env?.EXPECTED_INTEGRITY
@@ -462,17 +543,25 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
   const script = workflow.jobs.promote.steps.find(
     (step) => step.env?.EXPECTED_LATEST
   ).run
-  for (const latest of ["5.3.1", "5.4.0"]) {
+  for (const [latest, arrayResults] of [
+    ["5.3.1", false],
+    ["5.3.1", true],
+    ["5.4.0", true],
+    [[], false],
+    [["5.3.1", "5.3.2"], false],
+    [[["5.3.1"]], false],
+    [{ error: { code: "E404" } }, false],
+  ]) {
     const fixture = stepFixture(
       t,
       script,
       {},
-      { latest },
+      { latest, arrayResults },
       { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
     )
     const result = fixture.run()
     assert.equal(result.status === 0, latest === "5.3.1", result.stderr)
-    assert.equal(
+    assert.deepEqual(
       fixture.state().latest,
       latest === "5.3.1" ? manifest.version : latest
     )
@@ -480,6 +569,16 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
       .state()
       .calls.filter((args) => args[0] === "dist-tag")
     assert.equal(promotions.length, latest === "5.3.1" ? 1 : 0)
+  }
+  for (const failure of [{ fail: true }, { failAfterPromotion: true }]) {
+    const fixture = stepFixture(
+      t,
+      script,
+      {},
+      { latest: "5.3.1", arrayResults: true, ...failure },
+      { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+    )
+    assert.notEqual(fixture.run().status, 0)
   }
 })
 

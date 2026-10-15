@@ -32,7 +32,7 @@ jobs:
       release: ${{ steps.v.outputs.release }}
       sha: ${{ steps.source.outputs.sha }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.event.workflow_run.head_sha }}
 
@@ -72,7 +72,7 @@ jobs:
       packages: write # retag images in GHCR
       id-token: write # OIDC for keyless cosign signing
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.check.outputs.sha }}
           # Full history so extract-changelog.mjs can resolve each changelog
@@ -81,7 +81,7 @@ jobs:
 
       # Pin Node for the changelog-extraction step in "Create GitHub Release"
       # rather than relying on the runner's ambient version.
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: ".nvmrc"
 
@@ -91,14 +91,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
         with:
           # Pin cosign itself — cosign-installer@v3.x defaults to a
           # cosign v2.x release and we sign / publish-verify against
           # the v2 CLI surface. Cosign v3 changed the verify bundle
           # format; bumping requires cosign-installer@v4 AND updating
           # the verify instructions in the release-notes body below.
-          cosign-release: v2.4.3
+          cosign-release: v2.6.5
 
       - name: Retag and sign images
         env:

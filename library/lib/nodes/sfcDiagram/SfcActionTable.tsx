@@ -35,24 +35,26 @@ export function SfcActionTable({
 
   // Auto-expand height when content changes (like class diagram)
   useEffect(() => {
-    if (height && height < minHeight) {
-      setNodes((prev) =>
-        prev.map((node) => {
-          if (node.id === id) {
-            return {
-              ...node,
-              height: minHeight,
-              measured: {
-                ...node.measured,
+    if (height && height <= minHeight) {
+      setNodes(
+        (prev) =>
+          prev.map((node) => {
+            if (node.id === id) {
+              return {
+                ...node,
                 height: minHeight,
-              },
+                measured: {
+                  ...node.measured,
+                  height: minHeight,
+                },
+              }
             }
-          }
-          return node
-        })
+            return node
+          }),
+        { persist: isDiagramModifiable }
       )
     }
-  }, [minHeight, height, id, setNodes])
+  }, [minHeight, height, id, setNodes, isDiagramModifiable])
 
   if (!width || !height) {
     return null

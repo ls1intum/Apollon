@@ -4,6 +4,22 @@ import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { pathToFileURL } from "node:url"
 
+export function normalizeNpmView(value) {
+  if (Array.isArray(value)) {
+    assert.equal(value.length, 1, "npm view must return exactly one result")
+    value = value[0]
+  }
+  assert.ok(
+    typeof value === "string" ||
+      (value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        !Object.hasOwn(value, "error")),
+    "npm view must return a version or package metadata"
+  )
+  return value
+}
+
 export function validateVersion(version) {
   assert.equal(typeof version, "string", "Version must be a string")
   assert.equal(semver.valid(version), version, "Use canonical SemVer")
@@ -60,6 +76,7 @@ export function verifyArtifact(manifest, bytes, sha, published) {
     "Artifact integrity mismatch"
   )
   if (published !== undefined) {
+    published = normalizeNpmView(published)
     assert.equal(published.name, manifest.name)
     assert.equal(published.version, manifest.version)
     assert.equal(

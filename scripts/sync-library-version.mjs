@@ -18,7 +18,8 @@ const { version } = JSON.parse(
   readFileSync(join(repoRoot, "library", "package.json"), "utf8")
 )
 
-const PIN_RE = /(@tumaet\/apollon@)(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/g
+const PIN_RE =
+  /(https:\/\/esm\.sh\/@tumaet\/apollon@)(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/g
 
 const SCANNED_EXTENSIONS = new Set([".md", ".mdx", ".ts", ".tsx", ".html"])
 const SKIP_DIRS = new Set([
