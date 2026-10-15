@@ -10,6 +10,7 @@ import { SfcJumpNodeSVG } from "@/components"
 import { measureTextWidth, calculateMinWidth } from "@/utils"
 import { LAYOUT } from "@/constants"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
+import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 
 export function SfcJump({
   id,
@@ -19,6 +20,7 @@ export function SfcJump({
 }: NodeProps<Node<DefaultNodeProps>>) {
   const { name } = data || {}
   const [anchorEl, anchorRef] = usePopoverAnchor()
+  const isDiagramModifiable = useDiagramModifiable()
 
   const { setNodes } = useDiagramStore(
     useShallow((state) => ({
@@ -35,26 +37,31 @@ export function SfcJump({
 
   // Auto-expand/shrink width when text changes
   useEffect(() => {
-    if (width && width !== minWidth) {
-      setNodes((prev) =>
-        prev.map((node) => {
-          if (node.id === id) {
-            return {
-              ...node,
-              width: minWidth,
-              height: fixedHeight,
-              measured: {
-                ...node.measured,
+    if (
+      width &&
+      (width !== minWidth || height !== fixedHeight || isDiagramModifiable)
+    ) {
+      setNodes(
+        (prev) =>
+          prev.map((node) => {
+            if (node.id === id) {
+              return {
+                ...node,
                 width: minWidth,
                 height: fixedHeight,
-              },
+                measured: {
+                  ...node.measured,
+                  width: minWidth,
+                  height: fixedHeight,
+                },
+              }
             }
-          }
-          return node
-        })
+            return node
+          }),
+        { persist: isDiagramModifiable }
       )
     }
-  }, [minWidth, width, id, setNodes])
+  }, [minWidth, width, height, id, setNodes, isDiagramModifiable])
 
   if (!width || !height) {
     return null

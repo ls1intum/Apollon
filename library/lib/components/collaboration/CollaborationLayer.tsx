@@ -34,12 +34,14 @@ export type CollaborationAwarenessApi = {
   subscribeToCollaboratorChanges: (
     callback: (collaborators: CollaboratorInfo[]) => void
   ) => () => void
+  getCollaborators: () => CollaboratorInfo[]
   getLocalAwarenessClientId: () => number
 }
 
 export type CollaborationLayerOptions = {
   enabled: boolean
   user?: CollaborationUser
+  hasHostAwareness?: boolean
   showPresence: boolean
   showCursors: boolean
   showSelectionHighlights: boolean
@@ -137,6 +139,9 @@ function CollaboratorPresenceBar({
       return
     }
 
+    // A host-owned awareness can already hold peers when this mounts; the
+    // subscription only reports later changes.
+    setCollaborators(awareness.getCollaborators())
     const unsubscribe =
       awareness.subscribeToCollaboratorChanges(setCollaborators)
 
@@ -153,7 +158,7 @@ function CollaboratorPresenceBar({
     }
 
     const localClientId = awareness.getLocalAwarenessClientId()
-    return awareness.subscribeToAwarenessChanges((states) => {
+    const countFollowers = (states: Map<number, CollaborationState>) => {
       let count = 0
       for (const [clientId, state] of states) {
         if (
@@ -164,7 +169,9 @@ function CollaboratorPresenceBar({
         }
       }
       setFollowerCount((prev) => (prev === count ? prev : count))
-    })
+    }
+    countFollowers(awareness.getAwarenessStates())
+    return awareness.subscribeToAwarenessChanges(countFollowers)
   }, [active, showFollow, awareness])
 
   const remoteCount = collaborators.filter((c) => !c.isLocal).length
@@ -286,7 +293,7 @@ function CollaboratorCursors({
       return
     }
 
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+    const showCursors = (states: Map<number, CollaborationState>) => {
       const localClientId = awareness.getLocalAwarenessClientId()
       const next = Array.from(states.entries()).flatMap(([clientId, state]) => {
         if (clientId === localClientId) return []
@@ -307,7 +314,9 @@ function CollaboratorCursors({
       })
 
       setCollaborators(next)
-    })
+    }
+    showCursors(awareness.getAwarenessStates())
+    const unsubscribe = awareness.subscribeToAwarenessChanges(showCursors)
 
     return unsubscribe
   }, [active, awareness])
@@ -378,6 +387,14 @@ function LocalCollaborationAwareness({
   )
   const diagramId = useDiagramStore((state) => state.diagramId)
 
+  // A pan or zoom moves the diagram under a resting pointer, so the cursor's
+  // flow position changes without any pointer event.
+  const scheduleCursorFlushRef = useRef<(() => void) | null>(null)
+  const localViewport = useViewport()
+  useEffect(() => {
+    scheduleCursorFlushRef.current?.()
+  }, [localViewport.x, localViewport.y, localViewport.zoom])
+
   useEffect(() => {
     if (!active || !options.showCursors) {
       awareness.setLocalAwarenessCursor(null)
@@ -388,35 +405,41 @@ function LocalCollaborationAwareness({
     if (!container) return
 
     const rafRef = { current: 0 }
-    const pendingRef = {
-      current: null as CollaborationCursor | null,
+    // Project at frame flush: pan pointer events precede the viewport update.
+    const pointerRef = {
+      current: null as { clientX: number; clientY: number } | null,
     }
 
     const flushCursor = () => {
-      if (pendingRef.current) {
-        awareness.setLocalAwarenessCursor(pendingRef.current)
-        pendingRef.current = null
-      }
       rafRef.current = 0
-    }
-
-    const handlePointerMove = (event: PointerEvent) => {
-      const flowPosition = reactFlow.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      })
-
-      pendingRef.current = {
+      if (!pointerRef.current) return
+      const flowPosition = reactFlow.screenToFlowPosition(
+        {
+          x: pointerRef.current.clientX,
+          y: pointerRef.current.clientY,
+        },
+        { snapToGrid: false }
+      )
+      awareness.setLocalAwarenessCursor({
         x: flowPosition.x,
         y: flowPosition.y,
-      }
+      })
+    }
 
+    const scheduleFlush = () => {
       if (!rafRef.current) {
         rafRef.current = window.requestAnimationFrame(flushCursor)
       }
     }
+    scheduleCursorFlushRef.current = scheduleFlush
+
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerRef.current = { clientX: event.clientX, clientY: event.clientY }
+      scheduleFlush()
+    }
 
     const handlePointerLeave = () => {
+      pointerRef.current = null
       awareness.setLocalAwarenessCursor(null)
     }
 
@@ -429,6 +452,7 @@ function LocalCollaborationAwareness({
       if (rafRef.current) {
         window.cancelAnimationFrame(rafRef.current)
       }
+      scheduleCursorFlushRef.current = null
       awareness.setLocalAwarenessCursor(null)
     }
   }, [active, awareness, diagramId, options.showCursors, reactFlow])
@@ -477,7 +501,7 @@ function CollaboratorSelectionHighlights({
       return
     }
 
-    const unsubscribe = awareness.subscribeToAwarenessChanges((states) => {
+    const showHighlights = (states: Map<number, CollaborationState>) => {
       const localClientId = awareness.getLocalAwarenessClientId()
       const next = new Map<string, string>()
 
@@ -492,7 +516,9 @@ function CollaboratorSelectionHighlights({
       }
 
       setRemoteHighlights(next)
-    })
+    }
+    showHighlights(awareness.getAwarenessStates())
+    const unsubscribe = awareness.subscribeToAwarenessChanges(showHighlights)
 
     return unsubscribe
   }, [active, awareness])
@@ -570,6 +596,7 @@ function ViewportFollow({
 }) {
   const reactFlow = useReactFlow()
 
+  const mountedRef = useRef(false)
   const pendingViewport = useRef<CollaborationViewport | null>(null)
   const broadcastRaf = useRef(0)
   // True only for the synchronous span of a follow-driven `setViewport`. The
@@ -580,22 +607,36 @@ function ViewportFollow({
   const applyingRemote = useRef(false)
   const lastApplied = useRef<CollaborationViewport | null>(null)
 
+  // Ignore retained viewport callbacks after preview entry or unmount.
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      pendingViewport.current = null
+      if (broadcastRaf.current) {
+        window.cancelAnimationFrame(broadcastRaf.current)
+      }
+      broadcastRaf.current = 0
+    }
+  }, [])
+
   const flushViewport = useCallback(() => {
     broadcastRaf.current = 0
+    if (!mountedRef.current) return
     if (pendingViewport.current) {
       awareness.setLocalAwarenessViewport(pendingViewport.current)
       pendingViewport.current = null
     }
   }, [awareness])
 
-  // A single `onChange` handles both jobs: a real user pan/zoom hands control
-  // back (stops following), and every move is coalesced to one broadcast per
-  // frame — mirroring how the cursor broadcaster throttles pointer moves. The
-  // `applyingRemote`/`sameViewport` guards keep a follow-applied viewport from
-  // tripping either path.
+  // Local movement stops following; remote-applied movement must not echo.
   const handleViewportChange = useCallback(
     (viewport: CollaborationViewport) => {
-      if (applyingRemote.current || sameViewport(viewport, lastApplied.current))
+      if (
+        !mountedRef.current ||
+        applyingRemote.current ||
+        sameViewport(viewport, lastApplied.current)
+      )
         return
       if (followedClientId !== null) onStopFollowing()
       pendingViewport.current = viewport
@@ -606,7 +647,11 @@ function ViewportFollow({
     [followedClientId, onStopFollowing, flushViewport]
   )
 
-  useOnViewportChange({ onChange: handleViewportChange })
+  // The first pan-scroll event reports its moved viewport only through onStart.
+  useOnViewportChange({
+    onStart: handleViewportChange,
+    onChange: handleViewportChange,
+  })
 
   // Publish the current viewport once on mount so a peer who follows us snaps
   // to it immediately, even if we haven't panned since joining (`onChange`
@@ -614,15 +659,6 @@ function ViewportFollow({
   useEffect(() => {
     awareness.setLocalAwarenessViewport(reactFlow.getViewport())
   }, [awareness, reactFlow])
-
-  useEffect(
-    () => () => {
-      if (broadcastRaf.current) {
-        window.cancelAnimationFrame(broadcastRaf.current)
-      }
-    },
-    []
-  )
 
   // Reflect who we follow into awareness so the target can show a follower
   // count; clears on unfollow/unmount.
@@ -729,7 +765,9 @@ export function CollaborationLayer({
   awareness,
 }: CollaborationLayerProps) {
   const previewMode = useDiagramStore((state) => state.previewMode)
-  const active = options.enabled && options.user !== undefined
+  const active =
+    options.enabled &&
+    (options.user !== undefined || options.hasHostAwareness === true)
   const remoteVisualsActive = active && !previewMode
   const followActive = remoteVisualsActive && options.showFollow
 

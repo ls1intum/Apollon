@@ -1,5 +1,21 @@
 # @tumaet/apollon
 
+## 5.4.0
+
+### Minor Changes
+
+- [#860](https://github.com/ls1intum/Apollon/pull/860) [`bace1fd`](https://github.com/ls1intum/Apollon/commit/bace1fd1cc63885c67a81f64e16e6cbd4f54bb76) Thanks [@dschmidt](https://github.com/dschmidt)! - Adds `collaboration.ydoc` and `collaboration.awareness`: hand the editor a `Y.Doc` and awareness you already own, so providers such as y-websocket, Hocuspocus or y-indexeddb sync the diagram directly. The editor never destroys a document or awareness it did not create.
+
+  Read-only editors keep shared node geometry unchanged during automatic layout.
+
+- [#858](https://github.com/ls1intum/Apollon/pull/858) [`b9b7283`](https://github.com/ls1intum/Apollon/commit/b9b7283fa22a0498443410334f2e3532d4b19079) Thanks [@dschmidt](https://github.com/dschmidt)! - Adds `writeModelToYDoc`, `readModelFromYDoc`, `hasModelInYDoc` and `clearModelFromYDoc` to `@tumaet/apollon/model`: load a model into a Yjs document and read it back without mounting an editor.
+
+### Patch Changes
+
+- [#861](https://github.com/ls1intum/Apollon/pull/861) [`c88673a`](https://github.com/ls1intum/Apollon/commit/c88673ad6e2fe20fc85be4adc6b1d297db8c115e) Thanks [@dschmidt](https://github.com/dschmidt)! - Fixes following a collaborator's viewport lagging one step behind when they scroll the canvas a single step, and a single scroll step of your own not ending the follow.
+
+- [#859](https://github.com/ls1intum/Apollon/pull/859) [`957b733`](https://github.com/ls1intum/Apollon/commit/957b733274bff1e3adb9f7640e86653839b59116) Thanks [@dschmidt](https://github.com/dschmidt)! - Fixes the remote cursor jumping back and forth while a collaborator drags the canvas, and standing still while they scroll it.
+
 ## 5.3.1
 
 ### Patch Changes

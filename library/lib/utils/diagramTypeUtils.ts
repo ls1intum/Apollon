@@ -1,4 +1,4 @@
-import { UMLDiagramType } from "@/types"
+import { UMLDiagramType } from "@/types/DiagramType"
 import {
   ApollonEdge,
   ApollonNode,

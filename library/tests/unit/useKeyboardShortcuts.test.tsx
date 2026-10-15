@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode, RefObject } from "react"
 import { renderHook } from "@testing-library/react"
 import { ReactFlowProvider } from "@xyflow/react"
+import * as Y from "yjs"
 import { createDiagramStore } from "@/store/diagramStore"
 import { createMetadataStore } from "@/store/metadataStore"
 import { createOverlayStore } from "@/overlay/overlayStore"
@@ -16,8 +17,12 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
  * The hook's own wiring: which editor-root listener exists, and when. What each
  * shortcut then does is `handleShortcutKeydown`'s job — see keyboard.test.ts.
  */
+const documents: Y.Doc[] = []
+
 const mount = (keyboardShortcuts = true, editorRoot = createEditorRoot()) => {
-  const diagramStore = createDiagramStore()
+  const doc = new Y.Doc()
+  documents.push(doc)
+  const diagramStore = createDiagramStore(doc)
   const metadataStore = createMetadataStore()
   metadataStore.getState().setKeyboardShortcuts(keyboardShortcuts)
   const overlayStore = createOverlayStore()
@@ -64,6 +69,7 @@ const selectAll = (target: EventTarget = document.body) =>
 
 describe("useKeyboardShortcuts", () => {
   afterEach(() => {
+    for (const doc of documents.splice(0)) doc.destroy()
     document.body.innerHTML = ""
   })
 
