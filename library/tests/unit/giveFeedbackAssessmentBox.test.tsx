@@ -186,6 +186,30 @@ describe("GiveFeedbackAssessmentBox default title", () => {
     expect(assessments.element.title).toBe(labels.positiveFeedback)
   })
 
+  it("keeps the label, the correction status and the instruction of an assessment whose empty title is filled in", () => {
+    const instruction = { id: 7, credits: 2, feedback: "Correct" }
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      label: "Check",
+      labelColor: "#00aa00",
+      correctionStatus: { status: "CORRECT" },
+      dropInfo: instruction,
+    }
+    renderBox()
+
+    fireEvent.blur(titleField())
+
+    expect(assessments.element).toMatchObject({
+      title: labels.positiveFeedback,
+      label: "Check",
+      labelColor: "#00aa00",
+      correctionStatus: { status: "CORRECT" },
+      dropInfo: instruction,
+    })
+  })
+
   it("does not create an assessment when the empty title field of an ungraded element loses focus", () => {
     renderBox()
 
@@ -393,6 +417,21 @@ describe("GiveFeedbackAssessmentBox grading instruction", () => {
     })
 
     expect(assessments.element.dropInfo).toEqual(instruction)
+  })
+
+  it("leaves the points editable and does not crash for dropInfo that is not a grading instruction", () => {
+    assessments.element = {
+      modelElementId: "element",
+      elementType: "node",
+      score: 2,
+      dropInfo: { source: "custom", criterionTitle: 42 },
+    }
+    renderBox()
+
+    expect(screen.getByLabelText(labels.points)).toBeEnabled()
+    expect(
+      document.querySelector('[data-slot="assessment-linked-criterion-title"]')
+    ).toBeNull()
   })
 
   it("locks the points while a grading instruction sets them", () => {

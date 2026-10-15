@@ -67,17 +67,21 @@ export interface ApollonLabels {
   addComment: string
   points: string
   negativePointsAllowed: string
-  decreasePoints: string
-  increasePoints: string
+  /**
+   * The assessment keys below that are optional were added after the dictionary type was first exported, so a complete
+   * dictionary written before them still compiles; the resolved labels fall back to the built-in text.
+   */
+  decreasePoints?: string
+  increasePoints?: string
   feedback: string
   /** Default title placeholder for a positively-scored box (score > 0). */
-  positiveFeedback: string
+  positiveFeedback?: string
   /** Default title placeholder for a negatively-scored box (score < 0). */
-  needsRevision: string
+  needsRevision?: string
   /** Give-feedback footer badge shown while this assessment mirrors an unaccepted-as-is Athena suggestion. */
-  aiFeedbackSuggestion: string
+  aiFeedbackSuggestion?: string
   /** Same badge, worded for a suggestion the assessor has since edited. */
-  adaptedAiFeedbackSuggestion: string
+  adaptedAiFeedbackSuggestion?: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
   /**

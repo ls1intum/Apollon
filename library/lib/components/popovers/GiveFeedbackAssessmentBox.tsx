@@ -363,7 +363,16 @@ export const GiveFeedbackAssessmentBox = ({
               // that was never graded must not create an assessment for it.
               if (!existing || title.trim() !== "") return
               setTitle(defaultTitle)
-              updateAssessment(defaultTitle, score, feedback)
+              // Only the title is filled in: rebuilding the assessment (updateAssessment) would drop its label and
+              // label color and reset its correction status, though nothing but the title changed.
+              setAssessments((prev) =>
+                prev[elementId]
+                  ? {
+                      ...prev,
+                      [elementId]: { ...prev[elementId], title: defaultTitle },
+                    }
+                  : prev
+              )
             }}
             placeholder={defaultTitle}
             aria-label={t.assessmentFor(typeText)}

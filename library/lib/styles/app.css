@@ -1593,6 +1593,13 @@ svg.react-flow__connectionline {
   outline: none;
 }
 
+/* The +/- steppers replace the native spinner in every browser: WebKit hides it through its pseudo-elements, Firefox
+   only through the textfield appearance. */
+[data-slot="assessment-score-input"] input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
 [data-slot="assessment-score-input"] input::-webkit-outer-spin-button,
 [data-slot="assessment-score-input"] input::-webkit-inner-spin-button {
   appearance: none;

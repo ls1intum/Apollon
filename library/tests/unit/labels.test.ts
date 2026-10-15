@@ -23,4 +23,24 @@ describe("mergeLabels", () => {
       DEFAULT_LABELS.scrollLockHintTouch
     )
   })
+
+  it("keeps a complete dictionary from before the assessment title and suggestion labels assignable", () => {
+    const {
+      decreasePoints: _decreasePoints,
+      increasePoints: _increasePoints,
+      positiveFeedback: _positiveFeedback,
+      needsRevision: _needsRevision,
+      aiFeedbackSuggestion: _aiFeedbackSuggestion,
+      adaptedAiFeedbackSuggestion: _adaptedAiFeedbackSuggestion,
+      ...legacyDictionary
+    } = DEFAULT_LABELS
+    const compatibleDictionary: ApollonLabels = legacyDictionary
+
+    const merged = mergeLabels(compatibleDictionary)
+
+    expect(merged.positiveFeedback).toBe(DEFAULT_LABELS.positiveFeedback)
+    expect(merged.adaptedAiFeedbackSuggestion).toBe(
+      DEFAULT_LABELS.adaptedAiFeedbackSuggestion
+    )
+  })
 })

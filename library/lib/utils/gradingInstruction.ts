@@ -20,14 +20,50 @@ export type GradingInstructionInfo = {
   criterionTitle?: string
 }
 
+const NUMBER_FIELDS = ["id", "credits"] as const
+const TEXT_FIELDS = [
+  "feedback",
+  "instructionDescription",
+  "gradingScale",
+  "criterionTitle",
+] as const
+
+/**
+ * Whether the host's opaque `dropInfo` is a grading instruction: an object that carries at least one of its fields, each
+ * of the right type. Any other payload (e.g. `{ source: "custom" }`, or a field of the wrong type) is the host's own
+ * metadata and stays opaque, so it neither locks the score nor is read as a title or text.
+ */
+const isGradingInstruction = (
+  value: unknown
+): value is GradingInstructionInfo => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const fields = value as Record<string, unknown>
+  const present = [...NUMBER_FIELDS, ...TEXT_FIELDS].filter(
+    (key) => fields[key] !== undefined && fields[key] !== null
+  )
+  return (
+    present.length > 0 &&
+    NUMBER_FIELDS.every(
+      (key) =>
+        fields[key] === undefined ||
+        fields[key] === null ||
+        (typeof fields[key] === "number" && Number.isFinite(fields[key]))
+    ) &&
+    TEXT_FIELDS.every(
+      (key) =>
+        fields[key] === undefined ||
+        fields[key] === null ||
+        typeof fields[key] === "string"
+    )
+  )
+}
+
 /** The grading instruction linked to the assessment, if any. */
 export const gradingInstructionOf = (
   assessment: Assessment | undefined
 ): GradingInstructionInfo | undefined => {
   const dropInfo = assessment?.dropInfo
-  return dropInfo && typeof dropInfo === "object"
-    ? (dropInfo as GradingInstructionInfo)
-    : undefined
+  return isGradingInstruction(dropInfo) ? dropInfo : undefined
 }
 
 /**

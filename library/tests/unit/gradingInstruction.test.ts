@@ -16,6 +16,31 @@ const assessment = (overrides: Partial<Assessment>): Assessment => ({
   ...overrides,
 })
 
+describe("gradingInstructionOf", () => {
+  it("returns a grading instruction the host linked", () => {
+    expect(gradingInstructionOf(assessment({ dropInfo: correct }))).toBe(
+      correct
+    )
+  })
+
+  it.each([
+    ["unrelated host metadata", { source: "custom" }],
+    ["an empty object", {}],
+    ["a criterion title of the wrong type", { criterionTitle: 42 }],
+    ["credits of the wrong type", { id: 1, credits: "2" }],
+    ["credits that are not finite", { credits: Number.NaN }],
+    ["a list", [correct]],
+    ["a string", "instruction"],
+  ])("leaves %s opaque", (_name, dropInfo) => {
+    expect(gradingInstructionOf(assessment({ dropInfo }))).toBeUndefined()
+  })
+
+  it("returns nothing for a missing assessment or dropInfo", () => {
+    expect(gradingInstructionOf(undefined)).toBeUndefined()
+    expect(gradingInstructionOf(assessment({}))).toBeUndefined()
+  })
+})
+
 describe("linkGradingInstruction", () => {
   it("writes the criterion's text into an element that has no assessment yet", () => {
     const linked = linkGradingInstruction(undefined, correct, "element", "node")
