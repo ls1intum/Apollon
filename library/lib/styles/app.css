@@ -1679,6 +1679,28 @@ span:has(> [data-field="assessment-title"]) {
   min-width: 0;
 }
 
+/* The focused title or description of a give-feedback box gets a solid foreground-colored (black in the light theme)
+   border instead of the shared textarea's ring. !important because the shared rule sits in the bundled components.css. */
+[data-field="assessment-title"][data-slot="textarea"]:focus-visible,
+[data-field="assessment-description"][data-slot="textarea"]:focus-visible {
+  border-color: var(--apollon-foreground, #000) !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+/* A missing description (TextField error -> aria-invalid) is marked like the host's unified feedback card does: only the
+   left edge turns red, instead of the shared textarea's red border and ring. */
+[data-field="assessment-description"][data-slot="textarea"][aria-invalid="true"] {
+  border-color: var(--home-border-default);
+  border-left: 3px solid var(--apollon-danger, #721c24);
+  box-shadow: none;
+}
+
+/* Focused and missing: the focus border is black on the other three sides, the left edge stays red. */
+[data-field="assessment-description"][data-slot="textarea"][aria-invalid="true"]:focus-visible {
+  border-left-color: var(--apollon-danger, #721c24) !important;
+}
+
 /* Give-feedback box footer: marks an assessment that still mirrors an Athena feedback
    suggestion the assessor hasn't written over (GiveFeedbackAssessmentBox). Text-only,
    colored rather than boxed, matching the host's own footer-variant suggestion badge. */

@@ -418,6 +418,7 @@ export const GiveFeedbackAssessmentBox = ({
           minRows={3}
           maxLength={FEEDBACK_MAX_LENGTH}
           aria-label={t.feedback}
+          data-field="assessment-description"
           error={isDescriptionMissing}
           helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
           value={feedback}
