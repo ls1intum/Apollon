@@ -434,7 +434,12 @@ export const GiveFeedbackAssessmentBox = ({
         />
         {existing?.feedbackSuggestion && (
           <div data-slot="assessment-suggestion-badge">
-            <WandSparkles width={14} height={14} aria-hidden="true" />
+            <WandSparkles
+              width={14}
+              height={14}
+              fill="currentColor"
+              aria-hidden="true"
+            />
             <span>
               {existing.feedbackSuggestion === "adapted"
                 ? t.adaptedAiFeedbackSuggestion
