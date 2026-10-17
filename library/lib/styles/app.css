@@ -1725,10 +1725,12 @@ span:has(> [data-field="assessment-title"]) {
   color: var(--apollon-assessment-positive-text, #166534);
   background-color: var(--apollon-assessment-positive-bg, #dcfce7);
 }
+
 [data-slot="assessment-title-badge"][data-tone="negative"] {
   color: var(--apollon-assessment-negative-text, #991b1b);
   background-color: var(--apollon-assessment-negative-bg, #fee2e2);
 }
+
 [data-slot="assessment-title-badge"][data-tone="zero"] {
   color: var(--apollon-assessment-zero-text, #1e40af);
   background-color: var(--apollon-assessment-zero-bg, #dbeafe);
