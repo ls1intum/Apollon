@@ -9,9 +9,9 @@ import type { AssessmentTone } from "./AssessmentScoreInput"
 export const AssessmentTitleBadge = ({ tone }: { tone: AssessmentTone }) => (
   <span data-slot="assessment-title-badge" data-tone={tone}>
     {tone === "positive" ? (
-      <Check width={14} height={14} aria-hidden="true" />
+      <Check width={14} height={14} strokeWidth={3} aria-hidden="true" />
     ) : tone === "negative" ? (
-      <X width={14} height={14} aria-hidden="true" />
+      <X width={14} height={14} strokeWidth={3} aria-hidden="true" />
     ) : (
       <svg
         width={20}
@@ -19,7 +19,7 @@ export const AssessmentTitleBadge = ({ tone }: { tone: AssessmentTone }) => (
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth={2}
+        strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
