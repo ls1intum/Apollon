@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FocusEvent } from "react"
-import { Link, Sparkles, Trash2, Unlink, X } from "lucide-react"
+import { Link, WandSparkles, Trash2, Unlink, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
@@ -434,7 +434,7 @@ export const GiveFeedbackAssessmentBox = ({
         />
         {existing?.feedbackSuggestion && (
           <div data-slot="assessment-suggestion-badge">
-            <Sparkles width={14} height={14} aria-hidden="true" />
+            <WandSparkles width={14} height={14} aria-hidden="true" />
             <span>
               {existing.feedbackSuggestion === "adapted"
                 ? t.adaptedAiFeedbackSuggestion
