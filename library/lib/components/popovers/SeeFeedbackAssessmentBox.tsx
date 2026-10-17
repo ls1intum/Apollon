@@ -1,8 +1,15 @@
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { AssessmentScore } from "./AssessmentScore"
-import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+import { PopoverSection } from "./PopoverLayout"
 import { useLabels } from "@/i18n/useLabels"
+import { Typography } from "../ui"
+import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
+import { defaultTitleFor, toneForScore } from "./assessmentTitle"
+import { gradingInstructionOf } from "@/utils/gradingInstruction"
+
+/** Gap between controls within the header row (title + score pill). */
+const ROW_GAP = 8
 
 export const SeeFeedbackAssessmentBox = ({
   type,
@@ -24,18 +31,63 @@ export const SeeFeedbackAssessmentBox = ({
     useShallow((state) => state.getAssessment)
   )
   const assessment = getAssessment(elementId)
+  const typeText = typeLabel ?? type
+
+  // Same reference-row / title-row split as the give-feedback box, kept read-only:
+  // a title, defaulting the same way (by score sign) when the assessor left it
+  // blank, sits next to the score pill instead of a plain "Assessment for X" line.
+  const tone = toneForScore(assessment?.score)
+  const title = assessment
+    ? assessment.title || defaultTitleFor(tone, t)
+    : t.notGraded
+
+  // The student reads the description, or the linked instruction's text when the description is empty, like the host's
+  // unified feedback card.
+  const feedbackText =
+    assessment?.feedback || gradingInstructionOf(assessment)?.feedback
 
   // Three states the reader must be able to tell apart, each visually distinct:
-  //   no assessment   -> "Not graded" badge, no feedback line
-  //   graded, no note -> tone badge + muted "No comment"
-  //   graded, note    -> tone badge + the feedback text
+  //   no assessment   -> "Not graded" title + badge, no feedback line
+  //   graded, no note -> title + tone badge + muted "No comment"
+  //   graded, note    -> title + tone badge + the feedback text
   return (
     <PopoverSection divider={divider}>
-      <AssessmentHeader type={typeLabel ?? type} name={name} />
-      <AssessmentScore score={assessment?.score} />
+      <Typography
+        variant="caption"
+        style={{ display: "flex", alignItems: "center", gap: 4 }}
+      >
+        <span data-slot="assessment-reference-label">{typeText}</span>
+        <span data-slot="assessment-name-chip">{name}</span>
+      </Typography>
+      <div
+        data-slot="assessment-title-row"
+        data-tone={assessment ? tone : undefined}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: ROW_GAP,
+        }}
+      >
+        {assessment && <AssessmentTitleBadge tone={tone} />}
+        <Typography
+          variant="subtitle2"
+          // Without a zero minimum width a long unbroken title keeps this flex item as wide as the word and the popover
+          // clips it; the editable title wraps the same way.
+          style={{
+            fontWeight: 600,
+            flex: 1,
+            minWidth: 0,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {title}
+        </Typography>
+        <AssessmentScore score={assessment?.score} />
+      </div>
       {assessment &&
-        (assessment.feedback ? (
-          <p data-slot="assessment-feedback">{assessment.feedback}</p>
+        (feedbackText ? (
+          <p data-slot="assessment-feedback">{feedbackText}</p>
         ) : (
           <p data-slot="assessment-feedback" data-empty="">
             {t.noComment}

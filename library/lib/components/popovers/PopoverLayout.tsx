@@ -1,6 +1,5 @@
 import React from "react"
 import { Typography } from "@/components/ui"
-import { useLabels } from "@/i18n/useLabels"
 
 /**
  * Shared layout primitives for node/edge edit popovers.
@@ -135,34 +134,3 @@ export const ConnectionInfo: React.FC<{
       {source} → {target}
     </Typography>
   ) : null
-
-/**
- * Header for an assessment box: "Assessment for <type>" with the assessed
- * element's name shown in a highlighted chip (instead of quotation marks), and
- * an optional action (e.g. a delete button) pinned to the right.
- */
-export const AssessmentHeader: React.FC<{
-  type: string
-  name: string
-  action?: React.ReactNode
-}> = ({ type, name, action }) => {
-  const t = useLabels()
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: FIELD_GAP,
-      }}
-    >
-      {/* One flowing sentence: the name is an inline highlighted span, so it
-          wraps as part of the text instead of floating to its own line. */}
-      <Typography variant="subtitle2" style={{ flex: 1 }}>
-        {t.assessmentFor(type)}
-        {name && " "}
-        {name && <span data-slot="assessment-name-chip">{name}</span>}
-      </Typography>
-      {action}
-    </div>
-  )
-}
