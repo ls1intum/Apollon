@@ -14,6 +14,7 @@ import { useLabels } from "@/i18n/useLabels"
 import { PopoverSection } from "./PopoverLayout"
 import { AssessmentScoreInput, toneFor } from "./AssessmentScoreInput"
 import { defaultTitleFor } from "./assessmentTitle"
+import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
 import {
   adaptedSuggestion,
   gradingInstructionOf,
@@ -277,7 +278,6 @@ export const GiveFeedbackAssessmentBox = ({
         <Typography
           variant="caption"
           style={{
-            opacity: 0.7,
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
@@ -285,7 +285,7 @@ export const GiveFeedbackAssessmentBox = ({
             minWidth: 0,
           }}
         >
-          {typeText}
+          <span data-slot="assessment-reference-label">{typeText}</span>
           <span data-slot="assessment-name-chip">{name}</span>
           {instruction && (
             <span
@@ -348,6 +348,7 @@ export const GiveFeedbackAssessmentBox = ({
             gap: ROW_GAP,
           }}
         >
+          <AssessmentTitleBadge tone={toneFor(score)} />
           <TextField
             multiline
             minRows={1}
@@ -377,6 +378,7 @@ export const GiveFeedbackAssessmentBox = ({
             placeholder={defaultTitle}
             aria-label={t.assessmentFor(typeText)}
             data-field="assessment-title"
+            data-tone={toneFor(score)}
             fullWidth
           />
           <AssessmentScoreInput

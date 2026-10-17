@@ -164,6 +164,29 @@ describe("GiveFeedbackAssessmentBox default title", () => {
     expect(assessments.element.title).toBe(labels.feedback)
   })
 
+  it("tones the badge and the title by the sign of the points", () => {
+    renderBox()
+    const badge = () =>
+      document.querySelector<HTMLElement>(
+        '[data-slot="assessment-title-badge"]'
+      )!
+
+    expect(badge()).toHaveAttribute("data-tone", "zero")
+    expect(titleField()).toHaveAttribute("data-tone", "zero")
+
+    fireEvent.change(screen.getByLabelText(labels.points), {
+      target: { value: "2" },
+    })
+    expect(badge()).toHaveAttribute("data-tone", "positive")
+    expect(titleField()).toHaveAttribute("data-tone", "positive")
+
+    fireEvent.change(screen.getByLabelText(labels.points), {
+      target: { value: "-1" },
+    })
+    expect(badge()).toHaveAttribute("data-tone", "negative")
+    expect(titleField()).toHaveAttribute("data-tone", "negative")
+  })
+
   it("writes the default title once the box gets a description", () => {
     renderBox()
 

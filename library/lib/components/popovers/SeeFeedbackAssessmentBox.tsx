@@ -4,6 +4,7 @@ import { AssessmentScore } from "./AssessmentScore"
 import { PopoverSection } from "./PopoverLayout"
 import { useLabels } from "@/i18n/useLabels"
 import { Typography } from "../ui"
+import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
 import { defaultTitleFor, toneForScore } from "./assessmentTitle"
 import { gradingInstructionOf } from "@/utils/gradingInstruction"
 
@@ -35,8 +36,9 @@ export const SeeFeedbackAssessmentBox = ({
   // Same reference-row / title-row split as the give-feedback box, kept read-only:
   // a title, defaulting the same way (by score sign) when the assessor left it
   // blank, sits next to the score pill instead of a plain "Assessment for X" line.
+  const tone = toneForScore(assessment?.score)
   const title = assessment
-    ? assessment.title || defaultTitleFor(toneForScore(assessment.score), t)
+    ? assessment.title || defaultTitleFor(tone, t)
     : t.notGraded
 
   // The student reads the description, or the linked instruction's text when the description is empty, like the host's
@@ -52,12 +54,14 @@ export const SeeFeedbackAssessmentBox = ({
     <PopoverSection divider={divider}>
       <Typography
         variant="caption"
-        style={{ opacity: 0.7, display: "flex", alignItems: "center", gap: 4 }}
+        style={{ display: "flex", alignItems: "center", gap: 4 }}
       >
-        {typeText}
+        <span data-slot="assessment-reference-label">{typeText}</span>
         <span data-slot="assessment-name-chip">{name}</span>
       </Typography>
       <div
+        data-slot="assessment-title-row"
+        data-tone={assessment ? tone : undefined}
         style={{
           display: "flex",
           alignItems: "center",
@@ -65,6 +69,7 @@ export const SeeFeedbackAssessmentBox = ({
           gap: ROW_GAP,
         }}
       >
+        {assessment && <AssessmentTitleBadge tone={tone} />}
         <Typography
           variant="subtitle2"
           // Without a zero minimum width a long unbroken title keeps this flex item as wide as the word and the popover

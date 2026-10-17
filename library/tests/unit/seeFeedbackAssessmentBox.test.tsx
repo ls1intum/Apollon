@@ -68,6 +68,32 @@ describe("SeeFeedbackAssessmentBox", () => {
     expect(feedbackLine()).toHaveAttribute("data-empty")
   })
 
+  it("shows a toned badge in front of the title of a graded element, and none for an ungraded one", () => {
+    const badge = () =>
+      document.querySelector<HTMLElement>(
+        '[data-slot="assessment-title-badge"]'
+      )
+    const row = () =>
+      document.querySelector<HTMLElement>('[data-slot="assessment-title-row"]')!
+
+    for (const [score, tone] of [
+      [2, "positive"],
+      [-1, "negative"],
+      [0, "zero"],
+    ] as const) {
+      assessments.element = assessment({ score })
+      const { unmount } = renderBox()
+      expect(badge()).toHaveAttribute("data-tone", tone)
+      expect(row()).toHaveAttribute("data-tone", tone)
+      unmount()
+    }
+
+    assessments = {}
+    renderBox()
+    expect(badge()).toBeNull()
+    expect(row()).not.toHaveAttribute("data-tone")
+  })
+
   it("lets a long unbroken title wrap inside the popover instead of widening it", () => {
     assessments.element = assessment({ title: "Unbroken".repeat(40) })
     renderBox()

@@ -1701,6 +1701,58 @@ span:has(> [data-field="assessment-title"]) {
   border-left-color: var(--apollon-danger, #721c24) !important;
 }
 
+/* The label of the reference row ("Class", "Attribute", ...) is muted; the element's name chip and the linked criterion
+   chip next to it keep their full color, like the host's unified feedback card. */
+[data-slot="assessment-reference-label"] {
+  opacity: 0.7;
+}
+
+/* Round, tone-tinted icon in front of the title (AssessmentTitleBadge), like the icon badge of the host's unified
+   feedback card. It lines up with the first line of the title, which can wrap. */
+[data-slot="assessment-title-badge"] {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: 0.125rem;
+  border-radius: 50%;
+}
+
+[data-slot="assessment-title-badge"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+  background-color: var(--apollon-assessment-positive-bg, #dcfce7);
+}
+[data-slot="assessment-title-badge"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+  background-color: var(--apollon-assessment-negative-bg, #fee2e2);
+}
+[data-slot="assessment-title-badge"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+  background-color: var(--apollon-assessment-zero-bg, #dbeafe);
+}
+
+/* The title takes the tone's color: the editable one in the give-feedback box, the read-only one in the see-feedback box. */
+[data-field="assessment-title"][data-tone="positive"],
+[data-slot="assessment-title-row"][data-tone="positive"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+}
+
+[data-field="assessment-title"][data-tone="negative"],
+[data-slot="assessment-title-row"][data-tone="negative"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+}
+
+[data-field="assessment-title"][data-tone="zero"],
+[data-slot="assessment-title-row"][data-tone="zero"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+}
+
 /* Give-feedback box footer: marks an assessment that still mirrors an Athena feedback
    suggestion the assessor hasn't written over (GiveFeedbackAssessmentBox). Text-only,
    colored rather than boxed, matching the host's own footer-variant suggestion badge. */
@@ -1784,7 +1836,7 @@ span:has(> [data-field="assessment-title"]) {
 
 [data-slot="assessment-linked-criterion-text"] > svg {
   flex: none;
-  color: var(--apollon-gray-variant, #495057);
+  opacity: 0.6;
 }
 
 /* The link icon already says it; "Linked to" stays for screen readers only. */
@@ -1805,7 +1857,7 @@ span:has(> [data-field="assessment-title"]) {
   flex: none;
   font-weight: 500;
   white-space: nowrap;
-  color: var(--apollon-gray-variant, #495057);
+  opacity: 0.7;
 }
 
 /* The grading scale sits in its own segment behind the criterion. A long one is cut off like the criterion's title,
