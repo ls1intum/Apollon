@@ -34,7 +34,7 @@ catalog:
   "@storybook/addon-docs": "10.6.1"
   "@storybook/addon-a11y": "10.6.1"
   "@storybook/addon-themes": "10.6.1"
-  "@storybook/addon-vitest": "10.6.1"
+  "@storybook/addon-vitest": "10.6.2"
   # `@playwright/test` (e2e + visual) and `playwright` (the browser-test provider
   # API, via @vitest/browser-playwright) are kept on ONE version so the workspace
   # resolves a single `playwright-core` + browser-binary set — no drift. Pinned to
