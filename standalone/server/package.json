@@ -36,7 +36,7 @@
     "ws": "8.22.0",
     "y-protocols": "1.0.7",
     "yjs": "catalog:",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
