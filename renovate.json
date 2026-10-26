@@ -78,6 +78,12 @@
       "groupName": "Playwright"
     },
     {
+      "description": "MCR publishes no tag timestamps, so under the default timestamp-required behaviour the Playwright image is held forever. The npm Playwright packages in the same group keep the 7-day age gate for the version.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mcr.microsoft.com/playwright"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
+    },
+    {
       "description": "Hold the server's `canvas` alias below 1.0.12: 1.0.12 makes ctx.canvas a read-only getter (Brooooooklyn/canvas#1373), and jsdom's getContext() assigns it, so every jsdom canvas throws.",
       "matchPackageNames": ["@napi-rs/canvas", "canvas"],
       "allowedVersions": "<1.0.12"
