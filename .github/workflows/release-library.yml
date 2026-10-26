@@ -173,17 +173,27 @@ jobs:
           const digest = `sha512-${createHash('sha512').update(readFileSync('artifact/package.tgz')).digest('base64')}`
           if (digest !== process.env.EXPECTED_INTEGRITY) throw new Error('Tarball integrity mismatch')
           NODE
-          npm stage publish ./artifact/package.tgz --ignore-scripts --access public --provenance --tag latest
-          echo "Approve the staged package in npm's **Staged Packages** tab with 2FA. This run then verifies the published tarball and creates the GitHub Release." >> "$GITHUB_STEP_SUMMARY"
+          npm stage publish ./artifact/package.tgz --ignore-scripts --access public --provenance --tag next
+          echo "Approve the staged package in npm's **Staged Packages** tab with 2FA. This run then verifies it, moves \`latest\`, and creates the GitHub Release." >> "$GITHUB_STEP_SUMMARY"
 
-  release:
+  finalize:
     needs: [build, stage]
+    # A lost staging response can fail `stage` after npm accepted the upload,
+    # so wait for the approval whenever the build succeeded. Only the exact
+    # tested bytes pass the checks below.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     # Waits for the npm approval within GitHub's job limit. If the approval
-    # comes later, re-run this job: the artifact is kept for 90 days.
+    # comes later, re-run the failed jobs: the artifact is kept for 90 days.
     timeout-minutes: 360
     permissions:
-      contents: write
+      contents: read
+    outputs:
+      version: ${{ steps.verified.outputs.version }}
+      integrity: ${{ steps.verified.outputs.integrity }}
+      latest: ${{ steps.verified.outputs.latest }}
+      promote: ${{ steps.verified.outputs.promote }}
+      node: ${{ steps.verified.outputs.node }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -208,25 +218,86 @@ jobs:
             jq -e '.error.code == "E404"' published.json > /dev/null
             sleep 60
           done
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Verify the published tarball and the latest tag
+      - name: Verify npm approval and exact published content
         id: verified
         env:
           SOURCE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           node scripts/library-release.mjs artifact published.json > verified.json
+          VERSION=$(jq -r .version verified.json)
+          TAG_SHA=$(git ls-remote --tags origin "refs/tags/@tumaet/apollon@$VERSION" | cut -f1)
+          if [ -n "$TAG_SHA" ]; then test "$TAG_SHA" = "$SOURCE_SHA"; fi
           npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version > latest.json
           node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs'
-          import { normalizeNpmView } from './scripts/library-release.mjs'
-          const { version } = JSON.parse(readFileSync('verified.json', 'utf8'))
+          import { readFileSync, appendFileSync } from 'node:fs'
+          import { normalizeNpmView, shouldPromote } from './scripts/library-release.mjs'
+          const { version, integrity } = JSON.parse(readFileSync('verified.json', 'utf8'))
           const latest = normalizeNpmView(JSON.parse(readFileSync('latest.json', 'utf8')))
-          if (latest !== version) throw new Error(`npm latest is ${latest}, expected ${version}`)
+          const node = readFileSync('.nvmrc', 'utf8').trim()
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nintegrity=${integrity}\nlatest=${latest}\npromote=${shouldPromote(version, latest)}\nnode=${node}\n`)
           NODE
-      - name: Create or resume the GitHub Release
+
+  promote:
+    needs: finalize
+    if: needs.finalize.outputs.promote == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: npm-promote
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ needs.finalize.outputs.node }}
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - run: npm install -g --ignore-scripts "npm@$NPM_VERSION"
+      - name: Promote only the verified newer version
+        env:
+          VERSION: ${{ needs.finalize.outputs.version }}
+          EXPECTED_LATEST: ${{ needs.finalize.outputs.latest }}
+        run: |
+          set -euo pipefail
+          read_latest() {
+            npm view --registry=https://registry.npmjs.org/ --json @tumaet/apollon@latest version | jq -er '
+              (if type == "array" then
+                if length == 1 then .[0] else error("npm view must return exactly one result") end
+              else . end) |
+              if type == "string" then . else error("npm view must return a version") end
+            '
+          }
+          LATEST=$(read_latest)
+          test "$LATEST" = "$EXPECTED_LATEST"
+          npm dist-tag add "@tumaet/apollon@$VERSION" latest
+          LATEST=$(read_latest)
+          test "$LATEST" = "$VERSION"
+
+  release:
+    needs: [build, finalize, promote]
+    if: |
+      !cancelled() && needs.finalize.result == 'success' &&
+      (needs.promote.result == 'success' || needs.promote.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: artifact
+      - name: Verify and create or resume the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.approval.outputs.version }}
+          VERSION: ${{ needs.finalize.outputs.version }}
           SOURCE_SHA: ${{ github.sha }}
-        run: bash scripts/finalize-library-release.sh artifact "$VERSION" "$SOURCE_SHA"
+          EXPECTED_INTEGRITY: ${{ needs.finalize.outputs.integrity }}
+        run: |
+          set -euo pipefail
+          DIGEST="sha512-$(openssl dgst -sha512 -binary artifact/package.tgz | openssl base64 -A)"
+          test "$DIGEST" = "$EXPECTED_INTEGRITY"
+          bash scripts/finalize-library-release.sh artifact "$VERSION" "$SOURCE_SHA"

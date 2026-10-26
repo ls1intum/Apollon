@@ -33,20 +33,20 @@ the library on npm.
 2. The release workflows start:
    - **Library:** lint, build, test, pack, and check the tarball as an external
      consumer. A separate job verifies its SHA-512 integrity and stages it on
-     npm with OIDC, provenance, and the `latest` tag. Nothing is public yet.
+     npm with OIDC, provenance, and the `next` tag. Nothing is public yet.
    - **Standalone:** after the Docker build succeeds, retag its source-pinned
      images, sign them with cosign, and create the `vX.Y.Z` release. The existing
      staging deployment uses the same image digests.
    - **Extension:** build and attest the VSIX, publish to VS Marketplace and
      optionally Open VSX, then create its release with the VSIX attached.
 3. Review the library in npm's **Staged Packages** tab. Check the version, source,
-   provenance, contents, and `latest` tag, then approve with **2FA**. The
-   version is now public as `latest`.
-4. The library run waits for the approval, verifies that npm serves the exact
-   tested tarball as `latest`, and creates the `@tumaet/apollon@X.Y.Z` GitHub
-   Release. The draft's uploaded tarball is compared byte-for-byte before the
-   release is made public. Standalone remains the repository's latest GitHub
-   Release.
+   provenance, contents, and `next` tag, then approve with **2FA**.
+4. The library run continues by itself. It waits for the approval, verifies
+   that npm serves the exact tested tarball, and promotes the version to
+   `latest` in a separate OIDC job; older versions cannot move `latest`
+   backwards. It then creates the `@tumaet/apollon@X.Y.Z` GitHub Release and
+   compares its uploaded tarball byte-for-byte before making it public.
+   Standalone remains the repository's latest GitHub Release.
 5. Promote standalone through **Deploy to Production**, with `image-tag: X.Y.Z`.
 
 Docs builds continue during npm review, but production deployment waits until
@@ -76,34 +76,43 @@ package-owner approval.
 
 ## npm setup
 
-Configure one trusted publisher connection for `ls1intum/Apollon`, workflow
-filename `release-library.yml`, environment `npm-publish`, with stage
-publishing only: no direct publish and no dist-tag access. The tag is fixed at
-staging and applied by the approval. Restrict the `npm-publish` environment to
-branch `main`. Protect `main` and require review of release code. Environment
-reviewers would add a third approval; npm approval is the release gate.
+Configure two trusted publisher connections for `ls1intum/Apollon`, workflow
+filename `release-library.yml`:
+
+| GitHub environment | npm allowed actions                                         |
+| ------------------ | ----------------------------------------------------------- |
+| `npm-publish`      | Stage publishing only; no direct publish or dist-tag access |
+| `npm-promote`      | Stage publishing and dist-tag access; no direct publish     |
+
+npm always permits staging on new trusted publisher connections. Turn on **Allow npm dist-tag** for the `npm-promote`
+connection; it is off by default, and without it promotion fails with E401
+([GitHub changelog](https://github.blog/changelog/2026-09-30-opt-in-dist-tag-permissions-for-npm-trusted-publishing)).
+Its job changes the tag only after verification. Restrict both GitHub environments to branch `main`. Protect
+`main` and require review of release code. Environment reviewers can provide an
+additional gate; they do not replace npm approval.
 
 In npm package Settings → Publishing access, select **Require two-factor
 authentication and disallow tokens**. Remove unused trusted publishers and
 revoke automation tokens. Do not add long-lived npm credentials to this workflow.
 Enable 2FA for release maintainers and keep account recovery credentials secure.
 
-The workflow pins an npm CLI that supports staging over OIDC. See
+The workflow pins an npm CLI that supports both staging and OIDC dist-tag
+operations. These permissions are independent of direct publishing. See
 [npm trusted publishers](https://docs.npmjs.com/trusted-publishers/) and
 [npm stage](https://docs.npmjs.com/cli/v12/commands/npm-stage).
 
 ## npm recovery
 
-| Failure                                 | Recovery                                                                                                                                                                                                                     |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build or consumer check                 | Fix the source and rerun. Each build attempt gets a new artifact.                                                                                                                                                            |
-| Duplicate stage or lost upload response | Inspect with interactive `npm stage list`, `view`, and `download`. If the bytes match the run's artifact, approve and re-run the `release` job, even if staging reported a failure. Do not assume a conflict proves success. |
-| Wrong staged contents                   | Reject with `npm stage reject <stage-id>` and 2FA. Fix the source through review before staging again.                                                                                                                       |
-| Approval later than 6 hours             | The `release` job times out. Approve, then re-run the failed `release` job; it reuses the run's artifact.                                                                                                                    |
-| Registry error or integrity mismatch    | The `release` job stops before the GitHub Release. Resolve the cause and re-run the job.                                                                                                                                     |
-| Upload or draft publication failed      | Re-run the `release` job. Draft assets are repaired and verified before publication. An existing public release is checked, not modified.                                                                                    |
-| Conflicting source tag or public asset  | Stop and investigate. The `release` job does not overwrite a conflicting public release.                                                                                                                                     |
-| Artifact expired or deleted             | Stop. Artifacts are retained for 90 days; the GitHub Release requires the original bytes, not a rebuild.                                                                                                                     |
+| Failure                                                            | Recovery                                                                                                                                                                                                          |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build or consumer check                                            | Fix the source and rerun. Each build attempt gets a new artifact ID.                                                                                                                                              |
+| Duplicate stage or lost upload response                            | Inspect with interactive `npm stage list`, `view`, and `download`. If the bytes match the run's artifact, approve; the run continues even if staging reported a failure. Do not assume a conflict proves success. |
+| Wrong staged contents                                              | Reject with `npm stage reject <stage-id>` and 2FA. Fix the source through review before staging again.                                                                                                            |
+| Approval later than 6 hours, registry error, or integrity mismatch | Finalization stops before promotion or release. Resolve the cause, approve if needed, and re-run the failed jobs of the original run.                                                                             |
+| `latest` changed during finalization                               | Retry. Verification reads the current tag again; older versions are not promoted.                                                                                                                                 |
+| Upload or draft publication failed                                 | Re-run the failed jobs. Draft assets are repaired and verified before publication. An existing public release is checked, not modified.                                                                           |
+| Conflicting source tag or public release asset                     | Stop and investigate. Finalization does not overwrite a conflicting public release.                                                                                                                               |
+| Original artifact expired or deleted                               | Stop. Artifacts are retained for 90 days; finalization requires the original bytes, not a rebuild.                                                                                                                |
 
 ## Verify a Docker image signature
 

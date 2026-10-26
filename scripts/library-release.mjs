@@ -28,12 +28,16 @@ export function validateVersion(version) {
 }
 
 export function validateNextVersion(version, latest) {
-  validateVersion(version)
-  validateVersion(latest)
   assert.ok(
-    semver.gt(version, latest),
+    shouldPromote(version, latest),
     "Stage only a version newer than npm latest"
   )
+}
+
+export function shouldPromote(version, latest) {
+  validateVersion(version)
+  validateVersion(latest)
+  return semver.gt(version, latest)
 }
 
 export function integrity(bytes) {
