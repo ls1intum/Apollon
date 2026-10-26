@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/server",
-  "version": "5.3.1",
+  "version": "5.4.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -36,7 +36,7 @@
     "ws": "8.22.0",
     "y-protocols": "1.0.7",
     "yjs": "catalog:",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
