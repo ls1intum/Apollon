@@ -1,5 +1,12 @@
 # apollon-extension
 
+## 5.5.0
+
+### Patch Changes
+
+- Updated dependencies [[`2b00e5f`](https://github.com/ls1intum/Apollon/commit/2b00e5f3e204334d216e5f7a177c1d0ea57e4075), [`a365003`](https://github.com/ls1intum/Apollon/commit/a365003a3d9ac546fa24433b9d38e50cd07d46b7)]:
+  - @tumaet/apollon@5.5.0
+
 ## 5.4.0
 
 ### Patch Changes
