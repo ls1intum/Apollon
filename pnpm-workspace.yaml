@@ -38,7 +38,7 @@ catalog:
   # `@playwright/test` (e2e + visual) and `playwright` (the browser-test provider
   # API, via @vitest/browser-playwright) are kept on ONE version so the workspace
   # resolves a single `playwright-core` + browser-binary set — no drift. Pinned to
-  # match CI's v1.63.0-noble image and the committed visual baselines;
+  # match CI's v1.64.1-noble image and the committed visual baselines;
   # @vitest/browser-playwright accepts any playwright (peer `*`) and its Storybook
   # browser tests run locally only. Both packages ship a `playwright` CLI bin, so
   # e2e/visual invoke @playwright/test's CLI directly (see webapp test:e2e /
