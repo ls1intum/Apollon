@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest"
+import { Fragment, type ReactNode } from "react"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import * as Y from "yjs"
 import type { Assessment } from "@/typings"
@@ -7,6 +8,7 @@ import { DiagramStoreContext, MetadataStoreContext } from "@/store/context"
 import { createDiagramStore } from "@/store/diagramStore"
 import { createMetadataStore } from "@/store/metadataStore"
 import { GiveFeedbackAssessmentBox } from "@/components/popovers/GiveFeedbackAssessmentBox"
+import { useKeyboardScope } from "@/hooks/useKeyboardScope"
 
 const t = mergeLabels(DEFAULT_LABELS)
 const instruction = {
@@ -32,16 +34,28 @@ const store = (assessment: Partial<Assessment>) =>
     })
   )
 
-const renderBox = () => {
+// The editor root, which focuses itself on every pointer press.
+const EditorKeyboardScope = ({ children }: { children: ReactNode }) => {
+  const { rootRef, rootHandlers } = useKeyboardScope(true)
+  return (
+    <div ref={rootRef} tabIndex={-1} {...rootHandlers}>
+      {children}
+    </div>
+  )
+}
+
+const renderBox = (Wrapper = Fragment) => {
   const ydoc = new Y.Doc()
   return render(
     <DiagramStoreContext value={diagramStore}>
       <MetadataStoreContext value={createMetadataStore(ydoc)}>
-        <GiveFeedbackAssessmentBox
-          elementId="element"
-          name="Person"
-          elementType="node"
-        />
+        <Wrapper>
+          <GiveFeedbackAssessmentBox
+            elementId="element"
+            name="Person"
+            elementType="node"
+          />
+        </Wrapper>
       </MetadataStoreContext>
     </DiagramStoreContext>
   )
@@ -170,25 +184,28 @@ describe("GiveFeedbackAssessmentBox delete", () => {
     expect(stored()).toBeDefined()
   })
 
-  it("disarms when keyboard focus leaves the button", () => {
+  it("disarms a keyboard-armed button when focus leaves it", () => {
     store({ score: 2 })
     renderBox()
 
-    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    fireEvent.click(button(t.deleteAssessmentFor("Person")), { detail: 0 })
     fireEvent.blur(button(t.confirmDeleteAssessment))
-    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    fireEvent.click(button(t.deleteAssessmentFor("Person")), { detail: 0 })
     expect(stored()).toBeDefined()
   })
 
-  it("stays armed when a pointer press on it moves focus away", () => {
+  it("deletes on a second pointer click while the editor takes focus", () => {
     store({ score: 2 })
-    renderBox()
+    renderBox(EditorKeyboardScope)
+    const press = (name: string) => {
+      const target = button(name)
+      target.focus()
+      fireEvent.pointerDown(target, { button: 0 })
+      fireEvent.click(target, { detail: 1 })
+    }
 
-    fireEvent.click(button(t.deleteAssessmentFor("Person")))
-    const armed = button(t.confirmDeleteAssessment)
-    fireEvent.pointerDown(armed)
-    fireEvent.blur(armed)
-    fireEvent.click(armed)
+    press(t.deleteAssessmentFor("Person"))
+    press(t.confirmDeleteAssessment)
     expect(stored()).toBeUndefined()
   })
 

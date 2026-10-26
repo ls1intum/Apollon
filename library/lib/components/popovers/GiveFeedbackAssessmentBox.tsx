@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react"
+import { useId, useState, type MouseEvent } from "react"
 import { Link, Trash2, Unlink, WandSparkles, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
@@ -45,36 +45,29 @@ const FEEDBACK_MAX_LENGTH = 500
 const TITLE_MAX_LENGTH = 100
 
 /**
- * Arms on the first click and runs `action` on the second. Moving the pointer
- * or keyboard focus away disarms it; the editor takes focus on every pointer
- * press, so a blur during a press on the button is not a departure.
+ * Arms on the first click and runs `action` on the second. A button armed by
+ * keyboard disarms when focus leaves it, one armed by pointer when the pointer
+ * leaves: the editor takes focus on every pointer press, so blur cannot tell
+ * a pointer user's second click from a departure.
  */
 const useTwoStepConfirm = (action: () => void, skip = false) => {
-  const [armed, setArmed] = useState(false)
-  const pressedRef = useRef(false)
-  const disarm = () => {
-    pressedRef.current = false
-    setArmed(false)
-  }
+  const [armedBy, setArmedBy] = useState<"keyboard" | "pointer" | null>(null)
   return {
-    armed,
+    armed: armedBy !== null,
     buttonProps: {
-      "data-confirming": armed || undefined,
-      onPointerDown: () => {
-        pressedRef.current = true
-      },
-      onClick: () => {
-        pressedRef.current = false
-        if (armed || skip) {
-          setArmed(false)
+      "data-confirming": armedBy !== null || undefined,
+      onClick: (event: MouseEvent) => {
+        if (armedBy || skip) {
+          setArmedBy(null)
           action()
         } else {
-          setArmed(true)
+          // A click from the keyboard reports no click count.
+          setArmedBy(event.detail === 0 ? "keyboard" : "pointer")
         }
       },
-      onMouseLeave: disarm,
+      onMouseLeave: () => setArmedBy(null),
       onBlur: () => {
-        if (!pressedRef.current) disarm()
+        if (armedBy === "keyboard") setArmedBy(null)
       },
     },
   }
