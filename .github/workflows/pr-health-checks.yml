@@ -276,7 +276,9 @@ jobs:
           # Browser-specific key: the chromium and firefox jobs share this cache
           # path but install different browsers, so they must not share a key
           # (a firefox-only cache would make this job skip its chromium install).
-          key: playwright-chromium-${{ runner.os }}-v1.63.0-${{ hashFiles('standalone/webapp/package.json') }}
+          # Hash the catalog (pnpm-workspace.yaml), which pins the Playwright
+          # version, so a Playwright bump always misses the cache.
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'standalone/webapp/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -346,7 +348,7 @@ jobs:
           path: ~/.cache/ms-playwright
           # Firefox-specific key — must differ from the chromium jobs' key (same
           # cache path, different browser) so neither poisons the other's cache.
-          key: playwright-firefox-${{ runner.os }}-v1.63.0-${{ hashFiles('standalone/webapp/package.json') }}
+          key: playwright-firefox-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'standalone/webapp/package.json') }}
 
       - name: Install Playwright Firefox
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -463,7 +465,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
