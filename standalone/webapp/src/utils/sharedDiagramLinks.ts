@@ -26,7 +26,7 @@ export const SHARED_DIAGRAM_VIEW_OPTIONS: readonly SharedDiagramViewOption[] = [
     value: DiagramView.GIVE_FEEDBACK,
     label: "Give feedback",
     badge: "Feedback",
-    description: "Let reviewers add feedback without changing modelling mode.",
+    description: "Grant write access and open the diagram in feedback mode.",
   },
   {
     value: DiagramView.SEE_FEEDBACK,
@@ -96,6 +96,11 @@ export const resolveServerOrigin = (): string => {
 export const buildSharedDiagramUrl = (
   diagramId: string,
   view: DiagramView = DEFAULT_SHARED_DIAGRAM_VIEW,
-  origin = resolveShareOrigin()
+  origin = resolveShareOrigin(),
+  writeToken?: string
 ): string =>
-  `${origin}/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}`
+  `${origin}/shared/${encodeURIComponent(diagramId)}?view=${encodeURIComponent(view)}${
+    view !== DiagramView.SEE_FEEDBACK && writeToken
+      ? `#access=${encodeURIComponent(writeToken)}`
+      : ""
+  }`

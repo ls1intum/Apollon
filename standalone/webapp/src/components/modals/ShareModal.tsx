@@ -98,10 +98,23 @@ export const ShareModal = () => {
               copied={share.copied}
               onCopy={() => void share.copy()}
               mode={share.mode}
-              options={MODE_OPTIONS}
+              options={
+                share.canWrite
+                  ? MODE_OPTIONS
+                  : MODE_OPTIONS.filter(
+                      (option) => option.value === DiagramView.SEE_FEEDBACK
+                    )
+              }
               onSelectMode={share.selectMode}
             />
           </HomeDialogField>
+
+          {!share.canWrite && (
+            <HomeDialogNotice>
+              This share is read-only. Create a new shared copy to give edit
+              access.
+            </HomeDialogNotice>
+          )}
 
           {/* No opacity dim on the note below: `--home-text-secondary` is
               already a muted secondary tone (~6.4:1 on the dialog); a 70%

@@ -15,7 +15,6 @@ import type { Diagram, VersionKind, VersionSummary } from "../types.js"
 import type { RelayHook } from "../http/app.js"
 import { Errors } from "../http/errors.js"
 import { validate } from "../http/middleware/validate.js"
-import { setOwnerCookie } from "../http/middleware/owner.js"
 import { logger } from "../logger.js"
 import { readDiagram, saveHead } from "./diagrams.js"
 import {
@@ -269,6 +268,7 @@ export function mountVersionRoutes(
           } as Diagram
 
           const { headRev } = await saveHead(redis, config, flushed)
+          relay?.publishControl(params.diagramId, { type: "DIAGRAM_UPDATED" })
 
           const vid = ulid()
           const nowMs = Date.now()
@@ -284,9 +284,6 @@ export function mountVersionRoutes(
             librarySchemaVersion: flushed.version,
             body: flushed,
           })
-
-          if (!c.get("isOwner"))
-            setOwnerCookie(c, params.diagramId, config.OWNER_SECRET)
 
           const summary = await readVersionMeta(redis, params.diagramId, vid)
           if (!summary)
@@ -392,6 +389,7 @@ export function mountVersionRoutes(
               updatedAt: new Date().toISOString(),
             } as Diagram
             await saveHead(redis, config, flushed)
+            relay?.publishControl(params.diagramId, { type: "DIAGRAM_UPDATED" })
             preRestoreBody = flushed
           } else {
             const existing = await readDiagram(redis, params.diagramId)

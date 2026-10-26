@@ -1,8 +1,11 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import WebSocket from "ws"
 import { createServer } from "node:net"
 import { startRelayServer } from "../ws.js"
 import type { ControlEvent, Envelope } from "../types.js"
+import { createWriteToken } from "../http/middleware/access.js"
+
+const secret = "test-secret-test-secret-test-secret"
 
 function getFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -24,23 +27,40 @@ interface Harness {
 let harness: Harness | undefined
 
 async function startHarness(
-  options: { maxSocketsPerRoom?: number } = {}
+  options: {
+    maxSocketsPerRoom?: number
+    diagramExists?: (id: string) => Promise<boolean>
+  } = {}
 ): Promise<Harness> {
   const port = await getFreePort()
   const relay = startRelayServer({
     port,
     host: "127.0.0.1",
+    ownerSecret: secret,
+    diagramExists: options.diagramExists ?? (async () => true),
     maxSocketsPerRoom: options.maxSocketsPerRoom,
   })
   return { port, relay }
 }
 
-function connect(port: number, diagramId: string): Promise<WebSocket> {
+async function connect(
+  port: number,
+  diagramId: string,
+  write = true
+): Promise<WebSocket> {
+  const token = write ? await createWriteToken(diagramId, secret) : undefined
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(
       `ws://127.0.0.1:${port}?diagramId=${encodeURIComponent(diagramId)}`
     )
-    ws.once("open", () => resolve(ws))
+    ws.once("open", () => ws.send(JSON.stringify({ kind: "access", token })))
+    ws.once("message", (raw) => {
+      expect(JSON.parse(raw.toString())).toEqual({
+        kind: "access",
+        canWrite: write,
+      })
+      resolve(ws)
+    })
     ws.once("error", reject)
   })
 }
@@ -59,6 +79,161 @@ afterEach(async () => {
 })
 
 describe("WebSocket relay", () => {
+  it("keeps a stalled access check retryable", async () => {
+    let entered!: () => void
+    let release!: () => void
+    const checking = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    harness = await startHarness({
+      diagramExists: async () => {
+        entered()
+        await gate
+        return true
+      },
+    })
+    vi.useFakeTimers({ toFake: ["setTimeout"] })
+    try {
+      const ws = new WebSocket(`ws://127.0.0.1:${harness.port}?diagramId=d1`)
+      ws.once("open", () => ws.send(JSON.stringify({ kind: "access" })))
+      await checking
+      const closed = new Promise<number>((resolve) => ws.once("close", resolve))
+      vi.advanceTimersByTime(5000)
+      expect(await closed).toBe(1011)
+      expect(harness.relay.roomCount()).toBe(0)
+    } finally {
+      release()
+      vi.useRealTimers()
+    }
+  })
+
+  it("uses a retryable close when storage fails, then accepts a reconnect", async () => {
+    let calls = 0
+    harness = await startHarness({
+      diagramExists: async () => {
+        if (calls++ === 0) throw new Error("Redis unavailable")
+        return true
+      },
+    })
+    const first = new WebSocket(`ws://127.0.0.1:${harness.port}?diagramId=d1`)
+    first.once("open", () => first.send(JSON.stringify({ kind: "access" })))
+    const closed = await new Promise<number>((resolve) =>
+      first.once("close", resolve)
+    )
+    expect(closed).toBe(1011)
+    const retry = await connect(harness.port, "d1", false)
+    expect(retry.readyState).toBe(WebSocket.OPEN)
+  })
+
+  it("lets readers request presence without publishing state", async () => {
+    harness = await startHarness()
+    const writer = await connect(harness.port, "d1")
+    const reader = await connect(harness.port, "d1", false)
+    const incoming = nextMessage(writer)
+    const message = JSON.stringify({ diagramData: "Ag==" })
+    reader.send(message)
+    expect(await incoming).toBe(message)
+  })
+
+  it.each([
+    ["document update", JSON.stringify({ diagramData: "AQ==" })],
+    ["awareness update", JSON.stringify({ diagramData: "Aw==" })],
+    ["document sync request", JSON.stringify({ diagramData: "AA==" })],
+    ["sync with payload", JSON.stringify({ diagramData: "AAE=" })],
+    ["opaque frame", "untrusted-update"],
+    ["control frame", JSON.stringify({ kind: "control", control: {} })],
+  ])("rejects reader %s frames before relay", async (_name, frame) => {
+    harness = await startHarness()
+    const writer = await connect(harness.port, "d1")
+    const reader = await connect(harness.port, "d1", false)
+    const received = vi.fn()
+    writer.on("message", received)
+    const closed = new Promise<number>((resolve) =>
+      reader.once("close", resolve)
+    )
+    reader.send(frame)
+    expect(await closed).toBe(1008)
+    expect(received).not.toHaveBeenCalled()
+  })
+
+  it.each(["forged", "wrong diagram"])(
+    "rejects %s access without joining a room",
+    async (kind) => {
+      harness = await startHarness()
+      const token =
+        kind === "forged" ? "invalid" : await createWriteToken("d2", secret)
+      const ws = new WebSocket(`ws://127.0.0.1:${harness.port}?diagramId=d1`)
+      ws.once("open", () => ws.send(JSON.stringify({ kind: "access", token })))
+      const code = await new Promise<number>((resolve) =>
+        ws.once("close", resolve)
+      )
+      expect(code).toBe(1008)
+      expect(harness.relay.roomCount()).toBe(0)
+    }
+  )
+
+  it("drops application frames queued while access is being verified", async () => {
+    let checking = false
+    let release!: () => void
+    let entered!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const checkingStarted = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    harness = await startHarness({
+      diagramExists: async () => {
+        if (checking) {
+          entered()
+          await gate
+        }
+        return true
+      },
+    })
+    const writer = await connect(harness.port, "d1")
+    const received = vi.fn()
+    writer.on("message", received)
+    checking = true
+    const ws = new WebSocket(`ws://127.0.0.1:${harness.port}?diagramId=d1`)
+    ws.once("open", () => ws.send(JSON.stringify({ kind: "access" })))
+    await checkingStarted
+    ws.send(JSON.stringify({ diagramData: "AQ==" }))
+    await new Promise<void>((resolve) => {
+      ws.once("pong", () => resolve())
+      ws.ping()
+    })
+    const acknowledged = nextMessage(ws)
+    release()
+    expect(JSON.parse(await acknowledged)).toEqual({
+      kind: "access",
+      canWrite: false,
+    })
+    expect(received).not.toHaveBeenCalled()
+  })
+
+  it("rejects foreign browser origins and missing diagrams", async () => {
+    harness = await startHarness({ diagramExists: async () => false })
+    const foreign = new WebSocket(
+      `ws://127.0.0.1:${harness.port}?diagramId=d1`,
+      {
+        headers: { Origin: "https://attacker.example" },
+      }
+    )
+    expect(
+      await new Promise<number>((resolve) => foreign.once("close", resolve))
+    ).toBe(1008)
+    const missing = new WebSocket(`ws://127.0.0.1:${harness.port}?diagramId=d1`)
+    missing.once("open", () => missing.send(JSON.stringify({ kind: "access" })))
+    expect(
+      await new Promise<number>((resolve) => missing.once("close", resolve))
+    ).toBe(1008)
+    expect(harness.relay.roomCount()).toBe(0)
+  })
+
   it("rejects connections with invalid diagramId characters", async () => {
     harness = await startHarness()
     const ws = new WebSocket(
@@ -130,6 +305,9 @@ describe("WebSocket relay", () => {
       }
       const overflow = new WebSocket(
         `ws://127.0.0.1:${harness.port}?diagramId=cap-room`
+      )
+      overflow.once("open", () =>
+        overflow.send(JSON.stringify({ kind: "access" }))
       )
       const code = await new Promise<number>((resolve) => {
         overflow.on("close", (c) => resolve(c))

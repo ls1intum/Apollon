@@ -16,6 +16,7 @@ const baseDiagram = {
 }
 
 let app: ReturnType<typeof buildApp>
+let client: ReturnType<typeof request.agent>
 let publishControl: ReturnType<typeof vi.fn>
 
 beforeEach(async () => {
@@ -33,30 +34,32 @@ beforeEach(async () => {
       ) => void,
     },
   })
+  client = request.agent(app)
 })
 
 async function newDiagram() {
-  const res = await request(app).post("/api/diagrams").send(baseDiagram)
+  const res = await client.post("/api/diagrams").send(baseDiagram)
   return res.body.id as string
 }
 
 describe("POST /api/diagrams/:id/versions", () => {
   it("creates a version with body inline and broadcasts VERSION_CREATED", async () => {
     const id = await newDiagram()
-    const res = await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: "Initial",
-        description: "first snapshot",
-        body: { ...baseDiagram, id, title: "First" },
-      })
+    const res = await client.post(`/api/diagrams/${id}/versions`).send({
+      name: "Initial",
+      description: "first snapshot",
+      body: { ...baseDiagram, id, title: "First" },
+    })
     expect(res.status).toBe(201)
     expect(res.body.name).toBe("Initial")
     expect(res.body.kind).toBe("user")
     expect(res.body.librarySchemaVersion).toBe("4.0.0")
 
-    expect(publishControl).toHaveBeenCalledOnce()
-    const [broadcastDiagramId, control] = publishControl.mock.calls[0]!
+    expect(publishControl).toHaveBeenCalledTimes(2)
+    expect(publishControl).toHaveBeenNthCalledWith(1, id, {
+      type: "DIAGRAM_UPDATED",
+    })
+    const [broadcastDiagramId, control] = publishControl.mock.calls[1]!
     expect(broadcastDiagramId).toBe(id)
     expect(control).toMatchObject({
       type: "VERSION_CREATED",
@@ -67,12 +70,12 @@ describe("POST /api/diagrams/:id/versions", () => {
     })
   })
 
-  it("returns 404 NO_HEAD when diagram doesn't exist", async () => {
-    const res = await request(app)
+  it("denies unauthenticated creation when diagram does not exist", async () => {
+    const res = await client
       .post(`/api/diagrams/no-such-diagram/versions`)
       .send({ body: { ...baseDiagram, id: "no-such-diagram" } })
-    expect(res.status).toBe(404)
-    expect(res.body.error).toBe("NO_HEAD")
+    expect(res.status).toBe(403)
+    expect(res.body.error).toBe("FORBIDDEN")
   })
 })
 
@@ -80,11 +83,11 @@ describe("GET /api/diagrams/:id/versions", () => {
   it("returns versions newest-first", async () => {
     const id = await newDiagram()
     for (const name of ["v1", "v2", "v3"]) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name, body: { ...baseDiagram, id, title: name } })
     }
-    const res = await request(app).get(`/api/diagrams/${id}/versions`)
+    const res = await client.get(`/api/diagrams/${id}/versions`)
     expect(res.status).toBe(200)
     expect(res.body.versions.map((v: { name: string }) => v.name)).toEqual([
       "v3",
@@ -96,17 +99,17 @@ describe("GET /api/diagrams/:id/versions", () => {
   it("paginates with cursor", async () => {
     const id = await newDiagram()
     for (let i = 0; i < 5; i++) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `v${i}`, body: { ...baseDiagram, id, title: `v${i}` } })
     }
-    const page1 = await request(app)
+    const page1 = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: 2 })
     expect(page1.body.versions).toHaveLength(2)
     expect(page1.body.nextCursor).toBeDefined()
 
-    const page2 = await request(app)
+    const page2 = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: 2, before: page1.body.nextCursor })
     expect(page2.body.versions).toHaveLength(2)
@@ -116,12 +119,12 @@ describe("GET /api/diagrams/:id/versions", () => {
 describe("GET /api/diagrams/:id/versions/:vid", () => {
   it("returns the snapshot body and immutable cache headers", async () => {
     const id = await newDiagram()
-    const created = await request(app)
+    const created = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "Snap" } })
     const vid = created.body.id
 
-    const res = await request(app).get(`/api/diagrams/${id}/versions/${vid}`)
+    const res = await client.get(`/api/diagrams/${id}/versions/${vid}`)
     expect(res.status).toBe(200)
     expect(res.body.title).toBe("Snap")
     expect(res.headers.etag).toBe(`"${vid}"`)
@@ -130,9 +133,7 @@ describe("GET /api/diagrams/:id/versions/:vid", () => {
 
   it("returns 404 for missing version", async () => {
     const id = await newDiagram()
-    const res = await request(app).get(
-      `/api/diagrams/${id}/versions/no-such-vid`
-    )
+    const res = await client.get(`/api/diagrams/${id}/versions/no-such-vid`)
     expect(res.status).toBe(404)
   })
 })
@@ -141,16 +142,16 @@ describe("POST /api/diagrams/:id/versions/:vid/restore", () => {
   it("creates auto-snapshot of pre-restore HEAD and applies the version", async () => {
     const id = await newDiagram()
     // Create v1 (snapshot "First").
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "First", body: { ...baseDiagram, id, title: "First" } })
     const v1Id = v1.body.id
     // Edit HEAD to "Second".
-    await request(app)
+    await client
       .put(`/api/diagrams/${id}`)
       .send({ ...baseDiagram, title: "Second" })
     // Restore v1 with currentBody = the user's canvas.
-    const restore = await request(app)
+    const restore = await client
       .post(`/api/diagrams/${id}/versions/${v1Id}/restore`)
       .send({ currentBody: { ...baseDiagram, id, title: "Second" } })
 
@@ -158,14 +159,14 @@ describe("POST /api/diagrams/:id/versions/:vid/restore", () => {
     expect(restore.body.autoSnapshotVersionId).toBeDefined()
 
     // HEAD now matches v1.
-    const head = await request(app).get(`/api/diagrams/${id}`)
+    const head = await client.get(`/api/diagrams/${id}`)
     expect(head.body.title).toBe("First")
 
     // List has at least v1 + the pre-restore auto-snapshot. The HEAD PUT
     // above can also trigger a wall-clock auto-version (there's no marker
     // for a fresh diagram, so its first PUT is eligible) — that's correct
     // behavior, so we only assert on the pre-restore row's presence.
-    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    const list = await client.get(`/api/diagrams/${id}/versions`)
     expect(list.body.versions.length).toBeGreaterThanOrEqual(2)
     const preRestore = list.body.versions.find((v: { name: string }) =>
       v.name.startsWith("Before restoring")
@@ -174,7 +175,7 @@ describe("POST /api/diagrams/:id/versions/:vid/restore", () => {
     expect(preRestore.kind).toBe("auto")
 
     // Auto-snapshot body matches the pre-restore canvas.
-    const autoBody = await request(app).get(
+    const autoBody = await client.get(
       `/api/diagrams/${id}/versions/${preRestore.id}`
     )
     expect(autoBody.body.title).toBe("Second")
@@ -184,12 +185,12 @@ describe("POST /api/diagrams/:id/versions/:vid/restore", () => {
 describe("PATCH /api/diagrams/:id/versions/:vid", () => {
   it("renames a version and broadcasts VERSION_RENAMED", async () => {
     const id = await newDiagram()
-    const created = await request(app)
+    const created = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id } })
     const vid = created.body.id
 
-    const res = await request(app)
+    const res = await client
       .patch(`/api/diagrams/${id}/versions/${vid}`)
       .send({ name: "Renamed", description: "Updated desc" })
     expect(res.status).toBe(200)
@@ -206,15 +207,15 @@ describe("PATCH /api/diagrams/:id/versions/:vid", () => {
 describe("DELETE /api/diagrams/:id/versions/:vid", () => {
   it("deletes the version and broadcasts VERSION_DELETED", async () => {
     const id = await newDiagram()
-    const created = await request(app)
+    const created = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id } })
     const vid = created.body.id
 
-    const del = await request(app).delete(`/api/diagrams/${id}/versions/${vid}`)
+    const del = await client.delete(`/api/diagrams/${id}/versions/${vid}`)
     expect(del.status).toBe(204)
 
-    const get = await request(app).get(`/api/diagrams/${id}/versions/${vid}`)
+    const get = await client.get(`/api/diagrams/${id}/versions/${vid}`)
     expect(get.status).toBe(404)
 
     const deleteCall = publishControl.mock.calls.find(
@@ -229,12 +230,12 @@ describe("FIFO eviction at the configured cap", () => {
     const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
     const id = await newDiagram()
     for (let i = 0; i < cap + 1; i++) {
-      const res = await request(app)
+      const res = await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `v${i}`, body: { ...baseDiagram, id } })
       expect(res.status).toBe(201)
     }
-    const list = await request(app)
+    const list = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: cap * 2 })
     expect(list.body.versions.length).toBe(cap)
@@ -257,18 +258,18 @@ describe("FIFO eviction at the configured cap", () => {
     // empty name+description so eviction priority still treats them as
     // "unnamed" (the priority gate is name-emptiness, not kind).
     for (let i = 0; i < 3; i++) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ body: { ...baseDiagram, id } })
     }
     // Then `cap` named versions — total = cap + 3, eviction needs to drop 3.
     for (let i = 0; i < cap; i++) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `named-${i}`, body: { ...baseDiagram, id } })
     }
 
-    const list = await request(app)
+    const list = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: cap * 2 })
     expect(list.body.versions.length).toBe(cap)
@@ -283,14 +284,14 @@ describe("FIFO eviction at the configured cap", () => {
     const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
     const id = await newDiagram()
     for (let i = 0; i < cap; i++) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `v${i}`, body: { ...baseDiagram, id } })
     }
     // Cap+1th save: no unnamed rows exist, so eviction must drop the
     // oldest named row (`v0`). Response surfaces this via evictedKinds
     // so the client can word the toast accurately.
-    const overflow = await request(app)
+    const overflow = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: `v${cap}`, body: { ...baseDiagram, id } })
     expect(overflow.status).toBe(201)
@@ -302,11 +303,11 @@ describe("FIFO eviction at the configured cap", () => {
     const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
     const id = await newDiagram()
     for (let i = 0; i < cap + 5; i++) {
-      await request(app)
+      await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `v${i}`, body: { ...baseDiagram, id } })
     }
-    const list = await request(app)
+    const list = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: cap })
     // Newest row's seq should be cap+5 (1-indexed monotonic), not `cap`.
@@ -322,12 +323,10 @@ describe("auto-versioning on the HEAD PUT path", () => {
   it("does not snapshot empty diagrams (no nodes, no edges)", async () => {
     const id = await newDiagram()
     // PUT with the same empty body — should not produce an auto-version.
-    await request(app)
-      .put(`/api/diagrams/${id}`)
-      .send({ ...baseDiagram, id })
+    await client.put(`/api/diagrams/${id}`).send({ ...baseDiagram, id })
     // Give the fire-and-forget tryAutoVersion a moment to run.
     await new Promise((r) => setTimeout(r, 50))
-    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    const list = await client.get(`/api/diagrams/${id}/versions`)
     expect(list.body.versions).toHaveLength(0)
   })
 
@@ -336,9 +335,30 @@ describe("auto-versioning on the HEAD PUT path", () => {
     // First PUT with content. Without a prior version, tryAutoVersion
     // skips so the user doesn't see a row in history they didn't ask
     // for. HEAD's 5s autosave still covers crash safety.
-    await request(app)
-      .put(`/api/diagrams/${id}`)
-      .send({
+    await client.put(`/api/diagrams/${id}`).send({
+      ...baseDiagram,
+      id,
+      nodes: [
+        {
+          id: "n1",
+          type: "Class",
+          position: { x: 0, y: 0 },
+          data: { name: "A" },
+        } as never,
+      ],
+    })
+    await new Promise((r) => setTimeout(r, 50))
+
+    const list = await client.get(`/api/diagrams/${id}/versions`)
+    expect(list.body.versions.length).toBe(0)
+  })
+
+  it("auto-version fires only after a baseline exists; respects the marker", async () => {
+    const id = await newDiagram()
+    // Step 1: user makes a manual save → baseline (latest) row exists.
+    await client.post(`/api/diagrams/${id}/versions`).send({
+      name: "Initial",
+      body: {
         ...baseDiagram,
         id,
         nodes: [
@@ -349,33 +369,8 @@ describe("auto-versioning on the HEAD PUT path", () => {
             data: { name: "A" },
           } as never,
         ],
-      })
-    await new Promise((r) => setTimeout(r, 50))
-
-    const list = await request(app).get(`/api/diagrams/${id}/versions`)
-    expect(list.body.versions.length).toBe(0)
-  })
-
-  it("auto-version fires only after a baseline exists; respects the marker", async () => {
-    const id = await newDiagram()
-    // Step 1: user makes a manual save → baseline (latest) row exists.
-    await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: "Initial",
-        body: {
-          ...baseDiagram,
-          id,
-          nodes: [
-            {
-              id: "n1",
-              type: "Class",
-              position: { x: 0, y: 0 },
-              data: { name: "A" },
-            } as never,
-          ],
-        },
-      })
+      },
+    })
 
     // Step 2: clear the auto-version marker so the next PUT is eligible.
     // (In production the marker is held for 30 min after a PUT — far
@@ -386,46 +381,42 @@ describe("auto-versioning on the HEAD PUT path", () => {
 
     // Step 3: PUT with edited content → tryAutoVersion sees prior
     // version, fingerprint differs → commits an auto row.
-    await request(app)
-      .put(`/api/diagrams/${id}`)
-      .send({
-        ...baseDiagram,
-        id,
-        nodes: [
-          {
-            id: "n1",
-            type: "Class",
-            position: { x: 100, y: 100 },
-            data: { name: "A2" },
-          } as never,
-        ],
-      })
+    await client.put(`/api/diagrams/${id}`).send({
+      ...baseDiagram,
+      id,
+      nodes: [
+        {
+          id: "n1",
+          type: "Class",
+          position: { x: 100, y: 100 },
+          data: { name: "A2" },
+        } as never,
+      ],
+    })
     await new Promise((r) => setTimeout(r, 50))
 
-    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    const list = await client.get(`/api/diagrams/${id}/versions`)
     expect(list.body.versions.length).toBe(2)
     expect(list.body.versions[0]!.kind).toBe("auto")
     expect(list.body.versions[0]!.name).toBe("")
 
     // Step 4: another PUT within the 30-min window → marker held, no
     // additional auto-version. Total stays at 2.
-    await request(app)
-      .put(`/api/diagrams/${id}`)
-      .send({
-        ...baseDiagram,
-        id,
-        nodes: [
-          {
-            id: "n1",
-            type: "Class",
-            position: { x: 200, y: 200 },
-            data: { name: "A3" },
-          } as never,
-        ],
-      })
+    await client.put(`/api/diagrams/${id}`).send({
+      ...baseDiagram,
+      id,
+      nodes: [
+        {
+          id: "n1",
+          type: "Class",
+          position: { x: 200, y: 200 },
+          data: { name: "A3" },
+        } as never,
+      ],
+    })
     await new Promise((r) => setTimeout(r, 50))
 
-    const second = await request(app).get(`/api/diagrams/${id}/versions`)
+    const second = await client.get(`/api/diagrams/${id}/versions`)
     expect(second.body.versions.length).toBe(2)
   })
 
@@ -444,12 +435,10 @@ describe("auto-versioning on the HEAD PUT path", () => {
       position: { x: 0, y: 0 },
       data: { name: "A" },
     } as never
-    await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: "Initial",
-        body: { ...baseDiagram, id, nodes: [baseNode] },
-      })
+    await client.post(`/api/diagrams/${id}/versions`).send({
+      name: "Initial",
+      body: { ...baseDiagram, id, nodes: [baseNode] },
+    })
 
     const redis = await getRedis()
     await redis.del(k.autoVersionMarker(id))
@@ -469,12 +458,12 @@ describe("auto-versioning on the HEAD PUT path", () => {
       connectable: true,
       deletable: true,
     } as never
-    await request(app)
+    await client
       .put(`/api/diagrams/${id}`)
       .send({ ...baseDiagram, id, nodes: [dirtyNode] })
     await new Promise((r) => setTimeout(r, 50))
 
-    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    const list = await client.get(`/api/diagrams/${id}/versions`)
     expect(list.body.versions.length).toBe(1)
     expect(list.body.versions[0]!.name).toBe("Initial")
   })
@@ -486,7 +475,7 @@ describe("auto-versioning on the HEAD PUT path", () => {
     const redis = await getRedis()
     const id = await newDiagram()
     // Seed a real version first.
-    await request(app)
+    await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "seed", body: { ...baseDiagram, id, title: "seed" } })
     // Now corrupt the body so `gunzipJson` will throw.
@@ -498,20 +487,18 @@ describe("auto-versioning on the HEAD PUT path", () => {
     await redis.set(k.versionBody(id, ids[0]!), "not-base64-gzip")
 
     // PUT triggers tryAutoVersion → gunzipJson throws → marker released.
-    await request(app)
-      .put(`/api/diagrams/${id}`)
-      .send({
-        ...baseDiagram,
-        id,
-        nodes: [
-          {
-            id: "n1",
-            type: "Class",
-            position: { x: 0, y: 0 },
-            data: { name: "A" },
-          } as never,
-        ],
-      })
+    await client.put(`/api/diagrams/${id}`).send({
+      ...baseDiagram,
+      id,
+      nodes: [
+        {
+          id: "n1",
+          type: "Class",
+          position: { x: 0, y: 0 },
+          data: { name: "A" },
+        } as never,
+      ],
+    })
     await new Promise((r) => setTimeout(r, 50))
 
     // Marker should be absent (released by the finally block).
@@ -526,12 +513,12 @@ describe("concurrency", () => {
     const N = 10
     await Promise.all(
       Array.from({ length: N }, (_, i) =>
-        request(app)
+        client
           .post(`/api/diagrams/${id}/versions`)
           .send({ name: `c${i}`, body: { ...baseDiagram, id } })
       )
     )
-    const list = await request(app)
+    const list = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: 100 })
     expect(list.body.versions.length).toBe(N)
@@ -545,12 +532,10 @@ describe("concurrency", () => {
 describe("schema versioning", () => {
   it("stamps librarySchemaVersion on snapshot meta", async () => {
     const id = await newDiagram()
-    const created = await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: "v1",
-        body: { ...baseDiagram, id, version: "4.7.0" },
-      })
+    const created = await client.post(`/api/diagrams/${id}/versions`).send({
+      name: "v1",
+      body: { ...baseDiagram, id, version: "4.7.0" },
+    })
     expect(created.body.librarySchemaVersion).toBe("4.7.0")
   })
 })
@@ -559,16 +544,14 @@ describe("UTF-8 round-trip", () => {
   it("preserves multi-byte titles and descriptions byte-for-byte", async () => {
     const id = await newDiagram()
     const tricky = "Класс 中文 ✅ — 日本語"
-    const created = await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: tricky,
-        description: tricky,
-        body: { ...baseDiagram, id, title: tricky },
-      })
+    const created = await client.post(`/api/diagrams/${id}/versions`).send({
+      name: tricky,
+      description: tricky,
+      body: { ...baseDiagram, id, title: tricky },
+    })
     expect(created.body.name).toBe(tricky)
     expect(created.body.description).toBe(tricky)
-    const body = await request(app).get(
+    const body = await client.get(
       `/api/diagrams/${id}/versions/${created.body.id}`
     )
     expect(body.body.title).toBe(tricky)
@@ -583,12 +566,12 @@ describe("FIFO eviction at scale", () => {
     const total = cap * 4
     const id = await newDiagram()
     for (let i = 0; i < total; i++) {
-      const r = await request(app)
+      const r = await client
         .post(`/api/diagrams/${id}/versions`)
         .send({ name: `v${i}`, body: { ...baseDiagram, id } })
       expect(r.status).toBe(201)
     }
-    const list = await request(app)
+    const list = await client
       .get(`/api/diagrams/${id}/versions`)
       .query({ limit: cap * 2 })
     expect(list.body.versions).toHaveLength(cap)
@@ -636,7 +619,7 @@ describe("pagination cursor stability", () => {
     let cursor: string | undefined
     let pages = 0
     do {
-      const page = await request(app)
+      const page = await client
         .get(`/api/diagrams/${id}/versions`)
         .query({ limit: 3, ...(cursor ? { before: cursor } : {}) })
       for (const v of page.body.versions) seen.add(v.id)
@@ -656,10 +639,10 @@ describe("REVISION_MISMATCH on PUT", () => {
     // The PUT path is the only endpoint that honors If-Match; this verifies
     // the 409 body shape so client autosave retry logic is reliable.
     const id = await newDiagram()
-    await request(app)
+    await client
       .put(`/api/diagrams/${id}`)
       .send({ ...baseDiagram, title: "first" })
-    const second = await request(app)
+    const second = await client
       .put(`/api/diagrams/${id}`)
       .set("If-Match", "0")
       .send({ ...baseDiagram, title: "second" })
@@ -679,10 +662,12 @@ describe("restore atomicity", () => {
     // second app with a duplicate Redis client and fire one request through
     // each, simultaneously.
     const id = await newDiagram()
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "v1" } })
 
+    const token = (await client.get(`/api/diagrams/${id}`)).body
+      .writeToken as string
     const r2 = (await getRedis()).duplicate()
     await r2.connect()
     try {
@@ -693,29 +678,28 @@ describe("restore atomicity", () => {
         relay: { publishControl: vi.fn() },
       })
       const [restore, put] = await Promise.all([
-        request(app)
+        client
           .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
           .send({}),
         request(app2)
           .put(`/api/diagrams/${id}`)
+          .set("Authorization", `Bearer ${token}`)
           .send({ ...baseDiagram, title: "concurrent-edit" }),
       ])
       expect(restore.status).toBe(200)
       expect(put.status).toBe(200)
 
       // Every indexed version must have a body — no orphans.
-      const list = await request(app)
+      const list = await client
         .get(`/api/diagrams/${id}/versions`)
         .query({ limit: 100 })
       for (const v of list.body.versions) {
-        const body = await request(app).get(
-          `/api/diagrams/${id}/versions/${v.id}`
-        )
+        const body = await client.get(`/api/diagrams/${id}/versions/${v.id}`)
         expect(body.status).toBe(200)
       }
 
       // HEAD must reflect one valid LWW outcome — never a torn state.
-      const head = await request(app).get(`/api/diagrams/${id}`)
+      const head = await client.get(`/api/diagrams/${id}`)
       expect(["v1", "concurrent-edit"]).toContain(head.body.title)
     } finally {
       await r2.quit()
@@ -724,12 +708,12 @@ describe("restore atomicity", () => {
 
   it("undo-restore path captures user's currentBody before reverting", async () => {
     const id = await newDiagram()
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "first", body: { ...baseDiagram, id, title: "first" } })
 
     // Edit HEAD to "modified" and snapshot it implicitly via restore.
-    const restoreResp = await request(app)
+    const restoreResp = await client
       .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
       .send({ currentBody: { ...baseDiagram, id, title: "modified" } })
     const auto = restoreResp.body.autoSnapshotVersionId
@@ -737,30 +721,28 @@ describe("restore atomicity", () => {
 
     // The pre-restore auto-snapshot must hold the user's "modified" body —
     // not whatever Redis HEAD happened to contain at the time.
-    const autoBody = await request(app).get(
-      `/api/diagrams/${id}/versions/${auto}`
-    )
+    const autoBody = await client.get(`/api/diagrams/${id}/versions/${auto}`)
     expect(autoBody.body.title).toBe("modified")
 
     // HEAD now reflects the restored v1 body.
-    const head = await request(app).get(`/api/diagrams/${id}`)
+    const head = await client.get(`/api/diagrams/${id}`)
     expect(head.body.title).toBe("first")
 
     // Undo: restore the auto-snapshot, passing the user's *new* edit so that
     // undoing again would reach the post-undo state. Without currentBody this
     // path used to silently lose those edits.
-    const undoResp = await request(app)
+    const undoResp = await client
       .post(`/api/diagrams/${id}/versions/${auto}/restore`)
       .send({ currentBody: { ...baseDiagram, id, title: "after-undo-edit" } })
     expect(undoResp.status).toBe(200)
 
-    const headAfter = await request(app).get(`/api/diagrams/${id}`)
+    const headAfter = await client.get(`/api/diagrams/${id}`)
     expect(headAfter.body.title).toBe("modified") // back to pre-restore state
 
     // The undo's own pre-restore snapshot captured "after-undo-edit", not
     // some stale Redis state.
     const undoAuto = undoResp.body.autoSnapshotVersionId
-    const undoAutoBody = await request(app).get(
+    const undoAutoBody = await client.get(
       `/api/diagrams/${id}/versions/${undoAuto}`
     )
     expect(undoAutoBody.body.title).toBe("after-undo-edit")
@@ -770,13 +752,11 @@ describe("restore atomicity", () => {
 describe("actor attribution on control events", () => {
   it("VERSION_CREATED carries the actor when provided", async () => {
     const id = await newDiagram()
-    await request(app)
-      .post(`/api/diagrams/${id}/versions`)
-      .send({
-        name: "v1",
-        actor: "Alice",
-        body: { ...baseDiagram, id },
-      })
+    await client.post(`/api/diagrams/${id}/versions`).send({
+      name: "v1",
+      actor: "Alice",
+      body: { ...baseDiagram, id },
+    })
 
     const call = publishControl.mock.calls.find(
       (c) => (c[1] as ControlEvent).type === "VERSION_CREATED"
@@ -787,7 +767,7 @@ describe("actor attribution on control events", () => {
 
   it("VERSION_CREATED omits actor field when not provided", async () => {
     const id = await newDiagram()
-    await request(app)
+    await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id } })
 
@@ -800,12 +780,12 @@ describe("actor attribution on control events", () => {
 
   it("VERSION_RESTORED carries the actor when provided", async () => {
     const id = await newDiagram()
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "v1" } })
     publishControl.mockClear()
 
-    await request(app)
+    await client
       .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
       .send({ actor: "Bob" })
 
@@ -819,7 +799,7 @@ describe("actor attribution on control events", () => {
   it("actor field is capped at 100 chars — longer values are rejected", async () => {
     const id = await newDiagram()
     const longActor = "X".repeat(101)
-    const res = await request(app)
+    const res = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", actor: longActor, body: { ...baseDiagram, id } })
     expect(res.status).toBe(422)
@@ -834,23 +814,23 @@ describe("restoring the latest version (no-op scenario)", () => {
     // block it (it's a valid operation), but it creates a redundant
     // auto-snapshot containing identical content. This test documents that
     // the client guard is a UX optimization, not a server constraint.
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "Same" } })
 
-    const restore = await request(app)
+    const restore = await client
       .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
       .send({ currentBody: { ...baseDiagram, id, title: "Same" } })
     expect(restore.status).toBe(200)
     expect(restore.body.autoSnapshotVersionId).toBeDefined()
 
     // HEAD is unchanged.
-    const head = await request(app).get(`/api/diagrams/${id}`)
+    const head = await client.get(`/api/diagrams/${id}`)
     expect(head.body.title).toBe("Same")
 
     // The auto-snapshot body is identical to the original — this is the
     // redundancy the client guards against.
-    const autoBody = await request(app).get(
+    const autoBody = await client.get(
       `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
     )
     expect(autoBody.body.title).toBe("Same")
@@ -860,21 +840,21 @@ describe("restoring the latest version (no-op scenario)", () => {
 describe("restore preserves user's canvas via currentBody", () => {
   it("auto-snapshot captures currentBody, not stale Redis HEAD", async () => {
     const id = await newDiagram()
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "First" } })
 
     // The user has unsaved changes ("Unsaved Work") that haven't been PUT
     // to HEAD yet. They restore v1 from preview. The auto-snapshot must
     // contain "Unsaved Work" — NOT whatever Redis HEAD has.
-    const restore = await request(app)
+    const restore = await client
       .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
       .send({
         currentBody: { ...baseDiagram, id, title: "Unsaved Work" },
       })
     expect(restore.status).toBe(200)
 
-    const autoBody = await request(app).get(
+    const autoBody = await client.get(
       `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
     )
     expect(autoBody.body.title).toBe("Unsaved Work")
@@ -882,22 +862,22 @@ describe("restore preserves user's canvas via currentBody", () => {
 
   it("auto-snapshot uses Redis HEAD when currentBody is omitted", async () => {
     const id = await newDiagram()
-    const v1 = await request(app)
+    const v1 = await client
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id, title: "First" } })
 
     // Edit HEAD to something different from v1.
-    await request(app)
+    await client
       .put(`/api/diagrams/${id}`)
       .send({ ...baseDiagram, id, title: "Edited HEAD" })
 
     // Restore v1 without currentBody — server falls back to Redis HEAD.
-    const restore = await request(app)
+    const restore = await client
       .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
       .send({})
     expect(restore.status).toBe(200)
 
-    const autoBody = await request(app).get(
+    const autoBody = await client.get(
       `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
     )
     // The auto-snapshot must contain what was in Redis HEAD before the

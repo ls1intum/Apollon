@@ -43,6 +43,8 @@ export interface VersionSummary {
 export type VersionKind = "user" | "auto"
 
 export type ApiErrorCode =
+  | "FORBIDDEN"
+  | "INVALID_CAPABILITY"
   | "INVALID_PARAMS"
   | "NOT_FOUND"
   | "REVISION_MISMATCH"
@@ -60,6 +62,7 @@ export interface ApiErrorBody {
 
 /** Typed control envelopes emitted to the WebSocket room on version events. */
 export type ControlEvent =
+  | { type: "DIAGRAM_UPDATED" }
   | {
       type: "VERSION_CREATED"
       versionId: string

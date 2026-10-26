@@ -1,6 +1,11 @@
 import { cors } from "hono/cors"
 import type { Config } from "../../config.js"
 
+export const parseAllowedOrigins = (config: Config): string[] =>
+  config.CORS_ORIGIN?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? []
+
 export function configureCors(config: Config) {
   // Behind the production reverse proxy the browser webapp and API share an
   // origin, so CORS is mostly a no-op there. Capacitor shells use origins such
@@ -12,16 +17,16 @@ export function configureCors(config: Config) {
   // hono/cors resolves an array `origin` exactly like the previous `cors`
   // package: it reflects the request Origin only when it is in the list, and
   // omits Access-Control-Allow-Origin otherwise (never `*` under credentials).
-  const allowedOrigins = config.CORS_ORIGIN
-    ? config.CORS_ORIGIN.split(",")
-        .map((origin) => origin.trim())
-        .filter(Boolean)
-    : []
   return cors({
-    origin: allowedOrigins,
+    origin: parseAllowedOrigins(config),
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowHeaders: ["Content-Type", "If-Match", "If-None-Match"],
+    allowHeaders: [
+      "Content-Type",
+      "If-Match",
+      "If-None-Match",
+      "Authorization",
+    ],
     exposeHeaders: ["x-owner-match", "x-request-id", "etag"],
   })
 }

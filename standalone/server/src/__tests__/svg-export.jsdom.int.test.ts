@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { Worker } from "node:worker_threads"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 
 // Drive the COMPILED worker in its own thread (same jsdom-shims + conversion
 // pipeline the production server uses) so the jsdom globals + font registration
@@ -30,7 +30,11 @@ function clipFromSvg(svg: string): ExportResult["clip"] {
 }
 
 function exportViaWorker(model: unknown): Promise<ExportResult> {
-  const worker = new Worker(workerPath)
+  const worker = new Worker(workerPath, { stderr: true })
+  let stderr = ""
+  worker.stderr.on("data", (chunk: Buffer) => {
+    stderr += chunk.toString()
+  })
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       void worker.terminate()
@@ -38,9 +42,13 @@ function exportViaWorker(model: unknown): Promise<ExportResult> {
     }, 30_000)
     worker.on(
       "message",
-      (m: { ok: boolean; error?: string; data?: string }) => {
+      async (m: { ok: boolean; error?: string; data?: string }) => {
         clearTimeout(timer)
-        void worker.terminate()
+        await worker.terminate()
+        if (/(?:TypeError|ReferenceError|Error):/.test(stderr)) {
+          reject(new Error(`SVG worker exception: ${stderr}`))
+          return
+        }
         if (m.ok && m.data) resolve({ svg: m.data, clip: clipFromSvg(m.data) })
         else reject(new Error(m.error))
       }
@@ -95,6 +103,51 @@ const BROWSER_NODE_WIDTHS: Record<string, number[]> = {
 const WIDTH_TOLERANCE_PX = 12
 
 describe("jsdom SVG export (no browser)", () => {
+  it("preserves viewport translation and zoom when computing its matrix", async () => {
+    const shimUrl = pathToFileURL(
+      path.resolve(dir, "../../dist/src/workers/jsdom-shims.js")
+    ).href
+    const worker = new Worker(
+      `const { parentPort } = require("node:worker_threads")
+       import(${JSON.stringify(shimUrl)}).then(() => {
+         const el = document.createElement("div")
+         el.className = "xyflow__viewport"
+         document.body.appendChild(el)
+         const matrices = [[120, -35, 0.5], [-10.25, 40.5, 2], [0, 0, 1]].map(([x, y, zoom]) => {
+           el.style.transform = \`translate(\${x}px,\${y}px) scale(\${zoom})\`
+           const matrix = new window.DOMMatrixReadOnly(window.getComputedStyle(el).transform)
+           return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f, el.style.transform]
+         })
+         el.style.transform = "rotate(20deg)"
+         const unknown = window.getComputedStyle(el).transform
+         let unknownRejected = false
+         try { new window.DOMMatrixReadOnly(unknown) } catch { unknownRejected = true }
+         el.className = ""
+         el.style.transform = "translate(1px,2px) scale(3)"
+         parentPort.postMessage({ matrices, unknown, unknownRejected, unrelated: window.getComputedStyle(el).transform })
+       })`,
+      { eval: true }
+    )
+    try {
+      const result = await new Promise((resolve, reject) => {
+        worker.once("message", resolve)
+        worker.once("error", reject)
+      })
+      expect(result).toEqual({
+        matrices: [
+          [0.5, 0, 0, 0.5, 120, -35, "translate(120px,-35px) scale(0.5)"],
+          [2, 0, 0, 2, -10.25, 40.5, "translate(-10.25px,40.5px) scale(2)"],
+          [1, 0, 0, 1, 0, 0, "translate(0px,0px) scale(1)"],
+        ],
+        unknown: "rotate(20deg)",
+        unknownRejected: true,
+        unrelated: "translate(1px,2px) scale(3)",
+      })
+    } finally {
+      await worker.terminate()
+    }
+  })
+
   it.each(ALL_TYPES)(
     "renders %s to a valid, deterministic compat SVG",
     async (file) => {

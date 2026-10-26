@@ -2,6 +2,7 @@ import { ApollonEditor } from "@tumaet/apollon"
 import { serverWSSUrl } from "@/constants"
 import { type ControlEvent, type Envelope, WebSocketMessage } from "@/types"
 import { log } from "@/logger"
+import { getSharedDiagramWriteToken } from "@/utils/sharedDiagramStorage"
 
 interface ReconnectionStep {
   interval: number
@@ -22,14 +23,23 @@ export class WebSocketManager {
   ]
   private reconnectStartTime = 0
   private controlListeners = new Set<ControlListener>()
+  private accessReady = false
+  private canWrite = false
 
   constructor(
     private diagramId: string,
     private instance: ApollonEditor,
-    private onError: (e: Event) => void
+    private onError: (e: Event) => void,
+    private requestWrite = true
   ) {
     this.instance.sendBroadcastMessage((diagramData) => {
-      if (this.websocket?.readyState === WebSocket.OPEN) {
+      // Every frame the editor emits carries document or presence state,
+      // which the relay accepts only from writers.
+      if (
+        this.websocket?.readyState === WebSocket.OPEN &&
+        this.accessReady &&
+        this.canWrite
+      ) {
         this.websocket.send(JSON.stringify({ diagramData }))
       }
     })
@@ -45,7 +55,12 @@ export class WebSocketManager {
   }
 
   public publishControl(event: ControlEvent): void {
-    if (this.websocket?.readyState !== WebSocket.OPEN) return
+    if (
+      this.websocket?.readyState !== WebSocket.OPEN ||
+      !this.accessReady ||
+      !this.canWrite
+    )
+      return
     const envelope: Envelope = { kind: "control", control: event }
     this.websocket.send(JSON.stringify(envelope))
   }
@@ -53,32 +68,50 @@ export class WebSocketManager {
   private createWebSocket() {
     const url = `${serverWSSUrl}?diagramId=${encodeURIComponent(this.diagramId)}`
     this.websocket = new WebSocket(url)
+    this.accessReady = false
+    this.canWrite = false
 
     this.websocket.onopen = () => {
-      this.reconnectStartTime = 0
-      const initialMessage = {
-        diagramData: ApollonEditor.generateInitialSyncMessage(),
-      }
-      this.websocket?.send(JSON.stringify(initialMessage))
-
-      const awarenessMessage = {
-        diagramData: ApollonEditor.generateInitialAwarenessSyncMessage(),
-      }
-      this.websocket?.send(JSON.stringify(awarenessMessage))
-
-      // YjsSYNC asks peers for state but doesn't push our own. Any edits made
-      // while the WS was closed (initial pre-open, or any transient drop)
-      // were silently discarded by the send callback and would be lost
-      // forever otherwise. CRDT merge means peers that already have these
-      // ops no-op, so the cost is bounded to one push per reconnect.
-      this.instance.broadcastFullState()
+      this.websocket?.send(
+        JSON.stringify({
+          kind: "access",
+          token: this.requestWrite
+            ? getSharedDiagramWriteToken(this.diagramId)
+            : undefined,
+        })
+      )
     }
 
     this.websocket.onmessage = (event) => {
       const raw = String(event.data)
       if (raw.startsWith(ENVELOPE_PREFIX)) {
         try {
-          const envelope = JSON.parse(raw) as Envelope
+          const envelope = JSON.parse(raw) as
+            | Envelope
+            | { kind: "access"; canWrite: boolean }
+          if (envelope.kind === "access") {
+            if (this.accessReady) return
+            this.accessReady = true
+            this.reconnectStartTime = 0
+            this.canWrite = this.requestWrite && envelope.canWrite === true
+            if (this.canWrite) {
+              this.websocket?.send(
+                JSON.stringify({
+                  diagramData: ApollonEditor.generateInitialSyncMessage(),
+                })
+              )
+            }
+            this.websocket?.send(
+              JSON.stringify({
+                diagramData:
+                  ApollonEditor.generateInitialAwarenessSyncMessage(),
+              })
+            )
+            // Push offline edits only after the relay confirms write access.
+            if (this.canWrite) this.instance.broadcastFullState()
+            else this.dispatchControl({ type: "DIAGRAM_UPDATED" })
+            return
+          }
           if (envelope.kind === "control") {
             this.dispatchControl(envelope.control)
             return
@@ -90,6 +123,8 @@ export class WebSocketManager {
       try {
         const msg = JSON.parse(raw) as WebSocketMessage
         if (msg && typeof msg === "object" && "diagramData" in msg) {
+          if (!this.canWrite && atob(msg.diagramData).charCodeAt(0) === 1)
+            return
           this.instance.receiveBroadcastedMessage(msg.diagramData)
         }
       } catch (err) {
@@ -102,7 +137,12 @@ export class WebSocketManager {
       this.scheduleReconnect()
     }
 
-    this.websocket.onclose = () => {
+    this.websocket.onclose = (event) => {
+      this.accessReady = false
+      if (event.code === 1008) {
+        this.onError(event)
+        return
+      }
       this.scheduleReconnect()
     }
   }
@@ -145,6 +185,7 @@ export class WebSocketManager {
   }
 
   public cleanup() {
+    this.accessReady = false
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
       this.reconnectTimeout = null

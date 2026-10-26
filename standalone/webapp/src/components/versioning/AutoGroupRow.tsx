@@ -5,6 +5,7 @@ import { ROW_HOVER_BG, TEXT_MUTED } from "./theme"
 import type { GroupedEntry } from "./utils"
 
 interface AutoGroupRowProps {
+  canWrite?: boolean
   group: Extract<GroupedEntry, { kind: "auto-group" }>
   diagramId: string
   onPreview: (versionId: string) => void
@@ -27,6 +28,7 @@ export const AutoGroupRow: FC<AutoGroupRowProps> = ({
   versionNumberById,
   latestSavedId,
   hasUnsavedChanges,
+  canWrite = true,
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
@@ -60,7 +62,10 @@ export const AutoGroupRow: FC<AutoGroupRowProps> = ({
               version={v}
               versionNumber={versionNumberById.get(v.id)}
               isPreviewing={previewingVersionId === v.id}
-              canRestore={v.id !== latestSavedId || hasUnsavedChanges}
+              canRestore={
+                canWrite && (v.id !== latestSavedId || hasUnsavedChanges)
+              }
+              canWrite={canWrite}
               onPreview={onPreview}
               onRestore={onRestore}
               onDelete={onDelete}

@@ -208,13 +208,42 @@ REVISION_MISMATCH`, the client refetches HEAD, re-applies its
 
 ## Permissions
 
-There is no real auth. URL bearers have full read/write/delete access. A
-soft HMAC-signed cookie (`apollon_owner_<id>`) is issued on first
-`POST /diagrams` and the first `POST .../versions` per diagram.
-Destructive routes set the `X-Owner-Match: true|false` response header.
-The webapp uses this only to add a confirm-twice friction prompt for
-non-creators — "Heads up — this diagram was originally created in a
-different browser. Continue?" Friction, not security.
+The diagram ID grants read access, including version history and embeds. Writes
+require a signed, diagram-specific capability or the creator's v2 HttpOnly
+owner cookie. The server checks every diagram and version mutation. The
+WebSocket relay checks access before joining a room; readers cannot send
+document updates or transient edit geometry.
+
+Edit, collaboration, and give-feedback links carry the write capability in
+`#access=...`. Feedback mode changes the UI, not the write scope. Review links
+and version permalinks omit the capability; changing `view=` does not grant
+write access. The webapp sends capabilities in the HTTP Authorization header
+and the WebSocket access handshake, not in URL queries or persisted diagram
+models.
+
+Readers do not apply peer Yjs updates. Their documents are seeded from HEAD on
+their own, and readers cannot send state, so peer updates would not supersede
+the reader's seeded items. Readers reload HEAD after `DIAGRAM_UPDATED` instead,
+with one request in flight and at most one trailing refresh.
+
+If the server rejects the write capability during a session, the editor
+becomes read-only and shows one message that stays until the user closes it.
+
+A capability remains valid while its diagram exists and the server signing
+key is unchanged. Anyone with a write link can pass it on. Delete the diagram
+to revoke its links; changing a link's view does not revoke an earlier grant.
+The server answers a request with an invalid capability with `401
+INVALID_CAPABILITY`, also on reads. The webapp then discards that capability
+and retries reads without it, so the diagram stays readable.
+
+Links without a capability are read-only. Only the owner cookie that diagram
+creation issues proves the creator; the server ignores other owner cookies.
+Export or duplicate a read-only diagram and share the new copy to get write
+links. Rotating `OWNER_SECRET` invalidates both owner cookies and write
+capabilities; retain the key across normal deployments.
+
+`X-Owner-Match` still distinguishes creators from collaborators for destructive
+confirmation prompts. It is not a substitute for the server's write checks.
 
 ## Library API additions
 
