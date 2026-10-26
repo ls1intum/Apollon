@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ApollonEditor } from "@tumaet/apollon"
 import { WebSocketManager } from "./WebSocketManager"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = []
@@ -46,12 +47,73 @@ function startManager() {
 }
 
 beforeEach(() => {
+  localStorage.clear()
   FakeWebSocket.instances = []
   vi.stubGlobal("WebSocket", FakeWebSocket)
 })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+})
+
+describe("WebSocketManager access", () => {
+  it.each([
+    [1008, 1],
+    [1011, 2],
+  ])("reconnects only for a retryable access failure (%s)", (code, count) => {
+    vi.useFakeTimers()
+    const { manager, socket } = startManager()
+    try {
+      socket.onclose?.(new CloseEvent("close", { code }))
+      vi.advanceTimersByTime(5000)
+      expect(FakeWebSocket.instances).toHaveLength(count)
+    } finally {
+      manager.cleanup()
+      vi.useRealTimers()
+    }
+  })
+
+  it("waits for write authorization before broadcasting offline state", () => {
+    addSharedDiagramEntry("diag-1", { writeToken: "header.writer.sig" })
+    const editor = makeFakeEditor()
+    const manager = new WebSocketManager("diag-1", editor, vi.fn())
+    manager.startConnection()
+    const socket = FakeWebSocket.instances.at(-1)!
+    const send = vi.spyOn(socket, "send")
+    socket.readyState = FakeWebSocket.OPEN
+    socket.onopen?.(new Event("open"))
+    expect(send).toHaveBeenCalledExactlyOnceWith(
+      JSON.stringify({ kind: "access", token: "header.writer.sig" })
+    )
+    expect(editor.broadcastFullState).not.toHaveBeenCalled()
+    socket.onmessage?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({ kind: "access", canWrite: true }),
+      })
+    )
+    expect(editor.broadcastFullState).toHaveBeenCalledOnce()
+    manager.cleanup()
+  })
+
+  it("does not send document or awareness updates from a reader", () => {
+    const editor = makeFakeEditor()
+    const manager = new WebSocketManager("diag-1", editor, vi.fn(), false)
+    manager.startConnection()
+    const socket = FakeWebSocket.instances.at(-1)!
+    socket.readyState = FakeWebSocket.OPEN
+    socket.onopen?.(new Event("open"))
+    socket.onmessage?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({ kind: "access", canWrite: false }),
+      })
+    )
+    expect(editor.broadcastFullState).not.toHaveBeenCalled()
+    const send = vi.spyOn(socket, "send")
+    const broadcast = vi.mocked(editor.sendBroadcastMessage).mock.calls[0]![0]
+    for (const type of [0, 1, 2, 3]) broadcast(btoa(String.fromCharCode(type)))
+    expect(send).not.toHaveBeenCalled()
+    manager.cleanup()
+  })
 })
 
 describe("WebSocketManager.cleanup", () => {

@@ -13,6 +13,8 @@ import type { UMLModel } from "@tumaet/apollon"
 export type Diagram = UMLModel & {
   createdAt: string
   updatedAt: string
+  canWrite?: boolean
+  writeToken?: string
 }
 
 export type VersionKind = "user" | "auto"
@@ -45,6 +47,8 @@ export interface PendingVersion extends VersionSummary {
 }
 
 export type ApiErrorCode =
+  | "FORBIDDEN"
+  | "INVALID_CAPABILITY"
   | "INVALID_PARAMS"
   | "NOT_FOUND"
   | "REVISION_MISMATCH"
@@ -63,6 +67,7 @@ export interface ApiErrorBody {
 }
 
 export type ControlEvent =
+  | { type: "DIAGRAM_UPDATED" }
   | {
       type: "VERSION_CREATED"
       versionId: string

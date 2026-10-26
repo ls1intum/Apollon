@@ -131,7 +131,13 @@ export const ShareDashboardModal = ({ modelId }: ShareDashboardModalProps) => {
             copied={share.copied}
             onCopy={() => void share.copy()}
             mode={share.mode}
-            options={MODE_OPTIONS}
+            options={
+              share.canWrite
+                ? MODE_OPTIONS
+                : MODE_OPTIONS.filter(
+                    (option) => option.value === DiagramView.SEE_FEEDBACK
+                  )
+            }
             onSelectMode={share.selectMode}
           />
         </HomeDialogField>

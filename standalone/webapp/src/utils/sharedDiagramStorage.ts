@@ -9,6 +9,7 @@ const SHARED_DIAGRAM_EXPIRY_GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000
 
 export type SharedDiagramEntry = {
   id: string
+  writeToken?: string
   sharedAt: string
   favorite: boolean
   lastSharedView: DiagramView
@@ -67,6 +68,8 @@ const readStore = (): SharedDiagramStore => {
     return {
       entries: entries.map((entry) => ({
         id: entry.id,
+        writeToken:
+          typeof entry.writeToken === "string" ? entry.writeToken : undefined,
         sharedAt: entry.sharedAt,
         favorite: Boolean((entry as Partial<SharedDiagramEntry>).favorite),
         // Entries with no stored mode default to EDIT (the Collaborate default
@@ -121,7 +124,71 @@ export const subscribeToSharedDiagramChange = (
 export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>
   readStore().entries
 
+// Capabilities the server rejected in this page session. A rejected `#access`
+// token stays in the address bar, so it must be skipped instead of deleted.
+const rejectedWriteTokens = new Set<string>()
+
+// Capabilities are compact JWS tokens. Anything else (for example a damaged
+// `#access` value with a line break) is not a capability, and fetch would throw
+// on it as an invalid Authorization header value.
+const COMPACT_JWS = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
+
+const usableWriteToken = (token: string | null | undefined) =>
+  token && COMPACT_JWS.test(token) && !rejectedWriteTokens.has(token)
+    ? token
+    : undefined
+
+export const getSharedDiagramWriteToken = (
+  diagramId: string
+): string | undefined => {
+  if (typeof window === "undefined") return undefined
+  if (window.location.pathname === `/shared/${encodeURIComponent(diagramId)}`) {
+    const fromLink = usableWriteToken(
+      new URLSearchParams(window.location.hash.slice(1)).get("access")
+    )
+    if (fromLink) return fromLink
+  }
+  return usableWriteToken(
+    readStore().entries.find((entry) => entry.id === diagramId)?.writeToken
+  )
+}
+
+const setEntryWriteToken = (
+  diagramId: string,
+  writeToken: string | undefined
+) => {
+  const { entries } = readStore()
+  writeStore({
+    entries: entries.map((entry) =>
+      entry.id === diagramId ? { ...entry, writeToken } : entry
+    ),
+  })
+}
+
+// Caches a capability the server confirmed. Unlike addSharedDiagramEntry, this
+// keeps the entry's position and timestamps and writes nothing when the token
+// is unchanged, because the gallery refetches whenever the entry order changes.
+export const storeSharedDiagramWriteToken = (
+  diagramId: string,
+  writeToken: string
+) => {
+  const entry = readStore().entries.find((e) => e.id === diagramId)
+  if (!entry) addSharedDiagramEntry(diagramId, { writeToken })
+  else if (entry.writeToken !== writeToken)
+    setEntryWriteToken(diagramId, writeToken)
+}
+
+export const discardSharedDiagramWriteToken = (
+  diagramId: string,
+  writeToken: string
+) => {
+  rejectedWriteTokens.add(writeToken)
+  const entry = readStore().entries.find((e) => e.id === diagramId)
+  if (entry?.writeToken === writeToken) setEntryWriteToken(diagramId, undefined)
+}
+
 type AddSharedDiagramEntryOptions = {
+  writeToken?: string
   lastSharedView?: DiagramView
   sourceModelId?: string
   lastCopiedAt?: string
@@ -149,6 +216,7 @@ export const addSharedDiagramEntry = (
     entries: [
       {
         id: normalizedId,
+        writeToken: options.writeToken ?? existingEntry?.writeToken,
         sharedAt: now,
         favorite: existingEntry?.favorite ?? false,
         // New share with no explicit mode adopts the Collaborate default; an

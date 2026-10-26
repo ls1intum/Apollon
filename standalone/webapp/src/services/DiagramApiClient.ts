@@ -1,6 +1,14 @@
 import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
-import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
+import {
+  buildSharedDiagramUrl,
+  normalizeSharedDiagramView,
+} from "@/utils/sharedDiagramLinks"
+import {
+  discardSharedDiagramWriteToken,
+  getSharedDiagramWriteToken,
+  storeSharedDiagramWriteToken,
+} from "@/utils/sharedDiagramStorage"
 import type {
   ApiErrorBody,
   ApiErrorCode,
@@ -40,6 +48,11 @@ async function request<T>(
     Accept: "application/json",
     ...opts.headers,
   }
+  const diagramId = /^\/api\/diagrams\/([^/?#]+)/.exec(path)?.[1]
+  const writeToken = diagramId
+    ? getSharedDiagramWriteToken(diagramId)
+    : undefined
+  if (writeToken) headers.Authorization = `Bearer ${writeToken}`
   if (opts.body !== undefined && !(opts.body instanceof FormData)) {
     headers["Content-Type"] = "application/json"
   }
@@ -72,6 +85,13 @@ async function request<T>(
       message: `Request failed with status ${res.status}`,
       requestId: "",
     }
+    if (diagramId && writeToken && body.error === "INVALID_CAPABILITY") {
+      // Diagrams stay publicly readable when a capability is revoked (for
+      // example after OWNER_SECRET rotation), so a read retries without it.
+      // The retry cannot loop: the discarded token is never sent again.
+      discardSharedDiagramWriteToken(diagramId, writeToken)
+      if ((opts.method ?? "GET") === "GET") return request<T>(path, opts)
+    }
     throw new ApiError(res.status, body.error, body.message, body)
   }
 
@@ -86,7 +106,9 @@ export const DiagramApiClient = {
     const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`, {
       signal: opts.signal,
     })
-    return data
+    const { writeToken, ...diagram } = data
+    if (writeToken) storeSharedDiagramWriteToken(diagramId, writeToken)
+    return diagram
   },
 
   /**
@@ -112,7 +134,9 @@ export const DiagramApiClient = {
       method: "POST",
       body: model,
     })
-    return data
+    const { writeToken, ...diagram } = data
+    if (writeToken) storeSharedDiagramWriteToken(data.id, writeToken)
+    return diagram
   },
 
   async deleteDiagram(diagramId: string): Promise<void> {
@@ -124,11 +148,7 @@ export const DiagramApiClient = {
     opts: { signal?: AbortSignal } = {}
   ): Promise<StoredDiagram | null> {
     try {
-      const { data } = await request<StoredDiagram>(
-        `/api/diagrams/${diagramId}`,
-        { signal: opts.signal }
-      )
-      return data
+      return await DiagramApiClient.fetchDiagram(diagramId, opts)
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return null
       throw err
@@ -246,15 +266,14 @@ export const VersionApiClient = {
   /**
    * Permalink to a specific version, opened in preview mode. Preserves the
    * current `view` param — ApollonShared rejects URLs that omit it ("Invalid
-   * view type"), so a copied link would 404. Falls back to `collaborate` when
-   * the page has no `view` (e.g. local mode).
+   * view type"). The link never carries the write capability: a version link
+   * is for reading, and its recipients must not get write, restore, or delete
+   * access.
    */
   permalink(diagramId: string, versionId: string): string {
-    const current = new URLSearchParams(window.location.search)
-    const params = new URLSearchParams()
-    params.set("view", current.get("view") ?? "collaborate")
-    params.set("version", versionId)
-    // Native-aware origin (capacitor://localhost isn't externally openable).
-    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}`
+    const view = normalizeSharedDiagramView(
+      new URLSearchParams(window.location.search).get("view")
+    )
+    return `${buildSharedDiagramUrl(diagramId, view)}&version=${encodeURIComponent(versionId)}`
   },
 }

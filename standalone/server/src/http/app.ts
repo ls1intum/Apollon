@@ -8,6 +8,7 @@ import { requestId } from "./middleware/requestId.js"
 import { httpLogger } from "./middleware/logger.js"
 import { configureCors } from "./middleware/cors.js"
 import { ownerReader } from "./middleware/owner.js"
+import { diagramAccess } from "./middleware/access.js"
 import { errorHandler } from "./middleware/errors.js"
 import { Errors } from "./errors.js"
 import { mountDiagramRoutes } from "../routes/diagrams.js"
@@ -91,6 +92,7 @@ export function buildApp(deps: AppDeps): ServerType {
   app.use(httpLogger({ autoLogging }))
   app.use(configureCors(config))
   app.use(ownerReader({ secret: config.OWNER_SECRET }))
+  app.use(diagramAccess(config, redis))
 
   // Map every uncaught error (thrown ApiError, redis disconnects, anything) to
   // the typed error envelope. Registered as the app-level onError so it covers

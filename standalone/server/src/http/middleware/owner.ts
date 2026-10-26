@@ -7,7 +7,7 @@ import { getCookie, setCookie } from "hono/cookie"
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto"
 import type { AppEnv } from "../env.js"
 
-const COOKIE_PREFIX = "apollon_owner_"
+const COOKIE_PREFIX = "apollon_owner_v2_"
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 180 // 180 days
 const NONCE_BYTES = 16
 
@@ -17,7 +17,7 @@ interface OwnerCookieOptions {
 
 function sign(diagramId: string, nonce: string, secret: string): string {
   return createHmac("sha256", secret)
-    .update(`${diagramId}|${nonce}`)
+    .update(`apollon-owner-v2|${diagramId}|${nonce}`)
     .digest("hex")
 }
 
@@ -52,7 +52,7 @@ function verify(
 //   /api/diagrams/:diagramId/versions[/...]
 const DIAGRAM_ID_RE = /^\/api\/diagrams\/([A-Za-z0-9_-]+)(?:\/|$)/
 
-function readDiagramIdFromPath(path: string): string | undefined {
+export function readDiagramIdFromPath(path: string): string | undefined {
   const match = DIAGRAM_ID_RE.exec(path)
   return match ? match[1] : undefined
 }
@@ -62,7 +62,9 @@ function readDiagramIdFromPath(path: string): string | undefined {
  * `c.var.isOwner` (true|false) and — when a diagram id is present in the path —
  * the `X-Owner-Match` response header.
  *
- * Never blocks a request — friction, not security.
+ * Only diagram creation issues the owner cookie, so a valid cookie proves that
+ * this browser created the diagram. The `v2` cookie name and signature context
+ * reject owner cookies in any other format.
  */
 export function ownerReader({ secret }: OwnerCookieOptions) {
   return createMiddleware<AppEnv>(async (c, next) => {

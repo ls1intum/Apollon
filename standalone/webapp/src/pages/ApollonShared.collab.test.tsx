@@ -7,6 +7,7 @@ import { stubVersionRepository } from "@/test/versionRepositoryStub"
 import { EditorProvider, ModalProvider } from "@/contexts"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { ApollonShared } from "./ApollonShared"
+import { ApiError } from "@/services/DiagramApiClient"
 import type { ControlEvent, Diagram, VersionSummary } from "@/types"
 import type { UMLModel } from "@tumaet/apollon"
 
@@ -26,7 +27,12 @@ import type { UMLModel } from "@tumaet/apollon"
  */
 
 const DIAGRAM_ID = "collab-1"
-const HEAD_MODEL = { id: DIAGRAM_ID, nodes: [{ id: "head" }], edges: [] }
+const HEAD_MODEL = {
+  id: DIAGRAM_ID,
+  nodes: [{ id: "head" }],
+  edges: [],
+  canWrite: true,
+}
 const PREVIEW_BODY = {
   id: DIAGRAM_ID,
   nodes: [{ id: "old" }],
@@ -35,6 +41,7 @@ const PREVIEW_BODY = {
 
 const wsHoisted = vi.hoisted(() => ({
   control: null as ((event: ControlEvent) => void) | null,
+  onError: null as ((event: Event) => void) | null,
 }))
 const editorHoisted = vi.hoisted(() => ({ instance: null as unknown }))
 
@@ -43,11 +50,14 @@ const FakeApollonEditor = vi.hoisted(
     class FakeApollonEditor {
       model: object = {}
       previewMode = false
+      readonly: boolean[] = []
+      modelChanged: (() => void) | null = null
       constructor() {
         editorHoisted.instance = this
       }
       destroy() {}
-      subscribeToModelChange() {
+      subscribeToModelChange(listener: () => void) {
+        this.modelChanged = listener
         return 1
       }
       subscribeToDiagramNameChange() {
@@ -57,7 +67,9 @@ const FakeApollonEditor = vi.hoisted(
         return { diagramTitle: "Collab" }
       }
       unsubscribe() {}
-      setReadonly() {}
+      setReadonly(readonly: boolean) {
+        this.readonly.push(readonly)
+      }
       setPreviewMode(active: boolean) {
         this.previewMode = active
       }
@@ -77,6 +89,9 @@ vi.mock("@tumaet/apollon", async (importOriginal) => {
 
 vi.mock("@/services/WebSocketManager", () => ({
   WebSocketManager: class {
+    constructor(_id: string, _editor: unknown, onError: (e: Event) => void) {
+      wsHoisted.onError = onError
+    }
     startConnection() {}
     onControl(listener: (event: ControlEvent) => void) {
       wsHoisted.control = listener
@@ -89,13 +104,14 @@ vi.mock("@/services/WebSocketManager", () => ({
 }))
 
 const fetchDiagram = vi.hoisted(() => vi.fn())
+const sendDiagramUpdate = vi.hoisted(() => vi.fn())
 vi.mock("@/services/DiagramApiClient", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     DiagramApiClient: {
       fetchDiagram,
-      sendDiagramUpdate: vi.fn(async () => ({ headRev: 1, updatedAt: "" })),
+      sendDiagramUpdate,
     },
   }
 })
@@ -150,9 +166,12 @@ async function mountEditor({
 beforeEach(() => {
   sessionStorage.setItem("apollon-collab-name", "tester")
   wsHoisted.control = null
+  wsHoisted.onError = null
   editorHoisted.instance = null
   fetchDiagram.mockReset()
   fetchDiagram.mockResolvedValue(HEAD_MODEL as unknown as Diagram)
+  sendDiagramUpdate.mockReset()
+  sendDiagramUpdate.mockResolvedValue({ headRev: 1, updatedAt: "" })
   restoreRepository = stubVersionRepository("remote", {
     list: async () => ({
       versions: [version("v1")],
@@ -178,7 +197,124 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+describe("losing write access during a session", () => {
+  type Editor = { readonly: boolean[]; modelChanged: (() => void) | null }
+
+  it("switches to read-only with one lasting message when the relay rejects the capability", async () => {
+    await mountEditor()
+    const error = vi.spyOn(toast, "error")
+    const editor = editorHoisted.instance as Editor
+    for (let i = 0; i < 2; i++) {
+      act(() => wsHoisted.onError!(new CloseEvent("close", { code: 1008 })))
+    }
+    expect(editor.readonly.at(-1)).toBe(true)
+    expect(error).toHaveBeenCalledOnce()
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("read-only"),
+      expect.objectContaining({ autoClose: false })
+    )
+  })
+
+  it("switches to read-only instead of retrying when a save is rejected", async () => {
+    await mountEditor()
+    const error = vi.spyOn(toast, "error")
+    const editor = editorHoisted.instance as Editor
+    sendDiagramUpdate.mockRejectedValue(
+      new ApiError(401, "INVALID_CAPABILITY", "Invalid write capability")
+    )
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    try {
+      await act(async () => {
+        editor.modelChanged!()
+        await vi.advanceTimersByTimeAsync(5000)
+        editor.modelChanged!()
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(editor.readonly.at(-1)).toBe(true)
+    expect(error).toHaveBeenCalledOnce()
+    expect(error).not.toHaveBeenCalledWith("Failed to sync changes")
+    cleanup()
+    expect(sendDiagramUpdate).toHaveBeenCalledOnce()
+  })
+})
+
 describe("a collaborator's actions, as this client sees them", () => {
+  it("does not let a preview-exit fetch overwrite a newer reader update", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    const view = await mountEditor({ previewVersion: "v1" })
+    await waitFor(() =>
+      expect(
+        (editorHoisted.instance as { previewMode: boolean }).previewMode
+      ).toBe(true)
+    )
+    await emit({ type: "DIAGRAM_UPDATED" })
+    const pending: ((diagram: Diagram) => void)[] = []
+    fetchDiagram.mockImplementation(
+      () => new Promise((resolve) => pending.push(resolve))
+    )
+    act(() => view.history.push(`/shared/${DIAGRAM_ID}?view=COLLABORATE`))
+    await waitFor(() => expect(pending).toHaveLength(1))
+    await emit({ type: "DIAGRAM_UPDATED" })
+    expect(pending).toHaveLength(2)
+    const latest = { ...HEAD_MODEL, nodes: [], canWrite: false }
+    await act(async () => pending[1]!(latest as unknown as Diagram))
+    await act(async () => pending[0]!(HEAD_MODEL as unknown as Diagram))
+    expect((editorHoisted.instance as { model: object }).model).toEqual(latest)
+  })
+  it("coalesces a burst of reader refreshes into one request and one trailing refresh", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    await mountEditor()
+    const pending: ((diagram: Diagram) => void)[] = []
+    fetchDiagram.mockReset()
+    fetchDiagram.mockImplementation(
+      () => new Promise((resolve) => pending.push(resolve))
+    )
+    for (let i = 0; i < 5; i++) await emit({ type: "DIAGRAM_UPDATED" })
+    expect(pending).toHaveLength(1)
+    await act(async () => pending[0]!(HEAD_MODEL as unknown as Diagram))
+    expect(pending).toHaveLength(2)
+    const latest = { ...HEAD_MODEL, nodes: [], canWrite: false }
+    await act(async () => pending[1]!(latest as unknown as Diagram))
+    expect(fetchDiagram).toHaveBeenCalledTimes(2)
+    expect((editorHoisted.instance as { model: object }).model).toEqual(latest)
+  })
+
+  it("does not replace a preview with a late reader HEAD response", async () => {
+    fetchDiagram.mockResolvedValue({
+      ...HEAD_MODEL,
+      canWrite: false,
+    } as unknown as Diagram)
+    const view = await mountEditor()
+    let finish!: (diagram: Diagram) => void
+    fetchDiagram.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        })
+    )
+    await emit({ type: "DIAGRAM_UPDATED" })
+    act(() =>
+      view.history.push(`/shared/${DIAGRAM_ID}?view=COLLABORATE&version=v1`)
+    )
+    await waitFor(() =>
+      expect(
+        (editorHoisted.instance as { previewMode: boolean }).previewMode
+      ).toBe(true)
+    )
+    await act(async () => finish(HEAD_MODEL as unknown as Diagram))
+    expect((editorHoisted.instance as { model: object }).model).toEqual(
+      PREVIEW_BODY
+    )
+  })
   it("refreshes the canvas and announces a peer's restore", async () => {
     await mountEditor()
     const editor = editorHoisted.instance as { model: object }

@@ -57,6 +57,7 @@ const SIDEBAR_WIDTH = 320
 const EMPTY_VERSIONS: readonly PendingVersion[] = Object.freeze([])
 
 interface Props {
+  canWrite?: boolean
   diagramId: string
   onVersionSaved?: (headRev?: number) => void
   /**
@@ -88,6 +89,7 @@ export const VersionSidebarBody: FC<Props> = ({
   onVersionSaved,
   onConfirmedRestore,
   onPreview,
+  canWrite = true,
 }) => {
   const kind = useVersionRepositoryKind()
   const repo = getVersionRepository(kind)
@@ -304,6 +306,7 @@ export const VersionSidebarBody: FC<Props> = ({
   // version of old content). Block Save in that mode regardless of diff.
   // Also block on empty diagrams (the server skips them too).
   const canSave =
+    canWrite &&
     Boolean(editor) &&
     initialListLoaded &&
     baselineResolved &&
@@ -313,7 +316,7 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const handleCreate = (saveableOverride?: boolean) => {
     const saveable = saveableOverride ?? canSave
-    if (!editor || submitting || !saveable) return
+    if (!canWrite || !editor || submitting || !saveable) return
     // Request persistent storage from inside the click handler — running
     // it after the await chain below would leave the user-gesture window
     // (Firefox would silently deny). No-op for adapters that don't
@@ -439,7 +442,7 @@ export const VersionSidebarBody: FC<Props> = ({
 
   const handleRestore = useCallback(
     async (versionId: string) => {
-      if (!editor) return
+      if (!canWrite || !editor) return
       // Local mode: delegate to the page handler which gates on a confirm
       // dialog when the canvas is dirty (replaces collab's 10s snackbar).
       if (onConfirmedRestore) {
@@ -460,17 +463,24 @@ export const VersionSidebarBody: FC<Props> = ({
         toast.error(t.restoreFailed)
       }
     },
-    [editor, restoreMutation.mutateAsync, onVersionSaved, onConfirmedRestore]
+    [
+      editor,
+      restoreMutation.mutateAsync,
+      onVersionSaved,
+      onConfirmedRestore,
+      canWrite,
+    ]
   )
 
   const handleDelete = useCallback(
     (versionId: string) => {
+      if (!canWrite) return
       // Resolve the target here (we already hold the list) and pass it down so
       // the modal doesn't re-read the store for data we have.
       const version = versions.find((v) => v.id === versionId) ?? null
       openModal("DELETE_VERSION", { diagramId, versionId, version, kind })
     },
-    [openModal, diagramId, versions, kind]
+    [openModal, diagramId, versions, kind, canWrite]
   )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
@@ -719,6 +729,7 @@ export const VersionSidebarBody: FC<Props> = ({
             {groupedVersions.map((entry) =>
               entry.kind === "auto-group" ? (
                 <AutoGroupRow
+                  canWrite={canWrite}
                   key={entry.first.id}
                   group={entry}
                   diagramId={diagramId}
@@ -732,6 +743,7 @@ export const VersionSidebarBody: FC<Props> = ({
                 />
               ) : (
                 <VersionListItem
+                  canWrite={canWrite}
                   key={entry.version.id}
                   diagramId={diagramId}
                   version={entry.version}
@@ -742,7 +754,8 @@ export const VersionSidebarBody: FC<Props> = ({
                   // unsaved changes, restoring even the latest version is
                   // a real action ("discard my work").
                   canRestore={
-                    entry.version.id !== latestSavedVersion?.id || hasChanges
+                    canWrite &&
+                    (entry.version.id !== latestSavedVersion?.id || hasChanges)
                   }
                   onPreview={handlePreview}
                   onRestore={handleRestore}
@@ -795,6 +808,7 @@ export const VersionRail: FC<Props> = ({
   onVersionSaved,
   onConfirmedRestore,
   onPreview,
+  canWrite = true,
 }) => {
   const { editor } = useEditorContext()
   const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
@@ -839,6 +853,7 @@ export const VersionRail: FC<Props> = ({
       onTouchStartCapture={(e) => e.stopPropagation()}
     >
       <VersionSidebarBody
+        canWrite={canWrite}
         diagramId={diagramId}
         onVersionSaved={onVersionSaved}
         onConfirmedRestore={onConfirmedRestore}
@@ -858,6 +873,7 @@ export const VersionDrawer: FC<Props> = ({
   onVersionSaved,
   onConfirmedRestore,
   onPreview,
+  canWrite = true,
 }) => {
   const isSmall = useMediaQuery(NARROW_VIEW_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
@@ -887,6 +903,7 @@ export const VersionDrawer: FC<Props> = ({
         aria-label={t.drawerTitle}
       >
         <VersionSidebarBody
+          canWrite={canWrite}
           diagramId={diagramId}
           onVersionSaved={onVersionSaved}
           onConfirmedRestore={onConfirmedRestore}

@@ -4,7 +4,7 @@
 // `window`, `document`, or the apollon library.
 // `canvas` is aliased to @napi-rs/canvas (see standalone/server/package.json);
 // jsdom's HTMLCanvasElement resolves the same alias for getContext().
-import { GlobalFonts } from "canvas"
+import { DOMMatrix, GlobalFonts } from "canvas"
 import { fileURLToPath } from "node:url"
 import "global-jsdom/register"
 import { installSvgPathGeometry } from "./svgPathGeometry.js"
@@ -58,6 +58,22 @@ const w = window as Window & typeof globalThis
 const g = globalThis as typeof globalThis & { ResizeObserver?: unknown }
 
 g.ResizeObserver ??= ResizeObserverShim
+// JSDOM leaves React Flow's viewport transform as `translate(...) scale(...)`,
+// and the canvas DOMMatrix parses only matrix forms. Read that one viewport
+// format as its equivalent matrix; any other input keeps the canvas behaviour.
+// JSDOM computed styles are read-only, so the parse happens here.
+const VIEWPORT_TRANSFORM =
+  /^translate\(([-+\deE.]+)px,\s*([-+\deE.]+)px\) scale\(([-+\deE.]+)\)$/
+class ViewportDOMMatrix extends DOMMatrix {
+  constructor(init?: string | number[]) {
+    const match =
+      typeof init === "string" ? VIEWPORT_TRANSFORM.exec(init) : null
+    const [x = NaN, y = NaN, zoom = NaN] = match?.slice(1).map(Number) ?? []
+    if ([x, y, zoom].every(Number.isFinite)) super([zoom, 0, 0, zoom, x, y])
+    else super(init)
+  }
+}
+w.DOMMatrixReadOnly ??= ViewportDOMMatrix as unknown as typeof DOMMatrixReadOnly
 w.requestAnimationFrame ??= (cb: FrameRequestCallback) =>
   setTimeout(() => cb(Date.now()), 16) as unknown as number
 w.cancelAnimationFrame ??= (id: number) => clearTimeout(id)
