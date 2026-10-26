@@ -1,5 +1,18 @@
 # @tumaet/server
 
+## 5.5.0
+
+### Patch Changes
+
+- [#864](https://github.com/ls1intum/Apollon/pull/864) [`6a69d2a`](https://github.com/ls1intum/Apollon/commit/6a69d2a3096cbae6e0a0a737bad6b267e69a0663) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Review links now prevent changes even when the URL view is changed. Editing requires a write link; older shares remain readable and can be copied into a new share to edit.
+
+  Server-rendered previews and exports also avoid repeated viewport transform errors.
+
+- [#877](https://github.com/ls1intum/Apollon/pull/877) [`a365003`](https://github.com/ls1intum/Apollon/commit/a365003a3d9ac546fa24433b9d38e50cd07d46b7) Thanks [@renovate](https://github.com/apps/renovate)! - Updates the editor's underlying libraries to their latest fixes, including React 19.3.1, Base UI 1.9, lucide-react 1.61 and Zustand 5.0.16, with no change to the public API.
+
+- Updated dependencies [[`2b00e5f`](https://github.com/ls1intum/Apollon/commit/2b00e5f3e204334d216e5f7a177c1d0ea57e4075), [`a365003`](https://github.com/ls1intum/Apollon/commit/a365003a3d9ac546fa24433b9d38e50cd07d46b7)]:
+  - @tumaet/apollon@5.5.0
+
 ## 5.4.0
 
 ### Patch Changes
