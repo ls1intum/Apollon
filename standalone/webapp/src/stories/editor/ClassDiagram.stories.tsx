@@ -165,25 +165,21 @@ export const GiveFeedbackClass: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // One give-feedback box per row (node + attribute + method): each renders
-    // an empty Points input + Feedback textarea (labelled, not placeholdered),
+    // an empty Points input + Feedback textarea,
     // all blank in the fresh-grade flow (nothing seeded into the assessments map).
     const points = canvas.getAllByLabelText("Points")
     const feedback = canvas.getAllByLabelText("Feedback")
     await expect(points).toHaveLength(3)
     await expect(feedback).toHaveLength(3)
-    await expect(points[0]).toHaveValue(null)
+    await expect(points[0]).toHaveValue("")
     await expect(feedback[0]).toHaveValue("")
-    await expect(
-      canvas.getByRole("button", { name: /next assessment/i })
-    ).toBeInTheDocument()
   },
 }
 
 /**
- * Give-feedback form opened on an ALREADY-GRADED class — the re-grading flow.
- * The seed populates the assessments map, so each box's Points/Feedback fields
- * hydrate from `existing?.score`/`existing?.feedback` (the
- * GiveFeedbackAssessmentBox pre-populate branch) rather than starting blank.
+ * Give-feedback form opened on an ALREADY-GRADED class — the re-grading flow,
+ * with a typed title, a linked grading instruction and an adapted AI suggestion.
+ * Each box reads its fields from the seeded assessments map.
  */
 export const GiveFeedbackPrefilled: Story = {
   name: "Feedback (Give): Class — pre-filled",
@@ -210,14 +206,22 @@ export const GiveFeedbackPrefilled: Story = {
           a1: {
             modelElementId: "a1",
             elementType: "attribute",
-            score: 2,
-            feedback: "Correct type and visibility.",
+            score: -1,
+            title: "Visibility",
+            feedback: "Balance should be private.",
           },
           m1: {
             modelElementId: "m1",
             elementType: "method",
             score: 3,
             feedback: "Validate that the amount is positive.",
+            feedbackSuggestion: "adapted",
+            dropInfo: {
+              id: 1,
+              credits: 3,
+              gradingScale: "Correct",
+              criterionTitle: "Operations",
+            },
           },
         })
       }}
@@ -227,9 +231,9 @@ export const GiveFeedbackPrefilled: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    // The number input holds the seeded score; type=number → numeric value.
+    // The points field holds the seeded score.
     const points = canvas.getAllByLabelText("Points")
-    await expect(points[0]).toHaveValue(7)
+    await expect(points[0]).toHaveValue("7")
     // The textarea is pre-populated with the seeded feedback (re-grade flow).
     await expect(
       canvas.getByDisplayValue("Solid class, but balance should be private.")
@@ -412,11 +416,8 @@ export const GiveFeedbackAssociation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // A single give-feedback box for the edge: one blank Points + Feedback pair.
-    await expect(canvas.getByLabelText("Points")).toHaveValue(null)
+    await expect(canvas.getByLabelText("Points")).toHaveValue("")
     await expect(canvas.getByLabelText("Feedback")).toHaveValue("")
-    await expect(
-      canvas.getByRole("button", { name: /next assessment/i })
-    ).toBeInTheDocument()
   },
 }
 

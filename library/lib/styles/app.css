@@ -1540,10 +1540,6 @@ svg.react-flow__connectionline {
   font-variant-numeric: tabular-nums;
 }
 
-[data-slot="assessment-score"] > svg {
-  flex: none;
-}
-
 /* Tone pairs read the --apollon-assessment-* ramp (light/dark deltas live in
    tokens.css). The var() fallbacks mirror the light values per this file's
    convention; the real source — and the dark theme — lives in tokens.css. */
@@ -1565,6 +1561,144 @@ svg.react-flow__connectionline {
 [data-slot="assessment-score"][data-tone="ungraded"] {
   color: var(--apollon-assessment-ungraded-text, #475569);
   background-color: var(--apollon-assessment-ungraded-bg, #f1f5f9);
+}
+
+/* Editable counterpart of the score pill (AssessmentScoreInput): a neutral
+   pill with +/- steppers; only the number carries the tone. */
+[data-slot="assessment-score-input"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--apollon-border, #cdd5df);
+  background-color: var(--apollon-surface, #fff);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot="assessment-score-input"]:has(input:focus-visible) {
+  outline: 2px solid var(--apollon-primary, #3e8acc);
+  outline-offset: 2px;
+}
+
+[data-slot="assessment-score-input"] input {
+  width: 4ch;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+[data-slot="assessment-score-input"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+}
+
+[data-slot="assessment-score-input"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+}
+
+[data-slot="assessment-score-input"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+}
+
+[data-slot="assessment-score-step"] {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--apollon-foreground, #000);
+}
+
+[data-slot="assessment-score-step"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+[data-slot="assessment-score-step"]:not(:disabled):hover {
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 16%,
+    transparent
+  );
+}
+
+/* Armed two-step delete. */
+[data-slot="icon-button"][data-field="assessment-delete"][data-confirming] {
+  color: var(--apollon-danger, #721c24);
+}
+
+[data-field="assessment-title"][data-slot="textarea"] {
+  font-weight: 600;
+}
+
+[data-slot="assessment-reference-label"] {
+  opacity: 0.7;
+}
+
+/* Round, tone-tinted icon in front of an assessment title; it lines up with
+   the title's first line. */
+[data-slot="assessment-title-badge"] {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: 0.125rem;
+  border-radius: 50%;
+}
+
+[data-slot="assessment-title-badge"][data-tone="positive"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+  background-color: var(--apollon-assessment-positive-bg, #dcfce7);
+}
+
+[data-slot="assessment-title-badge"][data-tone="negative"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+  background-color: var(--apollon-assessment-negative-bg, #fee2e2);
+}
+
+[data-slot="assessment-title-badge"][data-tone="zero"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+  background-color: var(--apollon-assessment-zero-bg, #dbeafe);
+}
+
+/* Editable (give-feedback) and read-only (see-feedback) titles. */
+[data-field="assessment-title"][data-tone="positive"],
+[data-slot="assessment-title-row"][data-tone="positive"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-positive-text, #166534);
+}
+
+[data-field="assessment-title"][data-tone="negative"],
+[data-slot="assessment-title-row"][data-tone="negative"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-negative-text, #991b1b);
+}
+
+[data-field="assessment-title"][data-tone="zero"],
+[data-slot="assessment-title-row"][data-tone="zero"]
+  > [data-slot="typography"] {
+  color: var(--apollon-assessment-zero-text, #1e40af);
+}
+
+[data-slot="assessment-suggestion-badge"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--apollon-assessment-suggestion-text, #7e22ce);
 }
 
 /* On-canvas feedback badge: a soft drop-shadow lifts the tone-tinted disc off
@@ -1606,6 +1740,75 @@ svg.react-flow__connectionline {
     transparent
   );
   color: var(--apollon-foreground, #000);
+}
+
+/* "Linked to <criterion>" chip of an assessment linked to a grading
+   instruction: criterion, grading scale and remove button as segments of one
+   outlined chip. The inset shadow outlines it without making it taller. */
+[data-slot="assessment-linked-criterion"] {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: var(--apollon-radius-sm, 4px);
+  background-color: color-mix(
+    in srgb,
+    var(--apollon-foreground, #000) 5%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px var(--apollon-border, #cdd5df);
+  color: var(--apollon-foreground, #000);
+}
+
+[data-slot="assessment-linked-criterion-text"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 1px 6px;
+}
+
+[data-slot="assessment-linked-criterion-text"] > svg {
+  flex: none;
+  opacity: 0.6;
+}
+
+[data-slot="assessment-linked-criterion-title"],
+[data-slot="assessment-linked-criterion-scale"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-slot="assessment-linked-criterion-title"] {
+  font-weight: 600;
+}
+
+/* Never more than half the chip, so the criterion stays readable. */
+[data-slot="assessment-linked-criterion-scale"] {
+  max-width: 50%;
+  padding: 1px 6px;
+  border-left: 1px solid var(--apollon-border, #cdd5df);
+  font-weight: 500;
+}
+
+/* The shared 28px icon button shrinks to the chip's height. */
+[data-slot="assessment-linked-criterion"] [data-slot="icon-button"] {
+  flex: none;
+  width: 20px;
+  height: auto;
+  border-left: 1px solid var(--apollon-border, #cdd5df);
+  border-radius: 0 var(--apollon-radius-sm, 4px) var(--apollon-radius-sm, 4px) 0;
+  opacity: 0.6;
+}
+
+[data-slot="assessment-linked-criterion"] [data-slot="icon-button"]:hover,
+[data-slot="assessment-linked-criterion"]
+  [data-slot="icon-button"]:focus-visible,
+[data-slot="assessment-linked-criterion"]
+  [data-slot="icon-button"][data-confirming] {
+  opacity: 1;
 }
 
 /* Divider line (StyleEditor color rows, etc). Visual tokens live here, routed

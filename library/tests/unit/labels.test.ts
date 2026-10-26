@@ -15,6 +15,19 @@ describe("mergeLabels", () => {
       scrollLockHint: _scrollLockHint,
       scrollLockHintTouch: _scrollLockHintTouch,
       previousAssessment: _previousAssessment,
+      decreasePoints: _decreasePoints,
+      increasePoints: _increasePoints,
+      assessmentTitle: _assessmentTitle,
+      positiveFeedback: _positiveFeedback,
+      needsRevision: _needsRevision,
+      feedbackRequired: _feedbackRequired,
+      aiFeedbackSuggestion: _aiFeedbackSuggestion,
+      adaptedAiFeedbackSuggestion: _adaptedAiFeedbackSuggestion,
+      confirmDeleteAssessment: _confirmDeleteAssessment,
+      linkedCriterion: _linkedCriterion,
+      linkedCriterionFallback: _linkedCriterionFallback,
+      removeLinkedCriterion: _removeLinkedCriterion,
+      confirmRemoveLinkedCriterion: _confirmRemoveLinkedCriterion,
       ...legacyDictionary
     } = DEFAULT_LABELS
     const compatibleDictionary: ApollonLabels = legacyDictionary

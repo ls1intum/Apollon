@@ -183,7 +183,6 @@ export const GiveFeedbackUseCase: Story = {
     const canvas = within(canvasElement)
     // Header names the seeded use case; the box renders a score + feedback form.
     await canvas.findByText("Place Order")
-    // Points/Feedback are field LABELS now (placeholder is "0"), not placeholders.
     await canvas.findByLabelText("Points")
     await canvas.findByLabelText("Feedback")
   },
@@ -250,7 +249,6 @@ export const GiveFeedbackAssociation: Story = {
     const canvas = within(canvasElement)
     // The edge feedback header names the edge by its type; the box is a form.
     await canvas.findByText("UseCaseAssociation")
-    // Points/Feedback are field LABELS now (placeholder is "0"), not placeholders.
     await canvas.findByLabelText("Points")
     await canvas.findByLabelText("Feedback")
   },

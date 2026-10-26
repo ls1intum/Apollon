@@ -1,8 +1,12 @@
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { AssessmentScore } from "./AssessmentScore"
-import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+import { AssessmentReference, PopoverSection } from "./PopoverLayout"
 import { useLabels } from "@/i18n/useLabels"
+import { Typography } from "../ui"
+import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
+import { assessmentTone, defaultAssessmentTitle } from "@/utils/assessmentTitle"
+import { gradingInstructionOf } from "@/utils/gradingInstruction"
 
 export const SeeFeedbackAssessmentBox = ({
   type,
@@ -24,18 +28,48 @@ export const SeeFeedbackAssessmentBox = ({
     useShallow((state) => state.getAssessment)
   )
   const assessment = getAssessment(elementId)
+  const tone = assessmentTone(assessment?.score ?? 0)
+  const feedbackText =
+    assessment?.feedback || gradingInstructionOf(assessment)?.feedback
 
   // Three states the reader must be able to tell apart, each visually distinct:
   //   no assessment   -> "Not graded" badge, no feedback line
-  //   graded, no note -> tone badge + muted "No comment"
-  //   graded, note    -> tone badge + the feedback text
+  //   graded, no note -> title + tone badge + muted "No comment"
+  //   graded, note    -> title + tone badge + the feedback text
   return (
     <PopoverSection divider={divider}>
-      <AssessmentHeader type={typeLabel ?? type} name={name} />
-      <AssessmentScore score={assessment?.score} />
+      <AssessmentReference type={typeLabel ?? type} name={name} />
+      <div
+        data-slot="assessment-title-row"
+        data-tone={assessment ? tone : undefined}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+        }}
+      >
+        {assessment && (
+          <>
+            <AssessmentTitleBadge tone={tone} />
+            <Typography
+              variant="subtitle2"
+              style={{
+                fontWeight: 600,
+                flex: 1,
+                minWidth: 0,
+                overflowWrap: "anywhere",
+              }}
+            >
+              {assessment.title?.trim() || defaultAssessmentTitle(tone, t)}
+            </Typography>
+          </>
+        )}
+        <AssessmentScore score={assessment?.score} />
+      </div>
       {assessment &&
-        (assessment.feedback ? (
-          <p data-slot="assessment-feedback">{assessment.feedback}</p>
+        (feedbackText ? (
+          <p data-slot="assessment-feedback">{feedbackText}</p>
         ) : (
           <p data-slot="assessment-feedback" data-empty="">
             {t.noComment}

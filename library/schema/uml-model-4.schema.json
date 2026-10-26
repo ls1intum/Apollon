@@ -137,10 +137,17 @@
           "score": {
             "type": "number"
           },
-          "feedback": {
+          "title": {
+            "description": "Short headline. Empty shows a default that follows the score's sign.",
             "type": "string"
           },
-          "dropInfo": {},
+          "feedback": {
+            "description": "The description shown to the student.",
+            "type": "string"
+          },
+          "dropInfo": {
+            "description": "Host metadata, kept as is. An `AssessmentGradingInstruction` links\nthe assessment to that instruction."
+          },
           "label": {
             "type": "string"
           },
@@ -166,6 +173,14 @@
             "required": [
               "status"
             ]
+          },
+          "feedbackSuggestion": {
+            "description": "Marks an assessment taken from an AI feedback suggestion: `\"suggested\"`\nuntil the assessor changes it, `\"adapted\"` after.",
+            "enum": [
+              "adapted",
+              "suggested"
+            ],
+            "type": "string"
           }
         },
         "additionalProperties": false,
