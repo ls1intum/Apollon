@@ -229,21 +229,40 @@ export type FeedbackCorrectionStatus = {
   status: "CORRECT" | "INCORRECT" | "NOT_VALIDATED"
 }
 
+/**
+ * A grading instruction linked to an assessment through `Assessment.dropInfo`,
+ * recognized by its numeric `id`. While linked, it sets the points.
+ */
+export type AssessmentGradingInstruction = {
+  id: number
+  credits?: number
+  /** Shown to the student when the assessment has no description. */
+  feedback?: string
+  /** E.g. "Partially correct". */
+  gradingScale?: string
+  criterionTitle?: string
+}
+
 export type Assessment = {
   modelElementId: string
   elementType: string
   score: number
-  /** Short headline (the host's Feedback.text). Falls back to the element name when empty. */
+  /** Short headline. Empty shows a default that follows the score's sign. */
   title?: string
-  /** Longer explanation (the host's Feedback.detailText). */
+  /** The description shown to the student. */
   feedback?: string
+  /**
+   * Host metadata, kept as is. An `AssessmentGradingInstruction` links
+   * the assessment to that instruction.
+   */
   dropInfo?: unknown
   label?: string
   labelColor?: string
   correctionStatus?: FeedbackCorrectionStatus
-  /** Set when this mirrors an Athena feedback suggestion (the host's Feedback.isFeedbackSuggestion)
-   *  the assessor hasn't accepted-as-is or has edited since. Drives the AI feedback suggestion badge
-   *  in the give-feedback popover. */
+  /**
+   * Marks an assessment taken from an AI feedback suggestion: `"suggested"`
+   * until the assessor changes it, `"adapted"` after.
+   */
   feedbackSuggestion?: "suggested" | "adapted"
 }
 

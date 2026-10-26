@@ -1,672 +1,244 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import { act, fireEvent, render, screen } from "@testing-library/react"
+import * as Y from "yjs"
 import type { Assessment } from "@/typings"
 import { DEFAULT_LABELS, mergeLabels } from "@/i18n/labels"
-
-let assessments: Record<string, Assessment> = {}
-const setAssessments = vi.fn(
-  (
-    update: (prev: Record<string, Assessment>) => Record<string, Assessment>
-  ) => {
-    assessments = update(assessments)
-  }
-)
-
-vi.mock("@/store", () => ({
-  useDiagramStore: (select: (state: unknown) => unknown) =>
-    select({ assessments, setAssessments }),
-}))
-
-vi.mock("@/i18n/useLabels", () => ({
-  useLabels: () => mergeLabels(DEFAULT_LABELS),
-}))
-
+import { DiagramStoreContext, MetadataStoreContext } from "@/store/context"
+import { createDiagramStore } from "@/store/diagramStore"
+import { createMetadataStore } from "@/store/metadataStore"
 import { GiveFeedbackAssessmentBox } from "@/components/popovers/GiveFeedbackAssessmentBox"
-import { clampedScoreInput } from "@/components/popovers/AssessmentScoreInput"
-import { linkGradingInstruction } from "@/utils/gradingInstruction"
 
-const labels = mergeLabels(DEFAULT_LABELS)
+const t = mergeLabels(DEFAULT_LABELS)
+const instruction = {
+  id: 7,
+  credits: 2,
+  feedback: "Correct association",
+  gradingScale: "Correct",
+  criterionTitle: "Association",
+}
 
-const renderBox = () =>
-  render(
-    <GiveFeedbackAssessmentBox
-      elementId="element"
-      name="Person"
-      elementType="node"
-    />
+let diagramStore: ReturnType<typeof createDiagramStore>
+
+const stored = () => diagramStore.getState().assessments.element
+const store = (assessment: Partial<Assessment>) =>
+  act(() =>
+    diagramStore.getState().setAssessments({
+      element: {
+        modelElementId: "element",
+        elementType: "node",
+        score: 0,
+        ...assessment,
+      },
+    })
   )
 
-const deleteButton = () =>
-  document.querySelector<HTMLButtonElement>('[data-field="assessment-delete"]')!
+const renderBox = () => {
+  const ydoc = new Y.Doc()
+  return render(
+    <DiagramStoreContext value={diagramStore}>
+      <MetadataStoreContext value={createMetadataStore(ydoc)}>
+        <GiveFeedbackAssessmentBox
+          elementId="element"
+          name="Person"
+          elementType="node"
+        />
+      </MetadataStoreContext>
+    </DiagramStoreContext>
+  )
+}
 
-describe("GiveFeedbackAssessmentBox delete", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    assessments = {}
+const titleField = () =>
+  screen.getByRole("textbox", { name: t.assessmentTitle })
+const pointsField = () => screen.getByRole("textbox", { name: t.points })
+const descriptionField = () => screen.getByRole("textbox", { name: t.feedback })
+const button = (name: string) => screen.getByRole("button", { name })
+const typePoints = (value: string) => {
+  fireEvent.change(pointsField(), { target: { value } })
+  fireEvent.blur(pointsField())
+}
+
+beforeEach(() => {
+  diagramStore = createDiagramStore(new Y.Doc())
+})
+
+describe("GiveFeedbackAssessmentBox title", () => {
+  it("shows the default title for the sign of the points without storing it", () => {
+    renderBox()
+
+    typePoints("2")
+    expect(stored().score).toBe(2)
+    expect(stored().title).toBeUndefined()
+    expect(titleField()).toHaveAttribute("placeholder", t.positiveFeedback)
+
+    typePoints("-1")
+    expect(titleField()).toHaveAttribute("placeholder", t.needsRevision)
   })
 
-  it("asks for a second click before deleting an assessment with content", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
+  it("lets a stored default title follow the points, but keeps a typed one", () => {
+    store({ score: 2, title: t.positiveFeedback })
+    renderBox()
+    typePoints("-1")
+    expect(stored().title).toBeUndefined()
+
+    fireEvent.change(titleField(), { target: { value: "Wrong multiplicity" } })
+    typePoints("1")
+    expect(stored().title).toBe("Wrong multiplicity")
+  })
+
+  it("keeps host fields on edit, resets the correction status and adapts a suggestion", () => {
+    store({
       score: 2,
-      feedback: "Good",
-    }
+      label: "1st round",
+      labelColor: "#00aa00",
+      correctionStatus: { status: "CORRECT" },
+      dropInfo: { source: "host" },
+      feedbackSuggestion: "suggested",
+    })
     renderBox()
+    expect(screen.getByText(t.aiFeedbackSuggestion)).toBeInTheDocument()
 
-    fireEvent.click(deleteButton())
-    expect(setAssessments).not.toHaveBeenCalled()
-    expect(deleteButton()).toHaveAttribute("data-confirming")
-    expect(deleteButton()).toHaveAttribute(
-      "aria-label",
-      labels.confirmDeleteAssessment
-    )
+    fireEvent.change(titleField(), { target: { value: "Association" } })
 
-    fireEvent.click(deleteButton())
-    expect(assessments.element).toBeUndefined()
-    expect(deleteButton()).not.toHaveAttribute("data-confirming")
-  })
-
-  it("disarms the delete button when the pointer leaves it", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-    }
-    renderBox()
-
-    fireEvent.click(deleteButton())
-    fireEvent.mouseLeave(deleteButton())
-    expect(deleteButton()).not.toHaveAttribute("data-confirming")
-
-    fireEvent.click(deleteButton())
-    expect(assessments.element).toBeDefined()
-  })
-
-  it("stays armed when pressing the button moves focus away from it", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-    }
-    renderBox()
-
-    fireEvent.click(deleteButton())
-    // The editor focuses its root on pointerdown, so the armed button is blurred while the pointer is on it.
-    const matches = vi
-      .spyOn(deleteButton(), "matches")
-      .mockImplementation((selector) => selector === ":hover")
-    fireEvent.focusOut(deleteButton())
-    matches.mockRestore()
-    expect(deleteButton()).toHaveAttribute("data-confirming")
-
-    fireEvent.click(deleteButton())
-    expect(assessments.element).toBeUndefined()
-  })
-
-  it("disarms the delete button when focus moves away without the pointer on it", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-    }
-    renderBox()
-
-    fireEvent.click(deleteButton())
-    // e.g. tabbing away: the pointer is not over the button
-    const matches = vi
-      .spyOn(deleteButton(), "matches")
-      .mockImplementation(() => false)
-    fireEvent.focusOut(deleteButton())
-    matches.mockRestore()
-    expect(deleteButton()).not.toHaveAttribute("data-confirming")
-  })
-
-  it("deletes an empty assessment on the first click", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 0,
-    }
-    renderBox()
-
-    fireEvent.click(deleteButton())
-    expect(assessments.element).toBeUndefined()
+    expect(stored()).toMatchObject({
+      title: "Association",
+      label: "1st round",
+      labelColor: "#00aa00",
+      correctionStatus: { status: "NOT_VALIDATED" },
+      dropInfo: { source: "host" },
+      feedbackSuggestion: "adapted",
+    })
+    expect(screen.getByText(t.adaptedAiFeedbackSuggestion)).toBeInTheDocument()
   })
 })
 
-describe("GiveFeedbackAssessmentBox default title", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    assessments = {}
-  })
-
-  const titleField = () =>
-    screen.getByLabelText(labels.assessmentFor(labels.node))
-
-  it("writes the default title once the box gets points and keeps it in line with the sign", () => {
+describe("GiveFeedbackAssessmentBox points", () => {
+  it("leaves an assessment untouched when its fields are only visited", () => {
+    store({ score: 2, title: "Association", feedbackSuggestion: "suggested" })
+    const before = stored()
     renderBox()
 
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "2" },
-    })
-    expect(titleField()).toHaveValue(labels.positiveFeedback)
-    expect(assessments.element.title).toBe(labels.positiveFeedback)
-
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "-1" },
-    })
-    expect(assessments.element.title).toBe(labels.needsRevision)
-
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "0" },
-    })
-    expect(assessments.element.title).toBe(labels.feedback)
-  })
-
-  it("tones the badge and the title by the sign of the points", () => {
-    renderBox()
-    const badge = () =>
-      document.querySelector<HTMLElement>(
-        '[data-slot="assessment-title-badge"]'
-      )!
-
-    expect(badge()).toHaveAttribute("data-tone", "zero")
-    expect(titleField()).toHaveAttribute("data-tone", "zero")
-
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "2" },
-    })
-    expect(badge()).toHaveAttribute("data-tone", "positive")
-    expect(titleField()).toHaveAttribute("data-tone", "positive")
-
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "-1" },
-    })
-    expect(badge()).toHaveAttribute("data-tone", "negative")
-    expect(titleField()).toHaveAttribute("data-tone", "negative")
-  })
-
-  it("writes the default title once the box gets a description", () => {
-    renderBox()
-
-    fireEvent.change(screen.getByLabelText(labels.feedback), {
-      target: { value: "Missing multiplicity" },
-    })
-    expect(assessments.element.title).toBe(labels.feedback)
-  })
-
-  it("fills a title left empty when the field loses focus", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
+    for (const field of [titleField(), pointsField(), descriptionField()]) {
+      fireEvent.focus(field)
+      fireEvent.blur(field)
     }
-    renderBox()
-
-    fireEvent.blur(titleField())
-    expect(titleField()).toHaveValue(labels.positiveFeedback)
-    expect(assessments.element.title).toBe(labels.positiveFeedback)
+    expect(stored()).toBe(before)
   })
 
-  it("keeps the label, the correction status and the instruction of an assessment whose empty title is filled in", () => {
-    const instruction = { id: 7, credits: 2, feedback: "Correct" }
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      label: "Check",
-      labelColor: "#00aa00",
-      correctionStatus: { status: "CORRECT" },
-      dropInfo: instruction,
-    }
+  it("steps onto the half-point grid", () => {
+    store({ score: 1.3 })
     renderBox()
 
-    fireEvent.blur(titleField())
-
-    expect(assessments.element).toMatchObject({
-      title: labels.positiveFeedback,
-      label: "Check",
-      labelColor: "#00aa00",
-      correctionStatus: { status: "CORRECT" },
-      dropInfo: instruction,
-    })
+    fireEvent.click(button(t.increasePoints))
+    expect(stored().score).toBe(1.5)
   })
 
-  it("does not create an assessment when the empty title field of an ungraded element loses focus", () => {
+  it("limits the points to 100", () => {
     renderBox()
 
-    fireEvent.focusOut(titleField())
-    expect(titleField()).toHaveValue("")
-    expect(assessments.element).toBeUndefined()
-    expect(setAssessments).not.toHaveBeenCalled()
+    typePoints("500")
+    expect(stored().score).toBe(100)
+    expect(button(t.increasePoints)).toBeDisabled()
+  })
+})
+
+describe("GiveFeedbackAssessmentBox delete", () => {
+  it("deletes an assessment with content on the second click", () => {
+    store({ score: 2, feedback: "Good" })
+    renderBox()
+
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    expect(stored()).toBeDefined()
+
+    fireEvent.click(button(t.confirmDeleteAssessment))
+    expect(stored()).toBeUndefined()
   })
 
-  it("never rewrites a title the assessor typed", () => {
+  it("disarms when the pointer leaves the button", () => {
+    store({ score: 2 })
     renderBox()
 
-    fireEvent.change(titleField(), { target: { value: "Wrong association" } })
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "-1" },
-    })
-    fireEvent.blur(titleField())
-    expect(assessments.element.title).toBe("Wrong association")
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    fireEvent.mouseLeave(button(t.confirmDeleteAssessment))
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    expect(stored()).toBeDefined()
+  })
+
+  it("deletes an empty assessment on the first click", () => {
+    store({ score: 0 })
+    renderBox()
+
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    expect(stored()).toBeUndefined()
   })
 })
 
 describe("GiveFeedbackAssessmentBox description", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    assessments = {}
-  })
-
-  const descriptionField = () => screen.getByLabelText(labels.feedback)
-
-  it("flags a missing description once the element is assessed", () => {
+  it("asks for a description once the element is assessed", () => {
     renderBox()
-    expect(descriptionField()).not.toHaveAttribute("aria-invalid")
+    expect(descriptionField()).toBeValid()
 
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "2" },
-    })
-    expect(descriptionField()).toHaveAttribute("aria-invalid", "true")
+    typePoints("2")
+    expect(descriptionField()).toBeInvalid()
+    expect(descriptionField()).toHaveAccessibleDescription(t.feedbackRequired)
 
-    fireEvent.change(descriptionField(), {
-      target: { value: "Missing multiplicity" },
-    })
-    expect(descriptionField()).not.toHaveAttribute("aria-invalid")
+    fireEvent.change(descriptionField(), { target: { value: "Good" } })
+    expect(descriptionField()).toBeValid()
   })
 
-  it("does not require a description when a grading instruction provides one", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 1,
-      dropInfo: { id: 7, feedback: "Correct association" },
-    }
+  it("does not ask for one when a linked instruction brings feedback", () => {
+    store({ score: 2, dropInfo: instruction })
     renderBox()
 
-    expect(descriptionField()).not.toHaveAttribute("aria-invalid")
-  })
-})
-
-describe("GiveFeedbackAssessmentBox score bounds", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    assessments = {}
-  })
-
-  it("clamps typed values to the range from -100 to 100", () => {
-    expect(clampedScoreInput("99999")).toBe("100")
-    expect(clampedScoreInput("-99999")).toBe("-100")
-    expect(clampedScoreInput("42.5")).toBe("42.5")
-    expect(clampedScoreInput("-")).toBe("-")
-    expect(clampedScoreInput("")).toBe("")
-  })
-
-  it("stores a clamped score and disables the stepper at the bound", () => {
-    renderBox()
-
-    fireEvent.change(screen.getByLabelText(labels.points), {
-      target: { value: "500" },
-    })
-    expect(assessments.element.score).toBe(100)
-    expect(
-      screen.getByRole("button", { name: labels.increasePoints })
-    ).toBeDisabled()
-    expect(
-      screen.getByRole("button", { name: labels.decreasePoints })
-    ).toBeEnabled()
+    expect(descriptionField()).toBeValid()
   })
 })
 
 describe("GiveFeedbackAssessmentBox grading instruction", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    assessments = {}
-  })
-
-  const instruction = {
-    id: 7,
-    credits: 2,
-    feedback: "Correct association",
-    instructionDescription: "The association is modelled correctly",
-  }
-  const descriptionField = () => screen.getByLabelText(labels.feedback)
-  const linkButton = () =>
-    document.querySelector<HTMLButtonElement>(
-      '[data-field="assessment-grading-instruction"]'
-    )
-  const linkedCriterionChip = () =>
-    document.querySelector('[data-slot="assessment-linked-criterion"]')
-
-  // jsdom lays nothing out, so the title's widths are faked to make the chip cut it off
-  const cutOffCriterionTitle = () => {
-    const scrollWidth = vi
-      .spyOn(HTMLElement.prototype, "scrollWidth", "get")
-      .mockReturnValue(200)
-    const clientWidth = vi
-      .spyOn(HTMLElement.prototype, "clientWidth", "get")
-      .mockReturnValue(100)
-    return () => {
-      scrollWidth.mockRestore()
-      clientWidth.mockRestore()
-    }
-  }
-  const hoverChipText = () => {
-    const chipText = document.querySelector(
-      '[data-slot="assessment-linked-criterion-text"]'
-    )!
-    fireEvent.mouseEnter(chipText)
-    fireEvent.mouseMove(chipText)
-  }
-  const fullChipText = `${labels.linkedCriterion} Association ${labels.linkedCriterionSuffix} | Correct`
-
-  it("opens the chip's tooltip after the box's short delay, not the editor's", async () => {
-    vi.useFakeTimers()
-    const restoreWidths = cutOffCriterionTitle()
-    try {
-      assessments.element = {
-        modelElementId: "element",
-        elementType: "node",
-        score: 2,
-        dropInfo: {
-          ...instruction,
-          gradingScale: "Correct",
-          criterionTitle: "Association",
-        },
-      }
-      renderBox()
-
-      hoverChipText()
-      await act(async () => {
-        vi.advanceTimersByTime(100)
-      })
-      expect(document.body).not.toHaveTextContent(fullChipText)
-
-      // The editor's own 700ms delay would keep it closed well past this point
-      await act(async () => {
-        vi.advanceTimersByTime(100)
-      })
-      expect(document.body).toHaveTextContent(fullChipText)
-      // The instruction's description stays out of the tooltip
-      expect(document.body).not.toHaveTextContent(
-        instruction.instructionDescription
-      )
-    } finally {
-      restoreWidths()
-      vi.useRealTimers()
-    }
-  })
-
-  it("shows no chip tooltip while the criterion's name fits", async () => {
-    vi.useFakeTimers()
-    try {
-      assessments.element = {
-        modelElementId: "element",
-        elementType: "node",
-        score: 2,
-        dropInfo: {
-          ...instruction,
-          gradingScale: "Correct",
-          criterionTitle: "Association",
-        },
-      }
-      renderBox()
-
-      hoverChipText()
-      await act(async () => {
-        vi.advanceTimersByTime(1000)
-      })
-      expect(document.body).not.toHaveTextContent(fullChipText)
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-
-  it("keeps the grading instruction when the description is edited", () => {
-    // The host unlinks an assessment that comes back without its grading instruction.
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Correct association",
-      dropInfo: instruction,
-    }
+  it("names the criterion and scale and locks the points", () => {
+    store({ score: 2, dropInfo: instruction })
     renderBox()
 
-    fireEvent.change(descriptionField(), {
-      target: { value: "Correct association, well done" },
-    })
-
-    expect(assessments.element.dropInfo).toEqual(instruction)
+    expect(screen.getByRole("img", { name: t.linkedCriterion })).toBeVisible()
+    expect(screen.getByText("Association")).toBeVisible()
+    expect(screen.getByText("Correct")).toBeVisible()
+    expect(pointsField()).toBeDisabled()
   })
 
-  it("leaves the points editable and does not crash for dropInfo that is not a grading instruction", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      dropInfo: { source: "custom", criterionTitle: 42 },
-    }
+  it("leaves the points editable for other host metadata", () => {
+    store({ score: 2, dropInfo: { source: "host", criterionTitle: 42 } })
     renderBox()
 
-    expect(screen.getByLabelText(labels.points)).toBeEnabled()
-    expect(
-      document.querySelector('[data-slot="assessment-linked-criterion-title"]')
-    ).toBeNull()
+    expect(pointsField()).toBeEnabled()
+    expect(screen.queryByRole("img", { name: t.linkedCriterion })).toBeNull()
   })
 
-  it("locks the points while a grading instruction sets them", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      dropInfo: instruction,
-    }
+  it("keeps the link when the description is edited", () => {
+    store({ score: 2, dropInfo: instruction })
     renderBox()
 
-    expect(screen.getByLabelText(labels.points)).toBeDisabled()
-    expect(
-      screen.getByRole("button", { name: labels.increasePoints })
-    ).toBeDisabled()
-    expect(
-      screen.getByRole("button", { name: labels.decreasePoints })
-    ).toBeDisabled()
+    fireEvent.change(descriptionField(), { target: { value: "Well done" } })
+    expect(stored().dropInfo).toEqual(instruction)
   })
 
-  it("names the linked criterion in a chip next to the element", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Correct association",
-      dropInfo: { ...instruction, criterionTitle: "  Association  " },
-    }
+  it("shows an instruction linked while the box is open", () => {
+    store({ score: 1 })
     renderBox()
 
-    expect(linkedCriterionChip()).toHaveTextContent(
-      `${labels.linkedCriterion}Association${labels.linkedCriterionSuffix}`
-    )
-    expect(
-      linkedCriterionChip()!.querySelector(
-        '[data-slot="assessment-linked-criterion-title"]'
-      )
-    ).toHaveTextContent(/^Association$/)
-    // The criterion's text is no longer repeated above the description
-    expect(
-      document.querySelector('[data-slot="assessment-grading-instruction"]')
-    ).toBeNull()
-  })
-
-  it("shows the grading scale in its own segment of the linked criterion chip", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Correct association",
-      dropInfo: {
-        ...instruction,
-        gradingScale: " Partially correct ",
-        criterionTitle: "Association",
-      },
-    }
-    renderBox()
-
-    const scale = linkedCriterionChip()!.querySelector(
-      '[data-slot="assessment-linked-criterion-scale"]'
-    )
-    expect(scale).toHaveTextContent(/^Partially correct$/)
-    // It is a segment of its own, not part of the "Linked to Association Criterion" text
-    expect(
-      linkedCriterionChip()!.querySelector(
-        '[data-slot="assessment-linked-criterion-text"]'
-      )
-    ).toHaveTextContent(
-      `${labels.linkedCriterion}Association${labels.linkedCriterionSuffix}`
-    )
-  })
-
-  it("shows no grading scale the instructor left empty", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Correct association",
-      dropInfo: {
-        ...instruction,
-        gradingScale: "  ",
-        criterionTitle: "Association",
-      },
-    }
-    renderBox()
-
-    expect(
-      linkedCriterionChip()!.querySelector(
-        '[data-slot="assessment-linked-criterion-scale"]'
-      )
-    ).toBeNull()
-  })
-
-  it("names the criterion generically when the host provides no title", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      dropInfo: { ...instruction, criterionTitle: " " },
-    }
-    renderBox()
-
-    expect(
-      linkedCriterionChip()!.querySelector(
-        '[data-slot="assessment-linked-criterion-title"]'
-      )
-    ).toHaveTextContent(labels.linkedCriterionFallback)
-    // The fallback already reads "Assessment Criterion", so it is not followed by the suffix again
-    expect(
-      linkedCriterionChip()!.querySelector(
-        '[data-slot="assessment-linked-criterion-suffix"]'
-      )
-    ).toBeNull()
-  })
-
-  it("shows no linked criterion chip without a grading instruction", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Good",
-    }
-    renderBox()
-
-    expect(linkedCriterionChip()).toBeNull()
-    expect(linkButton()).toBeNull()
-  })
-
-  it("removes the link in two steps, keeping the points and unlocking them", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "Correct association",
-      dropInfo: instruction,
-    }
-    renderBox()
-
-    // The remove control sits inside the chip
-    expect(linkedCriterionChip()).toContainElement(linkButton())
-    expect(linkButton()).toHaveAttribute(
-      "aria-label",
-      labels.removeLinkedCriterion
-    )
-    fireEvent.click(linkButton()!)
-    expect(assessments.element.dropInfo).toEqual(instruction)
-    expect(linkButton()).toHaveAttribute(
-      "aria-label",
-      labels.removeGradingInstruction
-    )
-
-    fireEvent.click(linkButton()!)
-    expect(assessments.element.dropInfo).toBeUndefined()
-    expect(assessments.element.score).toBe(2)
-    expect(linkButton()).toBeNull()
-    expect(linkedCriterionChip()).toBeNull()
-    expect(screen.getByLabelText(labels.points)).toBeEnabled()
-  })
-
-  it("takes over a grading instruction dropped while the box is open, so the next edit keeps it", () => {
-    // The host drops the link of an assessment whose points no longer match its instruction.
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 1,
-      feedback: "",
-    }
-    const { rerender } = renderBox()
-
-    assessments.element = linkGradingInstruction(
-      assessments.element,
-      instruction,
-      "element",
-      "node"
-    )
-    rerender(
-      <GiveFeedbackAssessmentBox
-        elementId="element"
-        name="Person"
-        elementType="node"
-      />
-    )
-
-    expect(screen.getByLabelText(labels.points)).toHaveValue(2)
-    expect(screen.getByLabelText(labels.points)).toBeDisabled()
+    store({ score: 2, feedback: "Correct association", dropInfo: instruction })
+    expect(pointsField()).toHaveValue("2")
     expect(descriptionField()).toHaveValue("Correct association")
-
-    fireEvent.change(descriptionField(), {
-      target: { value: "Correct association, well done" },
-    })
-
-    expect(assessments.element.score).toBe(2)
-    expect(assessments.element.dropInfo).toEqual(instruction)
   })
 
-  it("marks an AI suggestion as adapted when its grading instruction is removed", () => {
-    assessments.element = {
-      modelElementId: "element",
-      elementType: "node",
-      score: 2,
-      feedback: "The association between Person and Car is right.",
-      dropInfo: instruction,
-      feedbackSuggestion: "suggested",
-    }
+  it("removes the link on the second click, keeping the points", () => {
+    store({ score: 2, dropInfo: instruction, feedbackSuggestion: "suggested" })
     renderBox()
 
-    fireEvent.click(linkButton()!)
-    fireEvent.click(linkButton()!)
+    fireEvent.click(button(t.removeLinkedCriterion))
+    expect(stored().dropInfo).toEqual(instruction)
 
-    expect(assessments.element.feedbackSuggestion).toBe("adapted")
-    expect(assessments.element.feedback).toBe(
-      "The association between Person and Car is right."
-    )
+    fireEvent.click(button(t.confirmRemoveLinkedCriterion))
+    expect(stored()).toMatchObject({ score: 2, feedbackSuggestion: "adapted" })
+    expect(stored().dropInfo).toBeUndefined()
+    expect(pointsField()).toBeEnabled()
   })
 })

@@ -15,32 +15,25 @@ describe("mergeLabels", () => {
       scrollLockHint: _scrollLockHint,
       scrollLockHintTouch: _scrollLockHintTouch,
       previousAssessment: _previousAssessment,
+      decreasePoints: _decreasePoints,
+      increasePoints: _increasePoints,
+      assessmentTitle: _assessmentTitle,
+      positiveFeedback: _positiveFeedback,
+      needsRevision: _needsRevision,
+      feedbackRequired: _feedbackRequired,
+      aiFeedbackSuggestion: _aiFeedbackSuggestion,
+      adaptedAiFeedbackSuggestion: _adaptedAiFeedbackSuggestion,
+      confirmDeleteAssessment: _confirmDeleteAssessment,
+      linkedCriterion: _linkedCriterion,
+      linkedCriterionFallback: _linkedCriterionFallback,
+      removeLinkedCriterion: _removeLinkedCriterion,
+      confirmRemoveLinkedCriterion: _confirmRemoveLinkedCriterion,
       ...legacyDictionary
     } = DEFAULT_LABELS
     const compatibleDictionary: ApollonLabels = legacyDictionary
 
     expect(mergeLabels(compatibleDictionary).scrollLockHintTouch).toBe(
       DEFAULT_LABELS.scrollLockHintTouch
-    )
-  })
-
-  it("keeps a complete dictionary from before the assessment title and suggestion labels assignable", () => {
-    const {
-      decreasePoints: _decreasePoints,
-      increasePoints: _increasePoints,
-      positiveFeedback: _positiveFeedback,
-      needsRevision: _needsRevision,
-      aiFeedbackSuggestion: _aiFeedbackSuggestion,
-      adaptedAiFeedbackSuggestion: _adaptedAiFeedbackSuggestion,
-      ...legacyDictionary
-    } = DEFAULT_LABELS
-    const compatibleDictionary: ApollonLabels = legacyDictionary
-
-    const merged = mergeLabels(compatibleDictionary)
-
-    expect(merged.positiveFeedback).toBe(DEFAULT_LABELS.positiveFeedback)
-    expect(merged.adaptedAiFeedbackSuggestion).toBe(
-      DEFAULT_LABELS.adaptedAiFeedbackSuggestion
     )
   })
 })

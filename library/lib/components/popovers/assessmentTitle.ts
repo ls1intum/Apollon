@@ -1,25 +1,30 @@
-import { AssessmentTone } from "./AssessmentScoreInput"
+import type { ResolvedApollonLabels } from "@/i18n/labels"
 
-/**
- * The default title shown for a box when no custom headline was typed —
- * shared by the give-feedback (editable placeholder) and see-feedback
- * (read-only fallback) boxes so the two can never drift apart. Mirrors the
- * host's unified feedback card (defaultTitlePlaceholder / feedbackTypeTitleKeys):
- * a zero/ungraded score reads as "Feedback", a positive one as "Positive", a
- * negative one as "Needs Revision" — independent of which element/type this
- * box is for.
- */
-export const defaultTitleFor = (
+export type AssessmentTone = "positive" | "negative" | "zero"
+
+export const assessmentTone = (score: number): AssessmentTone =>
+  score > 0 ? "positive" : score < 0 ? "negative" : "zero"
+
+type TitleLabels = Pick<
+  ResolvedApollonLabels,
+  "feedback" | "positiveFeedback" | "needsRevision"
+>
+
+/** Shown while the title is empty; it follows the sign of the score. */
+export const defaultAssessmentTitle = (
   tone: AssessmentTone,
-  t: { feedback: string; positiveFeedback: string; needsRevision: string }
-): string => {
-  if (tone === "positive") return t.positiveFeedback
-  if (tone === "negative") return t.needsRevision
-  return t.feedback
-}
+  t: TitleLabels
+): string =>
+  tone === "positive"
+    ? t.positiveFeedback
+    : tone === "negative"
+      ? t.needsRevision
+      : t.feedback
 
-/** Same sign convention as {@link toneFor}, for a numeric score (possibly absent). */
-export const toneForScore = (score: number | undefined): AssessmentTone => {
-  if (score === undefined || score === 0) return "zero"
-  return score > 0 ? "positive" : "negative"
-}
+/** Hosts may save the default title as the title; it still counts as none. */
+export const isDefaultAssessmentTitle = (
+  title: string | undefined,
+  t: TitleLabels
+): boolean =>
+  !!title &&
+  [t.feedback, t.positiveFeedback, t.needsRevision].includes(title.trim())

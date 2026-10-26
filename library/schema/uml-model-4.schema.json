@@ -138,14 +138,16 @@
             "type": "number"
           },
           "title": {
-            "description": "Short headline (the host's Feedback.text). Falls back to the element name when empty.",
+            "description": "Short headline. Empty shows a default that follows the score's sign.",
             "type": "string"
           },
           "feedback": {
-            "description": "Longer explanation (the host's Feedback.detailText).",
+            "description": "The description shown to the student.",
             "type": "string"
           },
-          "dropInfo": {},
+          "dropInfo": {
+            "description": "Host metadata, kept as is. An `AssessmentGradingInstruction` links\nthe assessment to that instruction."
+          },
           "label": {
             "type": "string"
           },
@@ -173,7 +175,7 @@
             ]
           },
           "feedbackSuggestion": {
-            "description": "Set when this mirrors an Athena feedback suggestion (the host's Feedback.isFeedbackSuggestion)\nthe assessor hasn't accepted-as-is or has edited since. Drives the AI feedback suggestion badge\nin the give-feedback popover.",
+            "description": "Marks an assessment taken from an AI feedback suggestion: `\"suggested\"`\nuntil the assessor changes it, `\"adapted\"` after.",
             "enum": [
               "adapted",
               "suggested"

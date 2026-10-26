@@ -59,6 +59,8 @@ interface PopoverSectionProps {
   action?: React.ReactNode
   /** Draw a hairline divider above the section. Default `false`. */
   divider?: boolean
+  /** Names the section as a group, e.g. after the element it is about. */
+  "aria-labelledby"?: string
   children: React.ReactNode
 }
 
@@ -67,9 +69,12 @@ export const PopoverSection: React.FC<PopoverSectionProps> = ({
   title,
   action,
   divider = false,
+  "aria-labelledby": labelledBy,
   children,
 }) => (
   <div
+    role={labelledBy ? "group" : undefined}
+    aria-labelledby={labelledBy}
     style={{
       display: "flex",
       flexDirection: "column",
@@ -134,3 +139,30 @@ export const ConnectionInfo: React.FC<{
       {source} → {target}
     </Typography>
   ) : null
+
+/**
+ * Names the element an assessment box is about: its type, muted, and its name
+ * in a highlighted chip, followed by optional extra chips.
+ */
+export const AssessmentReference: React.FC<{
+  id?: string
+  type: string
+  name: string
+  children?: React.ReactNode
+}> = ({ id, type, name, children }) => (
+  <Typography
+    id={id}
+    variant="caption"
+    style={{
+      display: "flex",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: 4,
+      minWidth: 0,
+    }}
+  >
+    <span data-slot="assessment-reference-label">{type}</span>
+    {name && <span data-slot="assessment-name-chip">{name}</span>}
+    {children}
+  </Typography>
+)

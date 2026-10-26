@@ -1,32 +1,19 @@
-import { Check, X } from "lucide-react"
-import type { AssessmentTone } from "./AssessmentScoreInput"
+import { ASSESSMENT_TONE_ICONS } from "@/components/svgs/AssessmentIcon"
+import type { AssessmentTone } from "./assessmentTitle"
 
-/**
- * The round, tone-tinted icon in front of an assessment's title, like the icon badge of the host's unified feedback card:
- * a check for positive points, an X for negative ones and an "i" for feedback without points. The "i" is drawn without
- * lucide's circle, as the badge already is one (see also AssessmentIcon's InfoGlyph).
- */
-export const AssessmentTitleBadge = ({ tone }: { tone: AssessmentTone }) => (
-  <span data-slot="assessment-title-badge" data-tone={tone}>
-    {tone === "positive" ? (
-      <Check width={14} height={14} strokeWidth={3} aria-hidden="true" />
-    ) : tone === "negative" ? (
-      <X width={14} height={14} strokeWidth={3} aria-hidden="true" />
-    ) : (
-      <svg
-        width={20}
-        height={20}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
+export const AssessmentTitleBadge = ({ tone }: { tone: AssessmentTone }) => {
+  const Icon = ASSESSMENT_TONE_ICONS[tone]
+  // The bare "i" needs more room than a check or a cross to read as large.
+  const size = tone === "zero" ? 20 : 14
+  return (
+    <span data-slot="assessment-title-badge" data-tone={tone}>
+      <Icon
+        width={size}
+        height={size}
+        color="currentColor"
         strokeWidth={3}
-        strokeLinecap="round"
-        strokeLinejoin="round"
         aria-hidden="true"
-      >
-        <path d="M12 16v-5" />
-        <path d="M12 7h.01" />
-      </svg>
-    )}
-  </span>
-)
+      />
+    </span>
+  )
+}

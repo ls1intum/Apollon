@@ -184,6 +184,8 @@
   --primitive-assessment-zero-bg: #dbeafe;
   --primitive-assessment-ungraded-text: #475569;
   --primitive-assessment-ungraded-bg: #f1f5f9;
+  /* AI feedback suggestion badge text; clears 4.5:1 on the popover surface. */
+  --primitive-assessment-suggestion-text: #7e22ce;
 
   /* Live-collaboration cursor palette (light). A fixed, deterministic set of
      cursor/label colors assigned per collaborator by name hash; the editor
@@ -380,6 +382,9 @@
   --apollon-assessment-zero-bg: var(--primitive-assessment-zero-bg);
   --apollon-assessment-ungraded-text: var(--primitive-assessment-ungraded-text);
   --apollon-assessment-ungraded-bg: var(--primitive-assessment-ungraded-bg);
+  --apollon-assessment-suggestion-text: var(
+    --primitive-assessment-suggestion-text
+  );
 
   /* Live-collaboration cursor palette — the public editor-facing handles on the
      --primitive-collab-* layer (so they re-resolve per theme) and the SINGLE
@@ -703,6 +708,7 @@
   --primitive-assessment-zero-bg: #1e3a8a;
   --primitive-assessment-ungraded-text: #cbd5e1;
   --primitive-assessment-ungraded-bg: #334155;
+  --primitive-assessment-suggestion-text: #d8b4fe;
 
   /* Live-collaboration cursor palette (dark) — brightened a step so each
      cursor/label stays legible against the dark canvas. */
@@ -765,6 +771,9 @@
   --apollon-assessment-zero-bg: var(--primitive-assessment-zero-bg);
   --apollon-assessment-ungraded-text: var(--primitive-assessment-ungraded-text);
   --apollon-assessment-ungraded-bg: var(--primitive-assessment-ungraded-bg);
+  --apollon-assessment-suggestion-text: var(
+    --primitive-assessment-suggestion-text
+  );
   --apollon-collaboration-color-1: var(--primitive-collab-1);
   --apollon-collaboration-color-2: var(--primitive-collab-2);
   --apollon-collaboration-color-3: var(--primitive-collab-3);
