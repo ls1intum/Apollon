@@ -584,6 +584,12 @@ test("docs deployment waits for the public version and does not hide registry fa
     docs.jobs.build.if,
     "github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'"
   )
+  // A release completion builds the current main (GITHUB_SHA of the
+  // workflow_run event), not the older release commit.
+  const checkout = docs.jobs.build.steps.find((step) =>
+    step.uses?.startsWith("actions/checkout@")
+  )
+  assert.equal(checkout.with.ref, undefined)
   const script = docs.jobs.build.steps.find((step) => step.id === "npm").run
   for (const state of [
     { versions: [manifest.version] },
