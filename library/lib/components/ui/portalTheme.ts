@@ -60,6 +60,7 @@ export const APOLLON_PORTAL_THEME_VARS = [
   "--apollon-assessment-zero-bg",
   "--apollon-assessment-ungraded-text",
   "--apollon-assessment-ungraded-bg",
+  "--apollon-assessment-suggestion-text",
   // App-level (webapp) surfaces some portaled panels reuse.
   "--panel-background",
   "--panel-shadow",

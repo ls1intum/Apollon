@@ -25,6 +25,7 @@ vi.mock("@/services/DiagramApiClient", () => ({
 }))
 vi.mock("@/utils/sharedDiagramStorage", () => ({
   addSharedDiagramEntry: vi.fn(),
+  getSharedDiagramWriteToken: vi.fn(() => "writer-token"),
   markSharedDiagramCopied: vi.fn(),
   updateSharedDiagramView: vi.fn(),
 }))

@@ -20,7 +20,7 @@ import {
 } from "@/services/createDiagramAutosaver"
 import { selectScopedPreview, useVersionStore } from "@/stores/useVersionStore"
 import { useDiagramSeed } from "@/hooks/useDiagramSeed"
-import { DiagramApiClient } from "@/services/DiagramApiClient"
+import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
 import { prefetchVersions } from "@/queries/versionQueries"
 import { useVersionRepositoryKind } from "@/contexts/VersionRepositoryContext"
 import { useRestoreVersionMutation } from "@/queries/versionMutations"
@@ -87,7 +87,8 @@ export const ApollonShared: React.FC = () => {
   const autosaverRef = useRef<DiagramAutosaver | null>(null)
   const diagramIsUpdated = useRef(false)
   const editorRef = useRef<ApollonEditor | null>(null)
-  const restoredDuringPreviewRef = useRef(false)
+  const headRefreshGenerationRef = useRef(0)
+  const headChangedDuringPreviewRef = useRef(false)
   /**
    * Fingerprint of the canvas at the FIRST preview entry of the current
    * preview session. Held until the user exits preview, so clicking
@@ -105,6 +106,13 @@ export const ApollonShared: React.FC = () => {
   const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
   const [collaborationUser, setCollaborationUser] =
     useState(readStoredCollabUser)
+  // The diagram whose write access the server rejected during this session.
+  // The ref feeds the editor effect without rebuilding the editor; the state
+  // updates the version UI.
+  const writeAccessLostForRef = useRef<string | null>(null)
+  const [writeAccessLostFor, setWriteAccessLostFor] = useState<string | null>(
+    null
+  )
 
   const preview = useVersionStore((s) => selectScopedPreview(s, diagramId))
   const restoreMutation = useRestoreVersionMutation(kind, diagramId)
@@ -132,7 +140,7 @@ export const ApollonShared: React.FC = () => {
     if (lifecycleKeyRef.current === nextLifecycleKey) return
     lifecycleKeyRef.current = nextLifecycleKey
     diagramIsUpdated.current = false
-    restoredDuringPreviewRef.current = false
+    headChangedDuringPreviewRef.current = false
     hasPromptedRef.current = false
   }, [diagramId, viewType])
 
@@ -195,8 +203,7 @@ export const ApollonShared: React.FC = () => {
 
     let instance: ApollonEditor | null = null
     let modelChangeSubscriptionId: number | null = null
-    // Owned by this effect: a peer's VERSION_RESTORED refresh must not outlive
-    // the editor it would assign to.
+    // Peer HEAD refreshes must not outlive the editor they would assign to.
     const peerRefreshAbort = new AbortController()
 
     try {
@@ -234,10 +241,90 @@ export const ApollonShared: React.FC = () => {
         editorOptions.mode = ApollonMode.Modelling
         editorOptions.readonly = false
       }
+      editorOptions.readonly ||=
+        diagram.canWrite !== true || writeAccessLostForRef.current === diagramId
+      let readonly = editorOptions.readonly
 
       instance = new ApollonEditor(container, editorOptions)
       editorRef.current = instance
       setEditor(instance)
+
+      const editorInstance = instance
+      const autosaver = createDiagramAutosaver({
+        diagramId,
+        getModel: () => editorInstance.model,
+        isPaused: () =>
+          selectScopedPreview(useVersionStore.getState(), diagramId) !== null,
+        collaboration: isCollaborationView,
+        onSaved: () => {
+          diagramIsUpdated.current = false
+        },
+        onError: (err) => {
+          if (
+            err instanceof ApiError &&
+            (err.code === "INVALID_CAPABILITY" || err.code === "FORBIDDEN")
+          ) {
+            loseWriteAccess()
+          } else {
+            toast.error("Failed to sync changes")
+          }
+        },
+      })
+      autosaverRef.current = autosaver
+
+      // The server can reject write access during a session, for example when
+      // the signing key changes. Further edits could not be saved, so the
+      // editor becomes read-only with one message that stays until closed.
+      const loseWriteAccess = () => {
+        if (readonly) return
+        readonly = true
+        editorInstance.setReadonly(true)
+        // Drop the autosaver so teardown does not flush a save that must fail.
+        autosaver.dispose()
+        if (autosaverRef.current === autosaver) autosaverRef.current = null
+        diagramIsUpdated.current = false
+        writeAccessLostForRef.current = diagramId
+        setWriteAccessLostFor(diagramId)
+        toast.error(
+          "Your edit access to this diagram is no longer valid. The diagram is now read-only. Changes after the last save were not saved.",
+          { toastId: "write-access-lost", autoClose: false }
+        )
+      }
+
+      // Readers converge on saved HEAD. Keep one request in flight and at most
+      // one trailing refresh, so a burst of saves costs each reader two GETs.
+      let readerRefresh: "idle" | "running" | "queued" = "idle"
+      const refreshReaderHead = () => {
+        if (readerRefresh !== "idle") {
+          readerRefresh = "queued"
+          return
+        }
+        readerRefresh = "running"
+        const refresh = ++headRefreshGenerationRef.current
+        DiagramApiClient.fetchDiagram(diagramId, {
+          signal: peerRefreshAbort.signal,
+        })
+          .then((head) => {
+            if (selectScopedPreview(useVersionStore.getState(), diagramId)) {
+              headChangedDuringPreviewRef.current = true
+              return
+            }
+            if (
+              refresh === headRefreshGenerationRef.current &&
+              !peerRefreshAbort.signal.aborted
+            )
+              editorInstance.model = importDiagram(head) as UMLModel
+          })
+          .catch((err) => {
+            if (!isAbort(err))
+              toast.error("Could not refresh the shared diagram")
+          })
+          .finally(() => {
+            const queued = readerRefresh === "queued"
+            readerRefresh = "idle"
+            if (queued && !peerRefreshAbort.signal.aborted) refreshReaderHead()
+          })
+      }
 
       if (
         [
@@ -246,12 +333,36 @@ export const ApollonShared: React.FC = () => {
           DiagramView.SEE_FEEDBACK,
         ].includes(viewType)
       ) {
-        wsManagerRef.current = new WebSocketManager(diagramId, instance, () =>
-          toast.error("WebSocket error")
+        wsManagerRef.current = new WebSocketManager(
+          diagramId,
+          instance,
+          (event) => {
+            // The relay closes with 1008 (policy violation) when it rejects
+            // the write capability or the diagram no longer exists.
+            if (
+              !editorOptions.readonly &&
+              event instanceof CloseEvent &&
+              event.code === 1008
+            )
+              loseWriteAccess()
+            else toast.error("WebSocket error")
+          },
+          !readonly
         )
         wsManagerRef.current.startConnection()
         wsManagerRef.current.onControl((event) => {
           applyControlEventToCache(queryClient, diagramId, event)
+          if (
+            readonly &&
+            (event.type === "DIAGRAM_UPDATED" ||
+              event.type === "VERSION_CREATED")
+          ) {
+            if (selectScopedPreview(useVersionStore.getState(), diagramId)) {
+              headChangedDuringPreviewRef.current = true
+              return
+            }
+            refreshReaderHead()
+          }
           if (event.type === "VERSION_DELETED") {
             // Clearing `?version=` is what actually leaves preview — the URL
             // is the source of truth, so dropping only the store state would
@@ -271,11 +382,19 @@ export const ApollonShared: React.FC = () => {
                 event.restoredFromVersionId
             if (!isLocalRestore) {
               const actor = event.actor || "A collaborator"
+              const refresh = ++headRefreshGenerationRef.current
+              if (selectScopedPreview(useVersionStore.getState(), diagramId))
+                headChangedDuringPreviewRef.current = true
               DiagramApiClient.fetchDiagram(diagramId, {
                 signal: peerRefreshAbort.signal,
               })
                 .then((next) => {
-                  if (!instance) return
+                  if (
+                    !instance ||
+                    peerRefreshAbort.signal.aborted ||
+                    refresh !== headRefreshGenerationRef.current
+                  )
+                    return
                   // Not while previewing: `editor.model` is the read-only
                   // overlay, so this would swap the snapshot out from under
                   // the user and be discarded on exit anyway. Exiting preview
@@ -286,6 +405,7 @@ export const ApollonShared: React.FC = () => {
                       diagramId
                     ) !== null
                   ) {
+                    headChangedDuringPreviewRef.current = true
                     return
                   }
                   instance.model = next
@@ -306,21 +426,8 @@ export const ApollonShared: React.FC = () => {
         })
       }
 
-      const editorInstance = instance
-      const autosaver = createDiagramAutosaver({
-        diagramId,
-        getModel: () => editorInstance.model,
-        isPaused: () =>
-          selectScopedPreview(useVersionStore.getState(), diagramId) !== null,
-        collaboration: isCollaborationView,
-        onSaved: () => {
-          diagramIsUpdated.current = false
-        },
-        onError: () => toast.error("Failed to sync changes"),
-      })
-      autosaverRef.current = autosaver
-
       modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
+        if (readonly) return
         if (selectScopedPreview(useVersionStore.getState(), diagramId)) return
         diagramIsUpdated.current = true
         autosaver.schedule()
@@ -378,7 +485,10 @@ export const ApollonShared: React.FC = () => {
     viewType,
   ])
 
-  const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
+  const baseReadonly =
+    viewType === DiagramView.SEE_FEEDBACK ||
+    diagram?.canWrite !== true ||
+    writeAccessLostFor === diagramId
 
   // Imperative preview-mode driver: caches a pre-preview fingerprint in a ref
   // and overlays the preview model via the editor's imperative API. These are
@@ -425,16 +535,22 @@ export const ApollonShared: React.FC = () => {
       prePreviewFingerprintRef.current = null
       if (!diagramId) return
 
-      if (restoredDuringPreviewRef.current) {
+      if (headChangedDuringPreviewRef.current) {
         // After a restore, the server's HEAD is now the new canonical
         // state. Flip preview off (Zustand resyncs from Yjs to a stale
         // intermediate), then fetch HEAD and apply — that final
         // `editor.model = head` runs with previewActive=false so writes
         // hit Yjs and broadcast to peers.
-        restoredDuringPreviewRef.current = false
+        headChangedDuringPreviewRef.current = false
         editor.setPreviewMode(false)
+        const refresh = ++headRefreshGenerationRef.current
         DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
           .then((head) => {
+            if (
+              abort.signal.aborted ||
+              refresh !== headRefreshGenerationRef.current
+            )
+              return
             editor.model = importDiagram(head) as UMLModel
             editor.fitView()
           })
@@ -476,11 +592,11 @@ export const ApollonShared: React.FC = () => {
   // Leave preview first so editor.model resyncs to the live canvas.
   const handleRestore = useCallback(
     async (versionId: string) => {
-      if (!diagramId || !editor) return
+      if (!diagramId || !editor || baseReadonly) return
       const previewing =
         selectScopedPreview(useVersionStore.getState(), diagramId) !== null
       if (previewing) {
-        restoredDuringPreviewRef.current = true
+        headChangedDuringPreviewRef.current = true
         editor.setPreviewMode(false)
       }
       const liveBody = editor.model
@@ -493,7 +609,7 @@ export const ApollonShared: React.FC = () => {
         // Strip `?version=` so the URL sync doesn't re-enter the restored version.
         if (previewing) closePreview()
       } catch {
-        restoredDuringPreviewRef.current = false
+        headChangedDuringPreviewRef.current = false
         toast.error(t.restoreFailed)
       }
     },
@@ -504,6 +620,7 @@ export const ApollonShared: React.FC = () => {
       // `mutateAsync` is stable; the mutation object is not.
       restoreMutation.mutateAsync,
       closePreview,
+      baseReadonly,
     ]
   )
 
@@ -527,7 +644,7 @@ export const ApollonShared: React.FC = () => {
               <VersionPreviewBanner
                 containerWidth={canvasColumnWidth}
                 diagramId={diagramId}
-                canRestore={canRestoreFromPreview}
+                canRestore={!baseReadonly && canRestoreFromPreview}
                 onExitPreview={handleExitPreview}
                 onRestore={handleRestore}
               />
@@ -536,6 +653,7 @@ export const ApollonShared: React.FC = () => {
         </div>
         {diagramId && (
           <VersionRail
+            canWrite={!baseReadonly}
             diagramId={diagramId}
             onVersionSaved={handleVersionSaved}
             onConfirmedRestore={handleRestore}
@@ -546,6 +664,7 @@ export const ApollonShared: React.FC = () => {
 
       {diagramId && (
         <VersionDrawer
+          canWrite={!baseReadonly}
           diagramId={diagramId}
           onVersionSaved={handleVersionSaved}
           onConfirmedRestore={handleRestore}

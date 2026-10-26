@@ -1,5 +1,10 @@
-import { Assessment } from "@/typings"
 import React, { useCallback } from "react"
+import {
+  isGradingInstruction,
+  linkGradingInstruction,
+} from "@/utils/gradingInstruction"
+import { isDefaultAssessmentTitle } from "@/utils/assessmentTitle"
+import { useLabels } from "@/i18n/useLabels"
 import { useShallow } from "zustand/shallow"
 import { useDiagramStore } from "@/store/context"
 
@@ -8,10 +13,19 @@ interface Props {
   elementType?: string
 }
 
+const parseJson = (text: string): unknown => {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return undefined
+  }
+}
+
 export const useDropFeedback = ({
   elementId,
   elementType = "default",
 }: Props) => {
+  const t = useLabels()
   const { setAssessments } = useDiagramStore(
     useShallow((state) => ({
       setAssessments: state.setAssessments,
@@ -23,23 +37,26 @@ export const useDropFeedback = ({
       event.preventDefault()
       event.stopPropagation()
 
-      const dropData = event.dataTransfer.getData("text/plain")
+      const instruction = parseJson(event.dataTransfer.getData("text/plain"))
+      if (!isGradingInstruction(instruction)) return
 
-      const instruction = JSON.parse(dropData)
-      const newAssessment: Assessment = {
-        modelElementId: elementId,
-        elementType,
-        score: instruction.credits,
-        feedback: instruction.feedback,
-        dropInfo: instruction,
-        correctionStatus: { status: "NOT_VALIDATED" },
-      }
-      setAssessments((prev) => ({
-        ...prev,
-        [elementId]: newAssessment,
-      }))
+      setAssessments((prev) => {
+        const linked = linkGradingInstruction(
+          prev[elementId],
+          instruction,
+          elementId,
+          elementType
+        )
+        return {
+          ...prev,
+          // A default title keeps following the sign of the new points.
+          [elementId]: isDefaultAssessmentTitle(linked.title, t)
+            ? { ...linked, title: undefined }
+            : linked,
+        }
+      })
     },
-    [elementId, elementType]
+    [elementId, elementType, setAssessments, t]
   )
 
   return handleDrop

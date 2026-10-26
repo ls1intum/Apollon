@@ -26,13 +26,7 @@ beforeEach(async () => {
   })
 })
 
-/**
- * Soft owner cookie: friction language only. Issued on POST /diagrams,
- * exposed via the `x-owner-match` response header on subsequent requests.
- * Never gates a request — the webapp uses the header to decide whether
- * to show a confirm-twice prompt.
- */
-describe("soft owner cookie", () => {
+describe("creation-only owner cookie", () => {
   it("POST /diagrams sets apollon_owner_<id> as HttpOnly + SameSite=Lax", async () => {
     const res = await request(app).post("/api/diagrams").send(baseDiagram)
     expect(res.status).toBe(201)
@@ -79,20 +73,18 @@ describe("soft owner cookie", () => {
     expect(res.headers["x-owner-match"]).toBe("false")
   })
 
-  it("destructive routes proceed without cookie (friction, not security)", async () => {
-    const created = await request(app).post("/api/diagrams").send(baseDiagram)
+  it("destructive routes require write authority", async () => {
+    const owner = request.agent(app)
+    const created = await owner.post("/api/diagrams").send(baseDiagram)
     const id = created.body.id
-    const v1 = await request(app)
+    const v1 = await owner
       .post(`/api/diagrams/${id}/versions`)
       .send({ name: "v1", body: { ...baseDiagram, id } })
 
-    // No cookie supplied — server still allows the destructive op (the
-    // webapp is responsible for the confirm-twice prompt based on
-    // x-owner-match=false).
     const del = await request(app).delete(
       `/api/diagrams/${id}/versions/${v1.body.id}`
     )
-    expect(del.status).toBe(204)
+    expect(del.status).toBe(403)
     expect(del.headers["x-owner-match"]).toBe("false")
   })
 })

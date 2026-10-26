@@ -1,11 +1,23 @@
-import { useState } from "react"
-import { Trash2 } from "lucide-react"
+import { useId, useState, type MouseEvent } from "react"
+import { Link, Trash2, Unlink, WandSparkles, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
 import { useShallow } from "zustand/shallow"
-import { IconButton, TextField } from "../ui"
+import { IconButton, TextField, Tooltip } from "../ui"
 import { useLabels } from "@/i18n/useLabels"
-import { AssessmentHeader, PopoverSection } from "./PopoverLayout"
+import { AssessmentReference, PopoverSection } from "./PopoverLayout"
+import { AssessmentScoreInput } from "./AssessmentScoreInput"
+import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
+import {
+  assessmentTone,
+  defaultAssessmentTitle,
+  isDefaultAssessmentTitle,
+} from "@/utils/assessmentTitle"
+import {
+  adaptedSuggestion,
+  gradingInstructionOf,
+  unlinkGradingInstruction,
+} from "@/utils/gradingInstruction"
 
 /** The coarse category stored on an Assessment's `elementType`. */
 type ElementType = "node" | "attribute" | "method" | "edge"
@@ -29,6 +41,38 @@ interface Props {
 /** Feedback comment cap, surfaced to the grader as an `n/500` helper. */
 const FEEDBACK_MAX_LENGTH = 500
 
+/** A title is a headline, not a paragraph. */
+const TITLE_MAX_LENGTH = 100
+
+/**
+ * Arms on the first click and runs `action` on the second. A button armed by
+ * keyboard disarms when focus leaves it, one armed by pointer when the pointer
+ * leaves: the editor takes focus on every pointer press, so blur cannot tell
+ * a pointer user's second click from a departure.
+ */
+const useTwoStepConfirm = (action: () => void, skip = false) => {
+  const [armedBy, setArmedBy] = useState<"keyboard" | "pointer" | null>(null)
+  return {
+    armed: armedBy !== null,
+    buttonProps: {
+      "data-confirming": armedBy !== null || undefined,
+      onClick: (event: MouseEvent) => {
+        if (armedBy || skip) {
+          setArmedBy(null)
+          action()
+        } else {
+          // A click from the keyboard reports no click count.
+          setArmedBy(event.detail === 0 ? "keyboard" : "pointer")
+        }
+      },
+      onMouseLeave: () => setArmedBy(null),
+      onBlur: () => {
+        if (armedBy === "keyboard") setArmedBy(null)
+      },
+    },
+  }
+}
+
 export const GiveFeedbackAssessmentBox = ({
   elementId,
   name,
@@ -43,6 +87,7 @@ export const GiveFeedbackAssessmentBox = ({
     method: t.method,
     edge: t.edge,
   }
+  const referenceId = useId()
   const { assessments, setAssessments } = useDiagramStore(
     useShallow((state) => ({
       assessments: state.assessments,
@@ -51,79 +96,190 @@ export const GiveFeedbackAssessmentBox = ({
   )
 
   const existing = assessments[elementId]
+  const title = existing?.title ?? ""
+  const feedback = existing?.feedback ?? ""
+  const tone = assessmentTone(existing?.score ?? 0)
+  const instruction = gradingInstructionOf(existing)
+  // The linked instruction's feedback stands in for a missing description.
+  const isDescriptionMissing =
+    !!existing && feedback.trim() === "" && !instruction?.feedback
 
-  const [score, setScore] = useState(existing?.score?.toString() ?? "")
-  const [feedback, setFeedback] = useState(existing?.feedback ?? "")
-
-  const updateAssessment = (newScore: string, newFeedback: string) => {
-    const parsedScore = parseFloat(newScore)
-    const validScore = isNaN(parsedScore) ? 0 : parsedScore
-
-    const updated: Assessment = {
-      modelElementId: elementId,
-      elementType,
-      score: newScore === "" ? 0 : validScore,
-      feedback: newFeedback || undefined,
-      correctionStatus: { status: "NOT_VALIDATED" },
-    }
-
-    setAssessments((prev) => ({
-      ...prev,
-      [elementId]: updated,
-    }))
-  }
-  const handleDelete = () => {
+  const updateAssessment = (changes: Partial<Assessment>) => {
     setAssessments((prev) => {
-      const { [elementId]: _, ...rest } = prev
-      return rest
+      const current: Assessment | undefined = prev[elementId]
+      return {
+        ...prev,
+        [elementId]: {
+          ...(current ?? { modelElementId: elementId, elementType, score: 0 }),
+          ...changes,
+          correctionStatus: { status: "NOT_VALIDATED" },
+          feedbackSuggestion: adaptedSuggestion(current?.feedbackSuggestion),
+        },
+      }
     })
-    setScore("")
-    setFeedback("")
   }
+
+  const isEmpty =
+    !existing ||
+    (title === "" &&
+      existing.score === 0 &&
+      feedback === "" &&
+      !existing.feedbackSuggestion)
+  const deleteConfirm = useTwoStepConfirm(() => {
+    setAssessments(({ [elementId]: _, ...rest }) => rest)
+  }, isEmpty)
+  const unlinkConfirm = useTwoStepConfirm(() => {
+    setAssessments((prev) =>
+      prev[elementId]
+        ? { ...prev, [elementId]: unlinkGradingInstruction(prev[elementId]) }
+        : prev
+    )
+  })
+
+  const criterionTitle =
+    instruction?.criterionTitle?.trim() || t.linkedCriterionFallback
+  const gradingScale = instruction?.gradingScale?.trim()
+  // A narrow popover cuts the chip's text off; the tooltip shows it in full.
+  const criterionTooltip = [
+    `${t.linkedCriterion} ${criterionTitle}`,
+    gradingScale,
+  ]
+    .filter(Boolean)
+    .join(" | ")
 
   return (
-    <PopoverSection divider={divider}>
-      <AssessmentHeader
+    <PopoverSection divider={divider} aria-labelledby={referenceId}>
+      <AssessmentReference
+        id={referenceId}
         type={typeLabel ?? ELEMENT_TYPE_LABEL[elementType]}
         name={name}
-        action={
-          <IconButton
-            ariaLabel={t.deleteAssessmentFor(name)}
-            tooltip={t.deleteAssessment}
-            onClick={handleDelete}
-          >
+      >
+        {instruction && (
+          <span data-slot="assessment-linked-criterion">
+            <Tooltip title={criterionTooltip}>
+              <span data-slot="assessment-linked-criterion-text">
+                <Link
+                  width={12}
+                  height={12}
+                  role="img"
+                  aria-label={t.linkedCriterion}
+                />
+                <span data-slot="assessment-linked-criterion-title">
+                  {criterionTitle}
+                </span>
+              </span>
+            </Tooltip>
+            {gradingScale && (
+              <Tooltip title={criterionTooltip}>
+                <span data-slot="assessment-linked-criterion-scale">
+                  {gradingScale}
+                </span>
+              </Tooltip>
+            )}
+            <IconButton
+              ariaLabel={
+                unlinkConfirm.armed
+                  ? t.confirmRemoveLinkedCriterion
+                  : t.removeLinkedCriterion
+              }
+              tooltip={
+                unlinkConfirm.armed
+                  ? t.confirmRemoveLinkedCriterion
+                  : t.removeLinkedCriterion
+              }
+              data-field="assessment-unlink"
+              {...unlinkConfirm.buttonProps}
+            >
+              {unlinkConfirm.armed ? (
+                <Unlink width={12} height={12} aria-hidden="true" />
+              ) : (
+                <X width={12} height={12} aria-hidden="true" />
+              )}
+            </IconButton>
+          </span>
+        )}
+      </AssessmentReference>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <AssessmentTitleBadge tone={tone} />
+        <TextField
+          multiline
+          minRows={1}
+          maxLength={TITLE_MAX_LENGTH}
+          value={title}
+          onChange={(e) =>
+            updateAssessment({
+              // A heading stays on one line; long titles wrap instead.
+              title: e.target.value.replace(/\s*\n\s*/g, " ") || undefined,
+            })
+          }
+          placeholder={defaultAssessmentTitle(tone, t)}
+          aria-label={t.assessmentTitle}
+          data-field="assessment-title"
+          data-tone={tone}
+          fullWidth
+          style={{ minWidth: 0 }}
+        />
+        <AssessmentScoreInput
+          value={existing ? existing.score : null}
+          onChange={(value) =>
+            updateAssessment({
+              score: value ?? 0,
+              // A default title keeps following the sign of the score.
+              ...(isDefaultAssessmentTitle(title, t) && { title: undefined }),
+            })
+          }
+          disabled={!!instruction}
+        />
+        <IconButton
+          ariaLabel={
+            deleteConfirm.armed
+              ? t.confirmDeleteAssessment
+              : t.deleteAssessmentFor(name)
+          }
+          tooltip={
+            deleteConfirm.armed ? t.confirmDeleteAssessment : t.deleteAssessment
+          }
+          data-field="assessment-delete"
+          {...deleteConfirm.buttonProps}
+        >
+          {deleteConfirm.armed ? (
             <Trash2 width={16} height={16} aria-hidden="true" />
-          </IconButton>
-        }
-      />
-      <TextField
-        type="number"
-        label={t.points}
-        helperText={t.negativePointsAllowed}
-        value={score}
-        onChange={(e) => {
-          const value = e.target.value
-          setScore(value)
-          updateAssessment(value, feedback)
-        }}
-        placeholder="0"
-        fullWidth
-      />
+          ) : (
+            <X width={16} height={16} aria-hidden="true" />
+          )}
+        </IconButton>
+      </div>
       <TextField
         multiline
         minRows={3}
         maxLength={FEEDBACK_MAX_LENGTH}
-        label={t.feedback}
-        helperText={`${feedback.length}/${FEEDBACK_MAX_LENGTH}`}
+        aria-label={t.feedback}
+        error={isDescriptionMissing}
+        helperText={
+          isDescriptionMissing
+            ? t.feedbackRequired
+            : `${feedback.length}/${FEEDBACK_MAX_LENGTH}`
+        }
         value={feedback}
-        onChange={(e) => {
-          const value = e.target.value
-          setFeedback(value)
-          updateAssessment(score, value)
-        }}
+        onChange={(e) =>
+          updateAssessment({ feedback: e.target.value || undefined })
+        }
         placeholder={t.addComment}
         fullWidth
       />
+      {existing?.feedbackSuggestion && (
+        <div data-slot="assessment-suggestion-badge">
+          <WandSparkles
+            width={14}
+            height={14}
+            fill="currentColor"
+            aria-hidden="true"
+          />
+          {existing.feedbackSuggestion === "adapted"
+            ? t.adaptedAiFeedbackSuggestion
+            : t.aiFeedbackSuggestion}
+        </div>
+      )}
     </PopoverSection>
   )
 }

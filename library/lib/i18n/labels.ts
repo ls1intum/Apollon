@@ -66,10 +66,32 @@ export interface ApollonLabels {
   // Assessment feedback
   addComment: string
   points: string
+  /** @deprecated No longer shown. */
   negativePointsAllowed: string
   feedback: string
   deleteAssessment: string
   deleteAssessmentFor: (name: string) => string
+  // Optional, so dictionaries written before these keys existed still compile.
+  decreasePoints?: string
+  increasePoints?: string
+  /** Accessible name of an assessment's title field. */
+  assessmentTitle?: string
+  /** Default title for positive points; `feedback` is the one for zero. */
+  positiveFeedback?: string
+  /** Default title for negative points. */
+  needsRevision?: string
+  /** Shown when an assessment has no description for the student. */
+  feedbackRequired?: string
+  aiFeedbackSuggestion?: string
+  adaptedAiFeedbackSuggestion?: string
+  confirmDeleteAssessment?: string
+  /** Names the link icon of the linked grading criterion chip. */
+  linkedCriterion?: string
+  /** Shown on the chip when the host gives no criterion title. */
+  linkedCriterionFallback?: string
+  removeLinkedCriterion?: string
+  confirmRemoveLinkedCriterion?: string
+  /** @deprecated No longer shown. */
   assessmentFor: (type: string) => string
   /** Optional for dictionaries authored before assessment navigation existed. */
   previousAssessment?: string
@@ -362,6 +384,19 @@ const RESOLVED_DEFAULT_LABELS: ResolvedApollonLabels = Object.freeze({
   feedback: "Feedback",
   deleteAssessment: "Delete assessment",
   deleteAssessmentFor: (name) => `Delete assessment for ${name}`,
+  decreasePoints: "Decrease points",
+  increasePoints: "Increase points",
+  assessmentTitle: "Title",
+  positiveFeedback: "Positive",
+  needsRevision: "Needs Revision",
+  feedbackRequired: "Add feedback for the student.",
+  aiFeedbackSuggestion: "AI Feedback Suggestion",
+  adaptedAiFeedbackSuggestion: "Adapted AI Feedback Suggestion",
+  confirmDeleteAssessment: "Click again to delete this assessment",
+  linkedCriterion: "Linked to",
+  linkedCriterionFallback: "Assessment Criterion",
+  removeLinkedCriterion: "Remove the link to the grading criterion",
+  confirmRemoveLinkedCriterion: "Click again to remove the link",
   assessmentFor: (type) => `Assessment for ${type}`,
   previousAssessment: "Previous Assessment",
   nextAssessment: "Next Assessment",

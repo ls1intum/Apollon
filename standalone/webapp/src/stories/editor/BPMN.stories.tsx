@@ -246,8 +246,8 @@ export const GiveFeedbackTask: Story = {
     const canvas = within(canvasElement)
     // Header names the seeded task; the box renders a score + feedback form.
     await canvas.findByText("Review Application")
-    await canvas.findByText("Points")
-    await canvas.findByText("Feedback")
+    await canvas.findByRole("textbox", { name: "Points" })
+    await canvas.findByRole("textbox", { name: "Feedback" })
   },
 }
 
@@ -313,8 +313,8 @@ export const GiveFeedbackSequenceFlow: Story = {
     const canvas = within(canvasElement)
     // The edge feedback header names the edge by its type; the box is a form.
     await canvas.findByText("BPMNSequenceFlow")
-    await canvas.findByText("Points")
-    await canvas.findByText("Feedback")
+    await canvas.findByRole("textbox", { name: "Points" })
+    await canvas.findByRole("textbox", { name: "Feedback" })
   },
 }
 

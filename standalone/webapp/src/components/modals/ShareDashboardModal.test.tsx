@@ -33,6 +33,7 @@ vi.mock("@/services/DiagramApiClient", () => ({
 }))
 
 vi.mock("@/utils/sharedDiagramStorage", () => ({
+  getSharedDiagramWriteToken: vi.fn(() => "writer-token"),
   addSharedDiagramEntry: (...args: unknown[]) =>
     addSharedDiagramEntryMock(...args),
   markSharedDiagramCopied: vi.fn(),
@@ -105,7 +106,9 @@ describe("ShareDashboardModal", () => {
 
     // Collaborate is the default mode, so the freshly created link is already a
     // collaborate link and opening it goes straight to the collab-name prompt.
-    await screen.findByDisplayValue(/shared-123\?view=COLLABORATE$/)
+    await screen.findByDisplayValue(
+      /shared-123\?view=COLLABORATE#access=writer-token$/
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Open diagram" }))
 

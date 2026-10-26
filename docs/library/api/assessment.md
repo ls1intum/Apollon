@@ -66,15 +66,38 @@ const all: Record<string, Assessment> = editor.model.assessments
 
 ### The `Assessment` shape
 
-| Field              | Type                                                                             | Notes                                                 |
-| ------------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `modelElementId`   | `string`                                                                         | The diagram element this assessment grades. Required. |
-| `elementType`      | `string`                                                                         | The element's type (e.g. `"Class"`). Required.        |
-| `score`            | `number`                                                                         | Points awarded. Required.                             |
-| `feedback`         | `string?`                                                                        | Free-text feedback.                                   |
-| `label`            | `string?`                                                                        | Short label shown on the element.                     |
-| `labelColor`       | `string?`                                                                        | CSS color for the label.                              |
-| `correctionStatus` | `{ status: "CORRECT" \| "INCORRECT" \| "NOT_VALIDATED"; description?: string }?` | For automated/suggested feedback review.              |
+| Field                | Type                                                                             | Notes                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `modelElementId`     | `string`                                                                         | The diagram element this assessment grades. Required.                                     |
+| `elementType`        | `string`                                                                         | The element's type (e.g. `"Class"`). Required.                                            |
+| `score`              | `number`                                                                         | Points awarded. Required.                                                                 |
+| `title`              | `string?`                                                                        | Short headline. Empty shows "Positive", "Needs Revision" or "Feedback" by the score.      |
+| `feedback`           | `string?`                                                                        | The description for the student.                                                          |
+| `dropInfo`           | `unknown?`                                                                       | Host metadata, kept as is. An `AssessmentGradingInstruction` links a grading instruction. |
+| `label`              | `string?`                                                                        | Short label shown on the element.                                                         |
+| `labelColor`         | `string?`                                                                        | CSS color for the label.                                                                  |
+| `correctionStatus`   | `{ status: "CORRECT" \| "INCORRECT" \| "NOT_VALIDATED"; description?: string }?` | For automated/suggested feedback review.                                                  |
+| `feedbackSuggestion` | `"suggested" \| "adapted"?`                                                      | Marks feedback from an AI suggestion; the editor sets `"adapted"` on the first change.    |
+
+### Grading instructions
+
+A host can let graders drop a grading instruction on an element: a drag whose
+`text/plain` data is an `AssessmentGradingInstruction` as JSON. The editor
+stores it in `dropInfo` and takes its `credits` as the points, which stay
+locked until the grader removes the link. Its `feedback` becomes the
+description only if that is empty or came from the previous instruction, and
+the student sees it whenever the description is empty.
+
+```ts
+import type { AssessmentGradingInstruction } from "@tumaet/apollon"
+
+function startInstructionDrag(
+  event: DragEvent,
+  instruction: AssessmentGradingInstruction
+) {
+  event.dataTransfer?.setData("text/plain", JSON.stringify(instruction))
+}
+```
 
 ## Drive the canvas from a feedback list
 

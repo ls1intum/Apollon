@@ -1,5 +1,6 @@
 import React from "react"
-import { Check, TriangleAlert, X } from "lucide-react"
+import { Check, createLucideIcon, X } from "lucide-react"
+import { assessmentTone, type AssessmentTone } from "@/utils/assessmentTitle"
 
 interface AssessmentIconProps {
   score?: number
@@ -7,10 +8,23 @@ interface AssessmentIconProps {
   y: number
 }
 
+// The "i" of lucide's Info icon without its circle: the badges draw their own.
+const InfoGlyph = createLucideIcon("info-glyph", [
+  ["path", { d: "M12 16v-5", key: "stem" }],
+  ["path", { d: "M12 7h.01", key: "dot" }],
+])
+
+export const ASSESSMENT_TONE_ICONS: Record<AssessmentTone, typeof Check> = {
+  positive: Check,
+  negative: X,
+  zero: InfoGlyph,
+}
+
 // The on-canvas feedback badge. A soft tone-tinted disc with the matching status
 // glyph — the SAME --apollon-assessment-* tones as the popover score pill, so the
 // canvas and the popover read as one system. Positive = check, negative = cross,
-// zero = alert; an ungraded element renders no badge.
+// zero = info, since feedback without points informs rather than warns; an
+// ungraded element renders no badge.
 const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
   if (score === undefined) return null
 
@@ -19,8 +33,8 @@ const AssessmentIcon: React.FC<AssessmentIconProps> = ({ score, x, y }) => {
   const centerX = x + RADIUS
   const centerY = y + RADIUS
 
-  const tone = score > 0 ? "positive" : score < 0 ? "negative" : "zero"
-  const Icon = score > 0 ? Check : score < 0 ? X : TriangleAlert
+  const tone = assessmentTone(score)
+  const Icon = ASSESSMENT_TONE_ICONS[tone]
   const fg = `var(--apollon-assessment-${tone}-text)`
 
   return (

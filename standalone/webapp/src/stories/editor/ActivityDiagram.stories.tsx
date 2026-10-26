@@ -149,8 +149,8 @@ export const GiveFeedbackAction: Story = {
     const canvas = within(canvasElement)
     // Header names the seeded action; the box renders a score + feedback form.
     await canvas.findByText("Submit Order")
-    await canvas.findByText("Points")
-    await canvas.findByText("Feedback")
+    await canvas.findByRole("textbox", { name: "Points" })
+    await canvas.findByRole("textbox", { name: "Feedback" })
   },
 }
 
@@ -216,8 +216,8 @@ export const GiveFeedbackControlFlow: Story = {
     const canvas = within(canvasElement)
     // The edge feedback header names the edge by its type; the box is a form.
     await canvas.findByText("ActivityControlFlow")
-    await canvas.findByText("Points")
-    await canvas.findByText("Feedback")
+    await canvas.findByRole("textbox", { name: "Points" })
+    await canvas.findByRole("textbox", { name: "Feedback" })
   },
 }
 
