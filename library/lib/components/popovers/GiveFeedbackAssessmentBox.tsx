@@ -198,7 +198,10 @@ export const GiveFeedbackAssessmentBox = ({
           maxLength={TITLE_MAX_LENGTH}
           value={title}
           onChange={(e) =>
-            updateAssessment({ title: e.target.value || undefined })
+            updateAssessment({
+              // A heading stays on one line; long titles wrap instead.
+              title: e.target.value.replace(/\s*\n\s*/g, " ") || undefined,
+            })
           }
           placeholder={defaultAssessmentTitle(tone, t)}
           aria-label={t.assessmentTitle}

@@ -85,6 +85,13 @@ describe("GiveFeedbackAssessmentBox title", () => {
     expect(stored().title).toBe("Wrong multiplicity")
   })
 
+  it("keeps the title on one line", () => {
+    renderBox()
+
+    fireEvent.change(titleField(), { target: { value: "Wrong\nmultiplicity" } })
+    expect(stored().title).toBe("Wrong multiplicity")
+  })
+
   it("keeps host fields on edit, resets the correction status and adapts a suggestion", () => {
     store({
       score: 2,
