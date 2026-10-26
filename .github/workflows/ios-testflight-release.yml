@@ -169,6 +169,13 @@ jobs:
             pnpm capacitor:add:ios
           fi
 
+      # The self-hosted runner keeps its CocoaPods spec index between runs and
+      # `cap sync` never refreshes it, so a plugin update that needs a newer pod
+      # would not resolve.
+      - name: Refresh the CocoaPods spec index
+        working-directory: standalone/webapp
+        run: bundle exec pod repo update
+
       - name: Capacitor sync (iOS)
         working-directory: standalone/webapp
         # Bake the live-update signing public key into the app so the updater
