@@ -1,17 +1,19 @@
 import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
-import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
+import {
+  buildSharedDiagramUrl,
+  normalizeSharedDiagramView,
+} from "@/utils/sharedDiagramLinks"
 import {
   discardSharedDiagramWriteToken,
   getSharedDiagramWriteToken,
   storeSharedDiagramWriteToken,
 } from "@/utils/sharedDiagramStorage"
-import {
-  type ApiErrorBody,
-  type ApiErrorCode,
-  type Diagram,
-  DiagramView,
-  type VersionSummary,
+import type {
+  ApiErrorBody,
+  ApiErrorCode,
+  Diagram,
+  VersionSummary,
 } from "@/types"
 
 export type StoredDiagram = Diagram
@@ -264,20 +266,14 @@ export const VersionApiClient = {
   /**
    * Permalink to a specific version, opened in preview mode. Preserves the
    * current `view` param — ApollonShared rejects URLs that omit it ("Invalid
-   * view type"), so a copied link would 404. Falls back to `collaborate` when
-   * the page has no `view` (e.g. local mode).
+   * view type"). The link never carries the write capability: a version link
+   * is for reading, and its recipients must not get write, restore, or delete
+   * access.
    */
   permalink(diagramId: string, versionId: string): string {
-    const current = new URLSearchParams(window.location.search)
-    const params = new URLSearchParams()
-    params.set("view", current.get("view") ?? "collaborate")
-    params.set("version", versionId)
-    // Native-aware origin (capacitor://localhost isn't externally openable).
-    const token = getSharedDiagramWriteToken(diagramId)
-    const fragment =
-      params.get("view") !== DiagramView.SEE_FEEDBACK && token
-        ? `#access=${encodeURIComponent(token)}`
-        : ""
-    return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}${fragment}`
+    const view = normalizeSharedDiagramView(
+      new URLSearchParams(window.location.search).get("view")
+    )
+    return `${buildSharedDiagramUrl(diagramId, view)}&version=${encodeURIComponent(versionId)}`
   },
 }

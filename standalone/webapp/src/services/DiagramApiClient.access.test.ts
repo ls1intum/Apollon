@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
-import { ApiError, DiagramApiClient } from "./DiagramApiClient"
+import {
+  ApiError,
+  DiagramApiClient,
+  VersionApiClient,
+} from "./DiagramApiClient"
 import {
   addSharedDiagramEntry,
   getSharedDiagramEntries,
@@ -40,28 +44,28 @@ it("stores a received write capability outside the model and scopes request auth
       nodes: [],
       edges: [],
       canWrite: true,
-      writeToken: "writer-token",
+      writeToken: "header.writer.sig",
     })
   )
   vi.stubGlobal("fetch", fetch)
-  history.replaceState(null, "", "/shared/abc#access=writer-token")
+  history.replaceState(null, "", "/shared/abc#access=header.writer.sig")
   const diagram = await DiagramApiClient.fetchDiagram("abc")
-  expect(authorizationOf(fetch.mock.calls[0]!)).toBe("Bearer writer-token")
+  expect(authorizationOf(fetch.mock.calls[0]!)).toBe("Bearer header.writer.sig")
   expect(diagram).not.toHaveProperty("writeToken")
   history.replaceState(null, "", "/")
-  expect(getSharedDiagramWriteToken("abc")).toBe("writer-token")
+  expect(getSharedDiagramWriteToken("abc")).toBe("header.writer.sig")
   expect(getSharedDiagramWriteToken("other")).toBeUndefined()
 })
 
 it("keeps the shared gallery order stable when it reloads writable shares", async () => {
-  addSharedDiagramEntry("a", { writeToken: "token-a" })
-  addSharedDiagramEntry("b", { writeToken: "token-b" })
+  addSharedDiagramEntry("a", { writeToken: "header.a.sig" })
+  addSharedDiagramEntry("b", { writeToken: "header.b.sig" })
   const before = getSharedDiagramEntries()
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => {
       const id = url.split("/").at(-1)!
-      return json({ id, nodes: [], edges: [], writeToken: `token-${id}` })
+      return json({ id, nodes: [], edges: [], writeToken: `header.${id}.sig` })
     })
   )
   const changed = vi.fn()
@@ -77,7 +81,7 @@ it("keeps the shared gallery order stable when it reloads writable shares", asyn
 })
 
 it("drops a revoked cached capability and reads the diagram without it", async () => {
-  addSharedDiagramEntry("abc", { writeToken: "revoked-cache" })
+  addSharedDiagramEntry("abc", { writeToken: "header.revoked-cache.sig" })
   const fetch = vi.fn((_url: string, init: RequestInit) =>
     Promise.resolve(
       (init.headers as Record<string, string>).Authorization
@@ -90,7 +94,7 @@ it("drops a revoked cached capability and reads the diagram without it", async (
     expect.objectContaining({ id: "abc", canWrite: false })
   )
   expect(fetch.mock.calls.map(authorizationOf)).toEqual([
-    "Bearer revoked-cache",
+    "Bearer header.revoked-cache.sig",
     undefined,
   ])
   expect(getSharedDiagramWriteToken("abc")).toBeUndefined()
@@ -98,7 +102,11 @@ it("drops a revoked cached capability and reads the diagram without it", async (
 })
 
 it("ignores a revoked link capability for the rest of the page session", async () => {
-  history.replaceState(null, "", "/shared/abc?view=EDIT#access=revoked-link")
+  history.replaceState(
+    null,
+    "",
+    "/shared/abc?view=EDIT#access=header.revoked-link.sig"
+  )
   const fetch = vi.fn((_url: string, init: RequestInit) =>
     Promise.resolve(
       (init.headers as Record<string, string>).Authorization
@@ -110,14 +118,14 @@ it("ignores a revoked link capability for the rest of the page session", async (
   await DiagramApiClient.fetchDiagram("abc")
   await DiagramApiClient.fetchDiagram("abc")
   expect(fetch.mock.calls.map(authorizationOf)).toEqual([
-    "Bearer revoked-link",
+    "Bearer header.revoked-link.sig",
     undefined,
     undefined,
   ])
 })
 
 it("does not retry a write with a revoked capability", async () => {
-  addSharedDiagramEntry("abc", { writeToken: "revoked-write" })
+  addSharedDiagramEntry("abc", { writeToken: "header.revoked-write.sig" })
   const fetch = vi.fn().mockResolvedValue(invalidCapability())
   vi.stubGlobal("fetch", fetch)
   await expect(
@@ -128,4 +136,32 @@ it("does not retry a write with a revoked capability", async () => {
   ).rejects.toEqual(expect.any(ApiError))
   expect(fetch).toHaveBeenCalledOnce()
   expect(getSharedDiagramWriteToken("abc")).toBeUndefined()
+})
+
+it("loads a diagram whose link carries a malformed capability", async () => {
+  history.replaceState(null, "", "/shared/abc?view=EDIT#access=a%0Ab")
+  // `new Headers` applies the same header-value check as the browser's fetch.
+  const fetch = vi.fn((_url: string, init: RequestInit) => {
+    new Headers(init.headers)
+    return Promise.resolve(json({ id: "abc", nodes: [], edges: [] }))
+  })
+  vi.stubGlobal("fetch", fetch)
+  await expect(DiagramApiClient.fetchDiagram("abc")).resolves.toEqual(
+    expect.objectContaining({ id: "abc" })
+  )
+  expect(authorizationOf(fetch.mock.calls[0]!)).toBeUndefined()
+})
+
+it("never puts the write capability into a version permalink", () => {
+  addSharedDiagramEntry("abc", { writeToken: "header.writer.sig" })
+  history.replaceState(
+    null,
+    "",
+    "/shared/abc?view=COLLABORATE#access=header.writer.sig"
+  )
+  const link = new URL(VersionApiClient.permalink("abc", "v1"))
+  expect(link.hash).toBe("")
+  expect(link.href).not.toContain("header.writer.sig")
+  expect(link.searchParams.get("view")).toBe("COLLABORATE")
+  expect(link.searchParams.get("version")).toBe("v1")
 })

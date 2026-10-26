@@ -128,8 +128,15 @@ export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>
 // token stays in the address bar, so it must be skipped instead of deleted.
 const rejectedWriteTokens = new Set<string>()
 
+// Capabilities are compact JWS tokens. Anything else (for example a damaged
+// `#access` value with a line break) is not a capability, and fetch would throw
+// on it as an invalid Authorization header value.
+const COMPACT_JWS = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
+
 const usableWriteToken = (token: string | null | undefined) =>
-  token && !rejectedWriteTokens.has(token) ? token : undefined
+  token && COMPACT_JWS.test(token) && !rejectedWriteTokens.has(token)
+    ? token
+    : undefined
 
 export const getSharedDiagramWriteToken = (
   diagramId: string

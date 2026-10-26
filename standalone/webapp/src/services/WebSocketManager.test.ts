@@ -74,7 +74,7 @@ describe("WebSocketManager access", () => {
   })
 
   it("waits for write authorization before broadcasting offline state", () => {
-    addSharedDiagramEntry("diag-1", { writeToken: "writer-token" })
+    addSharedDiagramEntry("diag-1", { writeToken: "header.writer.sig" })
     const editor = makeFakeEditor()
     const manager = new WebSocketManager("diag-1", editor, vi.fn())
     manager.startConnection()
@@ -83,7 +83,7 @@ describe("WebSocketManager access", () => {
     socket.readyState = FakeWebSocket.OPEN
     socket.onopen?.(new Event("open"))
     expect(send).toHaveBeenCalledExactlyOnceWith(
-      JSON.stringify({ kind: "access", token: "writer-token" })
+      JSON.stringify({ kind: "access", token: "header.writer.sig" })
     )
     expect(editor.broadcastFullState).not.toHaveBeenCalled()
     socket.onmessage?.(

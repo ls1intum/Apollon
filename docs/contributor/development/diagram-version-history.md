@@ -216,9 +216,18 @@ document updates or transient edit geometry.
 
 Edit, collaboration, and give-feedback links carry the write capability in
 `#access=...`. Feedback mode changes the UI, not the write scope. Review links
-omit the capability; changing `view=` does not grant write access. The webapp
-sends capabilities in the HTTP Authorization header and the WebSocket access
-handshake, not in URL queries or persisted diagram models.
+and version permalinks omit the capability; changing `view=` does not grant
+write access. The webapp sends capabilities in the HTTP Authorization header
+and the WebSocket access handshake, not in URL queries or persisted diagram
+models.
+
+Readers do not apply peer Yjs updates. Their documents are seeded from HEAD on
+their own, and readers cannot send state, so peer updates would not supersede
+the reader's seeded items. Readers reload HEAD after `DIAGRAM_UPDATED` instead,
+with one request in flight and at most one trailing refresh.
+
+If the server rejects the write capability during a session, the editor
+becomes read-only and shows one message that stays until the user closes it.
 
 A capability remains valid while its diagram exists and the server signing
 key is unchanged. Anyone with a write link can pass it on. Delete the diagram
@@ -227,10 +236,10 @@ The server answers a request with an invalid capability with `401
 INVALID_CAPABILITY`, also on reads. The webapp then discards that capability
 and retries reads without it, so the diagram stays readable.
 
-Legacy links remain readable but cannot write. Old soft-owner cookies are not
-accepted as creator proof because earlier routes issued them to arbitrary
-writers. Export or duplicate the diagram and share the new copy to get new
-write links. Rotating `OWNER_SECRET` invalidates both owner cookies and write
+Links without a capability are read-only. Only the owner cookie that diagram
+creation issues proves the creator; the server ignores other owner cookies.
+Export or duplicate a read-only diagram and share the new copy to get write
+links. Rotating `OWNER_SECRET` invalidates both owner cookies and write
 capabilities; retain the key across normal deployments.
 
 `X-Owner-Match` still distinguishes creators from collaborators for destructive
