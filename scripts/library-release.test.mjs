@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import {
+  chmodSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -18,7 +19,6 @@ import {
   normalizeNpmView,
   shouldPromote,
   validateNextVersion,
-  validateStagingArtifact,
   validateVersion,
   verifyArtifact,
 } from "./library-release.mjs"
@@ -36,22 +36,6 @@ const published = {
   version: manifest.version,
   dist: { integrity: manifest.integrity },
 }
-const run = {
-  id: 123,
-  path: ".github/workflows/release-library.yml",
-  head_branch: "main",
-  head_repository: { full_name: "ls1intum/Apollon" },
-  event: "push",
-  status: "completed",
-  head_sha: sha,
-}
-
-const stagingArtifact = {
-  name: "library-release-1",
-  expired: false,
-  workflow_run: { id: run.id, head_sha: sha, head_branch: "main" },
-}
-
 test("npm view accepts legacy results and singleton arrays, never ambiguous or error output", () => {
   for (const result of ["5.3.1", published]) {
     assert.equal(normalizeNpmView(result), result)
@@ -106,40 +90,6 @@ test("latest promotion never moves backwards, including out-of-order approvals",
   assert.equal(shouldPromote("5.4.0", "5.3.1"), true)
   assert.equal(shouldPromote("5.4.0", "5.4.0"), false)
   assert.equal(shouldPromote("5.3.2", "5.4.0"), false)
-})
-
-test("finalization accepts only the original main release workflow", () => {
-  validateStagingArtifact(stagingArtifact, run)
-  validateStagingArtifact(stagingArtifact, {
-    ...run,
-    event: "workflow_dispatch",
-    conclusion: "failure",
-  })
-  for (const change of [
-    { path: ".github/workflows/untrusted.yml" },
-    { head_branch: "feature" },
-    { head_repository: { full_name: "attacker/Apollon" } },
-    { event: "pull_request" },
-    { status: "in_progress" },
-    { head_sha: "injected\noutput=true" },
-  ])
-    assert.throws(() =>
-      validateStagingArtifact(stagingArtifact, { ...run, ...change })
-    )
-  for (const change of [
-    { expired: true },
-    { name: "untrusted" },
-    { workflow_run: { ...stagingArtifact.workflow_run, id: 124 } },
-    {
-      workflow_run: {
-        ...stagingArtifact.workflow_run,
-        head_sha: "b".repeat(40),
-      },
-    },
-  ])
-    assert.throws(() =>
-      validateStagingArtifact({ ...stagingArtifact, ...change }, run)
-    )
 })
 
 test("exact tested bytes must be published before finalization", () => {
@@ -198,15 +148,16 @@ test("workflow permissions and artifact identity preserve the release boundary",
   assert.equal(workflow.jobs.stage.environment, "npm-publish")
   assert.deepEqual(workflow.jobs.promote.permissions, { "id-token": "write" })
   assert.equal(workflow.jobs.promote.environment, "npm-promote")
-  assert.deepEqual(workflow.jobs.finalize.permissions, {
-    actions: "read",
-    contents: "read",
-  })
-  assert.deepEqual(workflow.jobs.release.permissions, {
-    actions: "read",
-    contents: "write",
-  })
+  assert.deepEqual(workflow.jobs.finalize.permissions, { contents: "read" })
+  assert.deepEqual(workflow.jobs.release.permissions, { contents: "write" })
   assert.equal(workflow.jobs.build.needs, "check")
+  assert.deepEqual(workflow.jobs.finalize.needs, ["build", "stage"])
+  // npm can accept an upload whose response is lost, so a failed stage job
+  // must still reach the approval checks.
+  assert.equal(
+    workflow.jobs.finalize.if,
+    "${{ !cancelled() && needs.build.result == 'success' }}"
+  )
   const stageActions = workflow.jobs.stage.steps
     .filter((step) => step.uses)
     .map((step) => step.uses.split("@")[0])
@@ -216,10 +167,15 @@ test("workflow permissions and artifact identity preserve the release boundary",
   ])
   const upload = workflow.jobs.build.steps.find((step) => step.id === "upload")
   assert.equal(upload.with.name, "library-release-${{ github.run_attempt }}")
-  const download = workflow.jobs.finalize.steps.find((step) =>
-    step.uses?.startsWith("actions/download-artifact@")
-  )
-  assert.equal(download.with["artifact-ids"], "${{ inputs.artifact_id }}")
+  for (const job of ["finalize", "release"]) {
+    const download = workflow.jobs[job].steps.find((step) =>
+      step.uses?.startsWith("actions/download-artifact@")
+    )
+    assert.equal(
+      download.with["artifact-ids"],
+      "${{ needs.build.outputs.artifact-id }}"
+    )
+  }
   const checks = parse(
     readFileSync(
       new URL("../.github/workflows/pr-health-checks.yml", import.meta.url),
@@ -440,6 +396,7 @@ function stepFixture(t, script, files, npmState, environment = {}) {
   }
   const output = join(directory, "output")
   return {
+    directory,
     run: () =>
       spawnSync(
         "bash",
@@ -511,10 +468,7 @@ test("staging invokes native npm only after checking the actual tarball", (t) =>
       script,
       { "artifact/package.tgz": contents },
       {},
-      {
-        EXPECTED_INTEGRITY: manifest.integrity,
-        ARTIFACT_ID: "123",
-      }
+      { EXPECTED_INTEGRITY: manifest.integrity }
     )
     const result = fixture.run()
     if (contents === bytes) {
@@ -539,6 +493,37 @@ test("staging invokes native npm only after checking the actual tarball", (t) =>
   }
 })
 
+test("finalization waits for the npm approval and fails on other registry errors", (t) => {
+  const script = workflow.jobs.finalize.steps.find(
+    (step) => step.id === "approval"
+  ).run
+  for (const [npmState, approved] of [
+    [{ published, pendingViews: 2 }, true],
+    [{ published, pendingViews: 1, error: "E401" }, false],
+  ]) {
+    const fixture = stepFixture(
+      t,
+      script,
+      {
+        "artifact/manifest.json": JSON.stringify(manifest),
+        // Approval polling must not slow the test down.
+        sleep: "#!/bin/sh\n",
+      },
+      npmState
+    )
+    chmodSync(join(fixture.directory, "sleep"), 0o700)
+    const result = fixture.run()
+    assert.equal(result.status === 0, approved, result.stderr)
+    if (approved) {
+      assert.equal(fixture.state().calls.length, 3)
+      assert.deepEqual(
+        JSON.parse(readFileSync(join(fixture.directory, "published.json"))),
+        published
+      )
+    }
+  }
+})
+
 test("promotion checks for concurrent tag changes and verifies the new tag", (t) => {
   const script = workflow.jobs.promote.steps.find(
     (step) => step.env?.EXPECTED_LATEST
@@ -546,6 +531,7 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
   for (const [latest, arrayResults] of [
     ["5.3.1", false],
     ["5.3.1", true],
+    [manifest.version, true],
     ["5.4.0", true],
     [[], false],
     [["5.3.1", "5.3.2"], false],
@@ -560,7 +546,11 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
       { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
     )
     const result = fixture.run()
-    assert.equal(result.status === 0, latest === "5.3.1", result.stderr)
+    assert.equal(
+      result.status === 0,
+      latest === "5.3.1" || latest === manifest.version,
+      result.stderr
+    )
     assert.deepEqual(
       fixture.state().latest,
       latest === "5.3.1" ? manifest.version : latest
@@ -582,6 +572,32 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
   }
 })
 
+test("a promotion retry after a lost response leaves the moved tag alone", (t) => {
+  const script = workflow.jobs.promote.steps.find(
+    (step) => step.env?.EXPECTED_LATEST
+  ).run
+  const fixture = stepFixture(
+    t,
+    script,
+    {},
+    { latest: "5.3.1", arrayResults: true, failAfterPromotion: true },
+    { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+  )
+  assert.notEqual(fixture.run().status, 0)
+  const state = fixture.state()
+  assert.equal(state.latest, manifest.version)
+  writeFileSync(
+    join(fixture.directory, "npm.json"),
+    JSON.stringify({ ...state, failAfterPromotion: false })
+  )
+  const retry = fixture.run()
+  assert.equal(retry.status, 0, retry.stderr)
+  assert.equal(
+    fixture.state().calls.filter((args) => args[0] === "dist-tag").length,
+    1
+  )
+})
+
 test("docs deployment waits for the public version and does not hide registry failures", (t) => {
   const docs = parse(
     readFileSync(
@@ -594,6 +610,15 @@ test("docs deployment waits for the public version and does not hide registry fa
     "needs.build.outputs.is-production == 'true' && needs.build.outputs.published == 'true'"
   )
   assert.deepEqual(docs.on.workflow_run.workflows, ["Release Library"])
+  // A release run can fail after npm accepted the version (e.g. a lost
+  // staging response); the npm check below decides about the deployment.
+  assert.equal(docs.jobs.build.if, undefined)
+  // A release completion builds the current main (GITHUB_SHA of the
+  // workflow_run event), not the older release commit.
+  const checkout = docs.jobs.build.steps.find((step) =>
+    step.uses?.startsWith("actions/checkout@")
+  )
+  assert.equal(checkout.with.ref, undefined)
   const script = docs.jobs.build.steps.find((step) => step.id === "npm").run
   for (const state of [
     { versions: [manifest.version] },

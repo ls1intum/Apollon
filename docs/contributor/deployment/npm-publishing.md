@@ -26,36 +26,32 @@ URLs, and the lockfile. Release notes come from those changelogs through
 
 ## Cut a release
 
+A release takes two actions: merge the **Version Packages** PR, then approve
+the library on npm.
+
 1. Merge the **Version Packages** PR when the accumulated changes are ready.
 2. The release workflows start:
    - **Library:** lint, build, test, pack, and check the tarball as an external
      consumer. A separate job verifies its SHA-512 integrity and stages it on
-     npm with OIDC, provenance, and the `next` tag. The artifact name includes
-     the run attempt; its immutable ID is shown in the staging summary. No npm
-     version is public and no GitHub Release is created at this point.
+     npm with OIDC, provenance, and the `next` tag. Nothing is public yet.
    - **Standalone:** after the Docker build succeeds, retag its source-pinned
      images, sign them with cosign, and create the `vX.Y.Z` release. The existing
      staging deployment uses the same image digests.
    - **Extension:** build and attest the VSIX, publish to VS Marketplace and
      optionally Open VSX, then create its release with the VSIX attached.
 3. Review the library in npm's **Staged Packages** tab. Check the version, source,
-   provenance, contents, and `next` tag. Download the staged tarball and compare
-   its SHA-512 integrity with the original artifact's `manifest.json`. Approve
-   on npm with **2FA**. The version is now public under `next`; `latest` has not
-   changed.
-4. Run **Release Library** on branch `main`, operation `finalize`, with the
-   original `artifact_id` from the staging summary or upload artifact URL.
-   Finalization checks the artifact's source run and verifies that npm contains
-   the exact tested tarball. A separate OIDC job promotes newer versions to
-   `latest`; older or already-promoted versions cannot move it backwards.
-   The GitHub Release is prepared as a draft, its uploaded tarball is downloaded
-   and compared byte-for-byte, and only then is the release made public.
+   provenance, contents, and `next` tag, then approve with **2FA**.
+4. The library run continues by itself. It waits for the approval, verifies
+   that npm serves the exact tested tarball, and promotes the version to
+   `latest` in a separate OIDC job; older versions cannot move `latest`
+   backwards. It then creates the `@tumaet/apollon@X.Y.Z` GitHub Release and
+   compares its uploaded tarball byte-for-byte before making it public.
    Standalone remains the repository's latest GitHub Release.
 5. Promote standalone through **Deploy to Production**, with `image-tag: X.Y.Z`.
 
 Docs builds continue during npm review, but production deployment waits until
-all pinned library links refer to a public npm version. A successful library
-release workflow starts a new docs check. Docker and Marketplace releases do
+all pinned library links refer to a public npm version. Each completed
+library release run starts a new docs check of the current `main`. Docker and Marketplace releases do
 not wait for npm approval: they consume the library from the workspace.
 
 ## Version PR setup
@@ -88,9 +84,10 @@ filename `release-library.yml`:
 | `npm-publish`      | Stage publishing only; no direct publish or dist-tag access |
 | `npm-promote`      | Stage publishing and dist-tag access; no direct publish     |
 
-npm always permits staging on new trusted publisher connections. The promotion
-connection needs dist-tag permission, but its job only changes the tag after
-verification. Restrict both GitHub environments to branch `main`. Protect
+npm always permits staging on new trusted publisher connections. Turn on **Allow npm dist-tag** for the `npm-promote`
+connection; it is off by default, and without it promotion fails with E401
+([GitHub changelog](https://github.blog/changelog/2026-09-30-opt-in-dist-tag-permissions-for-npm-trusted-publishing)).
+Its job changes the tag only after verification. Restrict both GitHub environments to branch `main`. Protect
 `main` and require review of release code. Environment reviewers can provide an
 additional gate; they do not replace npm approval.
 
@@ -106,16 +103,16 @@ operations. These permissions are independent of direct publishing. See
 
 ## npm recovery
 
-| Failure                                                       | Recovery                                                                                                                                                                                                                              |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build or consumer check                                       | Fix the source and rerun. Each build attempt gets a new artifact ID.                                                                                                                                                                  |
-| Duplicate stage or lost upload response                       | Inspect with interactive `npm stage list`, `view`, and `download`. If the bytes match the original artifact, approve and finalize with that artifact ID, even if staging reported a failure. Do not assume a conflict proves success. |
-| Wrong staged contents                                         | Reject with `npm stage reject <stage-id>` and 2FA. Fix the source through review before staging again.                                                                                                                                |
-| Approval pending, registry unavailable, or integrity mismatch | Finalization stops before promotion or release. Resolve the cause and retry with the original artifact ID.                                                                                                                            |
-| `latest` changed during finalization                          | Retry. Verification reads the current tag again; older versions are not promoted.                                                                                                                                                     |
-| Upload or draft publication failed                            | Retry with the same artifact ID. Draft assets are repaired and verified before publication. An existing public release is checked, not modified.                                                                                      |
-| Conflicting source tag or public release asset                | Stop and investigate. Finalization does not overwrite a conflicting public release.                                                                                                                                                   |
-| Original artifact expired or deleted                          | Stop. Artifacts are retained for 90 days; finalization requires the original bytes, not a rebuild.                                                                                                                                    |
+| Failure                                                            | Recovery                                                                                                                                                                                                          |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build or consumer check                                            | Fix the source and rerun. Each build attempt gets a new artifact ID.                                                                                                                                              |
+| Duplicate stage or lost upload response                            | Inspect with interactive `npm stage list`, `view`, and `download`. If the bytes match the run's artifact, approve; the run continues even if staging reported a failure. Do not assume a conflict proves success. |
+| Wrong staged contents                                              | Reject with `npm stage reject <stage-id>` and 2FA. Fix the source through review before staging again.                                                                                                            |
+| Approval later than 6 hours, registry error, or integrity mismatch | Finalization stops before promotion or release. Resolve the cause, approve if needed, and re-run the failed jobs of the original run.                                                                             |
+| `latest` changed during finalization                               | Retry. Verification reads the current tag again; older versions are not promoted.                                                                                                                                 |
+| Upload or draft publication failed                                 | Re-run the failed jobs. Draft assets are repaired and verified before publication. An existing public release is checked, not modified.                                                                           |
+| Conflicting source tag or public release asset                     | Stop and investigate. Finalization does not overwrite a conflicting public release.                                                                                                                               |
+| Original artifact expired or deleted                               | Stop. Artifacts are retained for 90 days; finalization requires the original bytes, not a rebuild.                                                                                                                |
 
 ## Verify a Docker image signature
 
