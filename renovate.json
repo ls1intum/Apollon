@@ -69,6 +69,25 @@
       "automerge": true
     },
     {
+      "description": "Move the Playwright npm packages and the CI container image together: the visual job runs @playwright/test inside mcr.microsoft.com/playwright, which ships only the browsers of its own version.",
+      "matchPackageNames": [
+        "@playwright/test",
+        "playwright",
+        "mcr.microsoft.com/playwright"
+      ],
+      "groupName": "Playwright"
+    },
+    {
+      "description": "Hold the server's `canvas` alias below 1.0.12: 1.0.12 makes ctx.canvas a read-only getter (Brooooooklyn/canvas#1373), and jsdom's getContext() assigns it, so every jsdom canvas throws.",
+      "matchPackageNames": ["@napi-rs/canvas", "canvas"],
+      "allowedVersions": "<1.0.12"
+    },
+    {
+      "description": "Hold pdfmake below 0.3.12: its browser build (used by the server PDF worker with the VFS fonts) bundles pdfkit 0.20, which rejects VFS font file names for SVG <text>, so every PDF export throws. Still broken in 0.3.13.",
+      "matchPackageNames": ["pdfmake"],
+      "allowedVersions": "<0.3.12"
+    },
+    {
       "description": "Keep the verified React Flow/system pair until the touch regression is fixed.",
       "matchPackageNames": ["@xyflow/react"],
       "allowedVersions": "12.11.1"

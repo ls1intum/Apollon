@@ -522,7 +522,7 @@ importers:
         version: 17.13.0
       jsdom:
         specifier: 'catalog:'
-        version: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+        version: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -552,7 +552,7 @@ importers:
         version: 5.1.2(@microsoft/api-extractor@7.59.4(@types/node@24.19.2))(@rspack/core@1.7.12(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.15)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.112.2(@swc/core@1.16.13(@swc/helpers@0.5.23))(@swc/html@1.16.13)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.31))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(lightningcss@1.33.0)(postcss@8.5.31)(sharp@0.32.6)(svgo@3.3.5))
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       y-protocols:
         specifier: 'catalog:'
         version: 1.0.7(yjs@13.6.33)
@@ -644,7 +644,7 @@ importers:
         version: 17.13.0
       jsdom:
         specifier: 'catalog:'
-        version: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+        version: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
       storybook:
         specifier: 'catalog:'
         version: 10.6.3(@types/react@19.3.0)(prettier@3.8.5)(react@19.3.1)
@@ -659,7 +659,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   standalone/server:
     dependencies:
@@ -673,23 +673,23 @@ importers:
         specifier: 'catalog:'
         version: 12.11.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       canvas:
-        specifier: npm:@napi-rs/canvas@1.0.13
-        version: '@napi-rs/canvas@1.0.13'
+        specifier: npm:@napi-rs/canvas@1.0.11
+        version: '@napi-rs/canvas@1.0.11'
       global-jsdom:
         specifier: 30.0.0
-        version: 30.0.0(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))
+        version: 30.0.0(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))
       hono:
         specifier: 4.13.13
         version: 4.13.13
       jsdom:
         specifier: 'catalog:'
-        version: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+        version: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
       lib0:
         specifier: 0.2.119
         version: 0.2.119
       pdfmake:
-        specifier: 0.3.12
-        version: 0.3.12
+        specifier: 0.3.11
+        version: 0.3.11
       pino:
         specifier: 10.4.0
         version: 10.4.0
@@ -765,7 +765,7 @@ importers:
         version: 8.72.0(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   standalone/webapp:
     dependencies:
@@ -964,7 +964,7 @@ importers:
         version: 17.13.0
       jsdom:
         specifier: 'catalog:'
-        version: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+        version: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
       jszip:
         specifier: 3.10.2
         version: 3.10.2
@@ -988,7 +988,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       yjs:
         specifier: 'catalog:'
         version: 13.6.33
@@ -1034,7 +1034,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   vscode-extension/webview:
     dependencies:
@@ -3384,79 +3384,79 @@ packages:
   '@module-federation/webpack-bundler-runtime@0.22.0':
     resolution: {integrity: sha512-aM8gCqXu+/4wBmJtVeMeeMN5guw3chf+2i6HajKtQv7SJfxV/f4IyNQJUeUQu9HfiAZHjqtMV5Lvq/Lvh8LdyA==}
 
-  '@napi-rs/canvas-android-arm64@1.0.13':
-    resolution: {integrity: sha512-trn7AaDzQ+yeeA0ezhkC7cB1ZDPtp4UYk0EvB5F8qtYL9jEVWtVrU30WOpI52DszoTxaTsCgf5PP4ZVaOlOIHQ==}
+  '@napi-rs/canvas-android-arm64@1.0.11':
+    resolution: {integrity: sha512-dtJS4FQEfH9OwSYLtMrEnj7T8DzBbJc/97LI/OkiWOYpW/iW5t6R/gcxVrUXS8l45gCVpwMufgucRe/pe0ISqA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [android]
 
-  '@napi-rs/canvas-darwin-arm64@1.0.13':
-    resolution: {integrity: sha512-6Y2djEetL8copxfNK6hg7oig/xqTwOchv19hBOm+zBNdKc/02Z3kjZN5wrLzv/l5O04/bAQS6I/AlQpwBlXgPg==}
+  '@napi-rs/canvas-darwin-arm64@1.0.11':
+    resolution: {integrity: sha512-J/JylWoJTG8OQqZaiqly4IODyAxNofUlZo0wtSBJtHk6AdymbdIkPynAM1JvQaZpPaG5h+msk9QuK8y4i1ooqw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@napi-rs/canvas-darwin-x64@1.0.13':
-    resolution: {integrity: sha512-OZoPwwu4TMMg8GTCFBrg8UFExwQTU/55i3uTC/izDat6PHE+ro9dimyQoOboFf91+NY7Pnn70ScR8f8I8+eZXw==}
+  '@napi-rs/canvas-darwin-x64@1.0.11':
+    resolution: {integrity: sha512-nlecCk3xy06eAGC7krZtzNDm9UNTHKuHQYK8ZYegdjzgSL8anGt/eLJZm86OWaNgZkwQwvDqfSmG8Nqe6MPZNQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.13':
-    resolution: {integrity: sha512-dZSYaKROuswU2eUWG5aBKndNVe68elo1YX93xtRax7q658tj8rYE+HwduovWJgs6qwv1r1/CLR60nDeBbyjvyg==}
+  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.11':
+    resolution: {integrity: sha512-DKImmG+sTPolE0kGPsYPBxTtOjb3INALp32O2lW2CfSr0bAzSEKKuu+GrQbtilClyoPOahUErS3OrznFDraoWA==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@napi-rs/canvas-linux-arm64-gnu@1.0.13':
-    resolution: {integrity: sha512-W6FzYE8ADHI93In1vi80KBL6btDtAMuj50Ch5ptkWS8xuntyzbR4h5JDUmXoakxZn2yMInksudTEqVSWoFqFGg==}
+  '@napi-rs/canvas-linux-arm64-gnu@1.0.11':
+    resolution: {integrity: sha512-55sykACGENj5j1rhj+81AO8JbR9HYgGjRZ7/H+pNr4VE1DvINKYNMTcutk8ZmWxk276jAQvUKJ3+Kdj9GXU3lQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@napi-rs/canvas-linux-arm64-musl@1.0.13':
-    resolution: {integrity: sha512-+6fQ+rR49hkAa4voh2stLIwQ+4t+gmoseM8Bc53/DlMXb73IKymDPWK9A/NtWeqTW4ijWppYuyuxS2hPI8tzNA==}
+  '@napi-rs/canvas-linux-arm64-musl@1.0.11':
+    resolution: {integrity: sha512-6Jz6jys17yXydO+WdJgu7JhoB4K7/w9sWHByzzTmLjQghUx3TDMWvLv+UcCdnWhg4oprET67EMymnrETdeGNAg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@napi-rs/canvas-linux-riscv64-gnu@1.0.13':
-    resolution: {integrity: sha512-17XEMO3t9RW/TtHtSFf2AkaSWuCWdzbPeidz7zrOFawHxoLSJCnpTI1hN5aUvrZNnkNNmt/vZVJCh0ryUaik3A==}
+  '@napi-rs/canvas-linux-riscv64-gnu@1.0.11':
+    resolution: {integrity: sha512-lf2XeEebWiUYVOVEjLXxF7dfXrBBSEOBn9AqBh39VYXrPt5cDqI+1t58IFSjn8npqkg5jIOs8TQbjKABbFW1gQ==}
     engines: {node: '>= 10'}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@napi-rs/canvas-linux-x64-gnu@1.0.13':
-    resolution: {integrity: sha512-lc48IwknVHBsNzXn9Xs5OkUsRX38Ml3Z1aOybQ51mMEzZckm8+4A0qROlyYHEoBPzr1kL3IU8ZUAqDb7wtdX8w==}
+  '@napi-rs/canvas-linux-x64-gnu@1.0.11':
+    resolution: {integrity: sha512-iDapw7nFSE5tsmQxcH2+KotJhyfVPmHd6vUOQN/Em+8WNbkZJwJ/rDowlJMFnMl0SYSDSfgKCNUGi6Sn5++Smg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@napi-rs/canvas-linux-x64-musl@1.0.13':
-    resolution: {integrity: sha512-bGY1r26S2bs8UNFJcPWcCSNdCFbKep5PATsvtgtC9A5u6SRgr2/jJE/RlhHL5m9ZpixNDhVkLY/5h16Kx5V9YA==}
+  '@napi-rs/canvas-linux-x64-musl@1.0.11':
+    resolution: {integrity: sha512-26q26AyITo3CGZX4HWFIMgBMA1lu3YN07gxzBm4tW6Hglq/OVyTP50kDrmWuKybCX6dh3m8Ly+c7YhI+sqCgCQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@napi-rs/canvas-win32-arm64-msvc@1.0.13':
-    resolution: {integrity: sha512-2vRPBZoaIvJrUkDhZTE2Hn0YrnpJRCWVM3EJACoBKjuWI6WgPxGtUoRMsxRviCsyks8bKTSFdyw14CellnG2qA==}
+  '@napi-rs/canvas-win32-arm64-msvc@1.0.11':
+    resolution: {integrity: sha512-cUO96IdsfvIj2S+2PNcDSkTcLhjPj8pIOEWRV1Kj70MOP4wnE9zSk7N4C1EKHlFGRcgdR5AkbnBZj0dfHK9nbQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@napi-rs/canvas-win32-x64-msvc@1.0.13':
-    resolution: {integrity: sha512-DUlW3lZPz63kYsf8mxgyyZuevhlH0T3/BGP9l+NazhB0F1+gL6D4hqZdnhZpw24DlWmTpATDcyYSZlJOi+DdfQ==}
+  '@napi-rs/canvas-win32-x64-msvc@1.0.11':
+    resolution: {integrity: sha512-DFYp/ZQRdKunI/LPc0UkRXG1vlNjJKOJf8O8Ctb8+wm2Nt2ELg9Eamc31D2VoakkfGo8L+z0Iejz6WtFbQwyGw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@napi-rs/canvas@1.0.13':
-    resolution: {integrity: sha512-b87ugZpQ5ViwqVBkjervxpwa0GmJPsKHLBNoZN6GpjWeHzTbDUGryriq+2DYW2XbB+xCqSIINQysC0/I87nPbw==}
+  '@napi-rs/canvas@1.0.11':
+    resolution: {integrity: sha512-vt5tog1cr+QKadIddGe+3LrcX0EmjEd0izF717Uwf92mBmgYfq2XRmL2r4bZU40spB69exxhrBn9I91HYEr/7w==}
     engines: {node: '>= 10'}
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -6319,6 +6319,9 @@ packages:
   brotli@1.3.3:
     resolution: {integrity: sha512-oTKjJdShmDuGW94SyyaoQvAjf30dZaHnjJ8uAF+u2/vGJkJbJPJAT1gDiOJP5v1Zb6f9KEyW/1HpuaWIXtGHPg==}
 
+  browserify-zlib@0.2.0:
+    resolution: {integrity: sha512-Z942RysHXmJrhqk88FmKBVq/v5tqmSkDz7p54G/MGyjMnCFFnC79XWNbg+Vta8W6Wb2qtSZTSxIGkJrRpCFEiA==}
+
   browserslist@4.29.3:
     resolution: {integrity: sha512-1R4kiYKXGViqEN0CnoDrXc1StD9niAwu+j2dukWzrD4bJgsD4lDmEp0CRbc6E/vYJIfTHwPmwyaKtVSudICdPA==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
@@ -8608,6 +8611,9 @@ packages:
   joi@17.13.8:
     resolution: {integrity: sha512-iPKOGmiRw1jxf/JOPwxmCcUQAOdF359mdzYiP2DJ+TMX0YK2zjK3D+zYOaGjpumWxOFF/l2xVWjRVK5bGSLdEw==}
 
+  js-md5@0.8.3:
+    resolution: {integrity: sha512-qR0HB5uP6wCuRMrWPTrkMaev7MJZwJuuw4fnwAzRgP4J4/F8RwtodOKpGp4XpqsLBFzzgqIO42efFAyz2Et6KQ==}
+
   js-tokens@10.0.0:
     resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
@@ -9852,11 +9858,11 @@ packages:
     resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
     engines: {node: '>= 14.16'}
 
-  pdfkit@0.20.2:
-    resolution: {integrity: sha512-Q/w03ICAQyXfHNfTsg1udp0ADerdBN0s7a6XSPL7J7Ro6ABnafoBOCDBstIO9U02mvzHEV8HrvFIw5iV5ejIRA==}
+  pdfkit@0.19.1:
+    resolution: {integrity: sha512-6Gzk+wDwTs4VSxsR5rCMTnIl5nlmkye1oWB0l2hDB1EX6ZNSIBroKQEv+2+fPPn+stVjyqzmsqRJVDfB9fo5DA==}
 
-  pdfmake@0.3.12:
-    resolution: {integrity: sha512-Rhqr/IWpYeEzrKCaZJOfdNxMtBAaHb4NfVXRpTHtH8DRo++hUua9QjwP5UNau7rOsHpgE0xfQLqVtkxrpdNqJQ==}
+  pdfmake@0.3.11:
+    resolution: {integrity: sha512-Uc49J9hUMyuqJk+U+PxlpBpPr96A4HOOfesGx609EPr2ue82+5/Smq/KTAkEqh0/jUGSi1fumvqZ5yAWijJTJg==}
     engines: {node: '>=20'}
 
   pend@1.2.0:
@@ -9914,8 +9920,8 @@ packages:
     resolution: {integrity: sha512-ZIfcLJC+7E7FBFnDxm9MPmt7D+DidyQ26lewieO75AdhA2ayMtsJSES0iWzqJQbcVRSrTufQoy0DR94xHue0oA==}
     engines: {node: '>=10.4.0'}
 
-  png-js@2.0.0:
-    resolution: {integrity: sha512-GdzJuUMc6ZSpxFJWVxtOH1bzYHym+TOnveqUjb+VJIbZWbZzyiRGFiKhbiielfpYbgMlhHVhsJ0FTazfuRFkMA==}
+  png-js@1.1.0:
+    resolution: {integrity: sha512-PM/uYGzGdNSzqeOgly68+6wKQDL1SY0a/N+OEa/+br6LnHWOAJB0Npiamnodfq3jd2LS/i2fMeOKSAILjA+m5Q==}
 
   pngjs@5.0.0:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
@@ -16178,52 +16184,52 @@ snapshots:
       '@module-federation/runtime': 0.22.0
       '@module-federation/sdk': 0.22.0
 
-  '@napi-rs/canvas-android-arm64@1.0.13':
+  '@napi-rs/canvas-android-arm64@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-darwin-arm64@1.0.13':
+  '@napi-rs/canvas-darwin-arm64@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-darwin-x64@1.0.13':
+  '@napi-rs/canvas-darwin-x64@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.13':
+  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-arm64-gnu@1.0.13':
+  '@napi-rs/canvas-linux-arm64-gnu@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-arm64-musl@1.0.13':
+  '@napi-rs/canvas-linux-arm64-musl@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-riscv64-gnu@1.0.13':
+  '@napi-rs/canvas-linux-riscv64-gnu@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-x64-gnu@1.0.13':
+  '@napi-rs/canvas-linux-x64-gnu@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-linux-x64-musl@1.0.13':
+  '@napi-rs/canvas-linux-x64-musl@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-win32-arm64-msvc@1.0.13':
+  '@napi-rs/canvas-win32-arm64-msvc@1.0.11':
     optional: true
 
-  '@napi-rs/canvas-win32-x64-msvc@1.0.13':
+  '@napi-rs/canvas-win32-x64-msvc@1.0.11':
     optional: true
 
-  '@napi-rs/canvas@1.0.13':
+  '@napi-rs/canvas@1.0.11':
     optionalDependencies:
-      '@napi-rs/canvas-android-arm64': 1.0.13
-      '@napi-rs/canvas-darwin-arm64': 1.0.13
-      '@napi-rs/canvas-darwin-x64': 1.0.13
-      '@napi-rs/canvas-linux-arm-gnueabihf': 1.0.13
-      '@napi-rs/canvas-linux-arm64-gnu': 1.0.13
-      '@napi-rs/canvas-linux-arm64-musl': 1.0.13
-      '@napi-rs/canvas-linux-riscv64-gnu': 1.0.13
-      '@napi-rs/canvas-linux-x64-gnu': 1.0.13
-      '@napi-rs/canvas-linux-x64-musl': 1.0.13
-      '@napi-rs/canvas-win32-arm64-msvc': 1.0.13
-      '@napi-rs/canvas-win32-x64-msvc': 1.0.13
+      '@napi-rs/canvas-android-arm64': 1.0.11
+      '@napi-rs/canvas-darwin-arm64': 1.0.11
+      '@napi-rs/canvas-darwin-x64': 1.0.11
+      '@napi-rs/canvas-linux-arm-gnueabihf': 1.0.11
+      '@napi-rs/canvas-linux-arm64-gnu': 1.0.11
+      '@napi-rs/canvas-linux-arm64-musl': 1.0.11
+      '@napi-rs/canvas-linux-riscv64-gnu': 1.0.11
+      '@napi-rs/canvas-linux-x64-gnu': 1.0.11
+      '@napi-rs/canvas-linux-x64-musl': 1.0.11
+      '@napi-rs/canvas-win32-arm64-msvc': 1.0.11
+      '@napi-rs/canvas-win32-x64-msvc': 1.0.11
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
@@ -17245,7 +17251,7 @@ snapshots:
     optionalDependencies:
       '@vitest/browser': 5.0.5(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
       '@vitest/browser-playwright': 5.0.5(playwright@1.64.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     transitivePeerDependencies:
       - react
 
@@ -17760,7 +17766,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
     optionalDependencies:
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@testing-library/react@16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
@@ -18330,7 +18336,7 @@ snapshots:
       '@vitest/mocker': 5.0.5(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       playwright: 1.64.1
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -18347,7 +18353,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -18365,7 +18371,7 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     optionalDependencies:
       '@vitest/browser': 5.0.5(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
 
@@ -18414,7 +18420,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -18982,6 +18988,10 @@ snapshots:
   brotli@1.3.3:
     dependencies:
       base64-js: 1.5.1
+
+  browserify-zlib@0.2.0:
+    dependencies:
+      pako: 1.0.11
 
   browserslist@4.29.3:
     dependencies:
@@ -20873,9 +20883,9 @@ snapshots:
     dependencies:
       ini: 2.0.0
 
-  global-jsdom@30.0.0(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)):
+  global-jsdom@30.0.0(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)):
     dependencies:
-      jsdom: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+      jsdom: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
 
   globals@17.13.0: {}
 
@@ -21527,6 +21537,8 @@ snapshots:
       '@sideway/formula': 3.0.1
       '@sideway/pinpoint': 2.0.0
 
+  js-md5@0.8.3: {}
+
   js-tokens@10.0.0: {}
 
   js-tokens@4.0.0: {}
@@ -21544,7 +21556,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0):
+  jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0):
     dependencies:
       '@asamuzakjp/css-color': 7.1.3
       '@asamuzakjp/dom-selector': 10.0.5
@@ -21567,7 +21579,7 @@ snapshots:
       whatwg-url: 17.2.0(@noble/hashes@1.8.0)
       xml-name-validator: 5.0.0
     optionalDependencies:
-      canvas: '@napi-rs/canvas@1.0.13'
+      canvas: '@napi-rs/canvas@1.0.11'
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -23133,19 +23145,19 @@ snapshots:
 
   pathval@2.0.1: {}
 
-  pdfkit@0.20.2:
+  pdfkit@0.19.1:
     dependencies:
       '@noble/ciphers': 1.3.0
       '@noble/hashes': 1.8.0
-      fflate: 0.8.3
       fontkit: 2.0.4
+      js-md5: 0.8.3
       linebreak: 1.1.0
-      png-js: 2.0.0
+      png-js: 1.1.0
 
-  pdfmake@0.3.12:
+  pdfmake@0.3.11:
     dependencies:
       linebreak: 1.1.0
-      pdfkit: 0.20.2
+      pdfkit: 0.19.1
       xmldoc: 2.0.3
 
   pend@1.2.0: {}
@@ -23216,9 +23228,9 @@ snapshots:
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
 
-  png-js@2.0.0:
+  png-js@1.1.0:
     dependencies:
-      fflate: 0.8.3
+      browserify-zlib: 0.2.0
 
   pngjs@5.0.0: {}
 
@@ -25478,7 +25490,7 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.1
 
-  vitest@5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vitest@5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@20.14.5)(jsdom@30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.5(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -25500,7 +25512,7 @@ snapshots:
       '@vitest/coverage-v8': 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       '@vitest/ui': 5.0.5(vitest@5.0.5)
       happy-dom: 20.14.5
-      jsdom: 30.1.3(@napi-rs/canvas@1.0.13)(@noble/hashes@1.8.0)
+      jsdom: 30.1.3(@napi-rs/canvas@1.0.11)(@noble/hashes@1.8.0)
     transitivePeerDependencies:
       - msw
 
