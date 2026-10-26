@@ -5,7 +5,7 @@ import { AssessmentReference, PopoverSection } from "./PopoverLayout"
 import { useLabels } from "@/i18n/useLabels"
 import { Typography } from "../ui"
 import { AssessmentTitleBadge } from "./AssessmentTitleBadge"
-import { assessmentTone, defaultAssessmentTitle } from "./assessmentTitle"
+import { assessmentTone, defaultAssessmentTitle } from "@/utils/assessmentTitle"
 import { gradingInstructionOf } from "@/utils/gradingInstruction"
 
 export const SeeFeedbackAssessmentBox = ({

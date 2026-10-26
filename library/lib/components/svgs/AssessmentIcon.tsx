@@ -1,9 +1,6 @@
 import React from "react"
 import { Check, createLucideIcon, X } from "lucide-react"
-import {
-  assessmentTone,
-  type AssessmentTone,
-} from "@/components/popovers/assessmentTitle"
+import { assessmentTone, type AssessmentTone } from "@/utils/assessmentTitle"
 
 interface AssessmentIconProps {
   score?: number

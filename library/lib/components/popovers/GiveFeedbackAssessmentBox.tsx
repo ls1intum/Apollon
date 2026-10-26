@@ -1,4 +1,4 @@
-import { useId, useState } from "react"
+import { useId, useRef, useState } from "react"
 import { Link, Trash2, Unlink, WandSparkles, X } from "lucide-react"
 import { useDiagramStore } from "@/store"
 import { Assessment } from "@/typings"
@@ -12,7 +12,7 @@ import {
   assessmentTone,
   defaultAssessmentTitle,
   isDefaultAssessmentTitle,
-} from "./assessmentTitle"
+} from "@/utils/assessmentTitle"
 import {
   adaptedSuggestion,
   gradingInstructionOf,
@@ -44,14 +44,27 @@ const FEEDBACK_MAX_LENGTH = 500
 /** A title is a headline, not a paragraph. */
 const TITLE_MAX_LENGTH = 100
 
-/** Arms on the first click and runs `action` on the second; leaving disarms. */
+/**
+ * Arms on the first click and runs `action` on the second. Moving the pointer
+ * or keyboard focus away disarms it; the editor takes focus on every pointer
+ * press, so a blur during a press on the button is not a departure.
+ */
 const useTwoStepConfirm = (action: () => void, skip = false) => {
   const [armed, setArmed] = useState(false)
+  const pressedRef = useRef(false)
+  const disarm = () => {
+    pressedRef.current = false
+    setArmed(false)
+  }
   return {
     armed,
     buttonProps: {
       "data-confirming": armed || undefined,
+      onPointerDown: () => {
+        pressedRef.current = true
+      },
       onClick: () => {
+        pressedRef.current = false
         if (armed || skip) {
           setArmed(false)
           action()
@@ -59,7 +72,10 @@ const useTwoStepConfirm = (action: () => void, skip = false) => {
           setArmed(true)
         }
       },
-      onMouseLeave: () => setArmed(false),
+      onMouseLeave: disarm,
+      onBlur: () => {
+        if (!pressedRef.current) disarm()
+      },
     },
   }
 }

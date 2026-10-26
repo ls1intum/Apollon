@@ -1,7 +1,7 @@
 import { NumberField } from "@base-ui/react/number-field"
 import { Minus, Plus } from "lucide-react"
 import { useLabels } from "@/i18n/useLabels"
-import { assessmentTone } from "./assessmentTitle"
+import { assessmentTone } from "@/utils/assessmentTitle"
 
 // The host's limits for the points of a single assessment.
 const SCORE_MIN = -100

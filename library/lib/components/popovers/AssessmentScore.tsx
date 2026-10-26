@@ -1,6 +1,6 @@
 import React from "react"
 import { useLabels } from "@/i18n/useLabels"
-import { assessmentTone } from "./assessmentTitle"
+import { assessmentTone } from "@/utils/assessmentTitle"
 
 /**
  * The assessment score as a tone-coded pill: the signed points, or the word

@@ -170,6 +170,28 @@ describe("GiveFeedbackAssessmentBox delete", () => {
     expect(stored()).toBeDefined()
   })
 
+  it("disarms when keyboard focus leaves the button", () => {
+    store({ score: 2 })
+    renderBox()
+
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    fireEvent.blur(button(t.confirmDeleteAssessment))
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    expect(stored()).toBeDefined()
+  })
+
+  it("stays armed when a pointer press on it moves focus away", () => {
+    store({ score: 2 })
+    renderBox()
+
+    fireEvent.click(button(t.deleteAssessmentFor("Person")))
+    const armed = button(t.confirmDeleteAssessment)
+    fireEvent.pointerDown(armed)
+    fireEvent.blur(armed)
+    fireEvent.click(armed)
+    expect(stored()).toBeUndefined()
+  })
+
   it("deletes an empty assessment on the first click", () => {
     store({ score: 0 })
     renderBox()

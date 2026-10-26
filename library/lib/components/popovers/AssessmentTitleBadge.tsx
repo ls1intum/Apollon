@@ -1,5 +1,5 @@
 import { ASSESSMENT_TONE_ICONS } from "@/components/svgs/AssessmentIcon"
-import type { AssessmentTone } from "./assessmentTitle"
+import type { AssessmentTone } from "@/utils/assessmentTitle"
 
 export const AssessmentTitleBadge = ({ tone }: { tone: AssessmentTone }) => {
   const Icon = ASSESSMENT_TONE_ICONS[tone]
