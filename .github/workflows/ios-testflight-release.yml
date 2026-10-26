@@ -297,16 +297,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_REF: ${{ needs.check.outputs.source-ref }}
           VERSION: ${{ needs.check.outputs.version }}
+        # The self-hosted macOS runner has no GitHub CLI, so call the API with curl.
         run: |
-          if gh api \
-            "repos/$GITHUB_REPOSITORY/git/ref/tags/ios-testflight@$VERSION" \
+          api() {
+            curl -fsS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$@"
+          }
+          if api "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/tags/ios-testflight@$VERSION" \
             >/dev/null 2>&1; then
             echo "::notice::ios-testflight@$VERSION already exists."
             exit 0
           fi
 
-          gh api \
-            --method POST \
-            "repos/$GITHUB_REPOSITORY/git/refs" \
-            -f ref="refs/tags/ios-testflight@$VERSION" \
-            -f sha="$SOURCE_REF"
+          api --request POST \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/refs" \
+            --data "{\"ref\":\"refs/tags/ios-testflight@$VERSION\",\"sha\":\"$SOURCE_REF\"}" \
+            >/dev/null
