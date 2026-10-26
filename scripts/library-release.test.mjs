@@ -524,6 +524,13 @@ test("finalization waits for the npm approval and fails on other registry errors
   }
 })
 
+// Retry loops must not slow the tests down.
+const noSleep = { sleep: "#!/bin/sh\n" }
+function withoutSleep(fixture) {
+  chmodSync(join(fixture.directory, "sleep"), 0o700)
+  return fixture
+}
+
 test("promotion checks for concurrent tag changes and verifies the new tag", (t) => {
   const script = workflow.jobs.promote.steps.find(
     (step) => step.env?.EXPECTED_LATEST
@@ -538,12 +545,14 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
     [[["5.3.1"]], false],
     [{ error: { code: "E404" } }, false],
   ]) {
-    const fixture = stepFixture(
-      t,
-      script,
-      {},
-      { latest, arrayResults },
-      { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+    const fixture = withoutSleep(
+      stepFixture(
+        t,
+        script,
+        noSleep,
+        { latest, arrayResults },
+        { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+      )
     )
     const result = fixture.run()
     assert.equal(
@@ -561,12 +570,14 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
     assert.equal(promotions.length, latest === "5.3.1" ? 1 : 0)
   }
   for (const failure of [{ fail: true }, { failAfterPromotion: true }]) {
-    const fixture = stepFixture(
-      t,
-      script,
-      {},
-      { latest: "5.3.1", arrayResults: true, ...failure },
-      { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+    const fixture = withoutSleep(
+      stepFixture(
+        t,
+        script,
+        noSleep,
+        { latest: "5.3.1", arrayResults: true, ...failure },
+        { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+      )
     )
     assert.notEqual(fixture.run().status, 0)
   }
@@ -576,12 +587,14 @@ test("a promotion retry after a lost response leaves the moved tag alone", (t) =
   const script = workflow.jobs.promote.steps.find(
     (step) => step.env?.EXPECTED_LATEST
   ).run
-  const fixture = stepFixture(
-    t,
-    script,
-    {},
-    { latest: "5.3.1", arrayResults: true, failAfterPromotion: true },
-    { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+  const fixture = withoutSleep(
+    stepFixture(
+      t,
+      script,
+      noSleep,
+      { latest: "5.3.1", arrayResults: true, failAfterPromotion: true },
+      { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+    )
   )
   assert.notEqual(fixture.run().status, 0)
   const state = fixture.state()
@@ -596,6 +609,26 @@ test("a promotion retry after a lost response leaves the moved tag alone", (t) =
     fixture.state().calls.filter((args) => args[0] === "dist-tag").length,
     1
   )
+})
+
+test("promotion waits until the registry serves the new tag", (t) => {
+  const script = workflow.jobs.promote.steps.find(
+    (step) => step.env?.EXPECTED_LATEST
+  ).run
+  const fixture = withoutSleep(
+    stepFixture(
+      t,
+      script,
+      noSleep,
+      { latest: "5.3.1", arrayResults: true, staleViews: 2 },
+      { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+    )
+  )
+  // The first two reads after the tag change still return the old tag.
+  const result = fixture.run()
+  assert.equal(result.status, 0, result.stderr)
+  const views = fixture.state().calls.filter((args) => args[0] === "view")
+  assert.ok(views.every((args) => args.includes("--prefer-online")))
 })
 
 test("docs deployment waits for the public version and does not hide registry failures", (t) => {

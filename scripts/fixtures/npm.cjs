@@ -22,9 +22,15 @@ if (args[0] === "view" && args.at(-1).startsWith("@tumaet/apollon@")) {
   }
   console.log(JSON.stringify(state.published))
 } else if (args[0] === "view") {
-  const result = args.at(-1) === "versions" ? state.versions : state.latest
+  let result = args.at(-1) === "versions" ? state.versions : state.latest
+  // A registry that still serves the tag from before the change.
+  if (state.staleViews > 0 && state.previousLatest !== undefined) {
+    state.staleViews -= 1
+    result = state.previousLatest
+  }
   console.log(JSON.stringify(state.arrayResults ? [result] : result))
 } else if (args[0] === "dist-tag") {
+  state.previousLatest = state.latest
   state.latest = args[2].split("@").at(-1)
 }
 writeFileSync(process.env.NPM_STATE, JSON.stringify(state))
