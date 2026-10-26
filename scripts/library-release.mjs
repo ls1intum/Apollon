@@ -28,41 +28,16 @@ export function validateVersion(version) {
 }
 
 export function validateNextVersion(version, latest) {
+  validateVersion(version)
+  validateVersion(latest)
   assert.ok(
-    shouldPromote(version, latest),
+    semver.gt(version, latest),
     "Stage only a version newer than npm latest"
   )
 }
 
-export function shouldPromote(version, latest) {
-  validateVersion(version)
-  validateVersion(latest)
-  return semver.gt(version, latest)
-}
-
 export function integrity(bytes) {
   return `sha512-${createHash("sha512").update(bytes).digest("base64")}`
-}
-
-export function validateStagingArtifact(artifact, run) {
-  assert.match(artifact.name, /^library-release-[1-9][0-9]*$/)
-  assert.equal(
-    artifact.expired,
-    false,
-    "The original artifact must still be available"
-  )
-  assert.ok(Number.isSafeInteger(run.id) && run.id > 0)
-  assert.equal(artifact.workflow_run?.id, run.id)
-  assert.equal(artifact.workflow_run.head_sha, run.head_sha)
-  assert.equal(artifact.workflow_run.head_branch, "main")
-  assert.equal(run.path, ".github/workflows/release-library.yml")
-  assert.equal(run.head_branch, "main")
-  assert.equal(run.head_repository?.full_name, "ls1intum/Apollon")
-  assert.ok(["push", "workflow_dispatch"].includes(run.event))
-  assert.equal(run.status, "completed", "Wait for the staging run to finish")
-  assert.match(run.head_sha, /^[a-f0-9]{40}$/)
-  // A lost staging response can fail the run after npm accepted the upload.
-  // Publication and byte identity, not run success, are the final authority.
 }
 
 export function verifyArtifact(manifest, bytes, sha, published) {
