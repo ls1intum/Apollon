@@ -147,6 +147,25 @@ describe("diagram write access", () => {
     }
   })
 
+  it("ignores non-Bearer credentials and reads the Bearer scheme case-insensitively", async () => {
+    const created = await request(app).post("/api/diagrams").send(diagram)
+    const path = `/api/diagrams/${created.body.id}`
+    const basic = "Basic dXNlcjpwYXNzd29yZA=="
+    const read = await request(app).get(path).set("Authorization", basic)
+    expect(read.status).toBe(200)
+    expect(read.body.canWrite).toBe(false)
+    const write = await request(app)
+      .put(path)
+      .set("Authorization", basic)
+      .send(diagram)
+    expect(write.status).toBe(403)
+    const lowercase = await request(app)
+      .put(path)
+      .set("Authorization", `bearer ${created.body.writeToken}`)
+      .send({ ...diagram, title: "Lowercase scheme" })
+    expect(lowercase.status).toBe(200)
+  })
+
   it("rejects a revoked capability on reads but still serves the anonymous read", async () => {
     const created = await request(app).post("/api/diagrams").send(diagram)
     const path = `/api/diagrams/${created.body.id}`
@@ -165,18 +184,18 @@ describe("diagram write access", () => {
     expect(anonymous.body.canWrite).toBe(false)
   })
 
-  it("does not upgrade old soft-owner cookies or create missing diagrams on PUT", async () => {
+  it("accepts only the creation-issued owner cookie and does not create missing diagrams on PUT", async () => {
     const created = await request(app).post("/api/diagrams").send(diagram)
     const id = created.body.id as string
-    const nonce = "legacy"
+    const nonce = "unversioned"
     const signature = createHmac("sha256", loadConfig().OWNER_SECRET)
       .update(`${id}|${nonce}`)
       .digest("hex")
-    const legacy = await request(app)
+    const unversioned = await request(app)
       .put(`/api/diagrams/${id}`)
       .set("Cookie", `apollon_owner_${id}=${nonce}.${signature}`)
       .send(diagram)
-    expect(legacy.status).toBe(403)
+    expect(unversioned.status).toBe(403)
     const missing = await request(app)
       .put("/api/diagrams/missing")
       .send(diagram)

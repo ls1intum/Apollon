@@ -62,8 +62,9 @@ export function readDiagramIdFromPath(path: string): string | undefined {
  * `c.var.isOwner` (true|false) and — when a diagram id is present in the path —
  * the `X-Owner-Match` response header.
  *
- * Only creation issues this versioned cookie. Old soft-owner cookies could
- * be issued to any writer and cannot establish ownership.
+ * Only diagram creation issues the owner cookie, so a valid cookie proves that
+ * this browser created the diagram. The `v2` cookie name and signature context
+ * reject owner cookies in any other format.
  */
 export function ownerReader({ secret }: OwnerCookieOptions) {
   return createMiddleware<AppEnv>(async (c, next) => {

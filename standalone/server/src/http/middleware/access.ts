@@ -59,12 +59,16 @@ export function diagramAccess(config: Config, redis: Redis) {
     const diagramId = readDiagramIdFromPath(c.req.path)
     if (!diagramId) return next()
 
-    const authorization = c.req.header("authorization")
-    const token = authorization?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1]
+    // Auth schemes are case-insensitive (RFC 9110 §11.1). Other schemes, such
+    // as Basic credentials for a proxy in front of the API, grant nothing here
+    // and must not block public reads.
+    const bearer = /^bearer(?:\s+(.*))?$/is.exec(
+      c.req.header("authorization") ?? ""
+    )
+    const token = bearer ? (bearer[1] ?? "").trim() : undefined
     if (
-      authorization &&
-      (!token ||
-        !(await verifyWriteToken(token, diagramId, config.OWNER_SECRET)))
+      token !== undefined &&
+      !(await verifyWriteToken(token, diagramId, config.OWNER_SECRET))
     ) {
       // RFC 6750 §3.1: a rejected bearer token is a 401, so clients can tell
       // a revoked capability apart from a missing permission (403).

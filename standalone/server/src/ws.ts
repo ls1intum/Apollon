@@ -17,7 +17,7 @@ const AWARENESS_MSG_TYPE = 3
 // A reader may only ask peers for presence (a one-byte AwarenessSync request).
 // Readers discard document state, so a document sync request would only make
 // every writer re-send the full document to the room.
-const READER_FRAME = JSON.stringify({ diagramData: "Ag==" })
+export const READER_FRAME = JSON.stringify({ diagramData: "Ag==" })
 const DIAGRAM_ID_RE = /^[A-Za-z0-9_-]{1,64}$/
 
 type RoomAwarenessState = {
