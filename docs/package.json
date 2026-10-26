@@ -34,7 +34,7 @@
     "@docusaurus/types": "3.10.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "markdownlint-cli2": "0.23.3",
+    "markdownlint-cli2": "0.24.0",
     "typescript": "catalog:"
   },
   "engines": {
