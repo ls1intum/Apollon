@@ -184,6 +184,7 @@
   --primitive-assessment-zero-bg: #dbeafe;
   --primitive-assessment-ungraded-text: #475569;
   --primitive-assessment-ungraded-bg: #f1f5f9;
+
   /* AI feedback suggestion badge text; clears 4.5:1 on the popover surface. */
   --primitive-assessment-suggestion-text: #7e22ce;
 
