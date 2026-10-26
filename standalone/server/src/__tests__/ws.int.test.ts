@@ -128,21 +128,20 @@ describe("WebSocket relay", () => {
     expect(retry.readyState).toBe(WebSocket.OPEN)
   })
 
-  it("lets readers request sync without publishing state", async () => {
+  it("lets readers request presence without publishing state", async () => {
     harness = await startHarness()
     const writer = await connect(harness.port, "d1")
     const reader = await connect(harness.port, "d1", false)
-    for (const diagramData of ["AA==", "Ag=="]) {
-      const incoming = nextMessage(writer)
-      const message = JSON.stringify({ diagramData })
-      reader.send(message)
-      expect(await incoming).toBe(message)
-    }
+    const incoming = nextMessage(writer)
+    const message = JSON.stringify({ diagramData: "Ag==" })
+    reader.send(message)
+    expect(await incoming).toBe(message)
   })
 
   it.each([
     ["document update", JSON.stringify({ diagramData: "AQ==" })],
     ["awareness update", JSON.stringify({ diagramData: "Aw==" })],
+    ["document sync request", JSON.stringify({ diagramData: "AA==" })],
     ["sync with payload", JSON.stringify({ diagramData: "AAE=" })],
     ["opaque frame", "untrusted-update"],
     ["control frame", JSON.stringify({ kind: "control", control: {} })],

@@ -223,6 +223,9 @@ handshake, not in URL queries or persisted diagram models.
 A capability remains valid while its diagram exists and the server signing
 key is unchanged. Anyone with a write link can pass it on. Delete the diagram
 to revoke its links; changing a link's view does not revoke an earlier grant.
+The server answers a request with an invalid capability with `401
+INVALID_CAPABILITY`, also on reads. The webapp then discards that capability
+and retries reads without it, so the diagram stays readable.
 
 Legacy links remain readable but cannot write. Old soft-owner cookies are not
 accepted as creator proof because earlier routes issued them to arbitrary

@@ -18,8 +18,9 @@ type Phase = "form" | "creating"
 /**
  * The shared "share this diagram" state machine used by both the editor and the
  * dashboard share dialogs. It uploads a snapshot ONCE; after that, changing the
- * Read-only links omit the write capability. Changing the view never creates a
- * second server diagram.
+ * access mode only rewrites the `?view=` of the same link — it never creates a
+ * second server diagram. Review links omit the write capability. Copy is
+ * explicit, with a transient "copied" flag.
  */
 export function useShareableDiagram(
   modelData: UMLModel | null,
@@ -29,7 +30,7 @@ export function useShareableDiagram(
   const [diagramId, setDiagramId] = useState<string | null>(
     initialDiagramId ?? null
   )
-  const [mode, setMode] = useState<DiagramView>(
+  const [mode, setMode] = useState<DiagramView>(() =>
     initialDiagramId && !getSharedDiagramWriteToken(initialDiagramId)
       ? DiagramView.SEE_FEEDBACK
       : DiagramView.COLLABORATE

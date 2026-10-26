@@ -11,9 +11,13 @@ import {
 } from "y-protocols/awareness"
 import * as Y from "yjs"
 import * as decoding from "lib0/decoding"
-import { verifyWriteToken } from "./http/middleware/access.js"
+import { isTrustedOrigin, verifyWriteToken } from "./http/middleware/access.js"
 
 const AWARENESS_MSG_TYPE = 3
+// A reader may only ask peers for presence (a one-byte AwarenessSync request).
+// Readers discard document state, so a document sync request would only make
+// every writer re-send the full document to the room.
+const READER_FRAME = JSON.stringify({ diagramData: "Ag==" })
 const DIAGRAM_ID_RE = /^[A-Za-z0-9_-]{1,64}$/
 
 type RoomAwarenessState = {
@@ -179,22 +183,15 @@ export function startRelayServer(opts: StartOptions): RelayServer {
         ws.close(1008, "Invalid diagramId")
         return
       }
-      const origin = request.headers.origin
-      if (origin && !opts.allowedOrigins?.includes(origin)) {
-        let sameHost = false
-        try {
-          const originUrl = new URL(origin)
-          sameHost =
-            ["http:", "https:"].includes(originUrl.protocol) &&
-            originUrl.origin === origin &&
-            originUrl.host === request.headers.host
-        } catch {
-          // Opaque or malformed origins are never trusted.
-        }
-        if (!sameHost) {
-          ws.close(1008, "Untrusted origin")
-          return
-        }
+      if (
+        !isTrustedOrigin(
+          request.headers.origin,
+          request.headers.host,
+          opts.allowedOrigins ?? []
+        )
+      ) {
+        ws.close(1008, "Untrusted origin")
+        return
       }
       ws.isAlive = true
       ws.on("pong", () => {
@@ -257,6 +254,10 @@ export function startRelayServer(opts: StartOptions): RelayServer {
               rooms.set(diagramId, room)
             }
             if (room.size >= maxSocketsPerRoom) {
+              logger.warn(
+                { diagramId, size: room.size },
+                "ws room over capacity, rejecting connection"
+              )
               ws.close(1013, "Try again later")
               return
             }
@@ -271,22 +272,9 @@ export function startRelayServer(opts: StartOptions): RelayServer {
           return
         }
 
-        if (access === "read") {
-          try {
-            const parsed = JSON.parse(message) as Record<string, unknown>
-            const encoded = parsed.diagramData
-            if (
-              Object.keys(parsed).length !== 1 ||
-              typeof encoded !== "string" ||
-              !["AA==", "Ag=="].includes(encoded)
-            ) {
-              ws.close(1008, "Reader cannot publish updates")
-              return
-            }
-          } catch {
-            ws.close(1008, "Reader cannot publish updates")
-            return
-          }
+        if (access === "read" && message !== READER_FRAME) {
+          ws.close(1008, "Reader cannot publish updates")
+          return
         }
 
         try {

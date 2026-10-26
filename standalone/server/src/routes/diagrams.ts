@@ -201,16 +201,12 @@ export function mountDiagramRoutes(
         {
           ...diagram,
           canWrite,
-          ...(canWrite
-            ? {
-                writeToken:
-                  c.get("writeToken") ??
-                  (await createWriteToken(
-                    params.diagramId,
-                    config.OWNER_SECRET
-                  )),
-              }
-            : {}),
+          ...(canWrite && {
+            writeToken: await createWriteToken(
+              params.diagramId,
+              config.OWNER_SECRET
+            ),
+          }),
         },
         200
       )

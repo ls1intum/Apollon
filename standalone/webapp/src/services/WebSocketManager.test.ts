@@ -56,7 +56,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("WebSocketManager.cleanup", () => {
+describe("WebSocketManager access", () => {
   it.each([
     [1008, 1],
     [1011, 2],
@@ -72,6 +72,7 @@ describe("WebSocketManager.cleanup", () => {
       vi.useRealTimers()
     }
   })
+
   it("waits for write authorization before broadcasting offline state", () => {
     addSharedDiagramEntry("diag-1", { writeToken: "writer-token" })
     const editor = makeFakeEditor()
@@ -109,15 +110,13 @@ describe("WebSocketManager.cleanup", () => {
     expect(editor.broadcastFullState).not.toHaveBeenCalled()
     const send = vi.spyOn(socket, "send")
     const broadcast = vi.mocked(editor.sendBroadcastMessage).mock.calls[0]![0]
-    broadcast(btoa(String.fromCharCode(1, 42)))
-    broadcast(btoa(String.fromCharCode(3, 42)))
+    for (const type of [0, 1, 2, 3]) broadcast(btoa(String.fromCharCode(type)))
     expect(send).not.toHaveBeenCalled()
-    broadcast(btoa(String.fromCharCode(0)))
-    expect(send).toHaveBeenCalledExactlyOnceWith(
-      JSON.stringify({ diagramData: "AA==" })
-    )
     manager.cleanup()
   })
+})
+
+describe("WebSocketManager.cleanup", () => {
   it("closes the open socket with code 1000", () => {
     const { manager, socket } = startManager()
     const closeSpy = vi.spyOn(socket, "close")

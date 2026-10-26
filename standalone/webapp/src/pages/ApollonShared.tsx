@@ -201,9 +201,7 @@ export const ApollonShared: React.FC = () => {
 
     try {
       log.debug("Initializing Apollon editor with view type:", viewType)
-      addSharedDiagramEntry(diagramId, {
-        lastSharedView: viewType,
-      })
+      addSharedDiagramEntry(diagramId, { lastSharedView: viewType })
       log.debug("Fetched diagram", {
         diagramId,
         nodeCount: diagram.nodes?.length ?? 0,

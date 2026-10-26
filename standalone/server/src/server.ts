@@ -5,6 +5,7 @@ import { logger } from "./logger.js"
 import { buildApp } from "./http/app.js"
 import { bootLoadFunction, createRedisClient, k } from "./redis.js"
 import { startRelayServer } from "./ws.js"
+import { parseAllowedOrigins } from "./http/middleware/cors.js"
 
 async function main() {
   const config = loadConfig()
@@ -34,7 +35,7 @@ async function main() {
     host: config.HOST,
     ownerSecret: config.OWNER_SECRET,
     diagramExists: async (id) => (await redis.exists(k.diagram(id))) === 1,
-    allowedOrigins: config.CORS_ORIGIN?.split(",").map((s) => s.trim()) ?? [],
+    allowedOrigins: parseAllowedOrigins(config),
   })
 
   const app = buildApp({ config, redis, relay })

@@ -33,15 +33,13 @@ export class WebSocketManager {
     private requestWrite = true
   ) {
     this.instance.sendBroadcastMessage((diagramData) => {
-      if (this.websocket?.readyState === WebSocket.OPEN && this.accessReady) {
-        if (!this.canWrite) {
-          const frame = atob(diagramData)
-          if (
-            frame.length !== 1 ||
-            (frame.charCodeAt(0) !== 0 && frame.charCodeAt(0) !== 2)
-          )
-            return
-        }
+      // Every frame the editor emits carries document or presence state,
+      // which the relay accepts only from writers.
+      if (
+        this.websocket?.readyState === WebSocket.OPEN &&
+        this.accessReady &&
+        this.canWrite
+      ) {
         this.websocket.send(JSON.stringify({ diagramData }))
       }
     })

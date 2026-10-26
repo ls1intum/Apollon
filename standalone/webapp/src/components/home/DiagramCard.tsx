@@ -428,10 +428,8 @@ export const DiagramActionsMenu = ({
   const isCurrentDiagramInEditor = diagram.id === currentModelId
 
   const copySharedLink = async (view: DiagramView, message: string) => {
-    if (
-      view !== DiagramView.SEE_FEEDBACK &&
-      !getSharedDiagramWriteToken(diagram.id)
-    ) {
+    const writeToken = getSharedDiagramWriteToken(diagram.id)
+    if (view !== DiagramView.SEE_FEEDBACK && !writeToken) {
       toast.info(
         "This share is read-only. Create a new shared copy to give edit access."
       )
@@ -439,12 +437,7 @@ export const DiagramActionsMenu = ({
     }
     try {
       await navigator.clipboard.writeText(
-        buildSharedDiagramUrl(
-          diagram.id,
-          view,
-          undefined,
-          getSharedDiagramWriteToken(diagram.id)
-        )
+        buildSharedDiagramUrl(diagram.id, view, undefined, writeToken)
       )
       markSharedDiagramCopied(diagram.id, view)
       toast.success(message)

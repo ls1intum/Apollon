@@ -124,17 +124,60 @@ export const subscribeToSharedDiagramChange = (
 export const getSharedDiagramEntries = (): SharedDiagramEntry[] =>
   readStore().entries
 
+// Capabilities the server rejected in this page session. A rejected `#access`
+// token stays in the address bar, so it must be skipped instead of deleted.
+const rejectedWriteTokens = new Set<string>()
+
+const usableWriteToken = (token: string | null | undefined) =>
+  token && !rejectedWriteTokens.has(token) ? token : undefined
+
 export const getSharedDiagramWriteToken = (
   diagramId: string
 ): string | undefined => {
   if (typeof window === "undefined") return undefined
   if (window.location.pathname === `/shared/${encodeURIComponent(diagramId)}`) {
-    const token = new URLSearchParams(window.location.hash.slice(1)).get(
-      "access"
+    const fromLink = usableWriteToken(
+      new URLSearchParams(window.location.hash.slice(1)).get("access")
     )
-    if (token) return token
+    if (fromLink) return fromLink
   }
-  return readStore().entries.find((entry) => entry.id === diagramId)?.writeToken
+  return usableWriteToken(
+    readStore().entries.find((entry) => entry.id === diagramId)?.writeToken
+  )
+}
+
+const setEntryWriteToken = (
+  diagramId: string,
+  writeToken: string | undefined
+) => {
+  const { entries } = readStore()
+  writeStore({
+    entries: entries.map((entry) =>
+      entry.id === diagramId ? { ...entry, writeToken } : entry
+    ),
+  })
+}
+
+// Caches a capability the server confirmed. Unlike addSharedDiagramEntry, this
+// keeps the entry's position and timestamps and writes nothing when the token
+// is unchanged, because the gallery refetches whenever the entry order changes.
+export const storeSharedDiagramWriteToken = (
+  diagramId: string,
+  writeToken: string
+) => {
+  const entry = readStore().entries.find((e) => e.id === diagramId)
+  if (!entry) addSharedDiagramEntry(diagramId, { writeToken })
+  else if (entry.writeToken !== writeToken)
+    setEntryWriteToken(diagramId, writeToken)
+}
+
+export const discardSharedDiagramWriteToken = (
+  diagramId: string,
+  writeToken: string
+) => {
+  rejectedWriteTokens.add(writeToken)
+  const entry = readStore().entries.find((e) => e.id === diagramId)
+  if (entry?.writeToken === writeToken) setEntryWriteToken(diagramId, undefined)
 }
 
 type AddSharedDiagramEntryOptions = {

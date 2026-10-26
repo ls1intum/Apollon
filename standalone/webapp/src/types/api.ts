@@ -48,6 +48,7 @@ export interface PendingVersion extends VersionSummary {
 
 export type ApiErrorCode =
   | "FORBIDDEN"
+  | "INVALID_CAPABILITY"
   | "INVALID_PARAMS"
   | "NOT_FOUND"
   | "REVISION_MISMATCH"

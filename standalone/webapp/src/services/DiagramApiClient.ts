@@ -2,14 +2,16 @@ import type { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
 import { resolveShareOrigin } from "@/utils/sharedDiagramLinks"
 import {
-  addSharedDiagramEntry,
+  discardSharedDiagramWriteToken,
   getSharedDiagramWriteToken,
+  storeSharedDiagramWriteToken,
 } from "@/utils/sharedDiagramStorage"
-import type {
-  ApiErrorBody,
-  ApiErrorCode,
-  Diagram,
-  VersionSummary,
+import {
+  type ApiErrorBody,
+  type ApiErrorCode,
+  type Diagram,
+  DiagramView,
+  type VersionSummary,
 } from "@/types"
 
 export type StoredDiagram = Diagram
@@ -44,7 +46,7 @@ async function request<T>(
     Accept: "application/json",
     ...opts.headers,
   }
-  const diagramId = /^\/api\/diagrams\/([^/]+)/.exec(path)?.[1]
+  const diagramId = /^\/api\/diagrams\/([^/?#]+)/.exec(path)?.[1]
   const writeToken = diagramId
     ? getSharedDiagramWriteToken(diagramId)
     : undefined
@@ -81,6 +83,13 @@ async function request<T>(
       message: `Request failed with status ${res.status}`,
       requestId: "",
     }
+    if (diagramId && writeToken && body.error === "INVALID_CAPABILITY") {
+      // Diagrams stay publicly readable when a capability is revoked (for
+      // example after OWNER_SECRET rotation), so a read retries without it.
+      // The retry cannot loop: the discarded token is never sent again.
+      discardSharedDiagramWriteToken(diagramId, writeToken)
+      if ((opts.method ?? "GET") === "GET") return request<T>(path, opts)
+    }
     throw new ApiError(res.status, body.error, body.message, body)
   }
 
@@ -96,7 +105,7 @@ export const DiagramApiClient = {
       signal: opts.signal,
     })
     const { writeToken, ...diagram } = data
-    if (writeToken) addSharedDiagramEntry(diagramId, { writeToken })
+    if (writeToken) storeSharedDiagramWriteToken(diagramId, writeToken)
     return diagram
   },
 
@@ -124,7 +133,7 @@ export const DiagramApiClient = {
       body: model,
     })
     const { writeToken, ...diagram } = data
-    if (writeToken) addSharedDiagramEntry(data.id, { writeToken })
+    if (writeToken) storeSharedDiagramWriteToken(data.id, writeToken)
     return diagram
   },
 
@@ -266,7 +275,7 @@ export const VersionApiClient = {
     // Native-aware origin (capacitor://localhost isn't externally openable).
     const token = getSharedDiagramWriteToken(diagramId)
     const fragment =
-      params.get("view") !== "SEE_FEEDBACK" && token
+      params.get("view") !== DiagramView.SEE_FEEDBACK && token
         ? `#access=${encodeURIComponent(token)}`
         : ""
     return `${resolveShareOrigin()}/shared/${diagramId}?${params.toString()}${fragment}`

@@ -52,7 +52,7 @@ function verify(
 //   /api/diagrams/:diagramId/versions[/...]
 const DIAGRAM_ID_RE = /^\/api\/diagrams\/([A-Za-z0-9_-]+)(?:\/|$)/
 
-function readDiagramIdFromPath(path: string): string | undefined {
+export function readDiagramIdFromPath(path: string): string | undefined {
   const match = DIAGRAM_ID_RE.exec(path)
   return match ? match[1] : undefined
 }

@@ -139,8 +139,30 @@ describe("diagram write access", () => {
         .put(`/api/diagrams/${a.body.id}`)
         .set("Authorization", `Bearer ${token}`)
         .send(diagram)
-      expect(denied.status).toBe(403)
+      expect(denied.status).toBe(401)
+      expect(denied.body.error).toBe("INVALID_CAPABILITY")
+      expect(denied.headers["www-authenticate"]).toBe(
+        'Bearer error="invalid_token"'
+      )
     }
+  })
+
+  it("rejects a revoked capability on reads but still serves the anonymous read", async () => {
+    const created = await request(app).post("/api/diagrams").send(diagram)
+    const path = `/api/diagrams/${created.body.id}`
+    const revoked = await sign(
+      { aud: "apollon-write-v1", sub: created.body.id },
+      "a-rotated-out-owner-secret-of-32-bytes",
+      "HS256"
+    )
+    const denied = await request(app)
+      .get(path)
+      .set("Authorization", `Bearer ${revoked}`)
+    expect(denied.status).toBe(401)
+    expect(denied.body.error).toBe("INVALID_CAPABILITY")
+    const anonymous = await request(app).get(path)
+    expect(anonymous.status).toBe(200)
+    expect(anonymous.body.canWrite).toBe(false)
   })
 
   it("does not upgrade old soft-owner cookies or create missing diagrams on PUT", async () => {
