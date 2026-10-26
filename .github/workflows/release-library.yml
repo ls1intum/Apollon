@@ -268,6 +268,11 @@ jobs:
             '
           }
           LATEST=$(read_latest)
+          # A retry after a lost dist-tag response finds the tag already moved.
+          if [ "$LATEST" = "$VERSION" ]; then
+            echo "::notice::latest is already $VERSION."
+            exit 0
+          fi
           test "$LATEST" = "$EXPECTED_LATEST"
           npm dist-tag add "@tumaet/apollon@$VERSION" latest
           LATEST=$(read_latest)

@@ -531,6 +531,7 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
   for (const [latest, arrayResults] of [
     ["5.3.1", false],
     ["5.3.1", true],
+    [manifest.version, true],
     ["5.4.0", true],
     [[], false],
     [["5.3.1", "5.3.2"], false],
@@ -545,7 +546,11 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
       { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
     )
     const result = fixture.run()
-    assert.equal(result.status === 0, latest === "5.3.1", result.stderr)
+    assert.equal(
+      result.status === 0,
+      latest === "5.3.1" || latest === manifest.version,
+      result.stderr
+    )
     assert.deepEqual(
       fixture.state().latest,
       latest === "5.3.1" ? manifest.version : latest
@@ -567,6 +572,32 @@ test("promotion checks for concurrent tag changes and verifies the new tag", (t)
   }
 })
 
+test("a promotion retry after a lost response leaves the moved tag alone", (t) => {
+  const script = workflow.jobs.promote.steps.find(
+    (step) => step.env?.EXPECTED_LATEST
+  ).run
+  const fixture = stepFixture(
+    t,
+    script,
+    {},
+    { latest: "5.3.1", arrayResults: true, failAfterPromotion: true },
+    { VERSION: manifest.version, EXPECTED_LATEST: "5.3.1" }
+  )
+  assert.notEqual(fixture.run().status, 0)
+  const state = fixture.state()
+  assert.equal(state.latest, manifest.version)
+  writeFileSync(
+    join(fixture.directory, "npm.json"),
+    JSON.stringify({ ...state, failAfterPromotion: false })
+  )
+  const retry = fixture.run()
+  assert.equal(retry.status, 0, retry.stderr)
+  assert.equal(
+    fixture.state().calls.filter((args) => args[0] === "dist-tag").length,
+    1
+  )
+})
+
 test("docs deployment waits for the public version and does not hide registry failures", (t) => {
   const docs = parse(
     readFileSync(
@@ -579,11 +610,9 @@ test("docs deployment waits for the public version and does not hide registry fa
     "needs.build.outputs.is-production == 'true' && needs.build.outputs.published == 'true'"
   )
   assert.deepEqual(docs.on.workflow_run.workflows, ["Release Library"])
-  // The release run completes after the npm approval, whatever started it.
-  assert.equal(
-    docs.jobs.build.if,
-    "github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'"
-  )
+  // A release run can fail after npm accepted the version (e.g. a lost
+  // staging response); the npm check below decides about the deployment.
+  assert.equal(docs.jobs.build.if, undefined)
   // A release completion builds the current main (GITHUB_SHA of the
   // workflow_run event), not the older release commit.
   const checkout = docs.jobs.build.steps.find((step) =>

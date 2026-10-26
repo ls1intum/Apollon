@@ -50,8 +50,8 @@ the library on npm.
 5. Promote standalone through **Deploy to Production**, with `image-tag: X.Y.Z`.
 
 Docs builds continue during npm review, but production deployment waits until
-all pinned library links refer to a public npm version. A successful library
-release workflow starts a new docs check. Docker and Marketplace releases do
+all pinned library links refer to a public npm version. Each completed
+library release run starts a new docs check of the current `main`. Docker and Marketplace releases do
 not wait for npm approval: they consume the library from the workspace.
 
 ## Version PR setup
