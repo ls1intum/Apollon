@@ -19,7 +19,7 @@
     "migrate:string-to-json": "tsx src/scripts/migrate-string-to-json.ts"
   },
   "dependencies": {
-    "@hono/node-server": "2.1.5",
+    "@hono/node-server": "2.1.6",
     "@tumaet/apollon": "workspace:*",
     "@xyflow/react": "catalog:",
     "canvas": "npm:@napi-rs/canvas@1.0.11",
