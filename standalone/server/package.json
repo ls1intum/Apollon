@@ -24,7 +24,7 @@
     "@xyflow/react": "catalog:",
     "canvas": "npm:@napi-rs/canvas@1.0.11",
     "global-jsdom": "30.0.0",
-    "hono": "4.13.13",
+    "hono": "4.13.16",
     "jsdom": "catalog:",
     "lib0": "0.2.119",
     "pdfmake": "0.3.11",
