@@ -43,8 +43,8 @@ catalog:
   # browser tests run locally only. Both packages ship a `playwright` CLI bin, so
   # e2e/visual invoke @playwright/test's CLI directly (see webapp test:e2e /
   # test:visual) to avoid the bin collision.
-  "@playwright/test": "1.64.1"
-  playwright: "1.64.1"
+  "@playwright/test": "1.65.0"
+  playwright: "1.65.0"
   "@tailwindcss/vite": "4.3.3"
   "@testing-library/jest-dom": "7.0.1"
   "@testing-library/react": "16.3.3"
