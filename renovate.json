@@ -17,8 +17,10 @@
   "automergeStrategy": "squash",
   "semanticCommitScope": "deps",
 
-  "dependencyDashboard": true,
-  "dependencyDashboardTitle": "Dependency Dashboard",
+  "dependencyDashboard": {
+    "enabled": true,
+    "title": "Dependency Dashboard"
+  },
 
   "rebaseWhen": "conflicted",
   "postUpdateOptions": ["pnpmDedupe"],
