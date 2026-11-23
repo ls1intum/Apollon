@@ -48,9 +48,10 @@
      9998–10001, collaboration overlays at 10001–10004, overlay chrome at
      --apollon-z-chrome) stay self-contained and the whole editor sits below
      host-app chrome — e.g. the webapp navbar's body-portaled dropdown menus
-     render above the presence bar. Use `isolation` (not `transform`) so we don't
-     create a containing block for those portaled popovers (see the
-     `.apollon-canvas` note below). */
+     render above the presence bar. Use `isolation` (not `transform`, `filter`
+     or `contain`): those would make the editor the containing block of the
+     `position: fixed` surfaces in its portal root, and its `overflow: hidden`
+     would then clip them. */
   isolation: isolate;
 
   /* Overlay chrome (header, rails, host controls): above canvas content +
@@ -64,8 +65,9 @@
 }
 
 /* Each editor owns a layout-neutral portal root. Floating surfaces use it only
-   while this editor participates in fullscreen, keeping them in the browser's
-   fullscreen subtree without escaping the editor's host stacking context. */
+   while the editor sits in a host's modal layer — a subtree fullscreen, a modal
+   <dialog>, an open popover, or an aria-modal dialog — where a surface on the
+   body could not be seen or reached (see floatingLayer.tsx). */
 .apollon-editor__portal-root {
   position: absolute;
   z-index: var(--apollon-z-chrome);
@@ -75,6 +77,19 @@
 
 .apollon-editor__portal-root > * {
   pointer-events: auto;
+}
+
+/* The positioned root of every floating surface: each Base UI positioner and the
+   palette drag ghost. A positioner is placed with `transform`, which makes it a
+   stacking context, so the order against the host page has to be set HERE; a
+   z-index on the popup inside it only orders the popup against its own children.
+   On the body, the default clears the layers host frameworks put there (modal
+   masks at 1050–1300, sticky headers, toasts) and matches what tippy.js ships.
+   A host with a higher layer raises it: `:root { --apollon-z-floating: 20000 }`.
+   Equal values keep nested surfaces correct: a select opened inside a popover
+   portals later in the document, so it paints on top. */
+.apollon-floating-surface {
+  z-index: var(--apollon-z-floating, 9999);
 }
 
 /* The chrome frame. A CSS grid over the full-bleed canvas: the header/footer own
@@ -108,8 +123,8 @@
 
 /* Positioning context + clip region for the absolutely-positioned
    collaboration cursor layer. Keep `position` as `relative` only: a
-   `transform`/`filter`/`perspective` here would become the containing block
-   for the body-portaled Base UI popovers (see GenericPopover) and misplace them. */
+   `transform`/`filter`/`perspective` here would also become the containing
+   block of every `position: fixed` element on the canvas. */
 .apollon-canvas {
   position: relative;
   flex: 1;
@@ -1877,7 +1892,6 @@ svg.react-flow__connectionline {
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
-  z-index: 10003;
 }
 
 .apollon-tag-picker__add {
@@ -2014,7 +2028,6 @@ svg.react-flow__connectionline {
   border: 1px solid var(--apollon-border, #cdd5df);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
-  z-index: 10003;
 }
 
 .apollon-popover__content {
@@ -2116,7 +2129,6 @@ svg.react-flow__connectionline {
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
   transform-origin: var(--transform-origin, center);
-  z-index: 10004;
   overflow: hidden;
 }
 
@@ -2218,7 +2230,6 @@ svg.react-flow__connectionline {
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
-  z-index: 10003;
 }
 
 .apollon-color-picker__grid {
@@ -2304,7 +2315,6 @@ svg.react-flow__connectionline {
   border: 1px solid var(--apollon-border, #cdd5df);
   border-radius: var(--apollon-radius-lg, 8px);
   box-shadow: var(--apollon-shadow, 0 4px 12px rgba(0, 0, 0, 0.18));
-  z-index: 10003;
 }
 
 .apollon-style-editor__row {

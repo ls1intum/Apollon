@@ -70,7 +70,7 @@ import { EdgeGeometrySolver } from "@/components/EdgeGeometrySolver"
 import {
   ApollonPortalContainerProvider,
   ApollonPortalRoot,
-} from "@/components/ui/portalContainer"
+} from "@/components/ui/floatingLayer"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void

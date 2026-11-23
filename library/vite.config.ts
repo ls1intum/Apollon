@@ -95,12 +95,29 @@ const RUNTIME_DEPS = [
   "@chenglou/pretext",
 ]
 
+// The edge-routing Worker imports enums and edge helpers from @xyflow/system,
+// whose single entry also imports d3-zoom and d3-drag for pan and zoom. d3-zoom
+// declares no `sideEffects`, so the bundler keeps the whole pan/zoom stack —
+// d3-transition, d3-interpolate, d3-color — in a Worker that only computes
+// geometry. Nothing the Worker runs calls into d3, so its bundle treats d3 as
+// side-effect free and drops it. Mirrored in standalone/webapp/vite.config.ts.
+const D3_MODULE =
+  /[\\/]node_modules[\\/](?:\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/])?d3-[^\\/]+[\\/]/
+
 // Pure routing kernel loaded by a module Worker. It contains no JSX and must not
 // receive React Refresh's browser-only `window` preamble in Vite dev mode.
 const ROUTING_KERNEL =
   /library\/lib\/(?:utils\/geometry\/|utils\/(?:edgeUtils|connectionModes)\.ts|edges\/Connection\.ts)/
 
 export default defineConfig({
+  worker: {
+    rolldownOptions: {
+      treeshake: {
+        moduleSideEffects: (id: string) =>
+          D3_MODULE.test(id) ? false : undefined,
+      },
+    },
+  },
   // Runtime assets emitted by the published library (notably the geometry
   // Worker) must resolve beside dist/index.js in whichever host installs the
   // package, never from that host application's `/assets` root.
