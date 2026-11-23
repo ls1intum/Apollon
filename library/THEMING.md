@@ -141,6 +141,28 @@ when you want it to diverge from the base. Like every editor variable, each is
 referenced as `var(--apollon-x, <fallback>)`, so an un-themed embed keeps the
 built-in defaults.
 
+## Stacking above the host page (`--apollon-z-floating`)
+
+The editor's floating surfaces — the edit popover, selects, the color and tag
+pickers, tooltips, and the palette drag ghost — render on `document.body` on an
+ordinary page and stack at `z-index: var(--apollon-z-floating, 9999)`. Inside a
+modal host layer (an `aria-modal="true"` dialog, a native modal `<dialog>`, an
+open `popover`, or fullscreen) they render inside the editor instead, so they
+stay within that layer and the variable plays no part.
+
+Set it on `:root`, not on the editor: a surface on the body only inherits from
+the document.
+
+```css
+/* A host header that sits above 9999. */
+:root {
+  --apollon-z-floating: 20000;
+}
+```
+
+The [troubleshooting guide](https://ls1intum.github.io/Apollon/library/troubleshooting#a-popover-select-or-tooltip-is-hidden-or-cant-be-clicked)
+lists the layers the editor recognizes.
+
 ## Collaboration cursor palette (`--apollon-collaboration-color-*`)
 
 When real-time collaboration is enabled, each remote participant's cursor,
@@ -237,7 +259,7 @@ new ApollonEditor(element, { dataTheme: "dark" })
 
 Scoped `dataTheme` themes the **entire editor** — the canvas, the derived glass
 chrome, and every floating surface (menus, selects, tooltips, the color picker),
-even though those portal to `document.body` outside the mount subtree. Use it
+even when those portal to `document.body` outside the mount subtree. Use it
 when you want the editor dark on an otherwise-light page.
 
 The one thing scoped `dataTheme` does _not_ touch is the surrounding **document**

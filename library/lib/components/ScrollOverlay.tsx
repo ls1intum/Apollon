@@ -86,6 +86,14 @@ export const ScrollOverlay: React.FC = () => {
       // A modifier-held wheel is a zoom, not a blocked scroll: say nothing.
       const { ctrlKey, metaKey } = event as WheelEvent
       if (ctrlKey || metaKey) return
+      // A popover in the editor's portal root scrolls its own content; the
+      // canvas lock has nothing to say about it.
+      if (
+        event.target instanceof Element &&
+        event.target.closest("[data-apollon-portal-root]")
+      ) {
+        return
+      }
       setShowHint(true)
       clearHide()
       hideTimeout.current = setTimeout(() => {

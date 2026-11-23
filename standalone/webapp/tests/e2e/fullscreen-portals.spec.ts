@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { openFixtureInLocalEditor, waitForCanvasReady } from "../helpers/canvas"
+import { expectPaintedOnTop, isInEditorPortalRoot } from "../helpers/floating"
 
 const MODEL = {
   id: "e2e-fullscreen-portals",
@@ -82,23 +83,15 @@ test("keeps editor-owned floating surfaces inside subtree fullscreen", async ({
   await node.click()
   await page.getByRole("button", { name: "Edit element" }).click()
   const popover = page.locator(".apollon-popover")
-  await expect(popover).toBeVisible()
-  expect(
-    await popover.evaluate((popup) =>
-      Boolean(popup.closest("[data-apollon-portal-root]"))
-    )
-  ).toBe(true)
+  await expectPaintedOnTop(popover)
+  expect(await isInEditorPortalRoot(popover)).toBe(true)
 
   await page.keyboard.press("Escape")
   const fitView = editor.getByRole("button", { name: "Fit view" })
   await fitView.hover()
   const tooltip = page.locator('[data-slot="tooltip-content"]')
-  await expect(tooltip).toBeVisible()
-  expect(
-    await tooltip.evaluate((tip) =>
-      Boolean(tip.closest("[data-apollon-portal-root]"))
-    )
-  ).toBe(true)
+  await expectPaintedOnTop(tooltip)
+  expect(await isInEditorPortalRoot(tooltip)).toBe(true)
   await page.mouse.move(1, 1)
   await expect(tooltip).toBeHidden()
 
@@ -142,10 +135,6 @@ test("keeps editor-owned floating surfaces inside subtree fullscreen", async ({
 
   await node.click()
   await page.getByRole("button", { name: "Edit element" }).click()
-  await expect(popover).toBeVisible()
-  expect(
-    await popover.evaluate((popup) =>
-      Boolean(popup.closest("[data-apollon-portal-root]"))
-    )
-  ).toBe(false)
+  await expectPaintedOnTop(popover)
+  expect(await isInEditorPortalRoot(popover)).toBe(false)
 })

@@ -89,7 +89,7 @@
     {
       "name": "edge-routing Worker (loaded for large diagrams)",
       "path": "dist/assets/edgeGeometry.worker-*.js",
-      "limit": "40 kB",
+      "limit": "30 kB",
       "disablePlugins": [
         "@size-limit/webpack",
         "@size-limit/time"
