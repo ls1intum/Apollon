@@ -21,6 +21,11 @@ const apollonAliases = [
   },
 ]
 
+// d3 modules, which the edge-routing Worker reaches only through
+// @xyflow/system's pan-and-zoom code. Mirrored in library/vite.config.ts.
+const D3_MODULE =
+  /[\\/]node_modules[\\/](?:\.pnpm[\\/][^\\/]+[\\/]node_modules[\\/])?d3-[^\\/]+[\\/]/
+
 // Pure routing kernel loaded by a module Worker. It contains no JSX and must not
 // receive React Refresh's browser-only `window` preamble in dev mode.
 const ROUTING_KERNEL =
@@ -70,6 +75,14 @@ export default defineConfig({
   // as the main webapp graph rather than resolving those imports into webapp/src.
   worker: {
     plugins: () => [createApollonAliasResolver()],
+    // Keep d3's pan-and-zoom stack out of the edge-routing Worker; see the
+    // matching note in library/vite.config.ts.
+    rolldownOptions: {
+      treeshake: {
+        moduleSideEffects: (id: string) =>
+          D3_MODULE.test(id) ? false : undefined,
+      },
+    },
   },
   resolve: {
     alias: apollonAliases,
