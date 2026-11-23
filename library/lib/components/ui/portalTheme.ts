@@ -2,7 +2,8 @@ import React from "react"
 
 /**
  * Base UI popups (menus, selects, tooltips, the color picker) portal to
- * `document.body`, escaping the `.apollon-editor` subtree that scopes `--apollon-*`.
+ * `document.body` (unless the editor sits in a host's modal layer, see
+ * floatingLayer.tsx), escaping the `.apollon-editor` subtree that scopes `--apollon-*`.
  * A scoped `dataTheme`/`theme` sets tokens on the mount node only, so a portaled
  * popup falls back to the document's (light) default unless we carry the theme
  * over: we copy the resolved token values off the editor container onto the popup.
@@ -40,7 +41,7 @@ export const APOLLON_PORTAL_THEME_VARS = [
   "--apollon-hover-neutral",
   "--apollon-on-collaboration-cursor",
   "--apollon-interactive-selection",
-  // Color-picker swatch palette (the picker popup portals to <body>).
+  // Color-picker swatch palette (the picker popup usually portals to <body>).
   "--apollon-swatch-slate",
   "--apollon-swatch-red",
   "--apollon-swatch-orange",

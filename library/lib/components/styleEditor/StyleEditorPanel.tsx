@@ -4,7 +4,10 @@ import { Popover } from "@base-ui/react/popover"
 import { DividerLine, Tooltip, Typography } from "@/components/ui"
 import { EditorColorPicker } from "./ColorButtons"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
-import { useApollonPortalContainer } from "@/components/ui/portalContainer"
+import {
+  floatingPositionerProps,
+  useApollonFloatingLayer,
+} from "@/components/ui/floatingLayer"
 import { useLabels } from "@/i18n/useLabels"
 
 /**
@@ -47,12 +50,12 @@ export function StyleEditorPanel<K extends string>({
   headerVariant = "node",
 }: StyleEditorPanelProps<K>) {
   const t = useLabels()
-  // The popup portals to <body>, escaping the `.apollon-editor` subtree that
-  // scopes `--apollon-*`; carry the resolved theme onto it (same as the swatch
-  // picker) so a dark/custom embed theme paints the panel.
+  // The popup usually portals to <body>, escaping the `.apollon-editor` subtree
+  // that scopes `--apollon-*`; carry the resolved theme onto it (same as the
+  // swatch picker) so a dark/custom embed theme paints the panel.
   const [trigger, setTrigger] = useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
-  const portalContainer = useApollonPortalContainer()
+  const floatingLayer = useApollonFloatingLayer()
   const paintToggleLabel = colorEditorActionLabel ?? t.editColors
 
   return (
@@ -77,8 +80,12 @@ export function StyleEditorPanel<K extends string>({
                 <PaintRoller width={16} height={16} aria-hidden="true" />
               </Popover.Trigger>
             </Tooltip>
-            <Popover.Portal container={portalContainer}>
-              <Popover.Positioner sideOffset={6} align="end">
+            <Popover.Portal container={floatingLayer.container}>
+              <Popover.Positioner
+                {...floatingPositionerProps(floatingLayer)}
+                sideOffset={6}
+                align="end"
+              >
                 <Popover.Popup
                   data-slot="style-editor-content"
                   className="apollon-style-editor__popup"

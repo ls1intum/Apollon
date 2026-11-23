@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from "react"
-import { DROPS, DropElementConfig, ZINDEX } from "@/constants"
+import { DROPS, DropElementConfig } from "@/constants"
 import { createPortal } from "react-dom"
 import { useReactFlow, type XYPosition } from "@xyflow/react"
 import { useMetadataStore } from "@/store/context"
 import { resolveApollonThemeVars } from "@/components/ui/portalTheme"
-import { useApollonPortalContainer } from "@/components/ui/portalContainer"
+import {
+  FLOATING_SURFACE_CLASS,
+  useApollonFloatingLayer,
+} from "@/components/ui/floatingLayer"
 import { useShallow } from "zustand/shallow"
 import { usePalettePlacement } from "@/hooks/usePalettePlacement"
 
@@ -32,6 +35,24 @@ const enableScroll = () => {
   document.body.style.touchAction = savedBodyTouchAction
 }
 
+/**
+ * Where `position: fixed` puts (0, 0) inside `container`, in viewport
+ * coordinates. That is the viewport origin unless an ancestor with a
+ * `transform`, `filter` or `contain` becomes the containing block — which a host
+ * dialog often is (PrimeNG keeps `transform: scale(1)` on its dialog). Measured
+ * once per drag with a throwaway probe, so the ghost lands under the cursor in
+ * any host.
+ */
+function fixedOrigin(container: HTMLElement): XYPosition {
+  const probe = container.ownerDocument.createElement("div")
+  probe.style.cssText =
+    "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none"
+  container.append(probe)
+  const { left, top } = probe.getBoundingClientRect()
+  probe.remove()
+  return { x: left, y: top }
+}
+
 /** The palette's painted theme, carried onto the portaled ghost. */
 interface GhostTheme {
   vars: React.CSSProperties
@@ -56,7 +77,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       nodeTypeLabel: state.labels.nodeTypeLabel,
     }))
   )
-  const portalContainer = useApollonPortalContainer()
+  const floatingLayer = useApollonFloatingLayer()
 
   const ghostDropWidth = dropElementConfig.dropWidth ?? dropElementConfig.width
   const ghostDropHeight =
@@ -64,6 +85,8 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
 
   const [isDragging, setIsDragging] = useState(false)
   const [ghostPosition, setGhostPosition] = useState({ x: 0, y: 0 })
+  // Viewport position of the ghost's containing-block origin; see fixedOrigin.
+  const [ghostOrigin, setGhostOrigin] = useState<XYPosition>({ x: 0, y: 0 })
   // Where the cursor sits inside the GHOST, so the grabbed point stays under the
   // pointer as it moves.
   const [ghostOffset, setGhostOffset] = useState({ x: 0, y: 0 })
@@ -133,6 +156,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
     const zoom = getViewport().zoom
     setGhostRender({ scale: zoom })
 
+    setGhostOrigin(fixedOrigin(floatingLayer.container))
     setGhostOffset({
       x: grabOffset.x * zoom,
       y: grabOffset.y * zoom,
@@ -236,17 +260,19 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   // `fixed`, not `absolute`: the ghost is positioned in viewport coordinates
   // (clientX/clientY), and `absolute` resolves against the document, so page
   // scroll would shift it off the cursor when the editor sits below the fold.
+  // The stacking order comes from FLOATING_SURFACE_CLASS, like every other
+  // floating surface, so a host layer the popovers clear is cleared here too.
   const ghostElement = (
     <div
       data-draggable-preview
       data-theme={ghostTheme.dataTheme}
+      className={FLOATING_SURFACE_CLASS}
       style={{
         ...ghostTheme.vars,
         position: "fixed",
-        left: `${ghostPosition.x}px`,
-        top: `${ghostPosition.y}px`,
+        left: `${ghostPosition.x - ghostOrigin.x}px`,
+        top: `${ghostPosition.y - ghostOrigin.y}px`,
         pointerEvents: "none",
-        zIndex: ZINDEX.DRAGGABLE_ELEMENT,
         opacity: 0.8,
       }}
     >
@@ -280,7 +306,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       >
         {children}
       </button>
-      {isDragging && createPortal(ghostElement, portalContainer)}
+      {isDragging && createPortal(ghostElement, floatingLayer.container)}
     </>
   )
 }
