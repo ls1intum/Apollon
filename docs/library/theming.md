@@ -192,6 +192,28 @@ set them directly through `style` or a stylesheet rule.
 `radius` token flows through to controls; override `-md` explicitly only when you
 want it to diverge from the base.
 
+### Stacking above the host page (`--apollon-z-floating`)
+
+The editor's floating surfaces — the edit popover, selects, the color and tag
+pickers, tooltips, and the palette drag ghost — render on `document.body` on an
+ordinary page and stack at `z-index: var(--apollon-z-floating, 9999)`. Inside a
+modal host layer (an `aria-modal="true"` dialog, a native modal `<dialog>`, an
+open `popover`, or fullscreen) they render inside the editor instead, so they
+stay within that layer and the variable plays no part.
+
+Set it on `:root`, not on the editor: a surface on the body only inherits from
+the document.
+
+```css
+/* A host header that sits above 9999. */
+:root {
+  --apollon-z-floating: 20000;
+}
+```
+
+See [Troubleshooting](/library/troubleshooting#a-popover-select-or-tooltip-is-hidden-or-cant-be-clicked)
+for the layers the editor recognizes.
+
 ### Collaboration cursor palette (`--apollon-collaboration-color-*`)
 
 When real-time collaboration is enabled, each remote participant's cursor,
@@ -282,7 +304,7 @@ new ApollonEditor(element, { dataTheme: "dark" })
 
 Scoped `dataTheme` themes the **entire editor** — canvas, derived glass chrome,
 and every floating surface (menus, selects, tooltips, the color picker), even
-though those portal to `document.body` outside the mount subtree. It does **not**
+when those portal to `document.body` outside the mount subtree. It does **not**
 touch the surrounding document (`<html>`/`<body>`, native form controls, your own
 app chrome) — for a fully dark _page_, set `data-theme` on the document root
 instead and the editor inherits it.

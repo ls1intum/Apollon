@@ -5,7 +5,10 @@ import {
   TooltipContent,
   TooltipProvider as SharedTooltipProvider,
 } from "@tumaet/ui/components/tooltip"
-import { useApollonPortalContainer } from "./portalContainer"
+import {
+  FLOATING_SURFACE_CLASS,
+  useApollonFloatingLayer,
+} from "./floatingLayer"
 import { usePortalThemeVars } from "./portalTheme"
 
 // Wraps the shared @tumaet/ui Tooltip so the editor renders the same primitive as
@@ -37,12 +40,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
   side = "top",
   delayDuration,
 }) => {
-  // The content portals to <body>, escaping the `.apollon-editor` subtree that
-  // scopes `--apollon-*`; resolve the theme off the trigger and carry it along.
+  // The content usually portals to <body>, escaping the `.apollon-editor`
+  // subtree that scopes `--apollon-*`; resolve the theme off the trigger and
+  // carry it along.
   const [triggerElement, setTriggerElement] =
     React.useState<HTMLButtonElement | null>(null)
   const portalThemeVars = usePortalThemeVars(triggerElement)
-  const portalContainer = useApollonPortalContainer()
+  const floatingLayer = useApollonFloatingLayer()
 
   if (!title) return <>{children}</>
 
@@ -64,7 +68,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
       <TooltipContent
         side={side}
         style={portalThemeVars}
-        portalContainer={portalContainer}
+        portalContainer={floatingLayer.container}
+        positionMethod={floatingLayer.positionMethod}
+        positionerClassName={FLOATING_SURFACE_CLASS}
       >
         {title}
       </TooltipContent>

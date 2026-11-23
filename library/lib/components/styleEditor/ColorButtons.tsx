@@ -9,7 +9,10 @@ import {
   SWATCH_NAMES,
 } from "@tumaet/ui/lib/color-swatch-tokens"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
-import { useApollonPortalContainer } from "@/components/ui/portalContainer"
+import {
+  floatingPositionerProps,
+  useApollonFloatingLayer,
+} from "@/components/ui/floatingLayer"
 import { useLabels } from "@/i18n/useLabels"
 
 // Embed-safe editor color-picker. Mirrors the @tumaet/ui color-picker STRUCTURE
@@ -52,12 +55,12 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
 }) => {
   const t = useLabels()
   const pickerLabel = label ?? t.pickColor
-  // The popup portals to <body>, escaping the `.apollon-editor` subtree that
-  // scopes `--apollon-*` (incl. the swatch palette); carry the resolved theme
-  // onto it so a dark or custom embed theme paints the picker.
+  // The popup usually portals to <body>, escaping the `.apollon-editor` subtree
+  // that scopes `--apollon-*` (incl. the swatch palette); carry the resolved
+  // theme onto it so a dark or custom embed theme paints the picker.
   const [trigger, setTrigger] = React.useState<HTMLElement | null>(null)
   const portalThemeVars = usePortalThemeVars(trigger)
-  const portalContainer = useApollonPortalContainer()
+  const floatingLayer = useApollonFloatingLayer()
 
   const isCustom =
     selectedColor !== "" &&
@@ -84,8 +87,12 @@ export const EditorColorPicker: React.FC<EditorColorPickerProps> = ({
           } as React.CSSProperties
         }
       />
-      <Popover.Portal container={portalContainer}>
-        <Popover.Positioner sideOffset={6} align="start">
+      <Popover.Portal container={floatingLayer.container}>
+        <Popover.Positioner
+          {...floatingPositionerProps(floatingLayer)}
+          sideOffset={6}
+          align="start"
+        >
           <Popover.Popup
             data-slot="color-picker-content"
             className="apollon-color-picker__popup"

@@ -225,15 +225,10 @@ const RHOMBUS_HEIGHT_FACTOR = 0.618
 /* -------------------------------------------------------------------------- */
 /* Z-Index                                                                    */
 /* -------------------------------------------------------------------------- */
+// Layers inside the editor's own stacking context. Surfaces that float over the
+// host page (popovers, selects, tooltips, the palette drag ghost) are stacked in
+// CSS instead, by `--apollon-z-floating` (see floatingLayer.tsx and app.css).
 export const ZINDEX = Object.freeze({
-  BASE: 0,
-  HEADER_SWITCH: 1,
-  DRAGGABLE_GHOST: 2,
-  MINIMAP: 5,
-  PANEL: 10,
-  MODAL: 9998,
-  LABEL: 9998,
-  DRAGGABLE_ELEMENT: 9999,
   TOOLTIP: 10000,
 } as const)
 
