@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Apollon monorepo — UML modeling editor (library, webapp, server, VS Code extension).",
   "private": true,
-  "packageManager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61",
+  "packageManager": "pnpm@12.21.0+sha512.66fd8278ee28935ce951792d34367ff3af5c432a2756445823029533835b8da529bbe0be5130afd56ed0713fb8789e47bad82d93bd5ae2fe54b15562d6276ef0",
   "scripts": {
     "build": "pnpm run build:lib && concurrently \"pnpm run build:server\" \"pnpm run build:webapp\"",
     "build:lib": "pnpm --filter @tumaet/apollon run build",
@@ -73,10 +73,10 @@
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
     "@types/node": "catalog:",
-    "concurrently": "10.0.6",
+    "concurrently": "10.0.7",
     "husky": "9.1.7",
-    "knip": "6.42.1",
-    "lint-staged": "17.6.0",
+    "knip": "6.46.1",
+    "lint-staged": "17.6.1",
     "prettier": "3.8.5",
     "semver": "catalog:",
     "yaml": "2.9.1"
