@@ -1,5 +1,16 @@
 # @tumaet/webapp
 
+## 5.5.1
+
+### Patch Changes
+
+- [#898](https://github.com/ls1intum/Apollon/pull/898) [`db86141`](https://github.com/ls1intum/Apollon/commit/db8614117b4927a4fdb111dd7e9bed3ce1faea3f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Large diagrams start their background edge routing sooner: the helper that routes edges off the main thread is now about 28% smaller to download, because it no longer carries the canvas's pan-and-zoom code it never uses.
+
+- [#897](https://github.com/ls1intum/Apollon/pull/897) [`79358a9`](https://github.com/ls1intum/Apollon/commit/79358a9e5e01a05cab8b276b9092497c42544541) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Builds the web app on Node.js 24.22.3 and picks up the routing library's fixes for two code-injection advisories in its state serializer.
+
+- Updated dependencies [[`6c9f9d5`](https://github.com/ls1intum/Apollon/commit/6c9f9d562e4066a76070b3ebffff74bf1ed89d9d), [`db86141`](https://github.com/ls1intum/Apollon/commit/db8614117b4927a4fdb111dd7e9bed3ce1faea3f)]:
+  - @tumaet/apollon@5.5.1
+
 ## 5.5.0
 
 ### Minor Changes

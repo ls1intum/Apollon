@@ -1,5 +1,13 @@
 # @tumaet/apollon
 
+## 5.5.1
+
+### Patch Changes
+
+- [#896](https://github.com/ls1intum/Apollon/pull/896) [`6c9f9d5`](https://github.com/ls1intum/Apollon/commit/6c9f9d562e4066a76070b3ebffff74bf1ed89d9d) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Fixes the edit popover, selects, color and tag pickers, tooltips and the palette drag ghost being hidden or unclickable when the editor is embedded in a dialog. Inside a modal host layer (an `aria-modal` dialog, a native modal `<dialog>`, an open popover, or fullscreen) they now open within that layer, so they stay visible, keep focus under the dialog's focus trap, land under the cursor while dragging, and stay reachable for screen readers. Everywhere else they stack above the host page's overlays; a host with a layer above 9999 can lift them with the `--apollon-z-floating` CSS variable.
+
+- [#898](https://github.com/ls1intum/Apollon/pull/898) [`db86141`](https://github.com/ls1intum/Apollon/commit/db8614117b4927a4fdb111dd7e9bed3ce1faea3f) Thanks [@FelixTJDietrich](https://github.com/FelixTJDietrich)! - Large diagrams start their background edge routing sooner: the helper that routes edges off the main thread is now about 28% smaller to download, because it no longer carries the canvas's pan-and-zoom code it never uses.
+
 ## 5.5.0
 
 ### Minor Changes
