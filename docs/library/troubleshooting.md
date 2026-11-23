@@ -1,7 +1,7 @@
 ---
 id: troubleshooting
 title: Troubleshooting
-description: Fixes for the common Apollon embedding failures — blank canvas, SSR crashes, missing styles, and React duplication.
+description: Fixes for the common Apollon embedding failures — blank canvas, SSR crashes, missing styles, React duplication, and popovers hidden behind host dialogs.
 ---
 
 # Troubleshooting
@@ -128,3 +128,40 @@ subscription callback, an event handler, or after a `requestAnimationFrame`.
 `getNodes()` and `getEdges()` return `[]` and `getViewport()` returns `null`
 until then; `fitView()` already retries internally and is safe to call right
 away.
+
+## A popover, select or tooltip is hidden or can't be clicked
+
+**Symptom.** Inside your app's dialog, drawer or overlay, clicking the pen icon
+on a selected element shows no edit popover, a dropdown opens behind the
+dialog, or a field in a popover loses focus as soon as you click it.
+
+**Cause.** The editor's floating surfaces — the edit popover, selects, the color
+and tag pickers, tooltips and the palette drag ghost — have to paint above
+everything your page puts over the canvas. Where they render depends on the
+layer the editor sits in:
+
+- **Inside a modal layer** they render inside the editor, so they stay within
+  that layer. The editor treats an ancestor as modal when it is an
+  `aria-modal="true"` dialog (as PrimeNG, Angular CDK, Bootstrap, MUI, Radix and
+  Base UI dialogs are), a native `<dialog>` opened with `showModal()`, an open
+  `popover`, or the fullscreen element.
+- **Everywhere else** they render on `document.body`, above your page at
+  `z-index: var(--apollon-z-floating, 9999)`.
+
+**Fix.** Mark custom modals as modal, so assistive technology and the editor
+both see them as one:
+
+```html
+<div role="dialog" aria-modal="true">
+  <div id="apollon" style="height: 600px"></div>
+</div>
+```
+
+If a non-modal layer of yours (a fixed header, a drawer) sits above `9999`,
+raise the floating layer above it:
+
+```css
+:root {
+  --apollon-z-floating: 20000;
+}
+```

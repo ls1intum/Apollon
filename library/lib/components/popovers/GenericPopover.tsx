@@ -2,7 +2,10 @@ import React, { ReactNode } from "react"
 import { Popover } from "@base-ui/react/popover"
 import { PopoverOrigin } from "@/types"
 import { usePortalThemeVars } from "@/components/ui/portalTheme"
-import { useApollonPortalContainer } from "@/components/ui/portalContainer"
+import {
+  floatingPositionerProps,
+  useApollonFloatingLayer,
+} from "@/components/ui/floatingLayer"
 import { AssessmentNavigationFooter } from "./AssessmentNavigationFooter"
 import { useAssessmentNavigation } from "@/hooks"
 
@@ -59,7 +62,7 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
   const popoverThemeVars = usePortalThemeVars(
     anchorEl instanceof Element ? anchorEl : null
   )
-  const portalContainer = useApollonPortalContainer()
+  const floatingLayer = useApollonFloatingLayer()
 
   const { side, align } = toSideAlign(transformOrigin)
   const assessmentElementId = id.replace(/^popover-/, "")
@@ -91,9 +94,10 @@ export const GenericPopover: React.FC<GenericPopoverProps> = ({
         if (!next) onClose()
       }}
     >
-      <Popover.Portal container={portalContainer}>
+      <Popover.Portal container={floatingLayer.container}>
         {anchorEl && (
           <Popover.Positioner
+            {...floatingPositionerProps(floatingLayer)}
             anchor={anchorEl}
             side={side}
             align={align}
