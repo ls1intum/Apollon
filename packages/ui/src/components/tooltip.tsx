@@ -26,6 +26,8 @@ function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
 function TooltipContent({
   className,
   portalContainer,
+  positionerClassName,
+  positionMethod,
   side = "top",
   sideOffset = 4,
   align = "center",
@@ -35,15 +37,23 @@ function TooltipContent({
 }: TooltipPrimitive.Popup.Props &
   Pick<
     TooltipPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
+    "align" | "alignOffset" | "side" | "sideOffset" | "positionMethod"
   > & {
-    /** Optional host for fullscreen-safe embedding; defaults to document.body. */
+    /** Where the tooltip portals to; defaults to document.body. */
     portalContainer?: TooltipPrimitive.Portal.Props["container"]
+    /**
+     * Extra classes for the positioner, the element that stacks the tooltip
+     * against the page (it is a stacking context, so a z-index on the popup
+     * alone cannot lift it above a host's layers).
+     */
+    positionerClassName?: string
   }) {
   return (
     <TooltipPrimitive.Portal container={portalContainer}>
       <TooltipPrimitive.Positioner
         data-slot="tooltip-positioner"
+        className={positionerClassName}
+        positionMethod={positionMethod}
         align={align}
         alignOffset={alignOffset}
         side={side}
