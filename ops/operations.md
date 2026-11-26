@@ -11,11 +11,14 @@ description: Required infrastructure, environment variables, durability posture,
 - **A server with a JSON module.** HEAD storage uses the JSON data type
   (`JSON.SET` / `JSON.GET` with `$` paths), so the database must have one of:
   - **Redis Stack** — the `ReJSON` module, version ≥ 2.0.
-    `redis/redis-stack-server:7.4.0-v8` is the pinned image across local,
-    test, and production today (ReJSON 2.8.9).
+    `redis/redis-stack-server:7.4.0-v8` (ReJSON 2.8.9) is what local
+    development and the integration suite pin.
   - **Valkey with valkey-json** — the module registers as `json` (not
     `ReJSON`), version ≥ 1.0.3. The `valkey/valkey-bundle` image loads it
     by default (`valkey/valkey-bundle:9.2.0-alpine` ships valkey-json 1.1.0).
+
+  The image used for a deployed database is pinned in
+  `docker/compose.db.yml`.
 
   Plain `redis:7-alpine` / `redis:8-alpine` and plain `valkey/valkey`
   images do not bundle a JSON module and are refused at boot.
