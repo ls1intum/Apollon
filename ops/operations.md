@@ -69,9 +69,17 @@ other. Production deploys must:
 
 The server boot-loads one Lua library named `apollon` containing three
 functions: `commit_snapshot`, `restore_version`, and
-`list_versions_before`. Verify with `redis-cli FUNCTION LIST` (the library
-name `apollon` should appear). Idempotent across restarts; the library
-survives Redis restart because Redis Functions are persisted to AOF/RDB.
+`list_versions_before`. Verify with `valkey-cli FUNCTION LIST` (or
+`redis-cli` on Redis Stack; the library name `apollon` should appear).
+Idempotent across restarts; the library survives a database restart because
+functions are persisted to AOF/RDB.
+
+## Migration: Redis Stack → Valkey
+
+The production database moves from Redis Stack to `valkey/valkey-bundle`
+with a logical copy (`pnpm --filter @tumaet/server run db:copy`); see
+[`valkey-migration.md`](./valkey-migration.md) for the runbook, backup and
+rollback.
 
 ## Migration: legacy STRING → RedisJSON
 

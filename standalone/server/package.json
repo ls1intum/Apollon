@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "migrate:string-to-json": "tsx src/scripts/migrate-string-to-json.ts"
+    "migrate:string-to-json": "tsx src/scripts/migrate-string-to-json.ts",
+    "db:copy": "tsx src/scripts/copy-db.ts"
   },
   "dependencies": {
     "@hono/node-server": "2.1.11",

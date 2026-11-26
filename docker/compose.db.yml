@@ -1,23 +1,27 @@
 services:
   db:
-    # Stack image is required: the server's RedisJSON gate refuses to boot
-    # without the ReJSON module. `redis:7-alpine` ships without it and would
-    # silently break versioning on a fresh deploy.
-    image: redis/redis-stack-server:7.4.0-v8@sha256:798ab84d9f266936b034ab11c4d04a2b8e4b441884c5aa7d17ac951eefdf742a
+    # The bundle image is required: the server's boot gate refuses to start
+    # without a JSON module, and plain `valkey/valkey` (or `redis:*-alpine`)
+    # ships without one. valkey-bundle's entrypoint auto-loads every module in
+    # /usr/lib/valkey (json, search, bf, ldap) when the command starts with
+    # `valkey-server`, so no --loadmodule flags are needed. The service name
+    # stays `db` (REDIS_URL=redis://db:6379 is unchanged).
+    image: valkey/valkey-bundle:9.2.0-alpine@sha256:005117314f1af146684ecf55ac3d0553135917048b2572f8d0c34e41007b6cb0
     restart: unless-stopped
     expose:
       - "6379"
     volumes:
-      - dbdata:/data
+      # New volume name on purpose: the old `dbdata` volume holds Redis Stack
+      # RDB/AOF files (RDB format 12) that Valkey cannot load, and keeping it
+      # untouched is the rollback path. Data is moved with the logical copy in
+      # ops/valkey-migration.md, not by reusing files.
+      - valkeydata:/data
     networks:
       - apollon-network
     command:
-      - redis-stack-server
-      # `redis-stack-server` defaults `dir` to `/var/lib/redis-stack`, NOT
-      # `/data` like upstream `redis`. Without this flag the server writes
-      # its AOF/RDB into the container's writable layer instead of the
-      # `dbdata` volume — fine until the container is recreated, at which
-      # point every write since the previous recreate is lost.
+      - valkey-server
+      # The image's working directory is already /data; pinned explicitly so a
+      # future image change cannot silently move the AOF/RDB out of the volume.
       - --dir
       - /data
       - --appendonly
@@ -25,7 +29,7 @@ services:
       - --appendfsync
       - everysec
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,7 +42,7 @@ services:
         max-file: "5"
 
 volumes:
-  dbdata:
+  valkeydata:
 
 networks:
   apollon-network:
