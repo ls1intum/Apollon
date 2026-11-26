@@ -8,15 +8,33 @@ description: Required infrastructure, environment variables, durability posture,
 
 ## Required infrastructure
 
-- **Redis Stack** (`redis/redis-stack-server:7.4.0-v8` is the pinned
-  image across local, test, and production) — provides RedisJSON ≥ 2.0,
-  required for HEAD storage. Plain `redis:7-alpine` / `redis:8-alpine`
-  do not bundle the JSON module.
+- **A server with a JSON module.** HEAD storage uses the JSON data type
+  (`JSON.SET` / `JSON.GET` with `$` paths), so the database must have one of:
+  - **Redis Stack** — the `ReJSON` module, version ≥ 2.0.
+    `redis/redis-stack-server:7.4.0-v8` is the pinned image across local,
+    test, and production today (ReJSON 2.8.9).
+  - **Valkey with valkey-json** — the module registers as `json` (not
+    `ReJSON`), version ≥ 1.0.3. The `valkey/valkey-bundle` image loads it
+    by default (`valkey/valkey-bundle:9.2.0-alpine` ships valkey-json 1.1.0).
+
+  Plain `redis:7-alpine` / `redis:8-alpine` and plain `valkey/valkey`
+  images do not bundle a JSON module and are refused at boot.
+
 - **Node.js ≥ 24**, **pnpm ≥ 12**.
 
-The server checks `MODULE LIST` at startup and asserts ReJSON is loaded;
-on missing module the boot fails closed (process exits non-zero) rather
-than serving traffic with broken versioning.
+The server checks `MODULE LIST` at startup and asserts that either `ReJSON`
+(≥ 2.0) or `json` (≥ 1.0.3) is loaded; module names are matched exactly.
+On a missing or too-old module the boot fails closed (process exits
+non-zero) rather than serving traffic with broken versioning. The module
+that was accepted is logged with the `redis.function.loaded` event
+(`jsonModule`, `jsonModuleVersion`).
+
+Everything else the server uses — Redis Functions (`FUNCTION LOAD`,
+`FCALL`), hashes, sorted sets, `SET … NX EX`, `MULTI`/`EXEC`, `SCAN` — is
+core functionality that behaves the same on Redis Stack and on Valkey.
+The integration suite can be pointed at either server with
+`TEST_REDIS_URL=redis://host:port pnpm --filter @tumaet/server test` (it
+runs `FLUSHDB` after every test — use a throwaway instance).
 
 ## Environment variables
 
