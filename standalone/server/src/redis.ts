@@ -355,27 +355,124 @@ redis.register_function{
 }
 `
 
+// ---------------------------------------------------------------------------
+// JSON module gate
+// ---------------------------------------------------------------------------
+
 /**
- * Load the apollon Lua function library at boot. Idempotent — `REPLACE`
- * upgrades existing definitions. Verifies the RedisJSON module is loaded
- * (required for HEAD storage). Throws if the module is missing or too old.
+ * Oldest RedisJSON module accepted. Module versions are encoded as
+ * `major * 10000 + minor * 100 + patch`, so 20000 is RedisJSON 2.0.0 (the
+ * first release with JSONPath `$` support, which every HEAD read/write uses).
+ * Redis Stack 7.4.0-v8 ships ReJSON 2.8.9 (`20809`).
  */
-export async function bootLoadFunction(client: Redis): Promise<void> {
-  // Verify ReJSON >= 2.0 is loaded.
-  const modules = (await client.sendCommand(["MODULE", "LIST"])) as unknown
+export const MIN_REJSON_MODULE_VERSION = 20000
+
+/**
+ * Oldest Valkey JSON module accepted. valkey-json registers under the name
+ * `json` (not `ReJSON`) and has its own numbering. 1.0.3 (`10003`) is the
+ * oldest version the server's integration suite and Lua scenario were run
+ * against (shipped in `valkey/valkey-bundle` 8.1.12, 9.0.8 and 9.1.5);
+ * `valkey/valkey-bundle:9.2.0-alpine` ships 1.1.0 (`10100`).
+ */
+export const MIN_VALKEY_JSON_MODULE_VERSION = 10003
+
+export interface JsonModuleInfo {
+  /** Which JSON implementation is loaded. */
+  flavor: "redisjson" | "valkey-json"
+  /** Module name exactly as reported by `MODULE LIST`. */
+  name: string
+  /** Encoded module version (`major * 10000 + minor * 100 + patch`). */
+  version: number
+}
+
+const JSON_MODULES = [
+  { name: "ReJSON", flavor: "redisjson", min: MIN_REJSON_MODULE_VERSION },
+  { name: "json", flavor: "valkey-json", min: MIN_VALKEY_JSON_MODULE_VERSION },
+] as const
+
+/** Reads a `MODULE LIST` entry (flat RESP2 array) into a name -> value map. */
+function moduleFields(entry: unknown): Map<string, unknown> | undefined {
+  if (!Array.isArray(entry)) return undefined
+  const fields = new Map<string, unknown>()
+  for (let i = 0; i + 1 < entry.length; i += 2) {
+    fields.set(String(entry[i]), entry[i + 1])
+  }
+  return fields
+}
+
+function parseModuleVersion(value: unknown): number | undefined {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value)
+        ? Number(value)
+        : Number.NaN
+  return Number.isSafeInteger(n) && n >= 0 ? n : undefined
+}
+
+function formatModuleVersion(version: number): string {
+  return [
+    Math.floor(version / 10000),
+    Math.floor(version / 100) % 100,
+    version % 100,
+  ].join(".")
+}
+
+/**
+ * Validates a raw RESP2 `MODULE LIST` reply and returns the JSON module that
+ * will serve HEAD storage. Accepts exactly one of:
+ *
+ *   - `ReJSON`  >= 2.0.0 (Redis Stack), or
+ *   - `json`    >= 1.0.3 (valkey-json, e.g. `valkey/valkey-bundle`).
+ *
+ * Module names are matched exactly and case-sensitively; no other module
+ * (RediSearch, bloom, ...) is accepted in their place. Throws when no
+ * acceptable module is loaded or the reported version is too old or
+ * unreadable. When both are somehow listed, RedisJSON wins.
+ */
+export function resolveJsonModule(modules: unknown): JsonModuleInfo {
   if (!Array.isArray(modules)) {
     throw new Error("Unexpected MODULE LIST response shape")
   }
-  const reJson = modules.find((m: unknown) => {
-    if (!Array.isArray(m)) return false
-    const nameIndex = m.findIndex((x) => x === "name")
-    return nameIndex >= 0 && m[nameIndex + 1] === "ReJSON"
-  })
-  if (!reJson) {
-    throw new Error(
-      "RedisJSON module not loaded. Use redis/redis-stack-server."
-    )
+  const entries = modules
+    .map(moduleFields)
+    .filter((f): f is Map<string, unknown> => f !== undefined)
+
+  for (const candidate of JSON_MODULES) {
+    const fields = entries.find((f) => f.get("name") === candidate.name)
+    if (!fields) continue
+    const version = parseModuleVersion(fields.get("ver"))
+    if (version === undefined) {
+      throw new Error(
+        `Could not read the version of the ${candidate.name} module ` +
+          `(MODULE LIST ver=${String(fields.get("ver"))}).`
+      )
+    }
+    if (version < candidate.min) {
+      throw new Error(
+        `${candidate.name} module ${formatModuleVersion(version)} is too old; ` +
+          `need >= ${formatModuleVersion(candidate.min)}.`
+      )
+    }
+    return { flavor: candidate.flavor, name: candidate.name, version }
   }
+
+  throw new Error(
+    "No JSON module loaded (need the ReJSON module from redis/redis-stack-server " +
+      "or the json module from valkey/valkey-bundle). " +
+      "Plain redis/valkey images ship without it."
+  )
+}
+
+/**
+ * Load the apollon Lua function library at boot. Idempotent — `REPLACE`
+ * upgrades existing definitions. Verifies a JSON module is loaded (required
+ * for HEAD storage): RedisJSON >= 2.0 or valkey-json >= 1.0.3. Throws if the
+ * module is missing or too old.
+ */
+export async function bootLoadFunction(client: Redis): Promise<void> {
+  const modules = (await client.sendCommand(["MODULE", "LIST"])) as unknown
+  const jsonModule = resolveJsonModule(modules)
 
   await client.sendCommand([
     "FUNCTION",
@@ -383,7 +480,12 @@ export async function bootLoadFunction(client: Redis): Promise<void> {
     "REPLACE",
     COMMIT_VERSION_SOURCE,
   ])
-  logger.info({ event: "redis.function.loaded", lib: "apollon" })
+  logger.info({
+    event: "redis.function.loaded",
+    lib: "apollon",
+    jsonModule: jsonModule.flavor,
+    jsonModuleVersion: formatModuleVersion(jsonModule.version),
+  })
 }
 
 /**
