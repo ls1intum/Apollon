@@ -53,7 +53,7 @@ See [Releases](npm-publishing) for the release-cut procedure.
 | File                          | Purpose                                  | Lifecycle                                  |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------ |
 | `docker/compose.proxy.yml`    | Traefik reverse proxy + maintenance page | deployed once; stays up during app deploys |
-| `docker/compose.db.yml`       | Redis                                    | deployed once; stays up during app deploys |
+| `docker/compose.db.yml`       | Valkey                                   | deployed once; stays up during app deploys |
 | `docker/compose.app.yml`      | Server + webapp                          | deployed by CI on every merge + release    |
 | `docker/compose.local.db.yml` | Redis for local development              | started by `pnpm dev` / locally on demand  |
 | `docker/compose.local.yml`    | Local server + webapp stack              | optional; for `docker compose`-based dev   |
