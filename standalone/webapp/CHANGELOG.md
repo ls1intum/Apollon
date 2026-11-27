@@ -1,5 +1,12 @@
 # @tumaet/webapp
 
+## 5.5.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tumaet/apollon@5.5.2
+
 ## 5.5.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @tumaet/server
 
+## 5.5.2
+
+### Patch Changes
+
+- [#901](https://github.com/ls1intum/Apollon/pull/901) [`2ffb56c`](https://github.com/ls1intum/Apollon/commit/2ffb56c3b36eeea0f00ecc1442bd015a4199eadb) Thanks [@krusche](https://github.com/krusche)! - Self-hosted servers can now store diagrams in Valkey with its JSON module (for example the `valkey/valkey-bundle` image) as well as in Redis Stack.
+
+- Updated dependencies []:
+  - @tumaet/apollon@5.5.2
+
 ## 5.5.1
 
 ### Patch Changes

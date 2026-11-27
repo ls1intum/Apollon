@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/server",
-  "version": "5.5.1",
+  "version": "5.5.2",
   "private": true,
   "type": "module",
   "license": "MIT",
